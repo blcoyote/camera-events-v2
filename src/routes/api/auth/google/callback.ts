@@ -13,11 +13,11 @@ import {
 } from '#/server/google-oauth'
 import {
   parseOAuthState,
-  decryptOAuthState,
   OAUTH_STATE_COOKIE_NAME,
   sanitizeReturnTo,
   redirectTo,
 } from '#/server/auth'
+import { decryptOAuthState } from '#/server/auth-crypto'
 import { getSessionConfig  } from '#/server/session'
 import type {SessionData} from '#/server/session';
 

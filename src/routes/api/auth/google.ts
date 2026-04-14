@@ -4,12 +4,12 @@ import { setCookie } from '@tanstack/react-start/server'
 import { getGoogleProvider, getAppOrigin } from '#/server/google-oauth'
 import {
   buildOAuthState,
-  encryptOAuthState,
   OAUTH_SCOPES,
   OAUTH_STATE_COOKIE_NAME,
   OAUTH_STATE_COOKIE_OPTIONS,
   sanitizeReturnTo,
 } from '#/server/auth'
+import { encryptOAuthState } from '#/server/auth-crypto'
 
 export const Route = createFileRoute('/api/auth/google')({
   server: {

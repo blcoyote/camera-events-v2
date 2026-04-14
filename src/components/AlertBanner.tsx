@@ -80,7 +80,7 @@ export default function AlertBanner({
         type="button"
         aria-label="Dismiss message"
         onClick={() => setDismissed(true)}
-        className="flex-shrink-0 rounded-lg p-1 transition hover:opacity-100"
+        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg transition hover:opacity-100"
       >
         <svg
           width="16"

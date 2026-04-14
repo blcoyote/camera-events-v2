@@ -51,18 +51,18 @@ export const Route = createRootRouteWithContext<RouterContext>()({
 function NotFound() {
   return (
     <main id="main-content" className="page-wrap px-4 py-12">
-      <section className="island-shell rise-in rounded-[2rem] px-6 py-10 text-center sm:px-10 sm:py-14">
+      <section className="island-shell rise-in rounded-4xl px-6 py-10 text-center sm:px-10 sm:py-14">
         <p className="island-kicker mb-3">404</p>
-        <h1 className="display-title mb-5 text-4xl font-bold text-[var(--sea-ink)] sm:text-6xl">
+        <h1 className="display-title mb-5 text-4xl font-bold text-(--sea-ink) sm:text-6xl">
           Page not found
         </h1>
-        <p className="mx-auto mb-8 max-w-md text-base text-[var(--sea-ink-soft)] sm:text-lg">
+        <p className="mx-auto mb-8 max-w-md text-base text-(--sea-ink-soft) sm:text-lg">
           The page you're looking for doesn't exist or has been moved.
         </p>
         <Link
           to="/"
           search={{ error: undefined, status: undefined }}
-          className="inline-block rounded-full border border-[rgba(50,143,151,0.3)] bg-[rgba(79,184,178,0.14)] px-5 py-2.5 text-sm font-semibold text-[var(--lagoon-deep)] no-underline transition hover:-translate-y-0.5 hover:bg-[rgba(79,184,178,0.24)]"
+          className="inline-block rounded-full border border-[rgba(50,143,151,0.3)] bg-[rgba(79,184,178,0.14)] px-5 py-2.5 text-sm font-semibold text-(--lagoon-deep) no-underline transition hover:-translate-y-0.5 hover:bg-[rgba(79,184,178,0.24)]"
         >
           Back to Home
         </Link>
@@ -81,7 +81,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       <body className="font-sans antialiased [overflow-wrap:anywhere] selection:bg-[rgba(79,184,178,0.24)]">
         <a
           href="#main-content"
-          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-gray-900 focus:shadow-lg"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-100 focus:rounded-lg focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-gray-900 focus:shadow-lg"
         >
           Skip to main content
         </a>

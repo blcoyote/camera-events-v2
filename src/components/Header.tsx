@@ -1,3 +1,4 @@
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useRouteContext } from '@tanstack/react-router'
 import ThemeToggle from './ThemeToggle'
 import type { SessionData } from '../server/session'
@@ -14,24 +15,134 @@ interface NavLink {
 export function getHeaderAuthState(user: SessionData | null): {
   showSignIn: boolean
   userName: string | null
+  avatarUrl: string | null
+  initials: string | null
   signInHref: string
   signOutAction: string
   navLinks: NavLink[]
 } {
-  const navLinks: NavLink[] = [{ label: 'Home', to: '/' }]
-  if (user) {
-    navLinks.push(
-      { label: 'Camera Events', to: '/camera-events' },
-      { label: 'Settings', to: '/settings' },
-    )
-  }
+  const navLinks: NavLink[] = user
+    ? [
+        { label: 'Camera Events', to: '/camera-events' },
+        { label: 'Settings', to: '/settings' },
+      ]
+    : []
   return {
     showSignIn: !user,
     userName: user ? user.firstName : null,
+    avatarUrl: user ? user.avatarUrl : null,
+    initials: user
+      ? user.firstName
+        ? user.firstName[0].toUpperCase()
+        : '?'
+      : null,
     signInHref: '/api/auth/google',
     signOutAction: '/api/auth/logout',
     navLinks,
   }
+}
+
+function AvatarMenu({
+  avatarUrl,
+  initials,
+  signOutAction,
+}: {
+  avatarUrl: string
+  initials: string
+  signOutAction: string
+}) {
+  const [open, setOpen] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const buttonRef = useRef<HTMLButtonElement>(null)
+  const menuItemRef = useRef<HTMLButtonElement>(null)
+
+  const close = useCallback(() => {
+    setOpen(false)
+    buttonRef.current?.focus()
+  }, [])
+
+  useEffect(() => {
+    if (!open) return
+    menuItemRef.current?.focus()
+
+    function handleClickOutside(e: MouseEvent) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(e.target as Node)
+      ) {
+        close()
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [open, close])
+
+  function handleMenuKeyDown(e: React.KeyboardEvent) {
+    switch (e.key) {
+      case 'Escape':
+        e.preventDefault()
+        close()
+        break
+      case 'ArrowDown':
+      case 'ArrowUp':
+      case 'Home':
+      case 'End':
+        e.preventDefault()
+        menuItemRef.current?.focus()
+        break
+      case 'Tab':
+        close()
+        break
+    }
+  }
+
+  return (
+    <div ref={containerRef} className="relative">
+      <button
+        ref={buttonRef}
+        type="button"
+        onClick={() => setOpen((prev) => !prev)}
+        aria-expanded={open}
+        aria-haspopup="true"
+        aria-label="Account menu"
+        className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border border-(--line) bg-(--surface) text-sm font-semibold text-(--sea-ink) transition hover:border-(--lagoon-deep)"
+      >
+        {avatarUrl ? (
+          <img
+            src={avatarUrl}
+            alt=""
+            className="h-full w-full object-cover"
+            referrerPolicy="no-referrer"
+          />
+        ) : (
+          <span aria-hidden="true">{initials}</span>
+        )}
+      </button>
+
+      {open && (
+        <div
+          role="menu"
+          aria-label="Account"
+          onKeyDown={handleMenuKeyDown}
+          className="absolute right-0 top-full z-50 mt-2 min-w-40 overflow-hidden rounded-xl border border-(--line) bg-(--surface-strong) shadow-[0_8px_24px_rgba(30,90,72,0.12)]"
+        >
+          <form method="post" action={signOutAction}>
+            <button
+              ref={menuItemRef}
+              type="submit"
+              role="menuitem"
+              tabIndex={-1}
+              className="w-full px-4 py-3 text-left text-sm font-medium text-(--sea-ink) transition hover:bg-(--link-bg-hover)"
+            >
+              Sign out
+            </button>
+          </form>
+        </div>
+      )}
+    </div>
+  )
 }
 
 export default function Header() {
@@ -39,58 +150,44 @@ export default function Header() {
   const state = getHeaderAuthState(user)
 
   return (
-    <header className="sticky top-0 z-50 border-b border-[var(--line)] bg-[var(--header-bg)] px-4 backdrop-blur-lg">
-      <nav aria-label="Site navigation" className="page-wrap flex flex-wrap items-center gap-x-3 gap-y-2 py-3 sm:py-4">
-        <div className="m-0 flex-shrink-0 text-base font-semibold tracking-tight">
-          <Link
-            to="/"
-            search={{ error: undefined, status: undefined }}
-            className="inline-flex items-center gap-2 rounded-full border border-[var(--chip-line)] bg-[var(--chip-bg)] px-3 py-1.5 text-sm text-[var(--sea-ink)] no-underline shadow-[0_8px_24px_rgba(30,90,72,0.08)] sm:px-4 sm:py-2"
-          >
-            <span aria-hidden="true" className="h-2 w-2 rounded-full bg-[linear-gradient(90deg,#56c6be,#7ed3bf)]" />
-            TanStack Start
-          </Link>
-        </div>
-
-        <div className="ml-auto flex items-center gap-1.5 sm:ml-0 sm:gap-2">
-          {user ? (
-            <>
-              <span className="text-sm font-medium text-[var(--sea-ink)]">
-                {user.firstName}
-              </span>
-              <form method="post" action="/api/auth/logout">
-                <button
-                  type="submit"
-                  className="rounded-xl px-3 py-2 text-sm font-medium text-[var(--sea-ink-soft)] transition hover:bg-[var(--link-bg-hover)] hover:text-[var(--sea-ink)]"
-                >
-                  Sign out
-                </button>
-              </form>
-            </>
-          ) : (
-            <a
-              href="/api/auth/google"
-              className="rounded-full border border-[rgba(50,143,151,0.3)] bg-[rgba(79,184,178,0.14)] px-4 py-2 text-sm font-semibold text-[var(--lagoon-deep)] no-underline transition hover:-translate-y-0.5 hover:bg-[rgba(79,184,178,0.24)]"
-            >
-              Sign in with Google
-            </a>
-          )}
-
-          <ThemeToggle />
-        </div>
-
-        <div className="order-3 flex w-full flex-wrap items-center gap-x-4 gap-y-1 pb-1 text-sm font-semibold sm:order-2 sm:w-auto sm:flex-nowrap sm:pb-0">
+    <header className="sticky top-0 z-50 border-b border-(--line) bg-(--header-bg) px-4 backdrop-blur-lg">
+      <nav
+        aria-label="Site navigation"
+        className="page-wrap flex items-center gap-x-3 py-3 sm:py-4"
+      >
+        <div className="flex items-center gap-x-4 text-sm font-semibold">
           {state.navLinks.map((link) => (
             <Link
               key={link.to}
               to={link.to}
-              search={link.to === '/' ? { error: undefined, status: undefined } : undefined}
               className="nav-link"
-              activeProps={{ className: 'nav-link is-active', 'aria-current': 'page' as const }}
+              activeProps={{
+                className: 'nav-link is-active',
+                'aria-current': 'page' as const,
+              }}
             >
               {link.label}
             </Link>
           ))}
+        </div>
+
+        <div className="ml-auto flex items-center gap-2">
+          <ThemeToggle />
+
+          {state.showSignIn ? (
+            <a
+              href={state.signInHref}
+              className="inline-flex min-h-11 items-center rounded-full border border-[rgba(50,143,151,0.3)] bg-[rgba(79,184,178,0.14)] px-4 py-2 text-sm font-semibold text-(--lagoon-deep) no-underline transition hover:-translate-y-0.5 hover:bg-[rgba(79,184,178,0.24)]"
+            >
+              Sign in with Google
+            </a>
+          ) : (
+            <AvatarMenu
+              avatarUrl={state.avatarUrl ?? ''}
+              initials={state.initials ?? '?'}
+              signOutAction={state.signOutAction}
+            />
+          )}
         </div>
       </nav>
     </header>
