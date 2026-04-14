@@ -1,5 +1,4 @@
-/// <reference types="vitest/config" />
-import { defineConfig } from 'vite'
+import { defineConfig, type UserConfig } from 'vite'
 import { devtools } from '@tanstack/devtools-vite'
 import { tanstackStart } from '@tanstack/react-start/plugin/vite'
 import viteReact from '@vitejs/plugin-react'
@@ -8,13 +7,14 @@ import { swPlugin } from './vite-plugin-sw'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { storybookTest } from '@storybook/addon-vitest/vitest-plugin'
+
 const dirname =
   typeof __dirname !== 'undefined'
     ? __dirname
     : path.dirname(fileURLToPath(import.meta.url))
 
-// More info at: https://storybook.js.org/docs/next/writing-tests/integrations/vitest-addon
-const config = defineConfig({
+// Vitest 3.x bundles Vite 7 types; cast needed until Vitest 4 supports Vite 8
+export default defineConfig({
   resolve: {
     tsconfigPaths: true,
   },
@@ -38,7 +38,6 @@ const config = defineConfig({
       {
         extends: true,
         plugins: [
-          // The plugin will run tests for the stories defined in your Storybook config
           // See options at: https://storybook.js.org/docs/next/writing-tests/integrations/vitest-addon#storybooktest
           storybookTest({
             configDir: path.join(dirname, '.storybook'),
@@ -60,5 +59,4 @@ const config = defineConfig({
       },
     ],
   },
-})
-export default config
+} as UserConfig & { test: unknown })
