@@ -6,17 +6,27 @@ const FRIGATE_URL = 'http://frigate.local:5000'
 const MOCK_EVENT: FrigateEvent = {
   id: '1678886400.123-abc',
   label: 'person',
-  sub_label: '',
+  sub_label: null,
   camera: 'front_door',
   start_time: 1678886400,
   end_time: 1678886405,
-  false_positive: false,
+  false_positive: null,
   zones: ['driveway'],
   thumbnail: '/api/events/1678886400.123-abc/thumbnail.jpg',
   has_clip: true,
   has_snapshot: true,
   retain_indefinitely: false,
-  data: {},
+  plus_id: null,
+  box: null,
+  top_score: null,
+  data: {
+    attributes: [],
+    box: [0.5, 0.5, 0.1, 0.2],
+    region: [0, 0, 1, 1],
+    score: 0.9,
+    top_score: 0.9,
+    type: 'object',
+  },
 }
 
 function mockFetchJson(data: unknown, status = 200) {

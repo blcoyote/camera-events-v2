@@ -86,6 +86,13 @@ export async function getEvents(
   return frigateGet('/api/events', params as QueryParams, timeoutMs)
 }
 
+export async function getEvent(
+  eventId: string,
+  timeoutMs?: number,
+): Promise<FrigateResult<FrigateEvent>> {
+  return frigateGet(`/api/events/${eventId}`, undefined, timeoutMs)
+}
+
 export async function getEventThumbnail(
   eventId: string,
   params?: GetEventMediaParams,

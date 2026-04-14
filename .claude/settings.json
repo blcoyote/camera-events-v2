@@ -1,5 +1,16 @@
 {
   "permissions": {
-    "allow": []
+    "allow": [
+      "Bash(curl -s --max-time 10 http://devpi:5000/api/events/summary)",
+      "Bash(curl -s --max-time 10 'http://devpi:5000/api/timeline?limit=5')",
+      "Bash(curl -s --max-time 10 'http://devpi:5000/api/events?limit=1')",
+      "Bash(python3 -c ':*)",
+      "Bash(curl -s --max-time 10 'http://devpi:5000/api/review?limit=1')",
+      "Bash(curl -s --max-time 10 'http://devpi:5000/api/review/summary?timezone=Europe/Oslo')",
+      "Bash(curl -s --max-time 10 'http://devpi:5000/api/review/summary?timezone=Europe/Oslo' -v)",
+      "Bash(curl -s --max-time 10 'http://devpi:5000/api/review/summary')",
+      "Bash(curl -s --max-time 10 'http://devpi:5000/api/events/summary')",
+      "Bash(curl -s --max-time 10 'http://devpi:5000/api/events?limit=5')"
+    ]
   }
 }
