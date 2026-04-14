@@ -457,3 +457,47 @@ describe('getCameras', () => {
     expect(result.ok).toBe(false)
   })
 })
+
+describe('getLatestSnapshot', () => {
+  const originalEnv = process.env.FRIGATE_URL
+  const originalFetch = globalThis.fetch
+
+  beforeEach(() => { process.env.FRIGATE_URL = FRIGATE_URL })
+  afterEach(() => {
+    globalThis.fetch = originalFetch
+    if (originalEnv === undefined) { delete process.env.FRIGATE_URL } else { process.env.FRIGATE_URL = originalEnv }
+  })
+
+  it('makes GET request to correct snapshot URL and returns ArrayBuffer', async () => {
+    const buffer = new ArrayBuffer(32)
+    globalThis.fetch = mockFetchBinary(buffer)
+    const { getLatestSnapshot } = await import('./client')
+    const result = await getLatestSnapshot('front_door')
+
+    expect(result).toEqual({ ok: true, data: buffer })
+    const calledUrl = (globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[0][0] as string
+    expect(calledUrl).toBe(`${FRIGATE_URL}/api/front_door/latest.jpg`)
+  })
+
+  it('returns { ok: false } on HTTP error', async () => {
+    globalThis.fetch = mockFetchBinary(new ArrayBuffer(0), 404)
+    const { getLatestSnapshot } = await import('./client')
+    const result = await getLatestSnapshot('front_door')
+
+    expect(result.ok).toBe(false)
+    if (!result.ok) {
+      expect(result.status).toBe(404)
+    }
+  })
+
+  it('returns { ok: false } on network failure', async () => {
+    globalThis.fetch = mockFetchNetworkError()
+    const { getLatestSnapshot } = await import('./client')
+    const result = await getLatestSnapshot('front_door')
+
+    expect(result.ok).toBe(false)
+    if (!result.ok) {
+      expect(result.error).toContain('fetch failed')
+    }
+  })
+})

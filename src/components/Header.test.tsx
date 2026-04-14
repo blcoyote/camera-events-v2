@@ -59,7 +59,7 @@ describe('getHeaderAuthState', () => {
     expect(state.navLinks).toEqual([])
   })
 
-  it('returns Camera Events and Settings nav links when authenticated', () => {
+  it('returns Cameras, Camera Events, and Settings nav links when authenticated', () => {
     const user: SessionData = {
       sub: '123',
       firstName: 'Jane',
@@ -68,6 +68,7 @@ describe('getHeaderAuthState', () => {
     }
     const state = getHeaderAuthState(user)
     expect(state.navLinks).toEqual([
+      { label: 'Cameras', to: '/cameras' },
       { label: 'Camera Events', to: '/camera-events' },
       { label: 'Settings', to: '/settings' },
     ])

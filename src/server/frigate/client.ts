@@ -153,6 +153,15 @@ export async function getConfig(
   return frigateGet('/api/config', undefined, timeoutMs)
 }
 
+// ─── Camera endpoints ───
+
+export async function getLatestSnapshot(
+  cameraName: string,
+  timeoutMs?: number,
+): Promise<FrigateResult<ArrayBuffer>> {
+  return frigateBinary(`/api/${cameraName}/latest.jpg`, undefined, timeoutMs)
+}
+
 /**
  * Returns a sorted list of camera names from the Frigate config.
  */

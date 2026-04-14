@@ -23,6 +23,7 @@ export function getHeaderAuthState(user: SessionData | null): {
 } {
   const navLinks: NavLink[] = user
     ? [
+        { label: 'Cameras', to: '/cameras' },
         { label: 'Camera Events', to: '/camera-events' },
         { label: 'Settings', to: '/settings' },
       ]
