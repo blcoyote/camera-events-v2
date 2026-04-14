@@ -1,21 +1,30 @@
 /// <reference types="vitest/config" />
-import { defineConfig } from 'vite';
-import { devtools } from '@tanstack/devtools-vite';
-import { tanstackStart } from '@tanstack/react-start/plugin/vite';
-import viteReact from '@vitejs/plugin-react';
-import tailwindcss from '@tailwindcss/vite';
-import { swPlugin } from './vite-plugin-sw';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { storybookTest } from '@storybook/addon-vitest/vitest-plugin';
-const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url));
+import { defineConfig } from 'vite'
+import { devtools } from '@tanstack/devtools-vite'
+import { tanstackStart } from '@tanstack/react-start/plugin/vite'
+import viteReact from '@vitejs/plugin-react'
+import tailwindcss from '@tailwindcss/vite'
+import { swPlugin } from './vite-plugin-sw'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { storybookTest } from '@storybook/addon-vitest/vitest-plugin'
+const dirname =
+  typeof __dirname !== 'undefined'
+    ? __dirname
+    : path.dirname(fileURLToPath(import.meta.url))
 
 // More info at: https://storybook.js.org/docs/next/writing-tests/integrations/vitest-addon
 const config = defineConfig({
   resolve: {
-    tsconfigPaths: true
+    tsconfigPaths: true,
   },
-  plugins: [devtools(), tailwindcss(), tanstackStart(), viteReact(), swPlugin()],
+  plugins: [
+    devtools(),
+    tailwindcss(),
+    tanstackStart(),
+    viteReact(),
+    swPlugin(),
+  ],
   test: {
     projects: [
       {
@@ -41,13 +50,15 @@ const config = defineConfig({
             enabled: true,
             headless: true,
             provider: 'playwright',
-            instances: [{
-              browser: 'chromium',
-            }],
+            instances: [
+              {
+                browser: 'chromium',
+              },
+            ],
           },
         },
       },
     ],
-  }
-});
-export default config;
+  },
+})
+export default config

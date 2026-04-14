@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatEventSummary } from './camera-events.index'
+import { formatEventSummary } from '#/pages/camera-events/CameraEventsListPage'
 import type { CameraEvent } from '../../data/camera-events'
 
 describe('formatEventSummary', () => {

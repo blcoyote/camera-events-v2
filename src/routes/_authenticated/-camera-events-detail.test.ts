@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { getEventDetailContent } from './camera-events.$id'
+import { getEventDetailContent } from '#/pages/camera-events/CameraEventDetailPage'
 import type { CameraEvent } from '../../data/camera-events'
 
 describe('getEventDetailContent', () => {

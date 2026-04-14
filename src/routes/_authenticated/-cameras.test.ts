@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { getCamerasPageState, getCameraCardData } from './cameras'
+import { getCamerasPageState, getCameraCardData } from '#/pages/cameras/CamerasPage'
 import type { FrigateResult } from '#/server/frigate/config'
 
 describe('getCamerasPageState', () => {
