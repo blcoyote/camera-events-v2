@@ -8,6 +8,7 @@ import { getEventSnapshot } from '#/server/frigate/client'
 export async function handleSnapshotRequest(
   eventId: string,
   isAuthenticated: boolean,
+  download: boolean = false,
 ): Promise<Response> {
   if (!isAuthenticated) {
     return new Response(null, { status: 401 })
@@ -22,11 +23,14 @@ export async function handleSnapshotRequest(
     return new Response(null, { status: 502 })
   }
 
-  return new Response(result.data, {
-    status: 200,
-    headers: {
-      'Content-Type': 'image/jpeg',
-      'Cache-Control': 'public, max-age=3600',
-    },
-  })
+  const headers: Record<string, string> = {
+    'Content-Type': 'image/jpeg',
+    'Cache-Control': 'public, max-age=3600',
+  }
+
+  if (download) {
+    headers['Content-Disposition'] = `attachment; filename="event-${eventId}.jpg"`
+  }
+
+  return new Response(result.data, { status: 200, headers })
 }

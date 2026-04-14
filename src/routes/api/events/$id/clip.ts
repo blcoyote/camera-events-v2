@@ -2,12 +2,12 @@ import { createFileRoute } from '@tanstack/react-router'
 import { useSession } from '@tanstack/react-start/server'
 import { getSessionConfig } from '#/server/session'
 import type { SessionData } from '#/server/session'
-import { handleSnapshotRequest } from '../-snapshot-proxy'
+import { handleClipRequest } from '../-clip-proxy'
 
-export const Route = createFileRoute('/api/events/$id/snapshot')({
+export const Route = createFileRoute('/api/events/$id/clip')({
   server: {
     handlers: {
-      GET: async ({ params, request }) => {
+      GET: async ({ params }) => {
         let isAuthenticated = false
         try {
           const session = await useSession<SessionData>(getSessionConfig())
@@ -16,10 +16,7 @@ export const Route = createFileRoute('/api/events/$id/snapshot')({
           // Corrupted session — treat as unauthenticated
         }
 
-        const url = new URL(request.url)
-        const download = url.searchParams.get('download') === 'true'
-
-        return handleSnapshotRequest(params.id, isAuthenticated, download)
+        return handleClipRequest(params.id, isAuthenticated)
       },
     },
   },

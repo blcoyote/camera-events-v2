@@ -109,6 +109,13 @@ export async function getEventSnapshot(
   return frigateBinary(`/api/events/${eventId}/snapshot.jpg`, params as QueryParams, timeoutMs)
 }
 
+export async function getEventClip(
+  eventId: string,
+  timeoutMs?: number,
+): Promise<FrigateResult<ArrayBuffer>> {
+  return frigateBinary(`/api/events/${eventId}/clip.mp4`, undefined, timeoutMs)
+}
+
 export async function getEventSummary(
   params?: GetEventSummaryParams,
   timeoutMs?: number,

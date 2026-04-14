@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import { Camera, Clock, Tag, MapPin, Film, Image } from 'lucide-react'
+import { Camera, Clock, Tag, MapPin, Film, Image, Download } from 'lucide-react'
 import type { FrigateResult } from '../../server/frigate/config'
 import type { FrigateEvent } from '../../server/frigate/types'
 import {
@@ -51,6 +51,16 @@ export function formatDuration(startTime: number, endTime: number): string {
   return secs > 0 ? `${mins}m ${secs}s` : `${mins}m`
 }
 
+export function getDownloadUrl(
+  eventId: string,
+  kind: 'clip' | 'snapshot',
+): string {
+  if (kind === 'clip') {
+    return `/api/events/${eventId}/clip`
+  }
+  return `/api/events/${eventId}/snapshot?download=true`
+}
+
 // ─── Components ───
 
 function EventSnapshot({ eventId }: { eventId: string }) {
@@ -70,18 +80,44 @@ function InfoCard({
   icon: Icon,
   label,
   value,
+  href,
+  'aria-label': ariaLabel,
 }: {
   icon: React.ComponentType<{ className?: string }>
   label: string
   value: React.ReactNode
+  href?: string
+  'aria-label'?: string
 }) {
-  return (
-    <div className="rounded-xl border border-(--line) bg-(--surface) p-4">
+  const inner = (
+    <>
       <dt className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-(--sea-ink-soft)">
         <Icon className="h-3.5 w-3.5" />
         {label}
       </dt>
-      <dd className="mt-1 text-base font-medium text-(--sea-ink)">{value}</dd>
+      <dd className="mt-1 flex items-center gap-1.5 text-base font-medium text-(--sea-ink)">
+        {value}
+        {href && <Download className="h-3.5 w-3.5 text-(--lagoon-deep)" />}
+      </dd>
+    </>
+  )
+
+  if (href) {
+    return (
+      <a
+        href={href}
+        download
+        aria-label={ariaLabel}
+        className="rounded-xl border border-(--line) bg-(--surface) p-4 no-underline transition hover:border-(--lagoon-deep) hover:bg-[rgba(79,184,178,0.06)]"
+      >
+        {inner}
+      </a>
+    )
+  }
+
+  return (
+    <div className="rounded-xl border border-(--line) bg-(--surface) p-4">
+      {inner}
     </div>
   )
 }
@@ -170,8 +206,20 @@ export function CameraEventDetailPage({
           {event.zones.length > 0 && (
             <InfoCard icon={MapPin} label="Zones" value={event.zones.join(', ')} />
           )}
-          <InfoCard icon={Film} label="Clip" value={event.has_clip ? 'Available' : 'None'} />
-          <InfoCard icon={Image} label="Snapshot" value={event.has_snapshot ? 'Available' : 'None'} />
+          <InfoCard
+            icon={Film}
+            label="Clip"
+            value={event.has_clip ? 'Available' : 'None'}
+            href={event.has_clip ? getDownloadUrl(event.id, 'clip') : undefined}
+            aria-label={event.has_clip ? 'Download video clip' : undefined}
+          />
+          <InfoCard
+            icon={Image}
+            label="Snapshot"
+            value={event.has_snapshot ? 'Available' : 'None'}
+            href={event.has_snapshot ? getDownloadUrl(event.id, 'snapshot') : undefined}
+            aria-label={event.has_snapshot ? 'Download snapshot image' : undefined}
+          />
         </dl>
 
         {event.data.score > 0 && (

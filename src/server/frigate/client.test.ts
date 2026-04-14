@@ -468,6 +468,58 @@ describe('getCameras', () => {
   })
 })
 
+describe('getEventClip', () => {
+  const originalEnv = process.env.FRIGATE_URL
+  const originalFetch = globalThis.fetch
+
+  beforeEach(() => {
+    process.env.FRIGATE_URL = FRIGATE_URL
+  })
+
+  afterEach(() => {
+    globalThis.fetch = originalFetch
+    if (originalEnv === undefined) {
+      delete process.env.FRIGATE_URL
+    } else {
+      process.env.FRIGATE_URL = originalEnv
+    }
+  })
+
+  it('makes GET request to correct clip URL', async () => {
+    const buffer = new ArrayBuffer(32)
+    globalThis.fetch = mockFetchBinary(buffer)
+    const { getEventClip } = await import('./client')
+    const result = await getEventClip('abc123')
+
+    expect(result).toEqual({ ok: true, data: buffer })
+    const calledUrl = (globalThis.fetch as ReturnType<typeof vi.fn>).mock
+      .calls[0][0] as string
+    expect(calledUrl).toBe(`${FRIGATE_URL}/api/events/abc123/clip.mp4`)
+  })
+
+  it('returns { ok: false } on HTTP error', async () => {
+    globalThis.fetch = mockFetchBinary(new ArrayBuffer(0), 404)
+    const { getEventClip } = await import('./client')
+    const result = await getEventClip('missing')
+
+    expect(result.ok).toBe(false)
+    if (!result.ok) {
+      expect(result.status).toBe(404)
+    }
+  })
+
+  it('returns { ok: false } on network failure', async () => {
+    globalThis.fetch = mockFetchNetworkError()
+    const { getEventClip } = await import('./client')
+    const result = await getEventClip('abc123')
+
+    expect(result.ok).toBe(false)
+    if (!result.ok) {
+      expect(result.error).toContain('fetch failed')
+    }
+  })
+})
+
 describe('getLatestSnapshot', () => {
   const originalEnv = process.env.FRIGATE_URL
   const originalFetch = globalThis.fetch

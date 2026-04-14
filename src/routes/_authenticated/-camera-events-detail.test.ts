@@ -4,6 +4,7 @@ import {
   formatCameraName,
   formatTimestamp,
   formatDuration,
+  getDownloadUrl,
 } from '#/pages/camera-events/CameraEventDetailPage'
 import type { FrigateEvent } from '#/server/frigate/types'
 
@@ -94,5 +95,17 @@ describe('formatDuration', () => {
 
   it('formats mixed minute and second durations', () => {
     expect(formatDuration(100, 235)).toBe('2m 15s')
+  })
+})
+
+describe('getDownloadUrl', () => {
+  it('returns clip API path for clip kind', () => {
+    expect(getDownloadUrl('abc.123', 'clip')).toBe('/api/events/abc.123/clip')
+  })
+
+  it('returns snapshot API path with download param for snapshot kind', () => {
+    expect(getDownloadUrl('abc.123', 'snapshot')).toBe(
+      '/api/events/abc.123/snapshot?download=true',
+    )
   })
 })

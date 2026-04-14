@@ -19,6 +19,7 @@ import { Route as ApiAuthGoogleRouteImport } from './routes/api/auth/google'
 import { Route as AuthenticatedCameraEventsIdRouteImport } from './routes/_authenticated/camera-events.$id'
 import { Route as ApiEventsIdThumbnailRouteImport } from './routes/api/events/$id/thumbnail'
 import { Route as ApiEventsIdSnapshotRouteImport } from './routes/api/events/$id/snapshot'
+import { Route as ApiEventsIdClipRouteImport } from './routes/api/events/$id/clip'
 import { Route as ApiCamerasNameLatestRouteImport } from './routes/api/cameras/$name/latest'
 import { Route as ApiAuthGoogleCallbackRouteImport } from './routes/api/auth/google/callback'
 
@@ -73,6 +74,11 @@ const ApiEventsIdSnapshotRoute = ApiEventsIdSnapshotRouteImport.update({
   path: '/api/events/$id/snapshot',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiEventsIdClipRoute = ApiEventsIdClipRouteImport.update({
+  id: '/api/events/$id/clip',
+  path: '/api/events/$id/clip',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiCamerasNameLatestRoute = ApiCamerasNameLatestRouteImport.update({
   id: '/api/cameras/$name/latest',
   path: '/api/cameras/$name/latest',
@@ -94,6 +100,7 @@ export interface FileRoutesByFullPath {
   '/camera-events/': typeof AuthenticatedCameraEventsIndexRoute
   '/api/auth/google/callback': typeof ApiAuthGoogleCallbackRoute
   '/api/cameras/$name/latest': typeof ApiCamerasNameLatestRoute
+  '/api/events/$id/clip': typeof ApiEventsIdClipRoute
   '/api/events/$id/snapshot': typeof ApiEventsIdSnapshotRoute
   '/api/events/$id/thumbnail': typeof ApiEventsIdThumbnailRoute
 }
@@ -107,6 +114,7 @@ export interface FileRoutesByTo {
   '/camera-events': typeof AuthenticatedCameraEventsIndexRoute
   '/api/auth/google/callback': typeof ApiAuthGoogleCallbackRoute
   '/api/cameras/$name/latest': typeof ApiCamerasNameLatestRoute
+  '/api/events/$id/clip': typeof ApiEventsIdClipRoute
   '/api/events/$id/snapshot': typeof ApiEventsIdSnapshotRoute
   '/api/events/$id/thumbnail': typeof ApiEventsIdThumbnailRoute
 }
@@ -122,6 +130,7 @@ export interface FileRoutesById {
   '/_authenticated/camera-events/': typeof AuthenticatedCameraEventsIndexRoute
   '/api/auth/google/callback': typeof ApiAuthGoogleCallbackRoute
   '/api/cameras/$name/latest': typeof ApiCamerasNameLatestRoute
+  '/api/events/$id/clip': typeof ApiEventsIdClipRoute
   '/api/events/$id/snapshot': typeof ApiEventsIdSnapshotRoute
   '/api/events/$id/thumbnail': typeof ApiEventsIdThumbnailRoute
 }
@@ -137,6 +146,7 @@ export interface FileRouteTypes {
     | '/camera-events/'
     | '/api/auth/google/callback'
     | '/api/cameras/$name/latest'
+    | '/api/events/$id/clip'
     | '/api/events/$id/snapshot'
     | '/api/events/$id/thumbnail'
   fileRoutesByTo: FileRoutesByTo
@@ -150,6 +160,7 @@ export interface FileRouteTypes {
     | '/camera-events'
     | '/api/auth/google/callback'
     | '/api/cameras/$name/latest'
+    | '/api/events/$id/clip'
     | '/api/events/$id/snapshot'
     | '/api/events/$id/thumbnail'
   id:
@@ -164,6 +175,7 @@ export interface FileRouteTypes {
     | '/_authenticated/camera-events/'
     | '/api/auth/google/callback'
     | '/api/cameras/$name/latest'
+    | '/api/events/$id/clip'
     | '/api/events/$id/snapshot'
     | '/api/events/$id/thumbnail'
   fileRoutesById: FileRoutesById
@@ -174,6 +186,7 @@ export interface RootRouteChildren {
   ApiAuthGoogleRoute: typeof ApiAuthGoogleRouteWithChildren
   ApiAuthLogoutRoute: typeof ApiAuthLogoutRoute
   ApiCamerasNameLatestRoute: typeof ApiCamerasNameLatestRoute
+  ApiEventsIdClipRoute: typeof ApiEventsIdClipRoute
   ApiEventsIdSnapshotRoute: typeof ApiEventsIdSnapshotRoute
   ApiEventsIdThumbnailRoute: typeof ApiEventsIdThumbnailRoute
 }
@@ -250,6 +263,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiEventsIdSnapshotRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/events/$id/clip': {
+      id: '/api/events/$id/clip'
+      path: '/api/events/$id/clip'
+      fullPath: '/api/events/$id/clip'
+      preLoaderRoute: typeof ApiEventsIdClipRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/cameras/$name/latest': {
       id: '/api/cameras/$name/latest'
       path: '/api/cameras/$name/latest'
@@ -303,6 +323,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAuthGoogleRoute: ApiAuthGoogleRouteWithChildren,
   ApiAuthLogoutRoute: ApiAuthLogoutRoute,
   ApiCamerasNameLatestRoute: ApiCamerasNameLatestRoute,
+  ApiEventsIdClipRoute: ApiEventsIdClipRoute,
   ApiEventsIdSnapshotRoute: ApiEventsIdSnapshotRoute,
   ApiEventsIdThumbnailRoute: ApiEventsIdThumbnailRoute,
 }
