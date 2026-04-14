@@ -8,7 +8,8 @@
       "Bash(npx eslint:*)",
       "Bash(npx tsc:*)",
       "Bash(npx vitest:*)",
-      "WebFetch(domain:docs.frigate.video)"
+      "WebFetch(domain:docs.frigate.video)",
+      "Bash(npx storybook:*)"
     ]
   }
 }
