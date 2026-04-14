@@ -8,6 +8,7 @@ import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
 import Footer from '../components/Footer'
 import Header from '../components/Header'
+import { ServiceWorkerRegistration } from '../components/ServiceWorkerRegistration'
 import { getCurrentUserFn } from '../server/auth'
 import type { SessionData } from '../server/session'
 
@@ -37,11 +38,35 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       {
         title: 'TanStack Start Starter',
       },
+      {
+        name: 'theme-color',
+        content: '#173a40',
+      },
+      {
+        name: 'apple-mobile-web-app-capable',
+        content: 'yes',
+      },
+      {
+        name: 'apple-mobile-web-app-status-bar-style',
+        content: 'default',
+      },
+      {
+        name: 'apple-mobile-web-app-title',
+        content: 'TanStack App',
+      },
     ],
     links: [
       {
         rel: 'stylesheet',
         href: appCss,
+      },
+      {
+        rel: 'manifest',
+        href: '/manifest.json',
+      },
+      {
+        rel: 'apple-touch-icon',
+        href: '/logo192.png',
       },
     ],
   }),
@@ -99,6 +124,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
             },
           ]}
         />
+        <ServiceWorkerRegistration />
         <Scripts />
       </body>
     </html>

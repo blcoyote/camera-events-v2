@@ -48,8 +48,12 @@ function CameraEventsListComponent() {
                 <time
                   dateTime={event.timestamp}
                   className="shrink-0 text-xs text-(--sea-ink-soft)"
+                  suppressHydrationWarning
                 >
-                  {new Date(event.timestamp).toLocaleString()}
+                  {new Date(event.timestamp).toLocaleString('en-US', {
+                    dateStyle: 'medium',
+                    timeStyle: 'short',
+                  })}
                 </time>
               </div>
             </Link>
