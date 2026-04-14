@@ -1,9 +1,5 @@
 {
   "permissions": {
-    "allow": [
-      "Bash(npm info:*)",
-      "Bash(pnpm info:*)",
-      "Bash(node -e \"console.log\\(JSON.parse\\(require\\('fs'\\).readFileSync\\('/dev/stdin','utf8'\\)\\)\\)\")"
-    ]
+    "allow": []
   }
 }
