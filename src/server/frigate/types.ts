@@ -213,7 +213,7 @@ export interface FrigateCameraConfig {
 }
 
 export interface FrigateConfig {
-  cameras: Record<string, FrigateCameraConfig>
+  cameras?: Record<string, FrigateCameraConfig>
   audio: Record<string, JsonValue>
   birdseye: {
     enabled: boolean

@@ -10,7 +10,8 @@
       "Bash(curl -s --max-time 10 'http://devpi:5000/api/review/summary?timezone=Europe/Oslo' -v)",
       "Bash(curl -s --max-time 10 'http://devpi:5000/api/review/summary')",
       "Bash(curl -s --max-time 10 'http://devpi:5000/api/events/summary')",
-      "Bash(curl -s --max-time 10 'http://devpi:5000/api/events?limit=5')"
+      "Bash(curl -s --max-time 10 'http://devpi:5000/api/events?limit=5')",
+      "Bash(docker compose:*)"
     ]
   }
 }

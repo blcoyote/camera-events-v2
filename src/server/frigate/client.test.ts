@@ -1,5 +1,6 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
 import type { FrigateEvent, FrigateReview, FrigateReviewSummary } from './types'
+import { clearFrigateCache } from './cache'
 
 const FRIGATE_URL = 'http://frigate.local:5000'
 
@@ -71,11 +72,13 @@ describe('getEvents', () => {
   const originalFetch = globalThis.fetch
 
   beforeEach(() => {
+    clearFrigateCache()
     process.env.FRIGATE_URL = FRIGATE_URL
   })
 
   afterEach(() => {
     globalThis.fetch = originalFetch
+    clearFrigateCache()
     if (originalEnv === undefined) {
       delete process.env.FRIGATE_URL
     } else {
@@ -180,11 +183,13 @@ describe('getEventThumbnail', () => {
   const originalFetch = globalThis.fetch
 
   beforeEach(() => {
+    clearFrigateCache()
     process.env.FRIGATE_URL = FRIGATE_URL
   })
 
   afterEach(() => {
     globalThis.fetch = originalFetch
+    clearFrigateCache()
     if (originalEnv === undefined) {
       delete process.env.FRIGATE_URL
     } else {
@@ -221,11 +226,13 @@ describe('getEventSnapshot', () => {
   const originalFetch = globalThis.fetch
 
   beforeEach(() => {
+    clearFrigateCache()
     process.env.FRIGATE_URL = FRIGATE_URL
   })
 
   afterEach(() => {
     globalThis.fetch = originalFetch
+    clearFrigateCache()
     if (originalEnv === undefined) {
       delete process.env.FRIGATE_URL
     } else {
@@ -272,9 +279,10 @@ describe('getEventSummary', () => {
   const originalEnv = process.env.FRIGATE_URL
   const originalFetch = globalThis.fetch
 
-  beforeEach(() => { process.env.FRIGATE_URL = FRIGATE_URL })
+  beforeEach(() => { clearFrigateCache(); process.env.FRIGATE_URL = FRIGATE_URL })
   afterEach(() => {
     globalThis.fetch = originalFetch
+    clearFrigateCache()
     if (originalEnv === undefined) { delete process.env.FRIGATE_URL } else { process.env.FRIGATE_URL = originalEnv }
   })
 
@@ -303,9 +311,10 @@ describe('getReviews', () => {
   const originalEnv = process.env.FRIGATE_URL
   const originalFetch = globalThis.fetch
 
-  beforeEach(() => { process.env.FRIGATE_URL = FRIGATE_URL })
+  beforeEach(() => { clearFrigateCache(); process.env.FRIGATE_URL = FRIGATE_URL })
   afterEach(() => {
     globalThis.fetch = originalFetch
+    clearFrigateCache()
     if (originalEnv === undefined) { delete process.env.FRIGATE_URL } else { process.env.FRIGATE_URL = originalEnv }
   })
 
@@ -325,9 +334,10 @@ describe('getReviewByEvent', () => {
   const originalEnv = process.env.FRIGATE_URL
   const originalFetch = globalThis.fetch
 
-  beforeEach(() => { process.env.FRIGATE_URL = FRIGATE_URL })
+  beforeEach(() => { clearFrigateCache(); process.env.FRIGATE_URL = FRIGATE_URL })
   afterEach(() => {
     globalThis.fetch = originalFetch
+    clearFrigateCache()
     if (originalEnv === undefined) { delete process.env.FRIGATE_URL } else { process.env.FRIGATE_URL = originalEnv }
   })
 
@@ -346,9 +356,10 @@ describe('getReviewSummary', () => {
   const originalEnv = process.env.FRIGATE_URL
   const originalFetch = globalThis.fetch
 
-  beforeEach(() => { process.env.FRIGATE_URL = FRIGATE_URL })
+  beforeEach(() => { clearFrigateCache(); process.env.FRIGATE_URL = FRIGATE_URL })
   afterEach(() => {
     globalThis.fetch = originalFetch
+    clearFrigateCache()
     if (originalEnv === undefined) { delete process.env.FRIGATE_URL } else { process.env.FRIGATE_URL = originalEnv }
   })
 
@@ -370,9 +381,10 @@ describe('getTimeline', () => {
   const originalEnv = process.env.FRIGATE_URL
   const originalFetch = globalThis.fetch
 
-  beforeEach(() => { process.env.FRIGATE_URL = FRIGATE_URL })
+  beforeEach(() => { clearFrigateCache(); process.env.FRIGATE_URL = FRIGATE_URL })
   afterEach(() => {
     globalThis.fetch = originalFetch
+    clearFrigateCache()
     if (originalEnv === undefined) { delete process.env.FRIGATE_URL } else { process.env.FRIGATE_URL = originalEnv }
   })
 
@@ -392,9 +404,10 @@ describe('getStats', () => {
   const originalEnv = process.env.FRIGATE_URL
   const originalFetch = globalThis.fetch
 
-  beforeEach(() => { process.env.FRIGATE_URL = FRIGATE_URL })
+  beforeEach(() => { clearFrigateCache(); process.env.FRIGATE_URL = FRIGATE_URL })
   afterEach(() => {
     globalThis.fetch = originalFetch
+    clearFrigateCache()
     if (originalEnv === undefined) { delete process.env.FRIGATE_URL } else { process.env.FRIGATE_URL = originalEnv }
   })
 
@@ -414,9 +427,10 @@ describe('getConfig', () => {
   const originalEnv = process.env.FRIGATE_URL
   const originalFetch = globalThis.fetch
 
-  beforeEach(() => { process.env.FRIGATE_URL = FRIGATE_URL })
+  beforeEach(() => { clearFrigateCache(); process.env.FRIGATE_URL = FRIGATE_URL })
   afterEach(() => {
     globalThis.fetch = originalFetch
+    clearFrigateCache()
     if (originalEnv === undefined) { delete process.env.FRIGATE_URL } else { process.env.FRIGATE_URL = originalEnv }
   })
 
@@ -436,9 +450,10 @@ describe('getCameras', () => {
   const originalEnv = process.env.FRIGATE_URL
   const originalFetch = globalThis.fetch
 
-  beforeEach(() => { process.env.FRIGATE_URL = FRIGATE_URL })
+  beforeEach(() => { clearFrigateCache(); process.env.FRIGATE_URL = FRIGATE_URL })
   afterEach(() => {
     globalThis.fetch = originalFetch
+    clearFrigateCache()
     if (originalEnv === undefined) { delete process.env.FRIGATE_URL } else { process.env.FRIGATE_URL = originalEnv }
   })
 
@@ -473,11 +488,13 @@ describe('getEventClip', () => {
   const originalFetch = globalThis.fetch
 
   beforeEach(() => {
+    clearFrigateCache()
     process.env.FRIGATE_URL = FRIGATE_URL
   })
 
   afterEach(() => {
     globalThis.fetch = originalFetch
+    clearFrigateCache()
     if (originalEnv === undefined) {
       delete process.env.FRIGATE_URL
     } else {
@@ -524,9 +541,10 @@ describe('getLatestSnapshot', () => {
   const originalEnv = process.env.FRIGATE_URL
   const originalFetch = globalThis.fetch
 
-  beforeEach(() => { process.env.FRIGATE_URL = FRIGATE_URL })
+  beforeEach(() => { clearFrigateCache(); process.env.FRIGATE_URL = FRIGATE_URL })
   afterEach(() => {
     globalThis.fetch = originalFetch
+    clearFrigateCache()
     if (originalEnv === undefined) { delete process.env.FRIGATE_URL } else { process.env.FRIGATE_URL = originalEnv }
   })
 
@@ -560,6 +578,97 @@ describe('getLatestSnapshot', () => {
     expect(result.ok).toBe(false)
     if (!result.ok) {
       expect(result.error).toContain('fetch failed')
+    }
+  })
+})
+
+describe('frigateGet caching', () => {
+  const originalEnv = process.env.FRIGATE_URL
+  const originalFetch = globalThis.fetch
+
+  beforeEach(() => {
+    clearFrigateCache()
+    process.env.FRIGATE_URL = FRIGATE_URL
+  })
+
+  afterEach(() => {
+    globalThis.fetch = originalFetch
+    clearFrigateCache()
+    if (originalEnv === undefined) {
+      delete process.env.FRIGATE_URL
+    } else {
+      process.env.FRIGATE_URL = originalEnv
+    }
+  })
+
+  it('returns cached result on second call without hitting fetch again', async () => {
+    globalThis.fetch = mockFetchJson([MOCK_EVENT])
+    const { getEvents } = await import('./client')
+
+    const first = await getEvents()
+    const second = await getEvents()
+
+    expect(first).toEqual(second)
+    expect(globalThis.fetch).toHaveBeenCalledTimes(1)
+  })
+
+  it('cache key distinguishes different URLs', async () => {
+    globalThis.fetch = mockFetchJson([MOCK_EVENT])
+    const { getEvents } = await import('./client')
+
+    await getEvents({ limit: 10 })
+    await getEvents({ limit: 20 })
+
+    expect(globalThis.fetch).toHaveBeenCalledTimes(2)
+  })
+
+  it('does not cache failed responses', async () => {
+    globalThis.fetch = mockFetchJson({ detail: 'error' }, 500)
+    const { getEvents } = await import('./client')
+
+    const first = await getEvents()
+    expect(first.ok).toBe(false)
+
+    globalThis.fetch = mockFetchJson([MOCK_EVENT])
+    const second = await getEvents()
+    expect(second.ok).toBe(true)
+  })
+
+  it('does not cache binary endpoint responses', async () => {
+    const buffer = new ArrayBuffer(8)
+    globalThis.fetch = mockFetchBinary(buffer)
+    const { getEventThumbnail } = await import('./client')
+
+    await getEventThumbnail('abc123')
+    await getEventThumbnail('abc123')
+
+    expect(globalThis.fetch).toHaveBeenCalledTimes(2)
+  })
+
+  it('clearFrigateCache causes next call to fetch again', async () => {
+    globalThis.fetch = mockFetchJson([MOCK_EVENT])
+    const { getEvents, clearFrigateCache: clear } = await import('./client')
+
+    await getEvents()
+    clear()
+    await getEvents()
+
+    expect(globalThis.fetch).toHaveBeenCalledTimes(2)
+  })
+
+  it('cache expires after TTL', async () => {
+    vi.useFakeTimers()
+    try {
+      globalThis.fetch = mockFetchJson([MOCK_EVENT])
+      const { getEvents } = await import('./client')
+
+      await getEvents()
+      vi.advanceTimersByTime(600_001)
+      await getEvents()
+
+      expect(globalThis.fetch).toHaveBeenCalledTimes(2)
+    } finally {
+      vi.useRealTimers()
     }
   })
 })

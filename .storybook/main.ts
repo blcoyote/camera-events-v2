@@ -41,7 +41,7 @@ const config: StorybookConfig = {
   ],
   framework: '@storybook/react-vite',
   viteFinal(config) {
-    config.plugins = filterPlugins((config.plugins ?? []) as PluginOption[])
+    config.plugins = filterPlugins((config.plugins ?? []))
     return config
   },
 }

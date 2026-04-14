@@ -1,5 +1,6 @@
 import { getFrigateUrl, DEFAULT_TIMEOUT_MS } from './config'
 import type { FrigateResult } from './config'
+import { frigateCache } from './cache'
 import type {
   FrigateConfig,
   FrigateEvent,
@@ -51,7 +52,11 @@ async function frigateFetch<T>(
       signal: AbortSignal.timeout(timeoutMs),
     })
     if (!response.ok) {
-      return { ok: false, error: `HTTP ${response.status}`, status: response.status }
+      return {
+        ok: false,
+        error: `HTTP ${response.status}`,
+        status: response.status,
+      }
     }
     const data = await extract(response)
     return { ok: true, data }
@@ -61,12 +66,30 @@ async function frigateFetch<T>(
   }
 }
 
-function frigateGet<T>(
+async function frigateGet<T>(
   path: string,
   params?: QueryParams,
   timeoutMs?: number,
 ): Promise<FrigateResult<T>> {
-  return frigateFetch(path, params, (res) => res.json() as Promise<T>, timeoutMs)
+  const url = buildUrl(path, params)
+
+  const cached = frigateCache.get(url)
+  if (cached !== undefined) {
+    return cached as FrigateResult<T>
+  }
+
+  const result = await frigateFetch(
+    path,
+    params,
+    (res) => res.json() as Promise<T>,
+    timeoutMs,
+  )
+
+  if (result.ok) {
+    frigateCache.set(url, result)
+  }
+
+  return result
 }
 
 function frigateBinary(
@@ -98,7 +121,11 @@ export async function getEventThumbnail(
   params?: GetEventMediaParams,
   timeoutMs?: number,
 ): Promise<FrigateResult<ArrayBuffer>> {
-  return frigateBinary(`/api/events/${eventId}/thumbnail.jpg`, params as QueryParams, timeoutMs)
+  return frigateBinary(
+    `/api/events/${eventId}/thumbnail.jpg`,
+    params as QueryParams,
+    timeoutMs,
+  )
 }
 
 export async function getEventSnapshot(
@@ -106,7 +133,11 @@ export async function getEventSnapshot(
   params?: GetEventMediaParams,
   timeoutMs?: number,
 ): Promise<FrigateResult<ArrayBuffer>> {
-  return frigateBinary(`/api/events/${eventId}/snapshot.jpg`, params as QueryParams, timeoutMs)
+  return frigateBinary(
+    `/api/events/${eventId}/snapshot.jpg`,
+    params as QueryParams,
+    timeoutMs,
+  )
 }
 
 export async function getEventClip(
@@ -184,9 +215,7 @@ export async function getCameras(
 ): Promise<FrigateResult<string[]>> {
   const result = await getConfig(timeoutMs)
   if (!result.ok) return result
-  const cameras = result.data.cameras
-  if (!cameras || typeof cameras !== 'object') {
-    return { ok: true, data: [] }
-  }
-  return { ok: true, data: Object.keys(cameras).sort() }
+  return { ok: true, data: Object.keys(result.data.cameras ?? {}).sort() }
 }
+
+export { clearFrigateCache } from './cache'

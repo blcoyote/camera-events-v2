@@ -1,0 +1,118 @@
+import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
+import { clearFrigateCache } from './frigate/cache'
+
+vi.mock('mqtt', () => {
+  const mockClient = {
+    on: vi.fn(),
+    subscribe: vi.fn(),
+    end: vi.fn(),
+  }
+  return {
+    default: {
+      connect: vi.fn(() => mockClient),
+    },
+    __mockClient: mockClient,
+  }
+})
+
+async function getMockClient() {
+  const mod = await import('mqtt')
+   
+  return (mod as any).__mockClient
+}
+
+describe('SUBSCRIBED_TOPICS', () => {
+  it('contains frigate/events and frigate/reviews', async () => {
+    const { SUBSCRIBED_TOPICS } = await import('./mqtt')
+    expect(SUBSCRIBED_TOPICS).toContain('frigate/events')
+    expect(SUBSCRIBED_TOPICS).toContain('frigate/reviews')
+    expect(SUBSCRIBED_TOPICS).toHaveLength(2)
+  })
+})
+
+describe('onFrigateMessage', () => {
+  beforeEach(() => {
+    clearFrigateCache()
+  })
+
+  it('clears the Frigate cache when called with frigate/events', async () => {
+    const { onFrigateMessage } = await import('./mqtt')
+    const { frigateCache } = await import('./frigate/cache')
+
+    frigateCache.set('test-key', { ok: true, data: 'cached' })
+    expect(frigateCache.size).toBe(1)
+
+    onFrigateMessage('frigate/events', Buffer.from('{}'))
+    expect(frigateCache.size).toBe(0)
+  })
+
+  it('clears the Frigate cache when called with frigate/reviews', async () => {
+    const { onFrigateMessage } = await import('./mqtt')
+    const { frigateCache } = await import('./frigate/cache')
+
+    frigateCache.set('test-key', { ok: true, data: 'cached' })
+    expect(frigateCache.size).toBe(1)
+
+    onFrigateMessage('frigate/reviews', Buffer.from('{}'))
+    expect(frigateCache.size).toBe(0)
+  })
+})
+
+describe('startMqttSubscriber', () => {
+  const originalEnv = process.env.MQTT_URL
+
+  afterEach(() => {
+    if (originalEnv === undefined) {
+      delete process.env.MQTT_URL
+    } else {
+      process.env.MQTT_URL = originalEnv
+    }
+  })
+
+  it('returns null when MQTT_URL is not set', async () => {
+    delete process.env.MQTT_URL
+    const { startMqttSubscriber } = await import('./mqtt')
+    const result = startMqttSubscriber()
+    expect(result).toBeNull()
+  })
+
+  it('connects and subscribes when MQTT_URL is set', async () => {
+    process.env.MQTT_URL = 'mqtt://localhost:1883'
+    const mqtt = await import('mqtt')
+    const { startMqttSubscriber } = await import('./mqtt')
+
+    const client = startMqttSubscriber()
+    expect(client).not.toBeNull()
+    expect(mqtt.default.connect).toHaveBeenCalledWith(
+      'mqtt://localhost:1883',
+      expect.objectContaining({ clean: true }),
+    )
+
+    // Simulate 'connect' event to trigger subscription
+    const mockClient = await getMockClient()
+    const connectHandler = mockClient.on.mock.calls.find(
+      (call: [string, (...args: unknown[]) => void]) => call[0] === 'connect',
+    )?.[1]
+    expect(connectHandler).toBeDefined()
+    connectHandler()
+
+    expect(mockClient.subscribe).toHaveBeenCalledWith(
+      ['frigate/events', 'frigate/reviews'],
+      expect.any(Function),
+    )
+  })
+
+  it('wires onFrigateMessage as the message handler', async () => {
+    process.env.MQTT_URL = 'mqtt://localhost:1883'
+    const { startMqttSubscriber } = await import('./mqtt')
+
+    startMqttSubscriber()
+
+    const mockClient = await getMockClient()
+    const messageHandler = mockClient.on.mock.calls.find(
+      (call: [string, (...args: unknown[]) => void]) => call[0] === 'message',
+    )
+    expect(messageHandler).toBeDefined()
+    expect(messageHandler[0]).toBe('message')
+  })
+})
