@@ -10,7 +10,9 @@
       "Bash(npx vitest:*)",
       "WebFetch(domain:docs.frigate.video)",
       "Bash(npx storybook:*)",
-      "Bash(npx tsr:*)"
+      "Bash(npx tsr:*)",
+      "Bash(pnpm vitest *)",
+      "Bash(pnpm lint *)"
     ]
   }
 }
