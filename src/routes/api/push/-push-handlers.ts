@@ -1,5 +1,6 @@
 import { isPushEnabled, getVapidPublicKey, sendPushNotification } from '#/server/push'
 import { getPushStore } from '#/server/push-store'
+import { getCameras } from '#/server/frigate/client'
 
 interface HandlerResult {
   status: number
@@ -90,4 +91,44 @@ export async function handleTest(userId: string | null): Promise<HandlerResult> 
   )
 
   return { status: 200, body: { sent: subscriptions.length } }
+}
+
+export async function handleGetPreferences(
+  userId: string | null,
+): Promise<HandlerResult> {
+  if (!userId) {
+    return { status: 401, body: { error: 'Unauthorized' } }
+  }
+
+  const camerasResult = await getCameras()
+  if (!camerasResult.ok) {
+    return { status: 502, body: { error: 'Failed to fetch camera list' } }
+  }
+
+  const disabledSet = new Set(getPushStore().getDisabledCameras(userId))
+  const cameras = camerasResult.data.map((name) => ({
+    name,
+    enabled: !disabledSet.has(name),
+  }))
+
+  return { status: 200, body: { cameras } }
+}
+
+export async function handleSetPreference(
+  userId: string | null,
+  body: Record<string, unknown>,
+): Promise<HandlerResult> {
+  if (!userId) {
+    return { status: 401, body: { error: 'Unauthorized' } }
+  }
+
+  const camera = typeof body.camera === 'string' ? body.camera : ''
+  const enabled = typeof body.enabled === 'boolean' ? body.enabled : null
+
+  if (!camera || enabled === null) {
+    return { status: 400, body: { error: 'Invalid request: camera (string) and enabled (boolean) are required' } }
+  }
+
+  getPushStore().setPreference(userId, camera, enabled)
+  return { status: 200, body: { ok: true } }
 }

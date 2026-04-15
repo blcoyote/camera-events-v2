@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { Link } from '@tanstack/react-router'
 import { Video } from 'lucide-react'
+import { MediaCard } from '../../components/MediaCard'
 import type { FrigateResult } from '../../server/frigate/config'
 import type { FrigateEvent } from '../../server/frigate/types'
 
@@ -161,82 +161,70 @@ function EventThumbnail({ eventId }: { eventId: string }) {
 
 function EventCard({ event, index }: { event: FrigateEvent; index: number }) {
   const isRecent = Date.now() / 1000 - event.start_time < 300
-  const cappedDelay = Math.min(index, 11)
 
   return (
-    <Link
+    <MediaCard
       to="/camera-events/$id"
       params={{ id: event.id }}
-      className="event-card event-card-enter group block no-underline"
-      style={{ '--i': cappedDelay } as React.CSSProperties}
       aria-label={`${formatLabelName(event.label)} detected by ${event.camera}, ${formatRelativeTime(event.start_time)}`}
+      index={index}
+      image={<EventThumbnail eventId={event.id} />}
+      overlay={
+        <>
+          <div className="absolute left-3 top-3 flex items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-black/50 px-2.5 py-1 text-xs font-bold text-white backdrop-blur-sm">
+              <span
+                className="h-1.5 w-1.5 rounded-full"
+                style={{ backgroundColor: getLabelDotColor(event.label) }}
+                aria-hidden="true"
+              />
+              {formatLabelName(event.label)}
+            </span>
+            {event.sub_label && (
+              <span className="rounded-full bg-white/20 px-2 py-0.5 text-xs font-medium text-white backdrop-blur-sm">
+                {event.sub_label}
+              </span>
+            )}
+          </div>
+          <div className="absolute right-3 top-3 flex items-center gap-1.5">
+            {isRecent && (
+              <span
+                className="live-pulse h-2.5 w-2.5 rounded-full bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.6)]"
+                role="img"
+                aria-label="Recent event"
+              />
+            )}
+            {event.has_clip && (
+              <span
+                className="flex h-6 w-6 items-center justify-center rounded-full bg-black/40 backdrop-blur-sm"
+                role="img"
+                aria-label="Has video clip"
+              >
+                <Video size={12} className="text-white" aria-hidden="true" />
+              </span>
+            )}
+          </div>
+        </>
+      }
     >
-      <div className="event-thumb aspect-video">
-        <EventThumbnail eventId={event.id} />
-
-        {/* Label badge */}
-        <div className="absolute left-3 top-3 flex items-center gap-2">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-black/50 px-2.5 py-1 text-xs font-bold text-white backdrop-blur-sm">
-            <span
-              className="h-1.5 w-1.5 rounded-full"
-              style={{ backgroundColor: getLabelDotColor(event.label) }}
-              aria-hidden="true"
-            />
-            {formatLabelName(event.label)}
-          </span>
-          {event.sub_label && (
-            <span className="rounded-full bg-white/20 px-2 py-0.5 text-xs font-medium text-white backdrop-blur-sm">
-              {event.sub_label}
-            </span>
-          )}
-        </div>
-
-        {/* Status indicators */}
-        <div className="absolute right-3 top-3 flex items-center gap-1.5">
-          {isRecent && (
-            <span
-              className="live-pulse h-2.5 w-2.5 rounded-full bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.6)]"
-              role="img"
-              aria-label="Recent event"
-            />
-          )}
-          {event.has_clip && (
-            <span
-              className="flex h-6 w-6 items-center justify-center rounded-full bg-black/40 backdrop-blur-sm"
-              role="img"
-              aria-label="Has video clip"
-            >
-              <Video size={12} className="text-white" aria-hidden="true" />
-            </span>
-          )}
-        </div>
-
-        {/* Bottom gradient */}
-        <div className="event-meta-fade pointer-events-none absolute inset-x-0 bottom-0 h-16" />
+      <div className="flex items-center justify-between gap-2">
+        <p className="truncate text-sm font-semibold text-(--sea-ink)">
+          {event.camera}
+        </p>
+        <time
+          dateTime={new Date(event.start_time * 1000).toISOString()}
+          className="shrink-0 text-xs text-(--sea-ink-soft)"
+          suppressHydrationWarning
+        >
+          {formatRelativeTime(event.start_time)}
+        </time>
       </div>
-
-      {/* Card metadata */}
-      <div className="px-4 py-3">
-        <div className="flex items-center justify-between gap-2">
-          <p className="truncate text-sm font-semibold text-(--sea-ink)">
-            {event.camera}
-          </p>
-          <time
-            dateTime={new Date(event.start_time * 1000).toISOString()}
-            className="shrink-0 text-xs text-(--sea-ink-soft)"
-            suppressHydrationWarning
-          >
-            {formatRelativeTime(event.start_time)}
-          </time>
-        </div>
-
-        {event.zones.length > 0 && (
-          <p className="mt-1 truncate text-xs text-(--sea-ink-soft)">
-            {event.zones.join(' · ')}
-          </p>
-        )}
-      </div>
-    </Link>
+      {event.zones.length > 0 && (
+        <p className="mt-1 truncate text-xs text-(--sea-ink-soft)">
+          {event.zones.join(' · ')}
+        </p>
+      )}
+    </MediaCard>
   )
 }
 

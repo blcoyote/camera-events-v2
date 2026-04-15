@@ -18,6 +18,7 @@ import { Route as ApiPushVapidPublicKeyRouteImport } from './routes/api/push/vap
 import { Route as ApiPushUnsubscribeRouteImport } from './routes/api/push/unsubscribe'
 import { Route as ApiPushTestRouteImport } from './routes/api/push/test'
 import { Route as ApiPushSubscribeRouteImport } from './routes/api/push/subscribe'
+import { Route as ApiPushPreferencesRouteImport } from './routes/api/push/preferences'
 import { Route as ApiAuthLogoutRouteImport } from './routes/api/auth/logout'
 import { Route as ApiAuthGoogleRouteImport } from './routes/api/auth/google'
 import { Route as AuthenticatedCameraEventsIdRouteImport } from './routes/_authenticated/camera-events.$id'
@@ -72,6 +73,11 @@ const ApiPushSubscribeRoute = ApiPushSubscribeRouteImport.update({
   path: '/api/push/subscribe',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPushPreferencesRoute = ApiPushPreferencesRouteImport.update({
+  id: '/api/push/preferences',
+  path: '/api/push/preferences',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAuthLogoutRoute = ApiAuthLogoutRouteImport.update({
   id: '/api/auth/logout',
   path: '/api/auth/logout',
@@ -121,6 +127,7 @@ export interface FileRoutesByFullPath {
   '/camera-events/$id': typeof AuthenticatedCameraEventsIdRoute
   '/api/auth/google': typeof ApiAuthGoogleRouteWithChildren
   '/api/auth/logout': typeof ApiAuthLogoutRoute
+  '/api/push/preferences': typeof ApiPushPreferencesRoute
   '/api/push/subscribe': typeof ApiPushSubscribeRoute
   '/api/push/test': typeof ApiPushTestRoute
   '/api/push/unsubscribe': typeof ApiPushUnsubscribeRoute
@@ -139,6 +146,7 @@ export interface FileRoutesByTo {
   '/camera-events/$id': typeof AuthenticatedCameraEventsIdRoute
   '/api/auth/google': typeof ApiAuthGoogleRouteWithChildren
   '/api/auth/logout': typeof ApiAuthLogoutRoute
+  '/api/push/preferences': typeof ApiPushPreferencesRoute
   '/api/push/subscribe': typeof ApiPushSubscribeRoute
   '/api/push/test': typeof ApiPushTestRoute
   '/api/push/unsubscribe': typeof ApiPushUnsubscribeRoute
@@ -159,6 +167,7 @@ export interface FileRoutesById {
   '/_authenticated/camera-events/$id': typeof AuthenticatedCameraEventsIdRoute
   '/api/auth/google': typeof ApiAuthGoogleRouteWithChildren
   '/api/auth/logout': typeof ApiAuthLogoutRoute
+  '/api/push/preferences': typeof ApiPushPreferencesRoute
   '/api/push/subscribe': typeof ApiPushSubscribeRoute
   '/api/push/test': typeof ApiPushTestRoute
   '/api/push/unsubscribe': typeof ApiPushUnsubscribeRoute
@@ -179,6 +188,7 @@ export interface FileRouteTypes {
     | '/camera-events/$id'
     | '/api/auth/google'
     | '/api/auth/logout'
+    | '/api/push/preferences'
     | '/api/push/subscribe'
     | '/api/push/test'
     | '/api/push/unsubscribe'
@@ -197,6 +207,7 @@ export interface FileRouteTypes {
     | '/camera-events/$id'
     | '/api/auth/google'
     | '/api/auth/logout'
+    | '/api/push/preferences'
     | '/api/push/subscribe'
     | '/api/push/test'
     | '/api/push/unsubscribe'
@@ -216,6 +227,7 @@ export interface FileRouteTypes {
     | '/_authenticated/camera-events/$id'
     | '/api/auth/google'
     | '/api/auth/logout'
+    | '/api/push/preferences'
     | '/api/push/subscribe'
     | '/api/push/test'
     | '/api/push/unsubscribe'
@@ -233,6 +245,7 @@ export interface RootRouteChildren {
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   ApiAuthGoogleRoute: typeof ApiAuthGoogleRouteWithChildren
   ApiAuthLogoutRoute: typeof ApiAuthLogoutRoute
+  ApiPushPreferencesRoute: typeof ApiPushPreferencesRoute
   ApiPushSubscribeRoute: typeof ApiPushSubscribeRoute
   ApiPushTestRoute: typeof ApiPushTestRoute
   ApiPushUnsubscribeRoute: typeof ApiPushUnsubscribeRoute
@@ -306,6 +319,13 @@ declare module '@tanstack/react-router' {
       path: '/api/push/subscribe'
       fullPath: '/api/push/subscribe'
       preLoaderRoute: typeof ApiPushSubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/push/preferences': {
+      id: '/api/push/preferences'
+      path: '/api/push/preferences'
+      fullPath: '/api/push/preferences'
+      preLoaderRoute: typeof ApiPushPreferencesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/auth/logout': {
@@ -402,6 +422,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   ApiAuthGoogleRoute: ApiAuthGoogleRouteWithChildren,
   ApiAuthLogoutRoute: ApiAuthLogoutRoute,
+  ApiPushPreferencesRoute: ApiPushPreferencesRoute,
   ApiPushSubscribeRoute: ApiPushSubscribeRoute,
   ApiPushTestRoute: ApiPushTestRoute,
   ApiPushUnsubscribeRoute: ApiPushUnsubscribeRoute,

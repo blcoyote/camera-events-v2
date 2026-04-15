@@ -7,6 +7,7 @@ export interface PushPayload {
   title: string
   body: string
   url: string
+  icon?: string
 }
 
 const DEFAULT_PAYLOAD: PushPayload = {
@@ -29,6 +30,7 @@ export function parsePushPayload(data: unknown): PushPayload {
     title: typeof obj.title === 'string' && obj.title ? obj.title : DEFAULT_PAYLOAD.title,
     body: typeof obj.body === 'string' ? obj.body : DEFAULT_PAYLOAD.body,
     url: typeof obj.url === 'string' && obj.url ? obj.url : DEFAULT_PAYLOAD.url,
+    icon: typeof obj.icon === 'string' && obj.icon ? obj.icon : undefined,
   }
 }
 
@@ -38,6 +40,7 @@ export function parsePushPayload(data: unknown): PushPayload {
 export function buildNotificationOptions(payload: PushPayload): NotificationOptions {
   return {
     body: payload.body,
+    icon: payload.icon ?? '/logo192.png',
     data: { url: payload.url },
   }
 }

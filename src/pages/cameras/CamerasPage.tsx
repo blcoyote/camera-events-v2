@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { MediaCard } from '#/components/MediaCard'
 import type { FrigateResult } from '#/server/frigate/config'
 
 type CamerasState =
@@ -46,7 +47,7 @@ function SnapshotImage({ imgSrc, altText }: { imgSrc: string; altText: string })
 
   if (failed) {
     return (
-      <div className="flex aspect-video items-center justify-center bg-(--surface) text-sm text-(--sea-ink-soft)">
+      <div className="flex h-full w-full items-center justify-center bg-(--surface) text-sm text-(--sea-ink-soft)">
         Snapshot unavailable
       </div>
     )
@@ -58,7 +59,7 @@ function SnapshotImage({ imgSrc, altText }: { imgSrc: string; altText: string })
       alt={altText}
       loading="lazy"
       onError={() => setFailed(true)}
-      className="aspect-video w-full object-cover"
+      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
     />
   )
 }
@@ -92,18 +93,17 @@ export function CamerasPage({ result }: { result: FrigateResult<string[]> }) {
 
       {state.kind === 'cameras' && (
         <section aria-label="Camera list" className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {state.cameras.map((name) => {
+          {state.cameras.map((name, index) => {
             const card = getCameraCardData(name)
             return (
-              <div
+              <MediaCard
                 key={name}
-                className="island-shell min-h-11 overflow-hidden rounded-2xl"
+                index={index}
+                scanLines={false}
+                image={<SnapshotImage imgSrc={card.imgSrc} altText={card.altText} />}
               >
-                <SnapshotImage imgSrc={card.imgSrc} altText={card.altText} />
-                <div className="px-4 py-3">
-                  <h2 className="text-sm font-semibold text-(--sea-ink)">{card.name}</h2>
-                </div>
-              </div>
+                <h2 className="text-sm font-semibold text-(--sea-ink)">{card.name}</h2>
+              </MediaCard>
             )
           })}
         </section>

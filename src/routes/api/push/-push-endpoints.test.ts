@@ -4,9 +4,12 @@ import {
   handleSubscribe,
   handleUnsubscribe,
   handleTest,
+  handleGetPreferences,
+  handleSetPreference,
 } from './-push-handlers'
 import { isPushEnabled, getVapidPublicKey, sendPushNotification } from '#/server/push'
 import { getPushStore } from '#/server/push-store'
+import { getCameras } from '#/server/frigate/client'
 
 vi.mock('#/server/push', () => ({
   isPushEnabled: vi.fn(),
@@ -16,6 +19,10 @@ vi.mock('#/server/push', () => ({
 
 vi.mock('#/server/push-store', () => ({
   getPushStore: vi.fn(),
+}))
+
+vi.mock('#/server/frigate/client', () => ({
+  getCameras: vi.fn(),
 }))
 
 beforeEach(() => {
@@ -176,5 +183,92 @@ describe('handleTest', () => {
     const result = await handleTest('user1')
     expect(result.status).toBe(200)
     expect(result.body).toEqual({ sent: 0 })
+  })
+})
+
+describe('handleGetPreferences', () => {
+  it('returns 401 when unauthenticated', async () => {
+    const result = await handleGetPreferences(null)
+    expect(result.status).toBe(401)
+  })
+
+  it('returns 502 when getCameras fails', async () => {
+    vi.mocked(getCameras).mockResolvedValue({ ok: false, error: 'timeout' })
+
+    const result = await handleGetPreferences('user1')
+    expect(result.status).toBe(502)
+  })
+
+  it('returns camera list with preferences merged', async () => {
+    vi.mocked(getCameras).mockResolvedValue({
+      ok: true,
+      data: ['backyard', 'driveway', 'front_porch'],
+    })
+    vi.mocked(getPushStore).mockReturnValue({
+      getDisabledCameras: vi.fn(() => ['driveway']),
+    } as any)
+
+    const result = await handleGetPreferences('user1')
+    expect(result.status).toBe(200)
+    expect(result.body).toEqual({
+      cameras: [
+        { name: 'backyard', enabled: true },
+        { name: 'driveway', enabled: false },
+        { name: 'front_porch', enabled: true },
+      ],
+    })
+  })
+
+  it('returns all cameras as enabled when no preferences set', async () => {
+    vi.mocked(getCameras).mockResolvedValue({
+      ok: true,
+      data: ['front_porch', 'garage'],
+    })
+    vi.mocked(getPushStore).mockReturnValue({
+      getDisabledCameras: vi.fn(() => []),
+    } as any)
+
+    const result = await handleGetPreferences('user1')
+    expect(result.status).toBe(200)
+    const cameras = (result.body as any).cameras
+    expect(cameras.every((c: any) => c.enabled)).toBe(true)
+  })
+})
+
+describe('handleSetPreference', () => {
+  it('returns 401 when unauthenticated', async () => {
+    const result = await handleSetPreference(null, { camera: 'x', enabled: true })
+    expect(result.status).toBe(401)
+  })
+
+  it('returns 400 when camera is missing', async () => {
+    const result = await handleSetPreference('user1', { enabled: true })
+    expect(result.status).toBe(400)
+  })
+
+  it('returns 400 when enabled is missing', async () => {
+    const result = await handleSetPreference('user1', { camera: 'front_porch' })
+    expect(result.status).toBe(400)
+  })
+
+  it('returns 400 when enabled is not a boolean', async () => {
+    const result = await handleSetPreference('user1', { camera: 'x', enabled: 'yes' })
+    expect(result.status).toBe(400)
+  })
+
+  it('calls setPreference and returns ok', async () => {
+    const mockSetPref = vi.fn()
+    vi.mocked(getPushStore).mockReturnValue({
+      setPreference: mockSetPref,
+    } as any)
+
+    const result = await handleSetPreference('user1', {
+      camera: 'front_porch',
+      enabled: false,
+    })
+
+    expect(result.status).toBe(200)
+    expect(result.body).toEqual({ ok: true })
+    expect(mockSetPref).toHaveBeenCalledWith('user1', 'front_porch', false)
   })
 })

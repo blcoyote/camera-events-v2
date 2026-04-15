@@ -12,7 +12,8 @@
       "Bash(npx storybook:*)",
       "Bash(npx tsr:*)",
       "Bash(pnpm vitest *)",
-      "Bash(pnpm lint *)"
+      "Bash(pnpm lint *)",
+      "Bash(pnpm build *)"
     ]
   }
 }

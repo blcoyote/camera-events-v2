@@ -1,20 +1,71 @@
 import mqtt from 'mqtt'
 import type { MqttClient } from 'mqtt'
 import { clearFrigateCache } from './frigate/cache'
+import { EventBatcher } from './event-batcher'
+import type { FrigateEventInfo } from './event-batcher'
+import { notifyUsersForCamera } from './push-notify'
 
 /** MQTT topics to subscribe to for Frigate event updates. */
 export const SUBSCRIBED_TOPICS = ['frigate/events', 'frigate/reviews'] as const
 
+/** Singleton event batcher — flushes per-camera batches to push notifications. */
+const eventBatcher = new EventBatcher(
+  (camera, events) => {
+    notifyUsersForCamera(camera, events).catch((err) => {
+      console.error('[mqtt] Push notification dispatch failed:', err)
+    })
+  },
+)
+
+/**
+ * Parse a Frigate MQTT event payload into a FrigateEventInfo, or null
+ * if the message should be ignored (not a "new" event, or malformed).
+ */
+export function parseFrigateEvent(payload: Buffer): FrigateEventInfo | null {
+  try {
+    const msg = JSON.parse(payload.toString())
+    if (msg.type !== 'new') return null
+
+    const after = msg.after
+    if (
+      !after ||
+      typeof after.id !== 'string' ||
+      typeof after.camera !== 'string' ||
+      typeof after.label !== 'string' ||
+      typeof after.start_time !== 'number'
+    ) {
+      return null
+    }
+
+    return {
+      id: after.id,
+      camera: after.camera,
+      label: after.label,
+      startTime: after.start_time,
+    }
+  } catch {
+    return null
+  }
+}
+
 /**
  * Handle an incoming Frigate MQTT message.
  *
- * This function is the primary extension point for reacting to Frigate events.
- * Currently it clears the API cache so the next request fetches fresh data.
- * Future uses: real-time push to clients, notifications, event aggregation.
+ * Clears the API cache for all topics. For `frigate/events`, also parses
+ * the payload and feeds new events into the per-camera batcher for push
+ * notification dispatch.
  */
-export function onFrigateMessage(topic: string, _payload: Buffer): void {
+export function onFrigateMessage(topic: string, payload: Buffer): void {
   console.log(`[mqtt] Received message on ${topic} — clearing Frigate cache`)
   clearFrigateCache()
+
+  if (topic === 'frigate/events') {
+    const event = parseFrigateEvent(payload)
+    if (event) {
+      console.log(`[mqtt] New event: ${event.label} on ${event.camera} (${event.id})`)
+      eventBatcher.add(event)
+    }
+  }
 }
 
 /**

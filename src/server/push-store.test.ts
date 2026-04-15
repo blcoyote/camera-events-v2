@@ -130,6 +130,74 @@ describe('removeSubscriptionByEndpoint', () => {
   })
 })
 
+describe('getAllSubscribedUserIds', () => {
+  it('returns empty array when no subscriptions exist', () => {
+    expect(store.getAllSubscribedUserIds()).toEqual([])
+  })
+
+  it('returns distinct user IDs', () => {
+    store.saveSubscription('user1', 'https://push.example.com/1', 'k1', 'a1')
+    store.saveSubscription('user1', 'https://push.example.com/2', 'k2', 'a2')
+    store.saveSubscription('user2', 'https://push.example.com/3', 'k3', 'a3')
+
+    const ids = store.getAllSubscribedUserIds()
+    expect(ids).toHaveLength(2)
+    expect(ids).toContain('user1')
+    expect(ids).toContain('user2')
+  })
+})
+
+describe('camera notification preferences', () => {
+  it('defaults to enabled when no preference exists', () => {
+    expect(store.isCameraEnabledForUser('user1', 'front_porch')).toBe(true)
+  })
+
+  it('returns disabled cameras after setPreference(false)', () => {
+    store.setPreference('user1', 'front_porch', false)
+    expect(store.isCameraEnabledForUser('user1', 'front_porch')).toBe(false)
+    expect(store.getDisabledCameras('user1')).toEqual(['front_porch'])
+  })
+
+  it('re-enables a disabled camera', () => {
+    store.setPreference('user1', 'front_porch', false)
+    store.setPreference('user1', 'front_porch', true)
+    expect(store.isCameraEnabledForUser('user1', 'front_porch')).toBe(true)
+    expect(store.getDisabledCameras('user1')).toEqual([])
+  })
+
+  it('handles multiple cameras per user', () => {
+    store.setPreference('user1', 'front_porch', false)
+    store.setPreference('user1', 'driveway', false)
+    store.setPreference('user1', 'backyard', true)
+
+    const disabled = store.getDisabledCameras('user1')
+    expect(disabled).toHaveLength(2)
+    expect(disabled).toContain('front_porch')
+    expect(disabled).toContain('driveway')
+  })
+
+  it('isolates preferences between users', () => {
+    store.setPreference('user1', 'front_porch', false)
+    store.setPreference('user2', 'front_porch', true)
+
+    expect(store.isCameraEnabledForUser('user1', 'front_porch')).toBe(false)
+    expect(store.isCameraEnabledForUser('user2', 'front_porch')).toBe(true)
+  })
+
+  it('upserts preferences (does not create duplicate rows)', () => {
+    store.setPreference('user1', 'front_porch', true)
+    store.setPreference('user1', 'front_porch', false)
+    store.setPreference('user1', 'front_porch', true)
+
+    const rows = store.db
+      .prepare(
+        "SELECT * FROM push_notification_preferences WHERE user_id = ? AND category = 'camera' AND resource_id = ?",
+      )
+      .all('user1', 'front_porch')
+    expect(rows).toHaveLength(1)
+  })
+})
+
 describe('persistence across close/reopen', () => {
   it('retains subscriptions after closing and re-opening the database', () => {
     store.saveSubscription('user1', 'https://push.example.com/1', 'k1', 'a1')

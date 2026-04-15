@@ -1,5 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { usePushSubscription } from '#/hooks/usePushSubscription'
+
+interface CameraPref {
+  name: string
+  enabled: boolean
+}
 
 export function NotificationSettings() {
   const {
@@ -16,10 +21,34 @@ export function NotificationSettings() {
 
   const [testResult, setTestResult] = useState<string | null>(null)
   const [hasMounted, setHasMounted] = useState(false)
+  const [cameraPrefs, setCameraPrefs] = useState<CameraPref[]>([])
+  const [prefsLoading, setPrefsLoading] = useState(false)
 
   useEffect(() => {
     setHasMounted(true)
   }, [])
+
+  const loadPreferences = useCallback(async () => {
+    setPrefsLoading(true)
+    try {
+      const res = await fetch('/api/push/preferences')
+      if (res.ok) {
+        const data = await res.json()
+        setCameraPrefs(data.cameras ?? [])
+      }
+    } catch {
+      // Silently fail — preferences section will just not appear
+    } finally {
+      setPrefsLoading(false)
+    }
+  }, [])
+
+  // Load camera preferences when subscribed
+  useEffect(() => {
+    if (isSubscribed) {
+      loadPreferences()
+    }
+  }, [isSubscribed, loadPreferences])
 
   // Before the client effect runs, render a neutral placeholder so SSR
   // and initial client markup match (avoids hydration mismatch).
@@ -83,6 +112,31 @@ export function NotificationSettings() {
     }
   }
 
+  async function handleToggleCamera(camera: string, enabled: boolean) {
+    // Optimistic update
+    setCameraPrefs((prev) =>
+      prev.map((c) => (c.name === camera ? { ...c, enabled } : c)),
+    )
+    try {
+      const res = await fetch('/api/push/preferences', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ camera, enabled }),
+      })
+      if (!res.ok) {
+        // Revert on failure
+        setCameraPrefs((prev) =>
+          prev.map((c) => (c.name === camera ? { ...c, enabled: !enabled } : c)),
+        )
+      }
+    } catch {
+      // Revert on network error
+      setCameraPrefs((prev) =>
+        prev.map((c) => (c.name === camera ? { ...c, enabled: !enabled } : c)),
+      )
+    }
+  }
+
   return (
     <NotificationSection>
       <div className="flex flex-col gap-4">
@@ -112,6 +166,13 @@ export function NotificationSettings() {
                 {isLoading ? 'Sending...' : 'Send Test Notification'}
               </button>
             </div>
+            {cameraPrefs.length > 0 && (
+              <CameraPreferences
+                cameras={cameraPrefs}
+                loading={prefsLoading}
+                onToggle={handleToggleCamera}
+              />
+            )}
           </>
         ) : (
           <>
@@ -140,6 +201,65 @@ export function NotificationSettings() {
         </div>
       </div>
     </NotificationSection>
+  )
+}
+
+function formatCameraName(name: string): string {
+  return name
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, (c) => c.toUpperCase())
+}
+
+function CameraPreferences({
+  cameras,
+  loading,
+  onToggle,
+}: {
+  cameras: CameraPref[]
+  loading: boolean
+  onToggle: (camera: string, enabled: boolean) => void
+}) {
+  return (
+    <div className="mt-2 border-t border-(--chip-line) pt-5">
+      <h3 className="mb-3 text-sm font-semibold text-(--sea-ink)">
+        Camera Notifications
+      </h3>
+      <p className="mb-4 text-xs text-(--sea-ink-soft)">
+        Choose which cameras send you push notifications.
+      </p>
+      {loading ? (
+        <div className="h-6" />
+      ) : (
+        <ul className="flex flex-col gap-3">
+          {cameras.map((cam) => (
+            <li key={cam.name} className="flex items-center justify-between">
+              <span className="text-sm text-(--sea-ink)">
+                {formatCameraName(cam.name)}
+              </span>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={cam.enabled}
+                aria-label={`Notifications for ${formatCameraName(cam.name)}`}
+                onClick={() => onToggle(cam.name, !cam.enabled)}
+                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors ${
+                  cam.enabled
+                    ? 'bg-emerald-500'
+                    : 'bg-(--chip-line)'
+                }`}
+              >
+                <span
+                  aria-hidden="true"
+                  className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow ring-0 transition-transform ${
+                    cam.enabled ? 'translate-x-5' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   )
 }
 

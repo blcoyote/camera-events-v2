@@ -58,6 +58,100 @@ describe('onFrigateMessage', () => {
   })
 })
 
+describe('parseFrigateEvent', () => {
+  function makePayload(obj: unknown): Buffer {
+    return Buffer.from(JSON.stringify(obj))
+  }
+
+  it('parses a valid "new" event', async () => {
+    const { parseFrigateEvent } = await import('./mqtt')
+    const result = parseFrigateEvent(
+      makePayload({
+        type: 'new',
+        before: {},
+        after: {
+          id: '1713182400.123-abc',
+          camera: 'front_porch',
+          label: 'person',
+          start_time: 1713182400.123,
+          score: 0.87,
+          zones: ['yard'],
+        },
+      }),
+    )
+    expect(result).toEqual({
+      id: '1713182400.123-abc',
+      camera: 'front_porch',
+      label: 'person',
+      startTime: 1713182400.123,
+    })
+  })
+
+  it('returns null for "update" events', async () => {
+    const { parseFrigateEvent } = await import('./mqtt')
+    const result = parseFrigateEvent(
+      makePayload({
+        type: 'update',
+        after: { id: 'x', camera: 'c', label: 'person', start_time: 1 },
+      }),
+    )
+    expect(result).toBeNull()
+  })
+
+  it('returns null for "end" events', async () => {
+    const { parseFrigateEvent } = await import('./mqtt')
+    const result = parseFrigateEvent(
+      makePayload({
+        type: 'end',
+        after: { id: 'x', camera: 'c', label: 'person', start_time: 1 },
+      }),
+    )
+    expect(result).toBeNull()
+  })
+
+  it('returns null for invalid JSON', async () => {
+    const { parseFrigateEvent } = await import('./mqtt')
+    expect(parseFrigateEvent(Buffer.from('not json'))).toBeNull()
+  })
+
+  it('returns null when after is missing', async () => {
+    const { parseFrigateEvent } = await import('./mqtt')
+    expect(parseFrigateEvent(makePayload({ type: 'new' }))).toBeNull()
+  })
+
+  it('returns null when required fields are missing', async () => {
+    const { parseFrigateEvent } = await import('./mqtt')
+    // Missing id
+    expect(
+      parseFrigateEvent(makePayload({
+        type: 'new',
+        after: { camera: 'c', label: 'person', start_time: 1 },
+      })),
+    ).toBeNull()
+    // Missing camera
+    expect(
+      parseFrigateEvent(makePayload({
+        type: 'new',
+        after: { id: 'x', label: 'person', start_time: 1 },
+      })),
+    ).toBeNull()
+    // Missing label
+    expect(
+      parseFrigateEvent(makePayload({
+        type: 'new',
+        after: { id: 'x', camera: 'c', start_time: 1 },
+      })),
+    ).toBeNull()
+    // Non-numeric start_time
+    expect(
+      parseFrigateEvent(makePayload({
+        type: 'new',
+        after: { id: 'x', camera: 'c', label: 'person', start_time: 'bad' },
+      })),
+    ).toBeNull()
+  })
+})
+
 describe('startMqttSubscriber', () => {
   const originalMqttUrl = process.env.MQTT_URL
   const originalFrigateMock = process.env.FRIGATE_MOCK

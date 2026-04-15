@@ -12,31 +12,46 @@ describe('parsePushPayload', () => {
       body: 'Hello world',
       url: '/camera-events/123',
     })
-    expect(result).toEqual({
+    expect(result).toMatchObject({
       title: 'Test',
       body: 'Hello world',
       url: '/camera-events/123',
     })
   })
 
+  it('parses icon when provided', () => {
+    const result = parsePushPayload({
+      title: 'Test',
+      body: 'body',
+      url: '/',
+      icon: '/logo192.png',
+    })
+    expect(result.icon).toBe('/logo192.png')
+  })
+
+  it('returns undefined icon when not provided', () => {
+    const result = parsePushPayload({ title: 'Test', body: '', url: '/' })
+    expect(result.icon).toBeUndefined()
+  })
+
   it('returns defaults for null data', () => {
     const result = parsePushPayload(null)
-    expect(result).toEqual({ title: 'Notification', body: '', url: '/' })
+    expect(result).toMatchObject({ title: 'Notification', body: '', url: '/' })
   })
 
   it('returns defaults for undefined data', () => {
     const result = parsePushPayload(undefined)
-    expect(result).toEqual({ title: 'Notification', body: '', url: '/' })
+    expect(result).toMatchObject({ title: 'Notification', body: '', url: '/' })
   })
 
   it('returns defaults for non-object data', () => {
     const result = parsePushPayload('not an object')
-    expect(result).toEqual({ title: 'Notification', body: '', url: '/' })
+    expect(result).toMatchObject({ title: 'Notification', body: '', url: '/' })
   })
 
   it('falls back individual fields to defaults when missing', () => {
     const result = parsePushPayload({ title: 'Only Title' })
-    expect(result).toEqual({ title: 'Only Title', body: '', url: '/' })
+    expect(result).toMatchObject({ title: 'Only Title', body: '', url: '/' })
   })
 
   it('falls back title to default when empty string', () => {
@@ -51,7 +66,7 @@ describe('parsePushPayload', () => {
 })
 
 describe('buildNotificationOptions', () => {
-  it('builds options with body and data.url', () => {
+  it('builds options with body, icon, and data.url', () => {
     const result = buildNotificationOptions({
       title: 'Test',
       body: 'Hello',
@@ -59,8 +74,29 @@ describe('buildNotificationOptions', () => {
     })
     expect(result).toEqual({
       body: 'Hello',
+      icon: '/logo192.png',
       data: { url: '/events/42' },
     })
+  })
+
+  it('uses custom icon when provided', () => {
+    const result = buildNotificationOptions({
+      title: 'Test',
+      body: 'Hello',
+      url: '/events/42',
+      icon: '/custom-icon.png',
+    })
+    expect(result.icon).toBe('/custom-icon.png')
+  })
+
+  it('falls back to default icon when icon is undefined', () => {
+    const result = buildNotificationOptions({
+      title: 'Test',
+      body: 'Hello',
+      url: '/',
+      icon: undefined,
+    })
+    expect(result.icon).toBe('/logo192.png')
   })
 })
 
