@@ -16,4 +16,4 @@ public/sw.js
 *storybook.log
 storybook-static
 
-data/
+/data/
