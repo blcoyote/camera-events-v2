@@ -1,6 +1,14 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
 import { handleSnapshotRequest } from './-snapshot-proxy'
 
+// Ensure mock mode is off for real client tests
+const _savedFrigateMock = process.env.FRIGATE_MOCK
+beforeEach(() => { delete process.env.FRIGATE_MOCK })
+afterEach(() => {
+  if (_savedFrigateMock === undefined) delete process.env.FRIGATE_MOCK
+  else process.env.FRIGATE_MOCK = _savedFrigateMock
+})
+
 const FRIGATE_URL = 'http://frigate.local:5000'
 
 function mockFetchBinary(buffer: ArrayBuffer, status = 200) {

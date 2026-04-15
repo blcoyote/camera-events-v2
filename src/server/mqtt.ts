@@ -26,6 +26,11 @@ export function onFrigateMessage(topic: string, _payload: Buffer): void {
  * Returns the MQTT client for graceful shutdown, or `null` if skipped.
  */
 export function startMqttSubscriber(): MqttClient | null {
+  if (process.env.FRIGATE_MOCK === 'true') {
+    console.log('[mqtt] FRIGATE_MOCK enabled — skipping MQTT subscriber')
+    return null
+  }
+
   const url = process.env.MQTT_URL
   if (!url) {
     console.log('[mqtt] MQTT_URL not set — skipping MQTT subscriber')

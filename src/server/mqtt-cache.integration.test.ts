@@ -9,6 +9,14 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
 import { frigateCache, clearFrigateCache } from './frigate/cache'
 
+// Ensure mock mode is off for integration tests
+const _savedFrigateMock = process.env.FRIGATE_MOCK
+beforeEach(() => { delete process.env.FRIGATE_MOCK })
+afterEach(() => {
+  if (_savedFrigateMock === undefined) delete process.env.FRIGATE_MOCK
+  else process.env.FRIGATE_MOCK = _savedFrigateMock
+})
+
 const FRIGATE_URL = 'http://frigate.local:5000'
 
 // --- Mock only the mqtt transport layer ---

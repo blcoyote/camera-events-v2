@@ -1,12 +1,20 @@
+import {
+  useEventLimit,
+  MIN_EVENT_LIMIT,
+  MAX_EVENT_LIMIT,
+  EVENT_LIMIT_STEP,
+} from '#/hooks/useEventLimit'
+
 export function getSettingsContent(): { heading: string; description: string } {
   return {
     heading: 'Settings',
-    description: 'Account preferences and camera configuration will appear here.',
+    description: 'Account preferences and camera configuration.',
   }
 }
 
 export function SettingsPage() {
   const content = getSettingsContent()
+  const [eventLimit, setEventLimit] = useEventLimit()
 
   return (
     <main id="main-content" className="page-wrap px-4 pb-8 pt-14">
@@ -20,6 +28,47 @@ export function SettingsPage() {
         <p className="mb-8 max-w-2xl text-base text-(--sea-ink-soft) sm:text-lg">
           {content.description}
         </p>
+      </section>
+
+      <section className="island-shell mt-6 rounded-4xl px-6 py-8 sm:px-10 sm:py-10">
+        <h2 className="mb-6 text-lg font-semibold text-(--sea-ink)">
+          Camera Events
+        </h2>
+
+        <div className="flex flex-col gap-3">
+          <label
+            htmlFor="event-limit-slider"
+            className="text-sm font-medium text-(--sea-ink)"
+          >
+            Number of events to display
+          </label>
+          <div className="flex items-center gap-4">
+            <input
+              id="event-limit-slider"
+              type="range"
+              min={MIN_EVENT_LIMIT}
+              max={MAX_EVENT_LIMIT}
+              step={EVENT_LIMIT_STEP}
+              value={eventLimit}
+              onChange={(e) => setEventLimit(Number(e.target.value))}
+              aria-label="Number of events to display"
+              aria-valuemin={MIN_EVENT_LIMIT}
+              aria-valuemax={MAX_EVENT_LIMIT}
+              aria-valuenow={eventLimit}
+              className="h-2 flex-1 cursor-pointer appearance-none rounded-full bg-(--chip-line) accent-(--sea-accent)"
+            />
+            <span
+              className="min-w-16 rounded-lg border border-(--chip-line) bg-(--chip-bg) px-3 py-1.5 text-center text-sm font-medium text-(--sea-ink) tabular-nums"
+              aria-live="polite"
+            >
+              {eventLimit} events
+            </span>
+          </div>
+          <p className="text-xs text-(--sea-ink-soft)">
+            Controls how many events are loaded on the Camera Events page.
+            Range: {MIN_EVENT_LIMIT}–{MAX_EVENT_LIMIT}.
+          </p>
+        </div>
       </section>
     </main>
   )

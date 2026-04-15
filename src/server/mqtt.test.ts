@@ -59,24 +59,40 @@ describe('onFrigateMessage', () => {
 })
 
 describe('startMqttSubscriber', () => {
-  const originalEnv = process.env.MQTT_URL
+  const originalMqttUrl = process.env.MQTT_URL
+  const originalFrigateMock = process.env.FRIGATE_MOCK
 
   afterEach(() => {
-    if (originalEnv === undefined) {
+    if (originalMqttUrl === undefined) {
       delete process.env.MQTT_URL
     } else {
-      process.env.MQTT_URL = originalEnv
+      process.env.MQTT_URL = originalMqttUrl
     }
+    if (originalFrigateMock === undefined) {
+      delete process.env.FRIGATE_MOCK
+    } else {
+      process.env.FRIGATE_MOCK = originalFrigateMock
+    }
+  })
+
+  it('returns null when FRIGATE_MOCK is enabled', async () => {
+    process.env.FRIGATE_MOCK = 'true'
+    process.env.MQTT_URL = 'mqtt://localhost:1883'
+    const { startMqttSubscriber } = await import('./mqtt')
+    const result = startMqttSubscriber()
+    expect(result).toBeNull()
   })
 
   it('returns null when MQTT_URL is not set', async () => {
     delete process.env.MQTT_URL
+    delete process.env.FRIGATE_MOCK
     const { startMqttSubscriber } = await import('./mqtt')
     const result = startMqttSubscriber()
     expect(result).toBeNull()
   })
 
   it('connects and subscribes when MQTT_URL is set', async () => {
+    delete process.env.FRIGATE_MOCK
     process.env.MQTT_URL = 'mqtt://localhost:1883'
     const mqtt = await import('mqtt')
     const { startMqttSubscriber } = await import('./mqtt')
@@ -103,6 +119,7 @@ describe('startMqttSubscriber', () => {
   })
 
   it('wires onFrigateMessage as the message handler', async () => {
+    delete process.env.FRIGATE_MOCK
     process.env.MQTT_URL = 'mqtt://localhost:1883'
     const { startMqttSubscriber } = await import('./mqtt')
 

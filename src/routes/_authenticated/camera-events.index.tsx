@@ -7,15 +7,18 @@ import {
 } from '#/pages/camera-events/CameraEventsListPage'
 import type { FrigateResult } from '#/server/frigate/config'
 import type { FrigateEvent } from '#/server/frigate/types'
+import { readEventLimit } from '#/hooks/useEventLimit'
 
-const loadEvents = createServerFn({ method: 'GET' }).handler(
-  async (): Promise<FrigateResult<FrigateEvent[]>> => {
-    return getEvents({ limit: 50, include_thumbnails: false })
-  },
-)
+const loadEvents = createServerFn({ method: 'GET' })
+  .inputValidator((data: { limit: number }) => data)
+  .handler(
+    async ({ data }): Promise<FrigateResult<FrigateEvent[]>> => {
+      return getEvents({ limit: data.limit, include_thumbnails: false })
+    },
+  )
 
 export const Route = createFileRoute('/_authenticated/camera-events/')({
-  loader: () => loadEvents(),
+  loader: () => loadEvents({ data: { limit: readEventLimit() } }),
   pendingComponent: CameraEventsLoading,
   component: CameraEventsRoute,
 })
