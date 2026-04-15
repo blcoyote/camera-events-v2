@@ -36,7 +36,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
         content: 'width=device-width, initial-scale=1',
       },
       {
-        title: 'TanStack Start Starter',
+        title: 'camera-events-v2',
       },
       {
         name: 'theme-color',
@@ -52,7 +52,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       },
       {
         name: 'apple-mobile-web-app-title',
-        content: 'TanStack App',
+        content: 'camera-events-v2',
       },
     ],
     links: [
