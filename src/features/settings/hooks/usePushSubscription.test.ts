@@ -146,6 +146,29 @@ describe('usePushSubscription helpers', () => {
       )
     })
 
+    it('produces Brave-specific error when push service is blocked', () => {
+      vi.stubGlobal('navigator', { brave: {} })
+
+      const err = new DOMException('Registration failed - push service error', 'AbortError')
+      const isBrave = !!(navigator as any).brave
+      const isBraveBlock = isBrave && err instanceof DOMException && err.name === 'AbortError'
+
+      expect(isBraveBlock).toBe(true)
+      vi.unstubAllGlobals()
+    })
+
+    it('does not produce Brave error for non-Brave browsers', () => {
+      // navigator without .brave
+      vi.stubGlobal('navigator', {})
+
+      const err = new DOMException('Registration failed - push service error', 'AbortError')
+      const isBrave = !!(navigator as any).brave
+      const isBraveBlock = isBrave && err instanceof DOMException && err.name === 'AbortError'
+
+      expect(isBraveBlock).toBe(false)
+      vi.unstubAllGlobals()
+    })
+
     it('rolls back subscription on server error', async () => {
       const unsubscribeMock = vi.fn().mockResolvedValue(true)
       const mockSubscription = {

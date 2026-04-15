@@ -6,7 +6,6 @@ import {
 } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
-import Footer from '#/features/shell/components/Footer'
 import Header from '#/features/shell/components/Header'
 import { ServiceWorkerRegistration } from '#/features/shell/components/ServiceWorkerRegistration'
 import { getCurrentUserFn } from '#/features/auth/server/auth'
@@ -43,7 +42,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
         content: '#173a40',
       },
       {
-        name: 'apple-mobile-web-app-capable',
+        name: 'mobile-web-app-capable',
         content: 'yes',
       },
       {
@@ -112,7 +111,6 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         </a>
         <Header />
         {children}
-        <Footer />
         <TanStackDevtools
           config={{
             position: 'bottom-right',

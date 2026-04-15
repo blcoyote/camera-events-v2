@@ -128,7 +128,14 @@ export function usePushSubscription(): UsePushSubscriptionReturn {
       setCurrentSubscription(subscription)
       setIsSubscribed(true)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to subscribe')
+      const isBrave = !!(navigator as any).brave
+      if (isBrave && err instanceof DOMException && err.name === 'AbortError') {
+        setError(
+          'Brave blocks push notifications by default. Enable "Use Google services for push messaging" in brave://settings/privacy, then try again.',
+        )
+      } else {
+        setError(err instanceof Error ? err.message : 'Failed to subscribe')
+      }
     } finally {
       setIsLoading(false)
     }
