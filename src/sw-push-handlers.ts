@@ -44,6 +44,7 @@ export function buildNotificationOptions(payload: PushPayload): NotificationOpti
 
 /**
  * Extract the click target URL from notification data.
+ * Only allows relative paths starting with "/" to prevent open redirect attacks.
  */
 export function getNotificationClickUrl(notificationData: unknown): string {
   if (
@@ -52,7 +53,10 @@ export function getNotificationClickUrl(notificationData: unknown): string {
     'url' in notificationData &&
     typeof (notificationData as Record<string, unknown>).url === 'string'
   ) {
-    return (notificationData as Record<string, unknown>).url as string
+    const url = (notificationData as Record<string, unknown>).url as string
+    if (url.startsWith('/') && !url.startsWith('//') && !url.startsWith('/\\')) {
+      return url
+    }
   }
   return '/'
 }

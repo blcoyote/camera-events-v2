@@ -85,4 +85,21 @@ describe('getNotificationClickUrl', () => {
   it('returns "/" when url is not a string', () => {
     expect(getNotificationClickUrl({ url: 42 })).toBe('/')
   })
+
+  it('rejects absolute URLs (open redirect)', () => {
+    expect(getNotificationClickUrl({ url: 'https://attacker.com' })).toBe('/')
+  })
+
+  it('rejects protocol-relative URLs', () => {
+    expect(getNotificationClickUrl({ url: '//evil.com/path' })).toBe('/')
+  })
+
+  it('rejects backslash-based URLs', () => {
+    expect(getNotificationClickUrl({ url: '/\\evil.com' })).toBe('/')
+  })
+
+  it('allows valid relative paths', () => {
+    expect(getNotificationClickUrl({ url: '/events/42' })).toBe('/events/42')
+    expect(getNotificationClickUrl({ url: '/' })).toBe('/')
+  })
 })

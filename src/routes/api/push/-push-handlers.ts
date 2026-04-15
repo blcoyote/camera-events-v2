@@ -33,19 +33,35 @@ export async function handleSubscribe(
     return { status: 400, body: { error: 'Invalid subscription: endpoint and keys are required' } }
   }
 
+  // Validate endpoint is an HTTPS URL (push services always use HTTPS)
+  let parsedUrl: URL
+  try {
+    parsedUrl = new URL(endpoint)
+  } catch {
+    return { status: 400, body: { error: 'Invalid subscription endpoint URL' } }
+  }
+  if (parsedUrl.protocol !== 'https:') {
+    return { status: 400, body: { error: 'Subscription endpoint must use HTTPS' } }
+  }
+
   getPushStore().saveSubscription(userId, endpoint, p256dh, auth)
   return { status: 200, body: { ok: true } }
 }
 
 export async function handleUnsubscribe(
   userId: string | null,
-  body: { endpoint: string },
+  body: Record<string, unknown>,
 ): Promise<HandlerResult> {
   if (!userId) {
     return { status: 401, body: { error: 'Unauthorized' } }
   }
 
-  getPushStore().removeSubscription(userId, body.endpoint)
+  const endpoint = typeof body.endpoint === 'string' ? body.endpoint : ''
+  if (!endpoint) {
+    return { status: 400, body: { error: 'Invalid request: endpoint is required' } }
+  }
+
+  getPushStore().removeSubscription(userId, endpoint)
   return { status: 200, body: { ok: true } }
 }
 

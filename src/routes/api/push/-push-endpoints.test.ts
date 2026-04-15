@@ -79,6 +79,28 @@ describe('handleSubscribe', () => {
     const result = await handleSubscribe('user1', { endpoint: '', keys: { p256dh: '', auth: '' } })
     expect(result.status).toBe(400)
   })
+
+  it('returns 400 for non-HTTPS endpoint', async () => {
+    vi.mocked(isPushEnabled).mockReturnValue(true)
+
+    const result = await handleSubscribe('user1', {
+      endpoint: 'http://push.example.com/sub1',
+      keys: { p256dh: 'p-key', auth: 'a-key' },
+    })
+    expect(result.status).toBe(400)
+    expect(result.body).toMatchObject({ error: expect.stringContaining('HTTPS') })
+  })
+
+  it('returns 400 for invalid endpoint URL', async () => {
+    vi.mocked(isPushEnabled).mockReturnValue(true)
+
+    const result = await handleSubscribe('user1', {
+      endpoint: 'not-a-url',
+      keys: { p256dh: 'p-key', auth: 'a-key' },
+    })
+    expect(result.status).toBe(400)
+    expect(result.body).toMatchObject({ error: expect.stringContaining('endpoint URL') })
+  })
 })
 
 describe('handleUnsubscribe', () => {
@@ -96,6 +118,18 @@ describe('handleUnsubscribe', () => {
 
     expect(result.status).toBe(200)
     expect(mockRemove).toHaveBeenCalledWith('user1', 'https://push.example.com/sub1')
+  })
+
+  it('returns 400 when endpoint is missing', async () => {
+    const result = await handleUnsubscribe('user1', {})
+    expect(result.status).toBe(400)
+    expect(result.body).toMatchObject({ error: expect.stringContaining('endpoint') })
+  })
+
+  it('returns 400 when endpoint is not a string', async () => {
+    const result = await handleUnsubscribe('user1', { endpoint: 123 })
+    expect(result.status).toBe(400)
+    expect(result.body).toMatchObject({ error: expect.stringContaining('endpoint') })
   })
 })
 
