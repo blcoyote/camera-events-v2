@@ -13,7 +13,7 @@ export interface FrigateEventInfo {
   startTime: number
 }
 
-export type FlushCallback = (camera: string, events: FrigateEventInfo[]) => void
+type FlushCallback = (camera: string, events: FrigateEventInfo[]) => void
 
 export class EventBatcher {
   private buffers = new Map<string, FrigateEventInfo[]>()

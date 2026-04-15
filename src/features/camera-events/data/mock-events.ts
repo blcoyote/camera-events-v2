@@ -2,7 +2,7 @@ import type { FrigateEvent } from '#/features/shared/server/frigate/types'
 
 // ─── Legacy types (used by detail page) ───
 
-export interface CameraEvent {
+interface CameraEvent {
   id: string
   title: string
   timestamp: string

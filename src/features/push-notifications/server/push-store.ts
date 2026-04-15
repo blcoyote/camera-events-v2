@@ -13,11 +13,6 @@ export interface PushSubscriptionRow {
   created_at: string
 }
 
-export interface CameraPreference {
-  camera: string
-  enabled: boolean
-}
-
 export interface PushStore {
   db: Database.Database
   saveSubscription: (userId: string, endpoint: string, p256dh: string, auth: string) => void
