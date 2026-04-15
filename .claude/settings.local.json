@@ -13,7 +13,9 @@
       "Bash(npx tsr:*)",
       "Bash(pnpm vitest *)",
       "Bash(pnpm lint *)",
-      "Bash(pnpm build *)"
+      "Bash(pnpm build *)",
+      "Bash(pnpm tsc *)",
+      "Bash(pnpm test *)"
     ]
   }
 }

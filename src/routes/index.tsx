@@ -1,6 +1,6 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
-import { HomePage } from '#/pages/home/HomePage'
-import type { SessionData } from '../server/session'
+import { HomePage } from '#/features/home/components/HomePage'
+import type { SessionData } from '#/features/shared/server/session'
 
 export function getHomeRedirect(user: SessionData | null): string | null {
   if (user) return '/camera-events'

@@ -6,11 +6,11 @@ import {
 } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
-import Footer from '../components/Footer'
-import Header from '../components/Header'
-import { ServiceWorkerRegistration } from '../components/ServiceWorkerRegistration'
-import { getCurrentUserFn } from '../server/auth'
-import type { SessionData } from '../server/session'
+import Footer from '#/features/shell/components/Footer'
+import Header from '#/features/shell/components/Header'
+import { ServiceWorkerRegistration } from '#/features/shell/components/ServiceWorkerRegistration'
+import { getCurrentUserFn } from '#/features/auth/server/auth'
+import type { SessionData } from '#/features/shared/server/session'
 
 import appCss from '../styles.css?url'
 

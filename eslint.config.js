@@ -15,5 +15,5 @@ export default [...tanstackConfig, {
     'pnpm/json-enforce-catalog': 'off',
   },
 }, {
-  ignores: ['eslint.config.js', 'prettier.config.js', 'storybook-static'],
+  ignores: ['eslint.config.js', 'prettier.config.js', 'storybook-static', 'public/sw.js'],
 }, ...storybook.configs["flat/recommended"]];

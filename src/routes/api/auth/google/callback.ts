@@ -10,16 +10,16 @@ import {
   getAppOrigin,
   validateIdTokenClaims,
   parseIdTokenClaims,
-} from '#/server/google-oauth'
+} from '#/features/auth/server/google-oauth'
 import {
   parseOAuthState,
   OAUTH_STATE_COOKIE_NAME,
   sanitizeReturnTo,
   redirectTo,
-} from '#/server/auth'
-import { decryptOAuthState } from '#/server/auth-crypto'
-import { getSessionConfig  } from '#/server/session'
-import type {SessionData} from '#/server/session';
+} from '#/features/auth/server/auth'
+import { decryptOAuthState } from '#/features/auth/server/auth-crypto'
+import { getSessionConfig  } from '#/features/shared/server/session'
+import type {SessionData} from '#/features/shared/server/session';
 
 export const Route = createFileRoute('/api/auth/google/callback')({
   server: {

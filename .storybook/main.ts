@@ -40,9 +40,9 @@ const config: StorybookConfig = {
     '@storybook/addon-docs',
   ],
   framework: '@storybook/react-vite',
-  viteFinal(config) {
-    config.plugins = filterPlugins((config.plugins ?? []))
-    return config
+  viteFinal(viteConfig) {
+    viteConfig.plugins = filterPlugins(viteConfig.plugins ?? [])
+    return viteConfig
   },
 }
 export default config

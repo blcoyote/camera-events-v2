@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { getAuthRedirect } from './_authenticated'
-import type { SessionData } from '../server/session'
+import type { SessionData } from '#/features/shared/server/session'
 
 describe('getAuthRedirect', () => {
   it('returns null when user is present (no redirect needed)', () => {

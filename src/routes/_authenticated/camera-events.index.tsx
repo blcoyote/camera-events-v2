@@ -1,13 +1,13 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { createServerFn } from '@tanstack/react-start'
-import { getEvents } from '#/server/frigate/client'
+import { getEvents } from '#/features/shared/server/frigate/client'
 import {
   CameraEventsListPage,
   CameraEventsLoading,
-} from '#/pages/camera-events/CameraEventsListPage'
-import type { FrigateResult } from '#/server/frigate/config'
-import type { FrigateEvent } from '#/server/frigate/types'
-import { readEventLimit } from '#/hooks/useEventLimit'
+} from '#/features/camera-events/components/CameraEventsListPage'
+import type { FrigateResult } from '#/features/shared/server/frigate/config'
+import type { FrigateEvent } from '#/features/shared/server/frigate/types'
+import { readEventLimit } from '#/features/shared/hooks/useEventLimit'
 
 const loadEvents = createServerFn({ method: 'GET' })
   .inputValidator((data: { limit: number }) => data)

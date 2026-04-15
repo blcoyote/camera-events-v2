@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { getCamerasPageState, getCameraCardData } from '#/pages/cameras/CamerasPage'
-import type { FrigateResult } from '#/server/frigate/config'
+import { getCamerasPageState, getCameraCardData } from '#/features/cameras/components/CamerasPage'
+import type { FrigateResult } from '#/features/shared/server/frigate/config'
 
 describe('getCamerasPageState', () => {
   it('returns "cameras" state with camera list on success', () => {

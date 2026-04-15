@@ -6,7 +6,7 @@ import {
   RouterProvider,
   Outlet,
 } from '@tanstack/react-router'
-import type { SessionData } from '../../src/server/session'
+import type { SessionData } from '../../src/features/shared/server/session'
 
 interface RouterContext {
   user: SessionData | null

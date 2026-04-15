@@ -6,22 +6,22 @@ import {
   handleTest,
   handleGetPreferences,
   handleSetPreference,
-} from './-push-handlers'
-import { isPushEnabled, getVapidPublicKey, sendPushNotification } from '#/server/push'
-import { getPushStore } from '#/server/push-store'
-import { getCameras } from '#/server/frigate/client'
+} from '#/features/push-notifications/server/push-handlers'
+import { isPushEnabled, getVapidPublicKey, sendPushNotification } from '#/features/push-notifications/server/push'
+import { getPushStore } from '#/features/push-notifications/server/push-store'
+import { getCameras } from '#/features/shared/server/frigate/client'
 
-vi.mock('#/server/push', () => ({
+vi.mock('#/features/push-notifications/server/push', () => ({
   isPushEnabled: vi.fn(),
   getVapidPublicKey: vi.fn(),
   sendPushNotification: vi.fn(),
 }))
 
-vi.mock('#/server/push-store', () => ({
+vi.mock('#/features/push-notifications/server/push-store', () => ({
   getPushStore: vi.fn(),
 }))
 
-vi.mock('#/server/frigate/client', () => ({
+vi.mock('#/features/shared/server/frigate/client', () => ({
   getCameras: vi.fn(),
 }))
 

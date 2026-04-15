@@ -1,5 +1,5 @@
 import { createFileRoute, Outlet, redirect } from '@tanstack/react-router'
-import type { SessionData } from '../server/session'
+import type { SessionData } from '#/features/shared/server/session'
 
 /**
  * Pure function: determine redirect path for unauthenticated users.

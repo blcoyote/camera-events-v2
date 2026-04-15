@@ -7,8 +7,8 @@ import {
   formatRelativeTime,
   formatLabelName,
   getLabelDotColor,
-} from '#/pages/camera-events/CameraEventsListPage'
-import type { FrigateEvent } from '#/server/frigate/types'
+} from '#/features/camera-events/components/CameraEventsListPage'
+import type { FrigateEvent } from '#/features/shared/server/frigate/types'
 
 function makeEvent(overrides: Partial<FrigateEvent> = {}): FrigateEvent {
   return {

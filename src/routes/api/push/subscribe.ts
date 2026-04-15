@@ -1,8 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useSession } from '@tanstack/react-start/server'
-import { getSessionConfig } from '#/server/session'
-import type { SessionData } from '#/server/session'
-import { handleSubscribe } from './-push-handlers'
+import { getSessionConfig } from '#/features/shared/server/session'
+import type { SessionData } from '#/features/shared/server/session'
+import { handleSubscribe } from '#/features/push-notifications/server/push-handlers'
 
 export const Route = createFileRoute('/api/push/subscribe')({
   server: {

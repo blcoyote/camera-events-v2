@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { getHomeRedirect } from './index'
-import type { SessionData } from '../server/session'
+import type { SessionData } from '#/features/shared/server/session'
 
 describe('getHomeRedirect', () => {
   it('returns null when user is null (no redirect)', () => {

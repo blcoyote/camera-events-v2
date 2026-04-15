@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { clearSession } from '@tanstack/react-start/server'
-import { getSessionConfig } from '#/server/session'
-import { redirectTo } from '#/server/auth'
+import { getSessionConfig } from '#/features/shared/server/session'
+import { redirectTo } from '#/features/auth/server/auth'
 
 export const Route = createFileRoute('/api/auth/logout')({
   server: {

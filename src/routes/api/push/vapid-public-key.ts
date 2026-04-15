@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { handleVapidPublicKey } from './-push-handlers'
+import { handleVapidPublicKey } from '#/features/push-notifications/server/push-handlers'
 
 export const Route = createFileRoute('/api/push/vapid-public-key')({
   server: {
