@@ -4,6 +4,7 @@ import {
   MAX_EVENT_LIMIT,
   EVENT_LIMIT_STEP,
 } from '#/hooks/useEventLimit'
+import { NotificationSettings } from './NotificationSettings'
 
 export function getSettingsContent(): { heading: string; description: string } {
   return {
@@ -70,6 +71,7 @@ export function SettingsPage() {
           </p>
         </div>
       </section>
+      <NotificationSettings />
     </main>
   )
 }

@@ -6,10 +6,48 @@ import {
   Serwist,
   StaleWhileRevalidate,
 } from 'serwist'
+import {
+  parsePushPayload,
+  buildNotificationOptions,
+  getNotificationClickUrl,
+} from './sw-push-handlers'
 
 declare global {
   interface WorkerGlobalScope extends SerwistGlobalConfig {
     __SW_MANIFEST: (PrecacheEntry | string)[] | undefined
+    readonly clients: Clients
+    readonly registration: ServiceWorkerRegistration
+    addEventListener: {
+      (type: 'push', listener: (event: PushEvent) => void): void
+      (type: 'notificationclick', listener: (event: NotificationEvent) => void): void
+    }
+  }
+
+  interface Clients {
+    matchAll: (options?: { type?: string; includeUncontrolled?: boolean }) => Promise<WindowClient[]>
+    openWindow: (url: string) => Promise<WindowClient | null>
+  }
+
+  interface WindowClient {
+    focus: () => Promise<WindowClient>
+    navigate: (url: string) => Promise<WindowClient | null>
+  }
+
+  interface PushEvent extends ExtendableEvent {
+    readonly data: PushMessageData | null
+  }
+
+  interface PushMessageData {
+    json: () => unknown
+    text: () => string
+  }
+
+  interface NotificationEvent extends ExtendableEvent {
+    readonly notification: Notification & { data: unknown }
+  }
+
+  interface ExtendableEvent extends Event {
+    waitUntil: (promise: Promise<unknown>) => void
   }
 }
 
@@ -76,3 +114,40 @@ const serwist = new Serwist({
 })
 
 serwist.addEventListeners()
+
+// --- Web Push handlers ---
+
+self.addEventListener('push', (event: PushEvent) => {
+  let data: unknown
+  try {
+    data = event.data?.json()
+  } catch {
+    data = null
+  }
+
+  const payload = parsePushPayload(data)
+  const options = buildNotificationOptions(payload)
+
+  event.waitUntil(self.registration.showNotification(payload.title, options))
+})
+
+self.addEventListener('notificationclick', (event: NotificationEvent) => {
+  event.notification.close()
+
+  const url = getNotificationClickUrl(event.notification.data)
+
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      // Focus an existing window if one is open
+      for (const client of clientList) {
+        if ('focus' in client) {
+          client.focus()
+          client.navigate(url)
+          return
+        }
+      }
+      // Otherwise open a new window
+      return self.clients.openWindow(url)
+    }),
+  )
+})

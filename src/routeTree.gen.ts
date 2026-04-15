@@ -14,6 +14,10 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedCamerasRouteImport } from './routes/_authenticated/cameras'
 import { Route as AuthenticatedCameraEventsIndexRouteImport } from './routes/_authenticated/camera-events.index'
+import { Route as ApiPushVapidPublicKeyRouteImport } from './routes/api/push/vapid-public-key'
+import { Route as ApiPushUnsubscribeRouteImport } from './routes/api/push/unsubscribe'
+import { Route as ApiPushTestRouteImport } from './routes/api/push/test'
+import { Route as ApiPushSubscribeRouteImport } from './routes/api/push/subscribe'
 import { Route as ApiAuthLogoutRouteImport } from './routes/api/auth/logout'
 import { Route as ApiAuthGoogleRouteImport } from './routes/api/auth/google'
 import { Route as AuthenticatedCameraEventsIdRouteImport } from './routes/_authenticated/camera-events.$id'
@@ -48,6 +52,26 @@ const AuthenticatedCameraEventsIndexRoute =
     path: '/camera-events/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const ApiPushVapidPublicKeyRoute = ApiPushVapidPublicKeyRouteImport.update({
+  id: '/api/push/vapid-public-key',
+  path: '/api/push/vapid-public-key',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPushUnsubscribeRoute = ApiPushUnsubscribeRouteImport.update({
+  id: '/api/push/unsubscribe',
+  path: '/api/push/unsubscribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPushTestRoute = ApiPushTestRouteImport.update({
+  id: '/api/push/test',
+  path: '/api/push/test',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPushSubscribeRoute = ApiPushSubscribeRouteImport.update({
+  id: '/api/push/subscribe',
+  path: '/api/push/subscribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAuthLogoutRoute = ApiAuthLogoutRouteImport.update({
   id: '/api/auth/logout',
   path: '/api/auth/logout',
@@ -97,6 +121,10 @@ export interface FileRoutesByFullPath {
   '/camera-events/$id': typeof AuthenticatedCameraEventsIdRoute
   '/api/auth/google': typeof ApiAuthGoogleRouteWithChildren
   '/api/auth/logout': typeof ApiAuthLogoutRoute
+  '/api/push/subscribe': typeof ApiPushSubscribeRoute
+  '/api/push/test': typeof ApiPushTestRoute
+  '/api/push/unsubscribe': typeof ApiPushUnsubscribeRoute
+  '/api/push/vapid-public-key': typeof ApiPushVapidPublicKeyRoute
   '/camera-events/': typeof AuthenticatedCameraEventsIndexRoute
   '/api/auth/google/callback': typeof ApiAuthGoogleCallbackRoute
   '/api/cameras/$name/latest': typeof ApiCamerasNameLatestRoute
@@ -111,6 +139,10 @@ export interface FileRoutesByTo {
   '/camera-events/$id': typeof AuthenticatedCameraEventsIdRoute
   '/api/auth/google': typeof ApiAuthGoogleRouteWithChildren
   '/api/auth/logout': typeof ApiAuthLogoutRoute
+  '/api/push/subscribe': typeof ApiPushSubscribeRoute
+  '/api/push/test': typeof ApiPushTestRoute
+  '/api/push/unsubscribe': typeof ApiPushUnsubscribeRoute
+  '/api/push/vapid-public-key': typeof ApiPushVapidPublicKeyRoute
   '/camera-events': typeof AuthenticatedCameraEventsIndexRoute
   '/api/auth/google/callback': typeof ApiAuthGoogleCallbackRoute
   '/api/cameras/$name/latest': typeof ApiCamerasNameLatestRoute
@@ -127,6 +159,10 @@ export interface FileRoutesById {
   '/_authenticated/camera-events/$id': typeof AuthenticatedCameraEventsIdRoute
   '/api/auth/google': typeof ApiAuthGoogleRouteWithChildren
   '/api/auth/logout': typeof ApiAuthLogoutRoute
+  '/api/push/subscribe': typeof ApiPushSubscribeRoute
+  '/api/push/test': typeof ApiPushTestRoute
+  '/api/push/unsubscribe': typeof ApiPushUnsubscribeRoute
+  '/api/push/vapid-public-key': typeof ApiPushVapidPublicKeyRoute
   '/_authenticated/camera-events/': typeof AuthenticatedCameraEventsIndexRoute
   '/api/auth/google/callback': typeof ApiAuthGoogleCallbackRoute
   '/api/cameras/$name/latest': typeof ApiCamerasNameLatestRoute
@@ -143,6 +179,10 @@ export interface FileRouteTypes {
     | '/camera-events/$id'
     | '/api/auth/google'
     | '/api/auth/logout'
+    | '/api/push/subscribe'
+    | '/api/push/test'
+    | '/api/push/unsubscribe'
+    | '/api/push/vapid-public-key'
     | '/camera-events/'
     | '/api/auth/google/callback'
     | '/api/cameras/$name/latest'
@@ -157,6 +197,10 @@ export interface FileRouteTypes {
     | '/camera-events/$id'
     | '/api/auth/google'
     | '/api/auth/logout'
+    | '/api/push/subscribe'
+    | '/api/push/test'
+    | '/api/push/unsubscribe'
+    | '/api/push/vapid-public-key'
     | '/camera-events'
     | '/api/auth/google/callback'
     | '/api/cameras/$name/latest'
@@ -172,6 +216,10 @@ export interface FileRouteTypes {
     | '/_authenticated/camera-events/$id'
     | '/api/auth/google'
     | '/api/auth/logout'
+    | '/api/push/subscribe'
+    | '/api/push/test'
+    | '/api/push/unsubscribe'
+    | '/api/push/vapid-public-key'
     | '/_authenticated/camera-events/'
     | '/api/auth/google/callback'
     | '/api/cameras/$name/latest'
@@ -185,6 +233,10 @@ export interface RootRouteChildren {
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   ApiAuthGoogleRoute: typeof ApiAuthGoogleRouteWithChildren
   ApiAuthLogoutRoute: typeof ApiAuthLogoutRoute
+  ApiPushSubscribeRoute: typeof ApiPushSubscribeRoute
+  ApiPushTestRoute: typeof ApiPushTestRoute
+  ApiPushUnsubscribeRoute: typeof ApiPushUnsubscribeRoute
+  ApiPushVapidPublicKeyRoute: typeof ApiPushVapidPublicKeyRoute
   ApiCamerasNameLatestRoute: typeof ApiCamerasNameLatestRoute
   ApiEventsIdClipRoute: typeof ApiEventsIdClipRoute
   ApiEventsIdSnapshotRoute: typeof ApiEventsIdSnapshotRoute
@@ -227,6 +279,34 @@ declare module '@tanstack/react-router' {
       fullPath: '/camera-events/'
       preLoaderRoute: typeof AuthenticatedCameraEventsIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
+    }
+    '/api/push/vapid-public-key': {
+      id: '/api/push/vapid-public-key'
+      path: '/api/push/vapid-public-key'
+      fullPath: '/api/push/vapid-public-key'
+      preLoaderRoute: typeof ApiPushVapidPublicKeyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/push/unsubscribe': {
+      id: '/api/push/unsubscribe'
+      path: '/api/push/unsubscribe'
+      fullPath: '/api/push/unsubscribe'
+      preLoaderRoute: typeof ApiPushUnsubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/push/test': {
+      id: '/api/push/test'
+      path: '/api/push/test'
+      fullPath: '/api/push/test'
+      preLoaderRoute: typeof ApiPushTestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/push/subscribe': {
+      id: '/api/push/subscribe'
+      path: '/api/push/subscribe'
+      fullPath: '/api/push/subscribe'
+      preLoaderRoute: typeof ApiPushSubscribeRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/auth/logout': {
       id: '/api/auth/logout'
@@ -322,6 +402,10 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   ApiAuthGoogleRoute: ApiAuthGoogleRouteWithChildren,
   ApiAuthLogoutRoute: ApiAuthLogoutRoute,
+  ApiPushSubscribeRoute: ApiPushSubscribeRoute,
+  ApiPushTestRoute: ApiPushTestRoute,
+  ApiPushUnsubscribeRoute: ApiPushUnsubscribeRoute,
+  ApiPushVapidPublicKeyRoute: ApiPushVapidPublicKeyRoute,
   ApiCamerasNameLatestRoute: ApiCamerasNameLatestRoute,
   ApiEventsIdClipRoute: ApiEventsIdClipRoute,
   ApiEventsIdSnapshotRoute: ApiEventsIdSnapshotRoute,

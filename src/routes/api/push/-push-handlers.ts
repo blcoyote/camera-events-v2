@@ -1,0 +1,77 @@
+import { isPushEnabled, getVapidPublicKey, sendPushNotification } from '#/server/push'
+import { getPushStore } from '#/server/push-store'
+
+interface HandlerResult {
+  status: number
+  body: Record<string, unknown>
+}
+
+export function handleVapidPublicKey(): HandlerResult {
+  if (!isPushEnabled()) {
+    return { status: 503, body: { error: 'Push notifications are not configured' } }
+  }
+  return { status: 200, body: { publicKey: getVapidPublicKey() } }
+}
+
+export async function handleSubscribe(
+  userId: string | null,
+  body: Record<string, unknown>,
+): Promise<HandlerResult> {
+  if (!userId) {
+    return { status: 401, body: { error: 'Unauthorized' } }
+  }
+  if (!isPushEnabled()) {
+    return { status: 503, body: { error: 'Push notifications are not configured' } }
+  }
+
+  const endpoint = typeof body.endpoint === 'string' ? body.endpoint : ''
+  const keys = body.keys as Record<string, string> | undefined
+  const p256dh = typeof keys?.p256dh === 'string' ? keys.p256dh : ''
+  const auth = typeof keys?.auth === 'string' ? keys.auth : ''
+
+  if (!endpoint || !p256dh || !auth) {
+    return { status: 400, body: { error: 'Invalid subscription: endpoint and keys are required' } }
+  }
+
+  getPushStore().saveSubscription(userId, endpoint, p256dh, auth)
+  return { status: 200, body: { ok: true } }
+}
+
+export async function handleUnsubscribe(
+  userId: string | null,
+  body: { endpoint: string },
+): Promise<HandlerResult> {
+  if (!userId) {
+    return { status: 401, body: { error: 'Unauthorized' } }
+  }
+
+  getPushStore().removeSubscription(userId, body.endpoint)
+  return { status: 200, body: { ok: true } }
+}
+
+export async function handleTest(userId: string | null): Promise<HandlerResult> {
+  if (!userId) {
+    return { status: 401, body: { error: 'Unauthorized' } }
+  }
+  if (!isPushEnabled()) {
+    return { status: 503, body: { error: 'Push notifications are not configured' } }
+  }
+
+  const subscriptions = getPushStore().getSubscriptionsByUserId(userId)
+  const payload = {
+    title: 'Test Notification',
+    body: 'Push notifications are working!',
+    url: '/',
+  }
+
+  await Promise.allSettled(
+    subscriptions.map((sub) =>
+      sendPushNotification(
+        { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+        payload,
+      ),
+    ),
+  )
+
+  return { status: 200, body: { sent: subscriptions.length } }
+}
