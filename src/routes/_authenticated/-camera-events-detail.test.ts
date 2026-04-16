@@ -48,7 +48,11 @@ describe('getDetailPageState', () => {
   })
 
   it('returns error state with 404 message when not found', () => {
-    const state = getDetailPageState({ ok: false, error: 'HTTP 404', status: 404 })
+    const state = getDetailPageState({
+      ok: false,
+      error: 'HTTP 404',
+      status: 404,
+    })
     expect(state.kind).toBe('error')
     if (state.kind === 'error') {
       expect(state.message).toContain("doesn't exist")

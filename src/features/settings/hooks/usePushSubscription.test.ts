@@ -69,7 +69,8 @@ describe('usePushSubscription helpers', () => {
       const fetchMock = vi.fn().mockResolvedValue({
         ok: false,
         status: 503,
-        json: () => Promise.resolve({ error: 'Push notifications are not configured' }),
+        json: () =>
+          Promise.resolve({ error: 'Push notifications are not configured' }),
       })
       vi.stubGlobal('fetch', fetchMock)
 
@@ -149,9 +150,13 @@ describe('usePushSubscription helpers', () => {
     it('produces Brave-specific error when push service is blocked', () => {
       vi.stubGlobal('navigator', { brave: {} })
 
-      const err = new DOMException('Registration failed - push service error', 'AbortError')
+      const err = new DOMException(
+        'Registration failed - push service error',
+        'AbortError',
+      )
       const isBrave = !!(navigator as any).brave
-      const isBraveBlock = isBrave && err instanceof DOMException && err.name === 'AbortError'
+      const isBraveBlock =
+        isBrave && err instanceof DOMException && err.name === 'AbortError'
 
       expect(isBraveBlock).toBe(true)
       vi.unstubAllGlobals()
@@ -161,9 +166,13 @@ describe('usePushSubscription helpers', () => {
       // navigator without .brave
       vi.stubGlobal('navigator', {})
 
-      const err = new DOMException('Registration failed - push service error', 'AbortError')
+      const err = new DOMException(
+        'Registration failed - push service error',
+        'AbortError',
+      )
       const isBrave = !!(navigator as any).brave
-      const isBraveBlock = isBrave && err instanceof DOMException && err.name === 'AbortError'
+      const isBraveBlock =
+        isBrave && err instanceof DOMException && err.name === 'AbortError'
 
       expect(isBraveBlock).toBe(false)
       vi.unstubAllGlobals()

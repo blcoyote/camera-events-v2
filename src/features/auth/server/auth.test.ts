@@ -112,7 +112,11 @@ describe('buildOAuthState', () => {
 
 describe('parseOAuthState', () => {
   it('decodes a valid state cookie value', () => {
-    const original = { state: 'abc', codeVerifier: 'def', returnTo: '/dashboard' }
+    const original = {
+      state: 'abc',
+      codeVerifier: 'def',
+      returnTo: '/dashboard',
+    }
     const encoded = btoa(JSON.stringify(original))
 
     const result = parseOAuthState(encoded)
@@ -144,7 +148,12 @@ describe('parseOAuthState', () => {
 
   it('strips unknown fields from the result', () => {
     const encoded = btoa(
-      JSON.stringify({ state: 'a', codeVerifier: 'b', evil: 'yes', admin: true }),
+      JSON.stringify({
+        state: 'a',
+        codeVerifier: 'b',
+        evil: 'yes',
+        admin: true,
+      }),
     )
     const result = parseOAuthState(encoded)
     expect(result).toEqual({ state: 'a', codeVerifier: 'b' })

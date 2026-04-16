@@ -69,10 +69,10 @@ Feature: Mock Frigate client for development
 
 **Components:**
 
-| Component | Change |
-|-----------|--------|
-| `src/server/frigate/mock-client.ts` | **New** — Mock implementations of all exported client functions |
-| `src/server/frigate/client.ts` | **Modify** — Conditional export: when `FRIGATE_MOCK=true`, re-export mock functions instead of real ones |
+| Component                           | Change                                                                                                   |
+| ----------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `src/server/frigate/mock-client.ts` | **New** — Mock implementations of all exported client functions                                          |
+| `src/server/frigate/client.ts`      | **Modify** — Conditional export: when `FRIGATE_MOCK=true`, re-export mock functions instead of real ones |
 
 **Design:**
 
@@ -92,29 +92,31 @@ Feature: Mock Frigate client for development
 - **`FRIGATE_URL` bypass**: When mock mode is active, `getFrigateUrl()` is never called.
 
 **What is NOT in scope:**
+
 - Realistic image generation (placeholder pixels are fine)
 - Persisting mock state across requests (each call generates fresh data)
 - UI indicators showing mock mode is active
 - Mock data for the MQTT subscriber
 
 **Constraints:**
+
 - Zero new npm dependencies
 - Mock functions must have identical type signatures to real ones
 - Existing consumers of `client.ts` require zero changes
 
 ## Acceptance Criteria
 
-| # | Criterion | Pass condition |
-|---|-----------|----------------|
-| 1 | Toggle via env | `FRIGATE_MOCK=true` activates mock client; unset or `false` uses real client |
-| 2 | No FRIGATE_URL required | App starts and serves pages with only `FRIGATE_MOCK=true` set |
-| 3 | All client functions mocked | Every exported function from `client.ts` has a mock equivalent |
-| 4 | Type-safe returns | Mock functions return `FrigateResult<T>` matching real function signatures |
-| 5 | Realistic data | Generated events have varied labels, cameras, timestamps, scores, zones |
-| 6 | Binary endpoints return valid buffers | Thumbnail/snapshot return JPEG-like buffers; clip returns MP4-like buffer |
-| 7 | No consumer changes | Files importing from `client.ts` need zero modifications |
-| 8 | .env.example updated | `FRIGATE_MOCK` documented |
-| 9 | Tests pass | `tsc --noEmit` clean, all unit tests pass |
+| #   | Criterion                             | Pass condition                                                               |
+| --- | ------------------------------------- | ---------------------------------------------------------------------------- |
+| 1   | Toggle via env                        | `FRIGATE_MOCK=true` activates mock client; unset or `false` uses real client |
+| 2   | No FRIGATE_URL required               | App starts and serves pages with only `FRIGATE_MOCK=true` set                |
+| 3   | All client functions mocked           | Every exported function from `client.ts` has a mock equivalent               |
+| 4   | Type-safe returns                     | Mock functions return `FrigateResult<T>` matching real function signatures   |
+| 5   | Realistic data                        | Generated events have varied labels, cameras, timestamps, scores, zones      |
+| 6   | Binary endpoints return valid buffers | Thumbnail/snapshot return JPEG-like buffers; clip returns MP4-like buffer    |
+| 7   | No consumer changes                   | Files importing from `client.ts` need zero modifications                     |
+| 8   | .env.example updated                  | `FRIGATE_MOCK` documented                                                    |
+| 9   | Tests pass                            | `tsc --noEmit` clean, all unit tests pass                                    |
 
 ## Consistency Gate
 

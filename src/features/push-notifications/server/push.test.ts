@@ -44,7 +44,10 @@ describe('push module', () => {
       const { sendPushNotification } = await import('./push')
       await expect(
         sendPushNotification(
-          { endpoint: 'https://push.example.com', keys: { p256dh: 'k', auth: 'a' } },
+          {
+            endpoint: 'https://push.example.com',
+            keys: { p256dh: 'k', auth: 'a' },
+          },
           { title: 'Test', body: 'Hello', url: '/' },
         ),
       ).rejects.toThrow('Push notifications are not configured')
@@ -53,9 +56,7 @@ describe('push module', () => {
     it('logs a warning', async () => {
       const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
       await import('./push')
-      expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('VAPID'),
-      )
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('VAPID'))
       consoleSpy.mockRestore()
     })
   })
@@ -79,7 +80,9 @@ describe('push module', () => {
 
     it('sendPushNotification calls web-push with correct payload', async () => {
       const webPush = (await import('web-push')).default
-      const sendMock = vi.mocked(webPush.sendNotification).mockResolvedValue({} as any)
+      const sendMock = vi
+        .mocked(webPush.sendNotification)
+        .mockResolvedValue({} as any)
 
       const { sendPushNotification } = await import('./push')
 
@@ -112,11 +115,16 @@ describe('push module', () => {
       const { sendPushNotification } = await import('./push')
 
       await sendPushNotification(
-        { endpoint: 'https://push.example.com/expired', keys: { p256dh: 'k', auth: 'a' } },
+        {
+          endpoint: 'https://push.example.com/expired',
+          keys: { p256dh: 'k', auth: 'a' },
+        },
         { title: 'Test', body: 'Hello', url: '/' },
       )
 
-      expect(mockRemove).toHaveBeenCalledWith('https://push.example.com/expired')
+      expect(mockRemove).toHaveBeenCalledWith(
+        'https://push.example.com/expired',
+      )
     })
 
     it('re-throws non-410 errors', async () => {
@@ -129,7 +137,10 @@ describe('push module', () => {
 
       await expect(
         sendPushNotification(
-          { endpoint: 'https://push.example.com/sub1', keys: { p256dh: 'k', auth: 'a' } },
+          {
+            endpoint: 'https://push.example.com/sub1',
+            keys: { p256dh: 'k', auth: 'a' },
+          },
           { title: 'Test', body: 'Hello', url: '/' },
         ),
       ).rejects.toThrow('Server Error')

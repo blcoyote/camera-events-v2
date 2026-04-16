@@ -7,9 +7,14 @@ type CamerasState =
   | { kind: 'empty' }
   | { kind: 'error'; message: string }
 
-export function getCamerasPageState(result: FrigateResult<string[]>): CamerasState {
+export function getCamerasPageState(
+  result: FrigateResult<string[]>,
+): CamerasState {
   if (!result.ok) {
-    return { kind: 'error', message: 'Could not load cameras. Check that Frigate is running.' }
+    return {
+      kind: 'error',
+      message: 'Could not load cameras. Check that Frigate is running.',
+    }
   }
   if (result.data.length === 0) {
     return { kind: 'empty' }
@@ -42,7 +47,13 @@ export function CamerasLoading() {
   )
 }
 
-function SnapshotImage({ imgSrc, altText }: { imgSrc: string; altText: string }) {
+function SnapshotImage({
+  imgSrc,
+  altText,
+}: {
+  imgSrc: string
+  altText: string
+}) {
   const [failed, setFailed] = useState(false)
 
   if (failed) {
@@ -82,17 +93,25 @@ export function CamerasPage({ result }: { result: FrigateResult<string[]> }) {
       </section>
 
       {state.kind === 'empty' && (
-        <p className="mt-8 text-center text-(--sea-ink-soft)">No cameras found</p>
+        <p className="mt-8 text-center text-(--sea-ink-soft)">
+          No cameras found
+        </p>
       )}
 
       {state.kind === 'error' && (
-        <div role="alert" className="mx-auto mt-8 max-w-3xl rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-700 dark:bg-red-950 dark:text-red-200">
+        <div
+          role="alert"
+          className="mx-auto mt-8 max-w-3xl rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-700 dark:bg-red-950 dark:text-red-200"
+        >
           {state.message}
         </div>
       )}
 
       {state.kind === 'cameras' && (
-        <section aria-label="Camera list" className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <section
+          aria-label="Camera list"
+          className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+        >
           {state.cameras.map((name, index) => {
             const card = getCameraCardData(name)
             return (
@@ -100,9 +119,13 @@ export function CamerasPage({ result }: { result: FrigateResult<string[]> }) {
                 key={name}
                 index={index}
                 scanLines={false}
-                image={<SnapshotImage imgSrc={card.imgSrc} altText={card.altText} />}
+                image={
+                  <SnapshotImage imgSrc={card.imgSrc} altText={card.altText} />
+                }
               >
-                <h2 className="text-sm font-semibold text-(--sea-ink)">{card.name}</h2>
+                <h2 className="text-sm font-semibold text-(--sea-ink)">
+                  {card.name}
+                </h2>
               </MediaCard>
             )
           })}

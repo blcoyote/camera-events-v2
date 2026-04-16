@@ -1,7 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { generateState, generateCodeVerifier } from 'arctic'
 import { setCookie } from '@tanstack/react-start/server'
-import { getGoogleProvider, getAppOrigin } from '#/features/auth/server/google-oauth'
+import {
+  getGoogleProvider,
+  getAppOrigin,
+} from '#/features/auth/server/google-oauth'
 import {
   buildOAuthState,
   OAUTH_SCOPES,

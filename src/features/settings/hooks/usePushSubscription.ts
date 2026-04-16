@@ -27,11 +27,13 @@ export function usePushSubscription(): UsePushSubscriptionReturn {
   const [isSupported, setIsSupported] = useState(false)
   const [isPushEnabled, setIsPushEnabled] = useState(false)
   const [vapidPublicKey, setVapidPublicKey] = useState<string | null>(null)
-  const [permissionState, setPermissionState] = useState<NotificationPermission>('default')
+  const [permissionState, setPermissionState] =
+    useState<NotificationPermission>('default')
   const [isSubscribed, setIsSubscribed] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [currentSubscription, setCurrentSubscription] = useState<PushSubscription | null>(null)
+  const [currentSubscription, setCurrentSubscription] =
+    useState<PushSubscription | null>(null)
 
   // Detect browser support and fetch VAPID key / existing subscription on mount
   useEffect(() => {
@@ -86,7 +88,11 @@ export function usePushSubscription(): UsePushSubscriptionReturn {
       setPermissionState(permission)
 
       if (permission !== 'granted') {
-        setError(permission === 'denied' ? 'Notifications are blocked in your browser settings.' : 'Notification permission was not granted.')
+        setError(
+          permission === 'denied'
+            ? 'Notifications are blocked in your browser settings.'
+            : 'Notification permission was not granted.',
+        )
         return
       }
 

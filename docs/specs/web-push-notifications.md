@@ -118,16 +118,16 @@ Feature: Web Push Notification Support
 
 ### Components
 
-| Component | Location | Responsibility |
-|---|---|---|
-| VAPID key config | `.env` + `src/server/push.ts` | Load VAPID keys from env vars; export `isPushEnabled` flag; log warning+instructions if missing |
-| Push subscription API | `src/routes/api/push/subscribe.ts`, `unsubscribe.ts`, `test.ts`, `vapid-public-key.ts` | REST endpoints: POST subscribe, POST unsubscribe, POST test, GET vapid-public-key |
-| Subscription storage | `src/server/push-store.ts` | SQLite-backed store with two tables (see schema below). Initializes tables on first access. |
-| SQLite database | `data/camera-events.db` (Docker volume-mounted) | Single SQLite file for all app persistence |
-| `web-push` integration | `src/server/push.ts` | Wraps `web-push` library: `sendNotification()`, VAPID config, handles 410 cleanup |
-| SW push handler | `src/sw.ts` | `push` event: parse payload, show notification. `notificationclick` event: open/focus app, navigate to payload `url` |
-| Client subscription hook | `src/hooks/usePushSubscription.ts` | React hook: permission state, subscribe/unsubscribe, calls API, exposes `isPushSupported` |
-| Settings UI section | `src/pages/settings/SettingsPage.tsx` | New "Notifications" section: enable/disable, test button, status messages |
+| Component                | Location                                                                               | Responsibility                                                                                                       |
+| ------------------------ | -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| VAPID key config         | `.env` + `src/server/push.ts`                                                          | Load VAPID keys from env vars; export `isPushEnabled` flag; log warning+instructions if missing                      |
+| Push subscription API    | `src/routes/api/push/subscribe.ts`, `unsubscribe.ts`, `test.ts`, `vapid-public-key.ts` | REST endpoints: POST subscribe, POST unsubscribe, POST test, GET vapid-public-key                                    |
+| Subscription storage     | `src/server/push-store.ts`                                                             | SQLite-backed store with two tables (see schema below). Initializes tables on first access.                          |
+| SQLite database          | `data/camera-events.db` (Docker volume-mounted)                                        | Single SQLite file for all app persistence                                                                           |
+| `web-push` integration   | `src/server/push.ts`                                                                   | Wraps `web-push` library: `sendNotification()`, VAPID config, handles 410 cleanup                                    |
+| SW push handler          | `src/sw.ts`                                                                            | `push` event: parse payload, show notification. `notificationclick` event: open/focus app, navigate to payload `url` |
+| Client subscription hook | `src/hooks/usePushSubscription.ts`                                                     | React hook: permission state, subscribe/unsubscribe, calls API, exposes `isPushSupported`                            |
+| Settings UI section      | `src/pages/settings/SettingsPage.tsx`                                                  | New "Notifications" section: enable/disable, test button, status messages                                            |
 
 ### SQLite Schema
 
@@ -192,20 +192,20 @@ The `url` field enables future notification types (e.g., `/camera-events/{id}`) 
 
 ## Acceptance Criteria
 
-| # | Criterion | Pass condition |
-|---|---|---|
-| AC-1 | Subscription lifecycle | User can enable and disable push notifications from Settings; subscription is created/removed both client-side and in SQLite |
-| AC-2 | Multi-device | A user with two subscribed devices receives test notifications on both |
-| AC-3 | Duplicate subscription | Re-subscribing from the same device upserts rather than duplicates |
-| AC-4 | Test notification delivery | "Send Test Notification" delivers a visible system notification within 5 seconds |
-| AC-5 | Notification click routing | Clicking the test notification opens/focuses the app at the URL from the payload (`/`) |
-| AC-6 | Permission denied handling | If the user denies the browser prompt, UI reflects the blocked state without retrying |
-| AC-7 | Unsupported browser | On browsers without Push API, notification controls are hidden with an info message |
-| AC-8 | Missing VAPID keys | Server starts, logs a warning with setup instructions, push endpoints return 503, Settings shows "not available" |
-| AC-9 | Expired subscription cleanup | Server removes subscriptions that return 410 from the push service |
-| AC-10 | No SW regression | Existing precache, runtime caching, and navigation preload work after SW changes |
-| AC-11 | SQLite persistence | Subscriptions survive server restart (Docker volume mount) |
-| AC-12 | Preferences schema | `push_notification_preferences` table is created on startup with columns for category, resource_id, and enabled. No preferences UI or filtering logic in this slice |
+| #     | Criterion                    | Pass condition                                                                                                                                                      |
+| ----- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| AC-1  | Subscription lifecycle       | User can enable and disable push notifications from Settings; subscription is created/removed both client-side and in SQLite                                        |
+| AC-2  | Multi-device                 | A user with two subscribed devices receives test notifications on both                                                                                              |
+| AC-3  | Duplicate subscription       | Re-subscribing from the same device upserts rather than duplicates                                                                                                  |
+| AC-4  | Test notification delivery   | "Send Test Notification" delivers a visible system notification within 5 seconds                                                                                    |
+| AC-5  | Notification click routing   | Clicking the test notification opens/focuses the app at the URL from the payload (`/`)                                                                              |
+| AC-6  | Permission denied handling   | If the user denies the browser prompt, UI reflects the blocked state without retrying                                                                               |
+| AC-7  | Unsupported browser          | On browsers without Push API, notification controls are hidden with an info message                                                                                 |
+| AC-8  | Missing VAPID keys           | Server starts, logs a warning with setup instructions, push endpoints return 503, Settings shows "not available"                                                    |
+| AC-9  | Expired subscription cleanup | Server removes subscriptions that return 410 from the push service                                                                                                  |
+| AC-10 | No SW regression             | Existing precache, runtime caching, and navigation preload work after SW changes                                                                                    |
+| AC-11 | SQLite persistence           | Subscriptions survive server restart (Docker volume mount)                                                                                                          |
+| AC-12 | Preferences schema           | `push_notification_preferences` table is created on startup with columns for category, resource_id, and enabled. No preferences UI or filtering logic in this slice |
 
 ## Consistency Gate
 

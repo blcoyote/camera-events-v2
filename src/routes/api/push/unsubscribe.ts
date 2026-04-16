@@ -20,10 +20,10 @@ export const Route = createFileRoute('/api/push/unsubscribe')({
         try {
           body = await request.json()
         } catch {
-          return new Response(
-            JSON.stringify({ error: 'Invalid JSON body' }),
-            { status: 400, headers: { 'Content-Type': 'application/json' } },
-          )
+          return new Response(JSON.stringify({ error: 'Invalid JSON body' }), {
+            status: 400,
+            headers: { 'Content-Type': 'application/json' },
+          })
         }
 
         const result = await handleUnsubscribe(userId, body)

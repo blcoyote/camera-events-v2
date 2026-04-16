@@ -31,12 +31,30 @@ const PLACEHOLDER_IMAGE: ArrayBuffer = readFileSync(
 
 // Minimal valid MP4: ftyp box with isom brand
 const PLACEHOLDER_MP4: ArrayBuffer = new Uint8Array([
-  0x00, 0x00, 0x00, 0x18, // box size: 24
-  0x66, 0x74, 0x79, 0x70, // 'ftyp'
-  0x69, 0x73, 0x6f, 0x6d, // major brand: 'isom'
-  0x00, 0x00, 0x02, 0x00, // minor version
-  0x69, 0x73, 0x6f, 0x6d, // compatible brand: 'isom'
-  0x69, 0x73, 0x6f, 0x32, // compatible brand: 'iso2'
+  0x00,
+  0x00,
+  0x00,
+  0x18, // box size: 24
+  0x66,
+  0x74,
+  0x79,
+  0x70, // 'ftyp'
+  0x69,
+  0x73,
+  0x6f,
+  0x6d, // major brand: 'isom'
+  0x00,
+  0x00,
+  0x02,
+  0x00, // minor version
+  0x69,
+  0x73,
+  0x6f,
+  0x6d, // compatible brand: 'isom'
+  0x69,
+  0x73,
+  0x6f,
+  0x32, // compatible brand: 'iso2'
 ]).buffer.slice(0)
 
 // ─── Fixed pools ───
@@ -50,14 +68,7 @@ const MOCK_CAMERAS = [
   'front_door',
 ] as const
 
-const MOCK_LABELS = [
-  'person',
-  'car',
-  'dog',
-  'cat',
-  'truck',
-  'package',
-] as const
+const MOCK_LABELS = ['person', 'car', 'dog', 'cat', 'truck', 'package'] as const
 
 const MOCK_ZONES = [
   'front_yard',
@@ -386,8 +397,10 @@ export async function getStats(
 export async function getConfig(
   _timeoutMs?: number,
 ): Promise<FrigateResult<FrigateConfig>> {
-  const camerasConfig: Record<string, ReturnType<typeof generateCameraConfig>> =
-    {}
+  const camerasConfig: Record<
+    string,
+    ReturnType<typeof generateCameraConfig>
+  > = {}
   for (const cam of MOCK_CAMERAS) {
     camerasConfig[cam] = generateCameraConfig(cam)
   }

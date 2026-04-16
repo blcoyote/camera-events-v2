@@ -123,53 +123,59 @@ Feature: Cameras page
 
 **Complexity**: standard
 **RED**: Write tests in `src/server/frigate/client.test.ts` for `getLatestSnapshot(cameraName)`:
+
 - Returns `FrigateResult<ArrayBuffer>` on success, calling `GET /api/<camera_name>/latest.jpg`
 - Returns `{ ok: false }` on HTTP error
 - Returns `{ ok: false }` on network failure
-**GREEN**: Add `getLatestSnapshot` to `src/server/frigate/client.ts` using the existing `frigateBinary` helper
-**REFACTOR**: None needed — follows established pattern
-**Files**: `src/server/frigate/client.ts`, `src/server/frigate/client.test.ts`
-**Commit**: `feat(frigate): add getLatestSnapshot client function`
+  **GREEN**: Add `getLatestSnapshot` to `src/server/frigate/client.ts` using the existing `frigateBinary` helper
+  **REFACTOR**: None needed — follows established pattern
+  **Files**: `src/server/frigate/client.ts`, `src/server/frigate/client.test.ts`
+  **Commit**: `feat(frigate): add getLatestSnapshot client function`
 
 ### Step 2: Add camera name validation utility
 
 **Complexity**: standard
 **RED**: Write tests in `src/server/frigate/validation.test.ts` for `isValidCameraName(name)`:
+
 - Returns `true` for valid names like `front_door`, `backyard`, `garage-cam`
 - Returns `false` for path traversal attempts: `../etc/passwd`, `foo/../bar`, `..`
 - Returns `false` for empty string
 - Returns `false` for names containing slashes: `foo/bar`
 - Returns `false` for names with null bytes or control characters
-**GREEN**: Create `src/server/frigate/validation.ts` with `isValidCameraName` — allows only `[a-zA-Z0-9_-]` characters
-**REFACTOR**: None needed
-**Files**: `src/server/frigate/validation.ts`, `src/server/frigate/validation.test.ts`
-**Commit**: `feat(frigate): add camera name validation`
+  **GREEN**: Create `src/server/frigate/validation.ts` with `isValidCameraName` — allows only `[a-zA-Z0-9_-]` characters
+  **REFACTOR**: None needed
+  **Files**: `src/server/frigate/validation.ts`, `src/server/frigate/validation.test.ts`
+  **Commit**: `feat(frigate): add camera name validation`
 
 ### Step 3: Create snapshot proxy API route
 
 **Complexity**: complex
 **RED**: Write tests in `src/routes/api/cameras/-snapshot-proxy.test.ts` for pure handler logic extracted as `handleSnapshotRequest(cameraName, isAuthenticated)`:
+
 - Returns binary response with `Content-Type: image/jpeg` and `Cache-Control: no-store` on success
 - Returns 502 when Frigate is unreachable
 - Returns 400 when camera name fails validation
 - Returns 401 when user is not authenticated
-**GREEN**: Create `src/routes/api/cameras/$name/latest.jpg.ts` with a GET handler that:
+  **GREEN**: Create `src/routes/api/cameras/$name/latest.jpg.ts` with a GET handler that:
+
 1. Checks session authentication via `useSession`
 2. Validates camera name via `isValidCameraName`
 3. Calls `getLatestSnapshot(name)`
 4. Returns the binary response with `Content-Type: image/jpeg` and `Cache-Control: no-store`, or appropriate error status
-**REFACTOR**: None needed
-**Files**: `src/routes/api/cameras/$name/latest.jpg.ts`, `src/routes/api/cameras/-snapshot-proxy.test.ts`
-**Commit**: `feat(cameras): add snapshot proxy API route`
+   **REFACTOR**: None needed
+   **Files**: `src/routes/api/cameras/$name/latest.jpg.ts`, `src/routes/api/cameras/-snapshot-proxy.test.ts`
+   **Commit**: `feat(cameras): add snapshot proxy API route`
 
 ### Step 4: Create cameras page route
 
 **Complexity**: standard
 **RED**: Write tests in `src/routes/_authenticated/-cameras.test.ts` for:
+
 - Pure function that categorizes loader result into `cameras | empty | error` state
 - Camera card data: name → `{ name, imgSrc, altText }` mapping
 - Alt text format: `"Latest snapshot from {camera_name}"`
-**GREEN**: Create `src/routes/_authenticated/cameras.tsx` with:
+  **GREEN**: Create `src/routes/_authenticated/cameras.tsx` with:
+
 1. `createServerFn` loader that calls `getCameras()`
 2. `pendingComponent` showing a loading indicator while data loads
 3. Page component with island-shell/page-wrap/rise-in layout
@@ -179,9 +185,9 @@ Feature: Cameras page
 7. Empty state: "No cameras found" message
 8. Error state: message when Frigate is unreachable
 9. 44px minimum touch targets on camera cards
-**REFACTOR**: None needed
-**Files**: `src/routes/_authenticated/cameras.tsx`, `src/routes/_authenticated/-cameras.test.ts`
-**Commit**: `feat(cameras): add cameras page with card grid`
+   **REFACTOR**: None needed
+   **Files**: `src/routes/_authenticated/cameras.tsx`, `src/routes/_authenticated/-cameras.test.ts`
+   **Commit**: `feat(cameras): add cameras page with card grid`
 
 ### Step 5: Add "Cameras" to Header navigation
 
@@ -194,11 +200,11 @@ Feature: Cameras page
 
 ## Complexity Classification
 
-| Rating | Criteria | Review depth |
-|--------|----------|--------------|
-| `trivial` | Single-file rename, config change, typo fix, documentation-only | Skip inline review; covered by final `/code-review` |
-| `standard` | New function, test, module, or behavioral change within existing patterns | Spec-compliance + relevant quality agents |
-| `complex` | Architectural change, security-sensitive, cross-cutting concern, new abstraction | Full agent suite including opus-tier agents |
+| Rating     | Criteria                                                                         | Review depth                                        |
+| ---------- | -------------------------------------------------------------------------------- | --------------------------------------------------- |
+| `trivial`  | Single-file rename, config change, typo fix, documentation-only                  | Skip inline review; covered by final `/code-review` |
+| `standard` | New function, test, module, or behavioral change within existing patterns        | Spec-compliance + relevant quality agents           |
+| `complex`  | Architectural change, security-sensitive, cross-cutting concern, new abstraction | Full agent suite including opus-tier agents         |
 
 ## Pre-PR Quality Gate
 
@@ -220,11 +226,13 @@ Feature: Cameras page
 Four review perspectives were consulted. Three approved; the UX critic required revisions.
 
 **Addressed blockers (UX)**:
+
 - Added `alt` text requirement for snapshot images (`"Latest snapshot from {name}"`)
 - Added broken-image fallback (`onError` → "Snapshot unavailable" placeholder)
 - Added `pendingComponent` for loading state while camera data fetches
 
 **Incorporated warnings**:
+
 - Added proxy auth (401) and path-traversal (400) scenarios to Gherkin (Acceptance Critic)
 - Updated test file names to dash-prefix convention (`-snapshot-proxy.test.ts`, `-cameras.test.ts`) (Architecture Critic)
 - Added `Cache-Control: no-store` on proxy responses (Strategic Critic, UX Critic)
@@ -232,5 +240,6 @@ Four review perspectives were consulted. Three approved; the UX critic required 
 - Noted `.jpg.ts` routing risk with fallback strategy (Architecture Critic, Strategic Critic)
 
 **Noted for future consideration**:
+
 - Camera cards are display-only for now (no click destination); touch target criterion applies to the card container for potential future interactivity
 - Retry mechanism on error state deferred — initial implementation shows static error message

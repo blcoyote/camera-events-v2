@@ -1,7 +1,7 @@
 import { createServerFn } from '@tanstack/react-start'
 import { useSession, clearSession } from '@tanstack/react-start/server'
-import { getSessionConfig  } from '#/features/shared/server/session'
-import type {SessionData} from '#/features/shared/server/session';
+import { getSessionConfig } from '#/features/shared/server/session'
+import type { SessionData } from '#/features/shared/server/session'
 
 export const OAUTH_SCOPES = ['openid', 'profile', 'email']
 
@@ -12,7 +12,9 @@ export const OAUTH_STATE_COOKIE_NAME = 'oauth_state'
  * Rejects absolute URLs, protocol-relative URLs, and paths with backslashes.
  * Returns the path if safe, undefined otherwise.
  */
-export function sanitizeReturnTo(returnTo: string | undefined): string | undefined {
+export function sanitizeReturnTo(
+  returnTo: string | undefined,
+): string | undefined {
   if (!returnTo || !returnTo.startsWith('/') || returnTo.startsWith('//')) {
     return undefined
   }

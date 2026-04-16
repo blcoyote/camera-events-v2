@@ -33,7 +33,9 @@ export function getGoogleProvider(redirectUri: string): Google {
  * so signature verification is not required per the OIDC spec (section 3.1.3.7).
  * These checks provide defense-in-depth against token substitution or replay.
  */
-export function validateIdTokenClaims(claims: Record<string, unknown>): boolean {
+export function validateIdTokenClaims(
+  claims: Record<string, unknown>,
+): boolean {
   if (claims.iss !== GOOGLE_ISSUER) return false
   if (claims.aud !== process.env.GOOGLE_CLIENT_ID) return false
   if (typeof claims.exp !== 'number') return false
@@ -45,7 +47,9 @@ export function validateIdTokenClaims(claims: Record<string, unknown>): boolean 
  * Parse Google ID token claims into our session data shape.
  * Handles missing given_name and picture gracefully.
  */
-export function parseIdTokenClaims(claims: Record<string, unknown>): SessionData {
+export function parseIdTokenClaims(
+  claims: Record<string, unknown>,
+): SessionData {
   return {
     sub: String(claims.sub ?? ''),
     firstName: String(claims.given_name ?? ''),

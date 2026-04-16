@@ -8,7 +8,9 @@ import {
 } from './push-notify'
 import type { FrigateEventInfo } from './event-batcher'
 
-function makeEvent(overrides: Partial<FrigateEventInfo> = {}): FrigateEventInfo {
+function makeEvent(
+  overrides: Partial<FrigateEventInfo> = {},
+): FrigateEventInfo {
   return {
     id: '1713182400.123-abc',
     camera: 'front_porch',

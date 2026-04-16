@@ -2,7 +2,10 @@ import { createFileRoute } from '@tanstack/react-router'
 import { useSession } from '@tanstack/react-start/server'
 import { getSessionConfig } from '#/features/shared/server/session'
 import type { SessionData } from '#/features/shared/server/session'
-import { handleGetPreferences, handleSetPreference } from '#/features/push-notifications/server/push-handlers'
+import {
+  handleGetPreferences,
+  handleSetPreference,
+} from '#/features/push-notifications/server/push-handlers'
 
 export const Route = createFileRoute('/api/push/preferences')({
   server: {
@@ -36,10 +39,10 @@ export const Route = createFileRoute('/api/push/preferences')({
         try {
           body = await request.json()
         } catch {
-          return new Response(
-            JSON.stringify({ error: 'Invalid JSON body' }),
-            { status: 400, headers: { 'Content-Type': 'application/json' } },
-          )
+          return new Response(JSON.stringify({ error: 'Invalid JSON body' }), {
+            status: 400,
+            headers: { 'Content-Type': 'application/json' },
+          })
         }
 
         const result = await handleSetPreference(userId, body)

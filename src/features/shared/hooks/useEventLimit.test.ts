@@ -25,8 +25,12 @@ describe('readEventLimit', () => {
     for (const key of Object.keys(store)) delete store[key]
     vi.stubGlobal('localStorage', {
       getItem: (key: string) => store[key] ?? null,
-      setItem: (key: string, value: string) => { store[key] = value },
-      removeItem: (key: string) => { delete store[key] },
+      setItem: (key: string, value: string) => {
+        store[key] = value
+      },
+      removeItem: (key: string) => {
+        delete store[key]
+      },
     })
   })
 

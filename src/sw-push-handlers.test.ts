@@ -55,7 +55,11 @@ describe('parsePushPayload', () => {
   })
 
   it('falls back title to default when empty string', () => {
-    const result = parsePushPayload({ title: '', body: 'content', url: '/page' })
+    const result = parsePushPayload({
+      title: '',
+      body: 'content',
+      url: '/page',
+    })
     expect(result.title).toBe('Notification')
   })
 

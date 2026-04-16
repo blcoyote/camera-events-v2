@@ -1,7 +1,7 @@
 import { injectManifest } from '@serwist/build'
 import path from 'node:path'
-import { build  } from 'vite'
-import type {Plugin} from 'vite';
+import { build } from 'vite'
+import type { Plugin } from 'vite'
 
 /**
  * Custom Vite plugin that builds the service worker for TanStack Start.

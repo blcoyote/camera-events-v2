@@ -7,7 +7,11 @@ import {
   handleGetPreferences,
   handleSetPreference,
 } from '#/features/push-notifications/server/push-handlers'
-import { isPushEnabled, getVapidPublicKey, sendPushNotification } from '#/features/push-notifications/server/push'
+import {
+  isPushEnabled,
+  getVapidPublicKey,
+  sendPushNotification,
+} from '#/features/push-notifications/server/push'
 import { getPushStore } from '#/features/push-notifications/server/push-store'
 import { getCameras } from '#/features/shared/server/frigate/client'
 
@@ -35,7 +39,10 @@ describe('handleVapidPublicKey', () => {
     vi.mocked(getVapidPublicKey).mockReturnValue('test-public-key')
 
     const result = handleVapidPublicKey()
-    expect(result).toEqual({ status: 200, body: { publicKey: 'test-public-key' } })
+    expect(result).toEqual({
+      status: 200,
+      body: { publicKey: 'test-public-key' },
+    })
   })
 
   it('returns 503 when not configured', () => {
@@ -43,7 +50,9 @@ describe('handleVapidPublicKey', () => {
 
     const result = handleVapidPublicKey()
     expect(result.status).toBe(503)
-    expect(result.body).toMatchObject({ error: expect.stringContaining('not configured') })
+    expect(result.body).toMatchObject({
+      error: expect.stringContaining('not configured'),
+    })
   })
 })
 
@@ -69,7 +78,9 @@ describe('handleSubscribe', () => {
   it('upserts subscription for authenticated user', async () => {
     vi.mocked(isPushEnabled).mockReturnValue(true)
     const mockSave = vi.fn()
-    vi.mocked(getPushStore).mockReturnValue({ saveSubscription: mockSave } as any)
+    vi.mocked(getPushStore).mockReturnValue({
+      saveSubscription: mockSave,
+    } as any)
 
     const result = await handleSubscribe('user1', {
       endpoint: 'https://push.example.com/sub1',
@@ -77,13 +88,21 @@ describe('handleSubscribe', () => {
     })
 
     expect(result.status).toBe(200)
-    expect(mockSave).toHaveBeenCalledWith('user1', 'https://push.example.com/sub1', 'p-key', 'a-key')
+    expect(mockSave).toHaveBeenCalledWith(
+      'user1',
+      'https://push.example.com/sub1',
+      'p-key',
+      'a-key',
+    )
   })
 
   it('returns 400 when body is invalid', async () => {
     vi.mocked(isPushEnabled).mockReturnValue(true)
 
-    const result = await handleSubscribe('user1', { endpoint: '', keys: { p256dh: '', auth: '' } })
+    const result = await handleSubscribe('user1', {
+      endpoint: '',
+      keys: { p256dh: '', auth: '' },
+    })
     expect(result.status).toBe(400)
   })
 
@@ -95,7 +114,9 @@ describe('handleSubscribe', () => {
       keys: { p256dh: 'p-key', auth: 'a-key' },
     })
     expect(result.status).toBe(400)
-    expect(result.body).toMatchObject({ error: expect.stringContaining('HTTPS') })
+    expect(result.body).toMatchObject({
+      error: expect.stringContaining('HTTPS'),
+    })
   })
 
   it('returns 400 for invalid endpoint URL', async () => {
@@ -106,37 +127,52 @@ describe('handleSubscribe', () => {
       keys: { p256dh: 'p-key', auth: 'a-key' },
     })
     expect(result.status).toBe(400)
-    expect(result.body).toMatchObject({ error: expect.stringContaining('endpoint URL') })
+    expect(result.body).toMatchObject({
+      error: expect.stringContaining('endpoint URL'),
+    })
   })
 })
 
 describe('handleUnsubscribe', () => {
   it('returns 401 when unauthenticated', async () => {
-    const result = await handleUnsubscribe(null, { endpoint: 'https://push.example.com' })
+    const result = await handleUnsubscribe(null, {
+      endpoint: 'https://push.example.com',
+    })
     expect(result.status).toBe(401)
   })
 
   it('removes subscription for authenticated user', async () => {
     vi.mocked(isPushEnabled).mockReturnValue(true)
     const mockRemove = vi.fn()
-    vi.mocked(getPushStore).mockReturnValue({ removeSubscription: mockRemove } as any)
+    vi.mocked(getPushStore).mockReturnValue({
+      removeSubscription: mockRemove,
+    } as any)
 
-    const result = await handleUnsubscribe('user1', { endpoint: 'https://push.example.com/sub1' })
+    const result = await handleUnsubscribe('user1', {
+      endpoint: 'https://push.example.com/sub1',
+    })
 
     expect(result.status).toBe(200)
-    expect(mockRemove).toHaveBeenCalledWith('user1', 'https://push.example.com/sub1')
+    expect(mockRemove).toHaveBeenCalledWith(
+      'user1',
+      'https://push.example.com/sub1',
+    )
   })
 
   it('returns 400 when endpoint is missing', async () => {
     const result = await handleUnsubscribe('user1', {})
     expect(result.status).toBe(400)
-    expect(result.body).toMatchObject({ error: expect.stringContaining('endpoint') })
+    expect(result.body).toMatchObject({
+      error: expect.stringContaining('endpoint'),
+    })
   })
 
   it('returns 400 when endpoint is not a string', async () => {
     const result = await handleUnsubscribe('user1', { endpoint: 123 })
     expect(result.status).toBe(400)
-    expect(result.body).toMatchObject({ error: expect.stringContaining('endpoint') })
+    expect(result.body).toMatchObject({
+      error: expect.stringContaining('endpoint'),
+    })
   })
 })
 
@@ -169,8 +205,15 @@ describe('handleTest', () => {
     expect(result.body).toEqual({ sent: 2 })
     expect(sendPushNotification).toHaveBeenCalledTimes(2)
     expect(sendPushNotification).toHaveBeenCalledWith(
-      { endpoint: 'https://push.example.com/1', keys: { p256dh: 'k1', auth: 'a1' } },
-      { title: 'Test Notification', body: 'Push notifications are working!', url: '/' },
+      {
+        endpoint: 'https://push.example.com/1',
+        keys: { p256dh: 'k1', auth: 'a1' },
+      },
+      {
+        title: 'Test Notification',
+        body: 'Push notifications are working!',
+        url: '/',
+      },
     )
   })
 
@@ -237,7 +280,10 @@ describe('handleGetPreferences', () => {
 
 describe('handleSetPreference', () => {
   it('returns 401 when unauthenticated', async () => {
-    const result = await handleSetPreference(null, { camera: 'x', enabled: true })
+    const result = await handleSetPreference(null, {
+      camera: 'x',
+      enabled: true,
+    })
     expect(result.status).toBe(401)
   })
 
@@ -252,7 +298,10 @@ describe('handleSetPreference', () => {
   })
 
   it('returns 400 when enabled is not a boolean', async () => {
-    const result = await handleSetPreference('user1', { camera: 'x', enabled: 'yes' })
+    const result = await handleSetPreference('user1', {
+      camera: 'x',
+      enabled: 'yes',
+    })
     expect(result.status).toBe(400)
   })
 

@@ -9,7 +9,10 @@ interface HandlerResult {
 
 export function handleVapidPublicKey(): HandlerResult {
   if (!isPushEnabled()) {
-    return { status: 503, body: { error: 'Push notifications are not configured' } }
+    return {
+      status: 503,
+      body: { error: 'Push notifications are not configured' },
+    }
   }
   return { status: 200, body: { publicKey: getVapidPublicKey() } }
 }
@@ -22,7 +25,10 @@ export async function handleSubscribe(
     return { status: 401, body: { error: 'Unauthorized' } }
   }
   if (!isPushEnabled()) {
-    return { status: 503, body: { error: 'Push notifications are not configured' } }
+    return {
+      status: 503,
+      body: { error: 'Push notifications are not configured' },
+    }
   }
 
   const endpoint = typeof body.endpoint === 'string' ? body.endpoint : ''
@@ -31,7 +37,10 @@ export async function handleSubscribe(
   const auth = typeof keys?.auth === 'string' ? keys.auth : ''
 
   if (!endpoint || !p256dh || !auth) {
-    return { status: 400, body: { error: 'Invalid subscription: endpoint and keys are required' } }
+    return {
+      status: 400,
+      body: { error: 'Invalid subscription: endpoint and keys are required' },
+    }
   }
 
   // Validate endpoint is an HTTPS URL (push services always use HTTPS)
@@ -42,7 +51,10 @@ export async function handleSubscribe(
     return { status: 400, body: { error: 'Invalid subscription endpoint URL' } }
   }
   if (parsedUrl.protocol !== 'https:') {
-    return { status: 400, body: { error: 'Subscription endpoint must use HTTPS' } }
+    return {
+      status: 400,
+      body: { error: 'Subscription endpoint must use HTTPS' },
+    }
   }
 
   getPushStore().saveSubscription(userId, endpoint, p256dh, auth)
@@ -59,19 +71,27 @@ export async function handleUnsubscribe(
 
   const endpoint = typeof body.endpoint === 'string' ? body.endpoint : ''
   if (!endpoint) {
-    return { status: 400, body: { error: 'Invalid request: endpoint is required' } }
+    return {
+      status: 400,
+      body: { error: 'Invalid request: endpoint is required' },
+    }
   }
 
   getPushStore().removeSubscription(userId, endpoint)
   return { status: 200, body: { ok: true } }
 }
 
-export async function handleTest(userId: string | null): Promise<HandlerResult> {
+export async function handleTest(
+  userId: string | null,
+): Promise<HandlerResult> {
   if (!userId) {
     return { status: 401, body: { error: 'Unauthorized' } }
   }
   if (!isPushEnabled()) {
-    return { status: 503, body: { error: 'Push notifications are not configured' } }
+    return {
+      status: 503,
+      body: { error: 'Push notifications are not configured' },
+    }
   }
 
   const subscriptions = getPushStore().getSubscriptionsByUserId(userId)
@@ -84,7 +104,10 @@ export async function handleTest(userId: string | null): Promise<HandlerResult> 
   await Promise.allSettled(
     subscriptions.map((sub) =>
       sendPushNotification(
-        { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+        {
+          endpoint: sub.endpoint,
+          keys: { p256dh: sub.p256dh, auth: sub.auth },
+        },
         payload,
       ),
     ),
@@ -126,7 +149,13 @@ export async function handleSetPreference(
   const enabled = typeof body.enabled === 'boolean' ? body.enabled : null
 
   if (!camera || enabled === null) {
-    return { status: 400, body: { error: 'Invalid request: camera (string) and enabled (boolean) are required' } }
+    return {
+      status: 400,
+      body: {
+        error:
+          'Invalid request: camera (string) and enabled (boolean) are required',
+      },
+    }
   }
 
   getPushStore().setPreference(userId, camera, enabled)

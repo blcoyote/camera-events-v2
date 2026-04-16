@@ -7,11 +7,16 @@
  * to any link in the chain (mqtt → handler → cache → client) is caught.
  */
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
-import { frigateCache, clearFrigateCache } from '#/features/shared/server/frigate/cache'
+import {
+  frigateCache,
+  clearFrigateCache,
+} from '#/features/shared/server/frigate/cache'
 
 // Ensure mock mode is off for integration tests
 const _savedFrigateMock = process.env.FRIGATE_MOCK
-beforeEach(() => { delete process.env.FRIGATE_MOCK })
+beforeEach(() => {
+  delete process.env.FRIGATE_MOCK
+})
 afterEach(() => {
   if (_savedFrigateMock === undefined) delete process.env.FRIGATE_MOCK
   else process.env.FRIGATE_MOCK = _savedFrigateMock
@@ -52,14 +57,16 @@ function mockFetchJson(data: unknown) {
 /** Simulate the MQTT broker delivering a message to the client. */
 function deliverMqttMessage(topic: string, payload: string) {
   const messageHandler = handlers.get('message')
-  if (!messageHandler) throw new Error('No message handler registered on MQTT client')
+  if (!messageHandler)
+    throw new Error('No message handler registered on MQTT client')
   messageHandler(topic, Buffer.from(payload))
 }
 
 /** Simulate the MQTT broker confirming connection. */
 function simulateMqttConnect() {
   const connectHandler = handlers.get('connect')
-  if (!connectHandler) throw new Error('No connect handler registered on MQTT client')
+  if (!connectHandler)
+    throw new Error('No connect handler registered on MQTT client')
   connectHandler()
 }
 
@@ -90,7 +97,8 @@ describe('MQTT → cache invalidation → fresh fetch (integration)', () => {
     // 1. Set up Frigate fetch mock — returns different data on each call
     const firstResponse = [{ id: 'event-1', label: 'person' }]
     const secondResponse = [{ id: 'event-2', label: 'car' }]
-    const fetchMock = vi.fn()
+    const fetchMock = vi
+      .fn()
       .mockResolvedValueOnce({
         ok: true,
         status: 200,
@@ -105,7 +113,8 @@ describe('MQTT → cache invalidation → fresh fetch (integration)', () => {
 
     // 2. Import real modules (handler, client)
     const { startMqttSubscriber } = await import('./mqtt')
-    const { getEvents } = await import('#/features/shared/server/frigate/client')
+    const { getEvents } =
+      await import('#/features/shared/server/frigate/client')
 
     // 3. Start the MQTT subscriber (uses real handler wiring)
     startMqttSubscriber()
@@ -139,7 +148,8 @@ describe('MQTT → cache invalidation → fresh fetch (integration)', () => {
     globalThis.fetch = fetchMock
 
     const { startMqttSubscriber } = await import('./mqtt')
-    const { getEvents } = await import('#/features/shared/server/frigate/client')
+    const { getEvents } =
+      await import('#/features/shared/server/frigate/client')
 
     startMqttSubscriber()
     simulateMqttConnect()
@@ -162,7 +172,8 @@ describe('MQTT → cache invalidation → fresh fetch (integration)', () => {
     globalThis.fetch = fetchMock
 
     const { startMqttSubscriber } = await import('./mqtt')
-    const { getEvents } = await import('#/features/shared/server/frigate/client')
+    const { getEvents } =
+      await import('#/features/shared/server/frigate/client')
 
     startMqttSubscriber()
     simulateMqttConnect()
@@ -189,7 +200,8 @@ describe('MQTT → cache invalidation → fresh fetch (integration)', () => {
       resolveSlowFetch = resolve
     })
 
-    const fetchMock = vi.fn()
+    const fetchMock = vi
+      .fn()
       .mockReturnValueOnce({
         ok: true,
         status: 200,
@@ -204,7 +216,8 @@ describe('MQTT → cache invalidation → fresh fetch (integration)', () => {
     globalThis.fetch = fetchMock
 
     const { startMqttSubscriber } = await import('./mqtt')
-    const { getEvents } = await import('#/features/shared/server/frigate/client')
+    const { getEvents } =
+      await import('#/features/shared/server/frigate/client')
 
     startMqttSubscriber()
     simulateMqttConnect()

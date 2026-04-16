@@ -18,8 +18,8 @@ import {
   redirectTo,
 } from '#/features/auth/server/auth'
 import { decryptOAuthState } from '#/features/auth/server/auth-crypto'
-import { getSessionConfig  } from '#/features/shared/server/session'
-import type {SessionData} from '#/features/shared/server/session';
+import { getSessionConfig } from '#/features/shared/server/session'
+import type { SessionData } from '#/features/shared/server/session'
 
 export const Route = createFileRoute('/api/auth/google/callback')({
   server: {

@@ -226,11 +226,14 @@ export interface FrigateConfig {
   }
   database: { path: string }
   detect: Record<string, JsonValue>
-  detectors: Record<string, {
-    type: string
-    device: string
-    model: Record<string, JsonValue>
-  }>
+  detectors: Record<
+    string,
+    {
+      type: string
+      device: string
+      model: Record<string, JsonValue>
+    }
+  >
   ffmpeg: Record<string, JsonValue>
   go2rtc: Record<string, JsonValue>
   live: { height: number; quality: number; stream_name: string }

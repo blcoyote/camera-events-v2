@@ -199,11 +199,11 @@ Feature: Frigate API Client (Read Operations)
 
 ## Complexity Classification
 
-| Rating | Criteria | Review depth |
-|--------|----------|--------------|
-| `trivial` | Single-file rename, config change, typo fix, documentation-only | Skip inline review; covered by final `/code-review` |
-| `standard` | New function, test, module, or behavioral change within existing patterns | Spec-compliance + relevant quality agents |
-| `complex` | Architectural change, security-sensitive, cross-cutting concern, new abstraction | Full agent suite including opus-tier agents |
+| Rating     | Criteria                                                                         | Review depth                                        |
+| ---------- | -------------------------------------------------------------------------------- | --------------------------------------------------- |
+| `trivial`  | Single-file rename, config change, typo fix, documentation-only                  | Skip inline review; covered by final `/code-review` |
+| `standard` | New function, test, module, or behavioral change within existing patterns        | Spec-compliance + relevant quality agents           |
+| `complex`  | Architectural change, security-sensitive, cross-cutting concern, new abstraction | Full agent suite including opus-tier agents         |
 
 ## Pre-PR Quality Gate
 
@@ -224,14 +224,15 @@ Feature: Frigate API Client (Read Operations)
 
 Four review perspectives evaluated. All approved.
 
-| Reviewer | Verdict | Notes |
-|----------|---------|-------|
-| Acceptance Test Critic | approve | All 20 BDD scenarios traced to TDD steps. Step 2 (types) relies on tsc, not runtime tests — acceptable for pure type definitions. |
+| Reviewer                     | Verdict | Notes                                                                                                                                                            |
+| ---------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Acceptance Test Critic       | approve | All 20 BDD scenarios traced to TDD steps. Step 2 (types) relies on tsc, not runtime tests — acceptable for pure type definitions.                                |
 | Design & Architecture Critic | approve | Clean separation (config/types/client). Internal helpers prevent duplication. No new deps. FrigateConfig/FrigateStats loosely typed — acceptable for foundation. |
-| UX Critic | approve | N/A — server-side infrastructure, no UI. FrigateResult pattern gives future UI explicit error control. |
-| Strategic Critic | approve | Right-sized scope. Type drift risk acknowledged. Discriminated union prevents crashes on unexpected shapes. |
+| UX Critic                    | approve | N/A — server-side infrastructure, no UI. FrigateResult pattern gives future UI explicit error control.                                                           |
+| Strategic Critic             | approve | Right-sized scope. Type drift risk acknowledged. Discriminated union prevents crashes on unexpected shapes.                                                      |
 
 **Warnings (non-blocking)**:
+
 - Types may need tightening once connected to a real Frigate instance
 - No integration tests in this slice — all mocked fetch
 - Server-only boundary is architectural, not compiler-enforced

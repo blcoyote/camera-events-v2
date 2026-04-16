@@ -29,7 +29,8 @@ export async function handleSnapshotRequest(
   }
 
   if (download) {
-    headers['Content-Disposition'] = `attachment; filename="event-${eventId}.jpg"`
+    headers['Content-Disposition'] =
+      `attachment; filename="event-${eventId}.jpg"`
   }
 
   return new Response(result.data, { status: 200, headers })

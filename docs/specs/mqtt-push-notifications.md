@@ -135,20 +135,22 @@ sendPushNotification()       ← existing web-push wrapper
 
 ### Components
 
-| Component | Location | Responsibility |
-|---|---|---|
-| MQTT event parser | `src/server/mqtt.ts` — `parseFrigateEvent()` | Parse MQTT payload, filter `type: "new"`, extract event info |
-| Event batcher | `src/server/event-batcher.ts` — `EventBatcher` | Per-camera in-memory buffer with configurable timer window |
-| Notification dispatcher | `src/server/push-notify.ts` — `notifyUsersForCamera()` | Query subscribed users, filter by preferences, build payloads, send |
-| Preference store | `src/server/push-store.ts` (extended) | `getAllSubscribedUserIds`, `getDisabledCameras`, `isCameraEnabledForUser`, `setPreference` |
-| Preferences API | `src/routes/api/push/preferences.ts` | GET: camera list + prefs merged. PUT: update single preference |
-| Settings UI | `src/pages/settings/NotificationSettings.tsx` (extended) | Per-camera toggle switches below existing enable/disable section |
+| Component               | Location                                                 | Responsibility                                                                             |
+| ----------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| MQTT event parser       | `src/server/mqtt.ts` — `parseFrigateEvent()`             | Parse MQTT payload, filter `type: "new"`, extract event info                               |
+| Event batcher           | `src/server/event-batcher.ts` — `EventBatcher`           | Per-camera in-memory buffer with configurable timer window                                 |
+| Notification dispatcher | `src/server/push-notify.ts` — `notifyUsersForCamera()`   | Query subscribed users, filter by preferences, build payloads, send                        |
+| Preference store        | `src/server/push-store.ts` (extended)                    | `getAllSubscribedUserIds`, `getDisabledCameras`, `isCameraEnabledForUser`, `setPreference` |
+| Preferences API         | `src/routes/api/push/preferences.ts`                     | GET: camera list + prefs merged. PUT: update single preference                             |
+| Settings UI             | `src/pages/settings/NotificationSettings.tsx` (extended) | Per-camera toggle switches below existing enable/disable section                           |
 
 ### Frigate MQTT Event Payload
 
 ```json
 {
-  "before": { /* previous state */ },
+  "before": {
+    /* previous state */
+  },
   "after": {
     "id": "1713182400.123456-abc123",
     "camera": "front_porch",
@@ -176,6 +178,7 @@ Extracted to `FrigateEventInfo`: `{ id, camera, label, startTime }`.
 ### Push Payload Format
 
 **Single event:**
+
 ```json
 {
   "title": "Front Porch",
@@ -186,6 +189,7 @@ Extracted to `FrigateEventInfo`: `{ id, camera, label, startTime }`.
 ```
 
 **Bundled (3 events from same camera):**
+
 ```json
 {
   "title": "Front Porch",
@@ -197,14 +201,14 @@ Extracted to `FrigateEventInfo`: `{ id, camera, label, startTime }`.
 
 ### Design Decisions
 
-| Decision | Resolution | Rationale |
-|---|---|---|
-| Event types | Only `type: "new"` triggers notifications | Prevents repeat notifications for the same event |
-| Batching scope | Per-camera 10-second windows | Users can opt out of individual cameras; cross-camera bundling would complicate filtering |
-| Batching state | In-memory `Map` + `setTimeout` | Simple, no persistence needed — worst case on restart is one unbatched notification |
-| Default preference | All cameras enabled (opt-out model) | Zero setup required for new cameras |
-| Notification icon | `/logo192.png` (PWA icon) | Consistent branding |
-| Bundled URL | `/camera-events` (list page) | No single event to link to |
+| Decision           | Resolution                                | Rationale                                                                                 |
+| ------------------ | ----------------------------------------- | ----------------------------------------------------------------------------------------- |
+| Event types        | Only `type: "new"` triggers notifications | Prevents repeat notifications for the same event                                          |
+| Batching scope     | Per-camera 10-second windows              | Users can opt out of individual cameras; cross-camera bundling would complicate filtering |
+| Batching state     | In-memory `Map` + `setTimeout`            | Simple, no persistence needed — worst case on restart is one unbatched notification       |
+| Default preference | All cameras enabled (opt-out model)       | Zero setup required for new cameras                                                       |
+| Notification icon  | `/logo192.png` (PWA icon)                 | Consistent branding                                                                       |
+| Bundled URL        | `/camera-events` (list page)              | No single event to link to                                                                |
 
 ### Constraints
 
@@ -215,19 +219,19 @@ Extracted to `FrigateEventInfo`: `{ id, camera, label, startTime }`.
 
 ## Acceptance Criteria
 
-| # | Criterion | Pass condition |
-|---|---|---|
-| AC-1 | Single event notification | New Frigate event triggers a push notification with camera name, label, time, and link to event detail page |
-| AC-2 | Batched notification | Multiple events from same camera within 10s produce one notification with count and link to event list |
-| AC-3 | Event type filter | Only `type: "new"` events trigger notifications; `update` and `end` are ignored |
-| AC-4 | Per-camera independence | Each camera has its own 10s batch window |
-| AC-5 | Per-camera opt-out | Disabled cameras produce no notifications for that user |
-| AC-6 | Opt-out default | Cameras without a preference row are treated as enabled |
-| AC-7 | Settings UI | Camera toggles appear when notifications are subscribed; toggles call preferences API |
-| AC-8 | Optimistic UI | Toggle updates instantly, reverts on API failure |
-| AC-9 | Multi-user isolation | User A's preferences don't affect user B |
-| AC-10 | Notification icon | All notifications use `/logo192.png` |
-| AC-11 | No regression | Existing cache invalidation, push subscribe/unsubscribe, test notification all still work |
+| #     | Criterion                 | Pass condition                                                                                              |
+| ----- | ------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| AC-1  | Single event notification | New Frigate event triggers a push notification with camera name, label, time, and link to event detail page |
+| AC-2  | Batched notification      | Multiple events from same camera within 10s produce one notification with count and link to event list      |
+| AC-3  | Event type filter         | Only `type: "new"` events trigger notifications; `update` and `end` are ignored                             |
+| AC-4  | Per-camera independence   | Each camera has its own 10s batch window                                                                    |
+| AC-5  | Per-camera opt-out        | Disabled cameras produce no notifications for that user                                                     |
+| AC-6  | Opt-out default           | Cameras without a preference row are treated as enabled                                                     |
+| AC-7  | Settings UI               | Camera toggles appear when notifications are subscribed; toggles call preferences API                       |
+| AC-8  | Optimistic UI             | Toggle updates instantly, reverts on API failure                                                            |
+| AC-9  | Multi-user isolation      | User A's preferences don't affect user B                                                                    |
+| AC-10 | Notification icon         | All notifications use `/logo192.png`                                                                        |
+| AC-11 | No regression             | Existing cache invalidation, push subscribe/unsubscribe, test notification all still work                   |
 
 ## Consistency Gate
 

@@ -146,6 +146,7 @@ Feature: Web Push Notification Support
 
 **Complexity**: complex
 **RED**: Write tests for `push-store.ts`:
+
 - `saveSubscription` upserts on `(user_id, endpoint)` — inserting a new subscription, then saving again with the same endpoint updates rather than duplicates
 - `getSubscriptionsByUserId` returns all subscriptions for a user (multi-device)
 - `removeSubscription` deletes by user_id + endpoint
@@ -153,10 +154,10 @@ Feature: Web Push Notification Support
 - Both tables are created on init
 - Preferences table exists with correct columns (category, resource_id, enabled)
 - **Persistence**: close and re-open the DB, verify rows survive (AC-11)
-**GREEN**: Implement `src/server/push-store.ts` — lazy-init SQLite at `data/camera-events.db`, create both tables with `CREATE TABLE IF NOT EXISTS`, export CRUD functions. Use a temp directory in tests to avoid polluting the real data dir.
-**REFACTOR**: Extract DB path to a constant. Ensure WAL mode is enabled for concurrent reads.
-**Files**: `src/server/push-store.ts`, `src/server/push-store.test.ts`
-**Commit**: `feat(push): add SQLite push subscription and preferences store`
+  **GREEN**: Implement `src/server/push-store.ts` — lazy-init SQLite at `data/camera-events.db`, create both tables with `CREATE TABLE IF NOT EXISTS`, export CRUD functions. Use a temp directory in tests to avoid polluting the real data dir.
+  **REFACTOR**: Extract DB path to a constant. Ensure WAL mode is enabled for concurrent reads.
+  **Files**: `src/server/push-store.ts`, `src/server/push-store.test.ts`
+  **Commit**: `feat(push): add SQLite push subscription and preferences store`
 
 ### Step 3: VAPID config and web-push wrapper with graceful degradation
 
@@ -171,14 +172,15 @@ Feature: Web Push Notification Support
 
 **Complexity**: complex
 **RED**: Write tests for each endpoint:
+
 - GET `/api/push/vapid-public-key` returns `{ publicKey }` when configured, 503 when not
 - POST `/api/push/subscribe` upserts subscription for authenticated user, returns 401 if unauthenticated
 - POST `/api/push/unsubscribe` removes subscription, returns 401 if unauthenticated
 - POST `/api/push/test` sends notification to all user subscriptions, returns `{ sent: number }`, returns 401/503 appropriately
-**GREEN**: Implement four route files under `src/routes/api/push/`. Follow the existing pattern from `src/routes/api/events/$id/clip.ts` — use `useSession` for auth, call push-store and push.ts functions.
-**REFACTOR**: Extract shared auth check into a helper if repeated boilerplate is excessive.
-**Files**: `src/routes/api/push/vapid-public-key.ts`, `src/routes/api/push/subscribe.ts`, `src/routes/api/push/unsubscribe.ts`, `src/routes/api/push/test.ts`, `src/routes/api/push/-push-endpoints.test.ts`
-**Commit**: `feat(push): add push API endpoints (subscribe, unsubscribe, test, vapid-public-key)`
+  **GREEN**: Implement four route files under `src/routes/api/push/`. Follow the existing pattern from `src/routes/api/events/$id/clip.ts` — use `useSession` for auth, call push-store and push.ts functions.
+  **REFACTOR**: Extract shared auth check into a helper if repeated boilerplate is excessive.
+  **Files**: `src/routes/api/push/vapid-public-key.ts`, `src/routes/api/push/subscribe.ts`, `src/routes/api/push/unsubscribe.ts`, `src/routes/api/push/test.ts`, `src/routes/api/push/-push-endpoints.test.ts`
+  **Commit**: `feat(push): add push API endpoints (subscribe, unsubscribe, test, vapid-public-key)`
 
 ### Step 5: Service worker push and notificationclick handlers
 
@@ -194,6 +196,7 @@ Feature: Web Push Notification Support
 
 **Complexity**: standard
 **RED**: Write tests for the hook using `vi.stubGlobal` to mock browser APIs (`navigator.serviceWorker`, `PushManager`, `Notification.permission`) and `vi.fn()` to mock fetch calls:
+
 - Returns `isSupported: false` when Push API unavailable
 - Returns correct `permissionState` values (`default`, `granted`, `denied`)
 - **Distinct test for `denied` (previously blocked)**: returns `permissionState: 'denied'` and `isSubscribed: false` when `Notification.permission === 'denied'` on page load (BDD "Permission was previously blocked")
@@ -201,15 +204,16 @@ Feature: Web Push Notification Support
 - `unsubscribe()` calls PushManager and POST `/api/push/unsubscribe`
 - Rolls back local subscription on server error (mock fetch to reject)
 - Exposes `isLoading: true` during async operations, `false` when idle
-**GREEN**: Implement `src/hooks/usePushSubscription.ts` — React hook using `useState` and `useEffect`. Checks `'PushManager' in window` for support. Fetches VAPID public key from `/api/push/vapid-public-key`. Exposes: `isSupported`, `isPushEnabled` (server has VAPID), `permissionState`, `isSubscribed`, `isLoading`, `subscribe()`, `unsubscribe()`, `sendTest()`, `error`.
-**REFACTOR**: None needed.
-**Files**: `src/hooks/usePushSubscription.ts`, `src/hooks/usePushSubscription.test.ts`
-**Commit**: `feat(push): add usePushSubscription React hook`
+  **GREEN**: Implement `src/hooks/usePushSubscription.ts` — React hook using `useState` and `useEffect`. Checks `'PushManager' in window` for support. Fetches VAPID public key from `/api/push/vapid-public-key`. Exposes: `isSupported`, `isPushEnabled` (server has VAPID), `permissionState`, `isSubscribed`, `isLoading`, `subscribe()`, `unsubscribe()`, `sendTest()`, `error`.
+  **REFACTOR**: None needed.
+  **Files**: `src/hooks/usePushSubscription.ts`, `src/hooks/usePushSubscription.test.ts`
+  **Commit**: `feat(push): add usePushSubscription React hook`
 
 ### Step 7: Settings page Notifications section
 
 **Complexity**: standard
 **RED**: Write tests for the Notifications section rendering:
+
 - Shows "not supported" message when Push API absent (BDD "Browser does not support Push API")
 - Shows "not available" when server returns 503 (BDD "VAPID keys are not configured")
 - Shows enable button when permission is `default` (BDD "User enables push notifications")
@@ -217,10 +221,10 @@ Feature: Web Push Notification Support
 - Shows blocked message with browser-specific unblock hint when permission is `denied` — **both** the "just denied" case (AC-6) and the "previously blocked" case (enable button disabled)
 - Buttons are disabled with spinner during `isLoading` (prevents double-tap)
 - Test button shows inline success feedback with device count ("Test sent to N device(s)") in an `aria-live="polite"` region
-**GREEN**: Add a "Notifications" `<section>` to `src/pages/settings/SettingsPage.tsx` below the existing "Camera Events" section. Use `usePushSubscription` hook. Render conditionally based on `isSupported`, `isPushEnabled`, `permissionState`, `isSubscribed`, and `isLoading`. Include enable/disable button and "Send Test Notification" button. Use `aria-live="polite"` for status messages. Blocked-permission hint includes instructions for Chrome and Safari.
-**REFACTOR**: Extract notification section into a `NotificationSettings` component if the SettingsPage grows too large.
-**Files**: `src/pages/settings/SettingsPage.tsx`, `src/routes/_authenticated/-settings.test.ts`
-**Commit**: `feat(push): add notifications section to Settings page`
+  **GREEN**: Add a "Notifications" `<section>` to `src/pages/settings/SettingsPage.tsx` below the existing "Camera Events" section. Use `usePushSubscription` hook. Render conditionally based on `isSupported`, `isPushEnabled`, `permissionState`, `isSubscribed`, and `isLoading`. Include enable/disable button and "Send Test Notification" button. Use `aria-live="polite"` for status messages. Blocked-permission hint includes instructions for Chrome and Safari.
+  **REFACTOR**: Extract notification section into a `NotificationSettings` component if the SettingsPage grows too large.
+  **Files**: `src/pages/settings/SettingsPage.tsx`, `src/routes/_authenticated/-settings.test.ts`
+  **Commit**: `feat(push): add notifications section to Settings page`
 
 ### Step 8: Docker Compose volume mount and .env.example update
 
@@ -238,11 +242,11 @@ Feature: Web Push Notification Support
 
 ## Complexity Classification
 
-| Rating | Criteria | Review depth |
-|--------|----------|--------------|
-| `trivial` | Single-file rename, config change, typo fix, documentation-only | Skip inline review; covered by final `/code-review` |
-| `standard` | New function, test, module, or behavioral change within existing patterns | Spec-compliance + relevant quality agents |
-| `complex` | Architectural change, security-sensitive, cross-cutting concern, new abstraction | Full agent suite including opus-tier agents |
+| Rating     | Criteria                                                                         | Review depth                                        |
+| ---------- | -------------------------------------------------------------------------------- | --------------------------------------------------- |
+| `trivial`  | Single-file rename, config change, typo fix, documentation-only                  | Skip inline review; covered by final `/code-review` |
+| `standard` | New function, test, module, or behavioral change within existing patterns        | Spec-compliance + relevant quality agents           |
+| `complex`  | Architectural change, security-sensitive, cross-cutting concern, new abstraction | Full agent suite including opus-tier agents         |
 
 ## Pre-PR Quality Gate
 
@@ -270,24 +274,29 @@ Feature: Web Push Notification Support
 Four review perspectives were consulted. Two approved; two flagged revisions.
 
 **Addressed blockers (Architect):**
+
 - **Device identity for upsert (AC-3)**: The architect flagged that `(user_id, endpoint)` upsert doesn't handle endpoint regeneration on the same device. After analysis: when a browser regenerates an endpoint, the old endpoint becomes invalid and will 410 on next push attempt, triggering cleanup (AC-9). The new endpoint is saved as a new row. The net effect is correct — only valid subscriptions remain. A `device_id` adds complexity without material benefit since 410 cleanup is already specified. No change needed.
 - **SW handler testability**: Resolved by extracting push handler logic into pure functions in `src/sw-push-handlers.ts` (Step 5 revised). SW file stays thin; logic is testable in Node/Vitest.
 
 **Addressed blockers (Acceptance Test Critic):**
+
 - **AC-10 no automated test**: Added explicit manual verification step inside Step 5 and Pre-PR Quality Gate. SW caching behavior is inherently integration/manual — no unit test can verify Serwist precache works.
 - **AC-11 no persistence test**: Added close-and-reopen DB test to Step 2 RED phase.
 - **"Previously blocked" vs "just denied" distinction**: Added explicit separate test case in Step 7 and Step 6 RED for `Notification.permission === 'denied'` on page load.
 
 **Addressed warnings (UX Critic):**
+
 - **Loading state / double-tap prevention**: Added `isLoading` flag to hook (Step 6) and button disabled state (Step 7).
 - **Inline success feedback for test**: Added "Test sent to N device(s)" inline message using `{ sent }` response (Step 7).
 - **Blocked-permission hint specificity**: Step 7 now specifies browser-specific instructions for Chrome and Safari.
 
 **Addressed warnings (Strategic Critic):**
+
 - **POST body parsing pattern**: Added to Risks & Open Questions — must verify TanStack Start handler signature for POST.
 - **Dockerfile update for `better-sqlite3`**: Noted — if native compilation is problematic during implementation, switch to `sql.js`. Decision deferred to Step 1 implementation.
 - **`GET /api/push/vapid-public-key` intentionally unauthenticated**: Confirmed correct — VAPID public key is public by design.
 
 **Noted for future consideration:**
+
 - `sql.js` (WASM) as default over `better-sqlite3` (native) to avoid build complexity — evaluate during Step 1
 - `aria-live="polite"` regions for all notification status messages — consistent with existing SettingsPage pattern

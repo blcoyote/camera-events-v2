@@ -2,11 +2,7 @@ import { Link } from '@tanstack/react-router'
 import { Camera, Clock, Tag, MapPin, Film, Image, Download } from 'lucide-react'
 import type { FrigateResult } from '#/features/shared/server/frigate/config'
 import type { FrigateEvent } from '#/features/shared/server/frigate/types'
-import {
-  formatRelativeTime,
-  formatLabelName,
-  getLabelDotColor,
-} from '../utils'
+import { formatRelativeTime, formatLabelName, getLabelDotColor } from '../utils'
 
 // ─── Pure functions (exported for testing) ───
 
@@ -19,9 +15,16 @@ export function getDetailPageState(
 ): DetailPageState {
   if (!result.ok) {
     if (result.status === 404) {
-      return { kind: 'error', message: "The event you're looking for doesn't exist or has been removed." }
+      return {
+        kind: 'error',
+        message:
+          "The event you're looking for doesn't exist or has been removed.",
+      }
     }
-    return { kind: 'error', message: 'Could not load event. Check that Frigate is running.' }
+    return {
+      kind: 'error',
+      message: 'Could not load event. Check that Frigate is running.',
+    }
   }
   return { kind: 'event', event: result.data }
 }
@@ -185,7 +188,8 @@ export function CameraEventDetailPage({
         </h1>
 
         <p className="mb-6 text-sm text-(--sea-ink-soft)">
-          {formatRelativeTime(event.start_time)} · {formatTimestamp(event.start_time)}
+          {formatRelativeTime(event.start_time)} ·{' '}
+          {formatTimestamp(event.start_time)}
         </p>
 
         {event.has_snapshot && (
@@ -195,16 +199,37 @@ export function CameraEventDetailPage({
         )}
 
         <dl className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <InfoCard icon={Camera} label="Camera" value={formatCameraName(event.camera)} />
-          <InfoCard icon={Clock} label="Duration" value={formatDuration(event.start_time, event.end_time)} />
-          <InfoCard icon={Tag} label="Label" value={
-            <>
-              {formatLabelName(event.label)}
-              {event.sub_label && <span className="text-(--sea-ink-soft)"> ({event.sub_label})</span>}
-            </>
-          } />
+          <InfoCard
+            icon={Camera}
+            label="Camera"
+            value={formatCameraName(event.camera)}
+          />
+          <InfoCard
+            icon={Clock}
+            label="Duration"
+            value={formatDuration(event.start_time, event.end_time)}
+          />
+          <InfoCard
+            icon={Tag}
+            label="Label"
+            value={
+              <>
+                {formatLabelName(event.label)}
+                {event.sub_label && (
+                  <span className="text-(--sea-ink-soft)">
+                    {' '}
+                    ({event.sub_label})
+                  </span>
+                )}
+              </>
+            }
+          />
           {event.zones.length > 0 && (
-            <InfoCard icon={MapPin} label="Zones" value={event.zones.join(', ')} />
+            <InfoCard
+              icon={MapPin}
+              label="Zones"
+              value={event.zones.join(', ')}
+            />
           )}
           <InfoCard
             icon={Film}
@@ -217,8 +242,14 @@ export function CameraEventDetailPage({
             icon={Image}
             label="Snapshot"
             value={event.has_snapshot ? 'Available' : 'None'}
-            href={event.has_snapshot ? getDownloadUrl(event.id, 'snapshot') : undefined}
-            aria-label={event.has_snapshot ? 'Download snapshot image' : undefined}
+            href={
+              event.has_snapshot
+                ? getDownloadUrl(event.id, 'snapshot')
+                : undefined
+            }
+            aria-label={
+              event.has_snapshot ? 'Download snapshot image' : undefined
+            }
           />
         </dl>
 
@@ -231,7 +262,9 @@ export function CameraEventDetailPage({
               <div className="h-2 flex-1 overflow-hidden rounded-full bg-(--line)">
                 <div
                   className="h-full rounded-full bg-(--lagoon-deep) transition-all"
-                  style={{ width: `${Math.round(event.data.top_score * 100)}%` }}
+                  style={{
+                    width: `${Math.round(event.data.top_score * 100)}%`,
+                  }}
                 />
               </div>
               <span className="text-sm font-semibold text-(--sea-ink)">

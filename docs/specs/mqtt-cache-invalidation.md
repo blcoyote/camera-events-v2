@@ -67,11 +67,11 @@ Feature: MQTT event-driven cache invalidation
 
 **Components:**
 
-| Component | Purpose |
-|-----------|---------|
-| `src/server/mqtt.ts` | **New** — Top-level module. Exports `onFrigateMessage(topic, payload)` handler and `startMqttSubscriber()`. The handler is deliberately kept at the top level of `src/server/` for visibility and future extension. |
-| `src/server/frigate/cache.ts` | Existing — `clearFrigateCache()` already exported |
-| `package.json` | Add `mqtt` dependency |
+| Component                     | Purpose                                                                                                                                                                                                             |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/server/mqtt.ts`          | **New** — Top-level module. Exports `onFrigateMessage(topic, payload)` handler and `startMqttSubscriber()`. The handler is deliberately kept at the top level of `src/server/` for visibility and future extension. |
+| `src/server/frigate/cache.ts` | Existing — `clearFrigateCache()` already exported                                                                                                                                                                   |
+| `package.json`                | Add `mqtt` dependency                                                                                                                                                                                               |
 
 **Design:**
 
@@ -89,29 +89,31 @@ Feature: MQTT event-driven cache invalidation
   - Clean session: `true` (no persistent subscriptions needed)
 
 **What is NOT in scope:**
+
 - Parsing MQTT message payloads beyond topic identification
 - Pushing events to connected clients (SSE/WebSocket) — future work
 - Selective cache invalidation (we clear the entire cache; it's small and TTL-bounded)
 
 **Constraints:**
+
 - One new npm dependency: `mqtt` (MQTT.js v5)
 - Handler must be a named, exported function at a discoverable location (`src/server/mqtt.ts`)
 - No changes to the cache module — it already exports `clearFrigateCache()`
 
 ## Acceptance Criteria
 
-| # | Criterion | Pass condition |
-|---|-----------|----------------|
-| 1 | MQTT connection | Server connects to RabbitMQ's MQTT plugin on startup when `MQTT_URL` is set |
-| 2 | Topic subscription | Client subscribes to `frigate/events` and `frigate/reviews` |
-| 3 | Cache cleared on event | Publishing a message to `frigate/events` causes `clearFrigateCache()` to execute |
-| 4 | Cache cleared on review | Publishing a message to `frigate/reviews` causes `clearFrigateCache()` to execute |
-| 5 | Graceful skip | No MQTT connection attempted when `MQTT_URL` is not set; no errors logged |
-| 6 | Reconnect | MQTT.js auto-reconnect handles broker restarts without crashing the server |
-| 7 | Handler visibility | `onFrigateMessage` is exported from `src/server/mqtt.ts` and callable independently |
-| 8 | Graceful shutdown | MQTT client disconnects on server close |
-| 9 | Tests pass | Unit tests cover: handler calls clearFrigateCache, startup with/without MQTT_URL, topic constants |
-| 10 | Type safety | `tsc --noEmit` passes |
+| #   | Criterion               | Pass condition                                                                                    |
+| --- | ----------------------- | ------------------------------------------------------------------------------------------------- |
+| 1   | MQTT connection         | Server connects to RabbitMQ's MQTT plugin on startup when `MQTT_URL` is set                       |
+| 2   | Topic subscription      | Client subscribes to `frigate/events` and `frigate/reviews`                                       |
+| 3   | Cache cleared on event  | Publishing a message to `frigate/events` causes `clearFrigateCache()` to execute                  |
+| 4   | Cache cleared on review | Publishing a message to `frigate/reviews` causes `clearFrigateCache()` to execute                 |
+| 5   | Graceful skip           | No MQTT connection attempted when `MQTT_URL` is not set; no errors logged                         |
+| 6   | Reconnect               | MQTT.js auto-reconnect handles broker restarts without crashing the server                        |
+| 7   | Handler visibility      | `onFrigateMessage` is exported from `src/server/mqtt.ts` and callable independently               |
+| 8   | Graceful shutdown       | MQTT client disconnects on server close                                                           |
+| 9   | Tests pass              | Unit tests cover: handler calls clearFrigateCache, startup with/without MQTT_URL, topic constants |
+| 10  | Type safety             | `tsc --noEmit` passes                                                                             |
 
 ## Consistency Gate
 

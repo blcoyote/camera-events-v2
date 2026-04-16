@@ -4,7 +4,9 @@ import { clearFrigateCache } from './cache'
 
 // Ensure mock mode is off for real client tests
 const _savedFrigateMock = process.env.FRIGATE_MOCK
-beforeEach(() => { delete process.env.FRIGATE_MOCK })
+beforeEach(() => {
+  delete process.env.FRIGATE_MOCK
+})
 afterEach(() => {
   if (_savedFrigateMock === undefined) delete process.env.FRIGATE_MOCK
   else process.env.FRIGATE_MOCK = _savedFrigateMock
@@ -70,9 +72,9 @@ function mockFetchBadJson(status = 200) {
 }
 
 function mockFetchTimeout() {
-  return vi.fn().mockRejectedValue(
-    new DOMException('signal timed out', 'TimeoutError'),
-  )
+  return vi
+    .fn()
+    .mockRejectedValue(new DOMException('signal timed out', 'TimeoutError'))
 }
 
 describe('getEvents', () => {
@@ -287,11 +289,18 @@ describe('getEventSummary', () => {
   const originalEnv = process.env.FRIGATE_URL
   const originalFetch = globalThis.fetch
 
-  beforeEach(() => { clearFrigateCache(); process.env.FRIGATE_URL = FRIGATE_URL })
+  beforeEach(() => {
+    clearFrigateCache()
+    process.env.FRIGATE_URL = FRIGATE_URL
+  })
   afterEach(() => {
     globalThis.fetch = originalFetch
     clearFrigateCache()
-    if (originalEnv === undefined) { delete process.env.FRIGATE_URL } else { process.env.FRIGATE_URL = originalEnv }
+    if (originalEnv === undefined) {
+      delete process.env.FRIGATE_URL
+    } else {
+      process.env.FRIGATE_URL = originalEnv
+    }
   })
 
   it('calls the correct endpoint', async () => {
@@ -301,7 +310,8 @@ describe('getEventSummary', () => {
     const result = await getEventSummary()
 
     expect(result).toEqual({ ok: true, data: summary })
-    const calledUrl = (globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[0][0] as string
+    const calledUrl = (globalThis.fetch as ReturnType<typeof vi.fn>).mock
+      .calls[0][0] as string
     expect(calledUrl).toContain('/api/events/summary')
   })
 
@@ -310,7 +320,8 @@ describe('getEventSummary', () => {
     const { getEventSummary } = await import('./client')
     await getEventSummary({ timezone: 'Europe/Oslo' })
 
-    const calledUrl = (globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[0][0] as string
+    const calledUrl = (globalThis.fetch as ReturnType<typeof vi.fn>).mock
+      .calls[0][0] as string
     expect(calledUrl).toContain('timezone=Europe%2FOslo')
   })
 })
@@ -319,11 +330,18 @@ describe('getReviews', () => {
   const originalEnv = process.env.FRIGATE_URL
   const originalFetch = globalThis.fetch
 
-  beforeEach(() => { clearFrigateCache(); process.env.FRIGATE_URL = FRIGATE_URL })
+  beforeEach(() => {
+    clearFrigateCache()
+    process.env.FRIGATE_URL = FRIGATE_URL
+  })
   afterEach(() => {
     globalThis.fetch = originalFetch
     clearFrigateCache()
-    if (originalEnv === undefined) { delete process.env.FRIGATE_URL } else { process.env.FRIGATE_URL = originalEnv }
+    if (originalEnv === undefined) {
+      delete process.env.FRIGATE_URL
+    } else {
+      process.env.FRIGATE_URL = originalEnv
+    }
   })
 
   it('serializes severity and reviewed params', async () => {
@@ -332,7 +350,8 @@ describe('getReviews', () => {
     const result = await getReviews({ severity: 'alert', reviewed: 0 })
 
     expect(result).toEqual({ ok: true, data: [MOCK_REVIEW] })
-    const calledUrl = (globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[0][0] as string
+    const calledUrl = (globalThis.fetch as ReturnType<typeof vi.fn>).mock
+      .calls[0][0] as string
     expect(calledUrl).toContain('severity=alert')
     expect(calledUrl).toContain('reviewed=0')
   })
@@ -342,11 +361,18 @@ describe('getReviewByEvent', () => {
   const originalEnv = process.env.FRIGATE_URL
   const originalFetch = globalThis.fetch
 
-  beforeEach(() => { clearFrigateCache(); process.env.FRIGATE_URL = FRIGATE_URL })
+  beforeEach(() => {
+    clearFrigateCache()
+    process.env.FRIGATE_URL = FRIGATE_URL
+  })
   afterEach(() => {
     globalThis.fetch = originalFetch
     clearFrigateCache()
-    if (originalEnv === undefined) { delete process.env.FRIGATE_URL } else { process.env.FRIGATE_URL = originalEnv }
+    if (originalEnv === undefined) {
+      delete process.env.FRIGATE_URL
+    } else {
+      process.env.FRIGATE_URL = originalEnv
+    }
   })
 
   it('makes GET request to correct path', async () => {
@@ -355,7 +381,8 @@ describe('getReviewByEvent', () => {
     const result = await getReviewByEvent('abc123')
 
     expect(result).toEqual({ ok: true, data: MOCK_REVIEW })
-    const calledUrl = (globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[0][0] as string
+    const calledUrl = (globalThis.fetch as ReturnType<typeof vi.fn>).mock
+      .calls[0][0] as string
     expect(calledUrl).toBe(`${FRIGATE_URL}/api/review/event/abc123`)
   })
 })
@@ -364,23 +391,36 @@ describe('getReviewSummary', () => {
   const originalEnv = process.env.FRIGATE_URL
   const originalFetch = globalThis.fetch
 
-  beforeEach(() => { clearFrigateCache(); process.env.FRIGATE_URL = FRIGATE_URL })
+  beforeEach(() => {
+    clearFrigateCache()
+    process.env.FRIGATE_URL = FRIGATE_URL
+  })
   afterEach(() => {
     globalThis.fetch = originalFetch
     clearFrigateCache()
-    if (originalEnv === undefined) { delete process.env.FRIGATE_URL } else { process.env.FRIGATE_URL = originalEnv }
+    if (originalEnv === undefined) {
+      delete process.env.FRIGATE_URL
+    } else {
+      process.env.FRIGATE_URL = originalEnv
+    }
   })
 
   it('passes timezone param and returns summary', async () => {
     const summary: FrigateReviewSummary = {
-      last24Hours: { reviewed_alert: 0, reviewed_detection: 0, total_alert: 5, total_detection: 12 },
+      last24Hours: {
+        reviewed_alert: 0,
+        reviewed_detection: 0,
+        total_alert: 5,
+        total_detection: 12,
+      },
     }
     globalThis.fetch = mockFetchJson(summary)
     const { getReviewSummary } = await import('./client')
     const result = await getReviewSummary({ timezone: 'Europe/Oslo' })
 
     expect(result).toEqual({ ok: true, data: summary })
-    const calledUrl = (globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[0][0] as string
+    const calledUrl = (globalThis.fetch as ReturnType<typeof vi.fn>).mock
+      .calls[0][0] as string
     expect(calledUrl).toContain('timezone=Europe%2FOslo')
   })
 })
@@ -389,11 +429,18 @@ describe('getTimeline', () => {
   const originalEnv = process.env.FRIGATE_URL
   const originalFetch = globalThis.fetch
 
-  beforeEach(() => { clearFrigateCache(); process.env.FRIGATE_URL = FRIGATE_URL })
+  beforeEach(() => {
+    clearFrigateCache()
+    process.env.FRIGATE_URL = FRIGATE_URL
+  })
   afterEach(() => {
     globalThis.fetch = originalFetch
     clearFrigateCache()
-    if (originalEnv === undefined) { delete process.env.FRIGATE_URL } else { process.env.FRIGATE_URL = originalEnv }
+    if (originalEnv === undefined) {
+      delete process.env.FRIGATE_URL
+    } else {
+      process.env.FRIGATE_URL = originalEnv
+    }
   })
 
   it('passes camera and limit params', async () => {
@@ -402,7 +449,8 @@ describe('getTimeline', () => {
     const result = await getTimeline({ camera: 'front_door', limit: 50 })
 
     expect(result.ok).toBe(true)
-    const calledUrl = (globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[0][0] as string
+    const calledUrl = (globalThis.fetch as ReturnType<typeof vi.fn>).mock
+      .calls[0][0] as string
     expect(calledUrl).toContain('camera=front_door')
     expect(calledUrl).toContain('limit=50')
   })
@@ -412,11 +460,18 @@ describe('getStats', () => {
   const originalEnv = process.env.FRIGATE_URL
   const originalFetch = globalThis.fetch
 
-  beforeEach(() => { clearFrigateCache(); process.env.FRIGATE_URL = FRIGATE_URL })
+  beforeEach(() => {
+    clearFrigateCache()
+    process.env.FRIGATE_URL = FRIGATE_URL
+  })
   afterEach(() => {
     globalThis.fetch = originalFetch
     clearFrigateCache()
-    if (originalEnv === undefined) { delete process.env.FRIGATE_URL } else { process.env.FRIGATE_URL = originalEnv }
+    if (originalEnv === undefined) {
+      delete process.env.FRIGATE_URL
+    } else {
+      process.env.FRIGATE_URL = originalEnv
+    }
   })
 
   it('calls the correct endpoint with no params', async () => {
@@ -426,7 +481,8 @@ describe('getStats', () => {
     const result = await getStats()
 
     expect(result).toEqual({ ok: true, data: stats })
-    const calledUrl = (globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[0][0] as string
+    const calledUrl = (globalThis.fetch as ReturnType<typeof vi.fn>).mock
+      .calls[0][0] as string
     expect(calledUrl).toBe(`${FRIGATE_URL}/api/stats`)
   })
 })
@@ -435,11 +491,18 @@ describe('getConfig', () => {
   const originalEnv = process.env.FRIGATE_URL
   const originalFetch = globalThis.fetch
 
-  beforeEach(() => { clearFrigateCache(); process.env.FRIGATE_URL = FRIGATE_URL })
+  beforeEach(() => {
+    clearFrigateCache()
+    process.env.FRIGATE_URL = FRIGATE_URL
+  })
   afterEach(() => {
     globalThis.fetch = originalFetch
     clearFrigateCache()
-    if (originalEnv === undefined) { delete process.env.FRIGATE_URL } else { process.env.FRIGATE_URL = originalEnv }
+    if (originalEnv === undefined) {
+      delete process.env.FRIGATE_URL
+    } else {
+      process.env.FRIGATE_URL = originalEnv
+    }
   })
 
   it('calls the correct endpoint with no params', async () => {
@@ -449,7 +512,8 @@ describe('getConfig', () => {
     const result = await getConfig()
 
     expect(result).toEqual({ ok: true, data: config })
-    const calledUrl = (globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[0][0] as string
+    const calledUrl = (globalThis.fetch as ReturnType<typeof vi.fn>).mock
+      .calls[0][0] as string
     expect(calledUrl).toBe(`${FRIGATE_URL}/api/config`)
   })
 })
@@ -458,20 +522,36 @@ describe('getCameras', () => {
   const originalEnv = process.env.FRIGATE_URL
   const originalFetch = globalThis.fetch
 
-  beforeEach(() => { clearFrigateCache(); process.env.FRIGATE_URL = FRIGATE_URL })
+  beforeEach(() => {
+    clearFrigateCache()
+    process.env.FRIGATE_URL = FRIGATE_URL
+  })
   afterEach(() => {
     globalThis.fetch = originalFetch
     clearFrigateCache()
-    if (originalEnv === undefined) { delete process.env.FRIGATE_URL } else { process.env.FRIGATE_URL = originalEnv }
+    if (originalEnv === undefined) {
+      delete process.env.FRIGATE_URL
+    } else {
+      process.env.FRIGATE_URL = originalEnv
+    }
   })
 
   it('returns camera names from config', async () => {
-    const config = { cameras: { front_door: { enabled: true }, backyard: { enabled: true }, garage: { enabled: false } } }
+    const config = {
+      cameras: {
+        front_door: { enabled: true },
+        backyard: { enabled: true },
+        garage: { enabled: false },
+      },
+    }
     globalThis.fetch = mockFetchJson(config)
     const { getCameras } = await import('./client')
     const result = await getCameras()
 
-    expect(result).toEqual({ ok: true, data: ['backyard', 'front_door', 'garage'] })
+    expect(result).toEqual({
+      ok: true,
+      data: ['backyard', 'front_door', 'garage'],
+    })
   })
 
   it('returns empty array when config has no cameras key', async () => {
@@ -549,11 +629,18 @@ describe('getLatestSnapshot', () => {
   const originalEnv = process.env.FRIGATE_URL
   const originalFetch = globalThis.fetch
 
-  beforeEach(() => { clearFrigateCache(); process.env.FRIGATE_URL = FRIGATE_URL })
+  beforeEach(() => {
+    clearFrigateCache()
+    process.env.FRIGATE_URL = FRIGATE_URL
+  })
   afterEach(() => {
     globalThis.fetch = originalFetch
     clearFrigateCache()
-    if (originalEnv === undefined) { delete process.env.FRIGATE_URL } else { process.env.FRIGATE_URL = originalEnv }
+    if (originalEnv === undefined) {
+      delete process.env.FRIGATE_URL
+    } else {
+      process.env.FRIGATE_URL = originalEnv
+    }
   })
 
   it('makes GET request to correct snapshot URL and returns ArrayBuffer', async () => {
@@ -563,7 +650,8 @@ describe('getLatestSnapshot', () => {
     const result = await getLatestSnapshot('front_door')
 
     expect(result).toEqual({ ok: true, data: buffer })
-    const calledUrl = (globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[0][0] as string
+    const calledUrl = (globalThis.fetch as ReturnType<typeof vi.fn>).mock
+      .calls[0][0] as string
     expect(calledUrl).toBe(`${FRIGATE_URL}/api/front_door/latest.jpg`)
   })
 

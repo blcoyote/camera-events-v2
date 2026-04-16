@@ -9,11 +9,11 @@ describe('NotificationSettings state logic', () => {
   it('defines five distinct UI states based on hook values', () => {
     // The component conditionally renders based on these states:
     const states = [
-      'unsupported',       // isSupported === false
-      'not-configured',    // isPushEnabled === false
-      'blocked',           // permissionState === 'denied'
-      'not-subscribed',    // isSubscribed === false
-      'subscribed',        // isSubscribed === true
+      'unsupported', // isSupported === false
+      'not-configured', // isPushEnabled === false
+      'blocked', // permissionState === 'denied'
+      'not-subscribed', // isSubscribed === false
+      'subscribed', // isSubscribed === true
     ] as const
 
     expect(states).toHaveLength(5)

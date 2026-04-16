@@ -94,33 +94,33 @@ Feature: Storybook stories for all components and pages
 
 **New files**:
 
-| File | Purpose |
-|------|---------|
-| `.storybook/decorators/withRouter.tsx` | Shared decorator wrapping stories in TanStack Router context with a memory router |
-| `src/components/Header.stories.tsx` | Header stories: Authenticated, Unauthenticated |
-| `src/components/Footer.stories.tsx` | Footer story: Default |
-| `src/components/ThemeToggle.stories.tsx` | ThemeToggle story: Default |
-| `src/components/AlertBanner.stories.tsx` | AlertBanner stories: Error, Success, NoAlert |
-| `src/pages/home/HomePage.stories.tsx` | HomePage stories: Default, WithError, WithStatus |
-| `src/pages/cameras/CamerasPage.stories.tsx` | CamerasPage stories: WithCameras, Empty, Error, Loading |
-| `src/pages/camera-events/CameraEventsListPage.stories.tsx` | CameraEventsListPage story: Default |
-| `src/pages/camera-events/CameraEventDetailPage.stories.tsx` | CameraEventDetailPage stories: Found, NotFound |
-| `src/pages/settings/SettingsPage.stories.tsx` | SettingsPage story: Default |
+| File                                                        | Purpose                                                                           |
+| ----------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| `.storybook/decorators/withRouter.tsx`                      | Shared decorator wrapping stories in TanStack Router context with a memory router |
+| `src/components/Header.stories.tsx`                         | Header stories: Authenticated, Unauthenticated                                    |
+| `src/components/Footer.stories.tsx`                         | Footer story: Default                                                             |
+| `src/components/ThemeToggle.stories.tsx`                    | ThemeToggle story: Default                                                        |
+| `src/components/AlertBanner.stories.tsx`                    | AlertBanner stories: Error, Success, NoAlert                                      |
+| `src/pages/home/HomePage.stories.tsx`                       | HomePage stories: Default, WithError, WithStatus                                  |
+| `src/pages/cameras/CamerasPage.stories.tsx`                 | CamerasPage stories: WithCameras, Empty, Error, Loading                           |
+| `src/pages/camera-events/CameraEventsListPage.stories.tsx`  | CameraEventsListPage story: Default                                               |
+| `src/pages/camera-events/CameraEventDetailPage.stories.tsx` | CameraEventDetailPage stories: Found, NotFound                                    |
+| `src/pages/settings/SettingsPage.stories.tsx`               | SettingsPage story: Default                                                       |
 
 **Deleted files**:
 
-| File | Reason |
-|------|--------|
-| `src/stories/Button.tsx` | Placeholder from `storybook init` |
-| `src/stories/Button.stories.ts` | Placeholder |
-| `src/stories/Header.tsx` | Placeholder (conflicts with real Header) |
-| `src/stories/Header.stories.ts` | Placeholder |
-| `src/stories/Page.tsx` | Placeholder |
-| `src/stories/Page.stories.ts` | Placeholder |
-| `src/stories/Configure.mdx` | Placeholder |
-| `src/stories/button.css` | Placeholder CSS |
-| `src/stories/header.css` | Placeholder CSS |
-| `src/stories/page.css` | Placeholder CSS |
+| File                            | Reason                                   |
+| ------------------------------- | ---------------------------------------- |
+| `src/stories/Button.tsx`        | Placeholder from `storybook init`        |
+| `src/stories/Button.stories.ts` | Placeholder                              |
+| `src/stories/Header.tsx`        | Placeholder (conflicts with real Header) |
+| `src/stories/Header.stories.ts` | Placeholder                              |
+| `src/stories/Page.tsx`          | Placeholder                              |
+| `src/stories/Page.stories.ts`   | Placeholder                              |
+| `src/stories/Configure.mdx`     | Placeholder                              |
+| `src/stories/button.css`        | Placeholder CSS                          |
+| `src/stories/header.css`        | Placeholder CSS                          |
+| `src/stories/page.css`          | Placeholder CSS                          |
 
 **Router decorator pattern**:
 

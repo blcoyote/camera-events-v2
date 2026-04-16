@@ -1,10 +1,16 @@
 import { describe, expect, it } from 'vitest'
-import { getCamerasPageState, getCameraCardData } from '#/features/cameras/components/CamerasPage'
+import {
+  getCamerasPageState,
+  getCameraCardData,
+} from '#/features/cameras/components/CamerasPage'
 import type { FrigateResult } from '#/features/shared/server/frigate/config'
 
 describe('getCamerasPageState', () => {
   it('returns "cameras" state with camera list on success', () => {
-    const result: FrigateResult<string[]> = { ok: true, data: ['backyard', 'front_door', 'garage'] }
+    const result: FrigateResult<string[]> = {
+      ok: true,
+      data: ['backyard', 'front_door', 'garage'],
+    }
     const state = getCamerasPageState(result)
 
     expect(state.kind).toBe('cameras')

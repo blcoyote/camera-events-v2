@@ -34,13 +34,14 @@ Replace the placeholder pages (About, Dashboard, Home) with three purpose-built 
 
 **Complexity**: standard
 **RED**: Write tests for:
-  - `getAuthRedirect(user, currentPath)` — returns `/api/auth/google?returnTo=<currentPath>` when user is null, returns null when user is present. Include a case with a dynamic path like `/camera-events/abc-123`.
-  - `PLACEHOLDER_EVENTS` — is a non-empty array where each entry has `id` (string), `title` (string), `timestamp` (string), and `camera` (string).
-  - `findEventById(id)` — returns the event for a known ID, returns `undefined` for an unknown ID.
-**GREEN**: Create `src/data/camera-events.ts` with the `CameraEvent` type, `PLACEHOLDER_EVENTS` array, and `findEventById` function. Create `src/routes/_authenticated.tsx` with `beforeLoad` auth guard using `getAuthRedirect`. Component renders `<Outlet />`.
-**REFACTOR**: None needed
-**Files**: `src/data/camera-events.ts`, `src/data/-camera-events.test.ts`, `src/routes/_authenticated.tsx`, `src/routes/-authenticated.test.ts`
-**Commit**: `add shared event data and _authenticated layout route`
+
+- `getAuthRedirect(user, currentPath)` — returns `/api/auth/google?returnTo=<currentPath>` when user is null, returns null when user is present. Include a case with a dynamic path like `/camera-events/abc-123`.
+- `PLACEHOLDER_EVENTS` — is a non-empty array where each entry has `id` (string), `title` (string), `timestamp` (string), and `camera` (string).
+- `findEventById(id)` — returns the event for a known ID, returns `undefined` for an unknown ID.
+  **GREEN**: Create `src/data/camera-events.ts` with the `CameraEvent` type, `PLACEHOLDER_EVENTS` array, and `findEventById` function. Create `src/routes/_authenticated.tsx` with `beforeLoad` auth guard using `getAuthRedirect`. Component renders `<Outlet />`.
+  **REFACTOR**: None needed
+  **Files**: `src/data/camera-events.ts`, `src/data/-camera-events.test.ts`, `src/routes/_authenticated.tsx`, `src/routes/-authenticated.test.ts`
+  **Commit**: `add shared event data and _authenticated layout route`
 
 ### Step 2: Create camera events list page
 
@@ -98,11 +99,11 @@ Replace the placeholder pages (About, Dashboard, Home) with three purpose-built 
 
 ## Complexity Classification
 
-| Rating | Criteria | Review depth |
-|--------|----------|--------------|
-| `trivial` | Single-file rename, config change, typo fix, documentation-only | Skip inline review; covered by final `/code-review` |
-| `standard` | New function, test, module, or behavioral change within existing patterns | Spec-compliance + relevant quality agents |
-| `complex` | Architectural change, security-sensitive, cross-cutting concern, new abstraction | Full agent suite including opus-tier agents |
+| Rating     | Criteria                                                                         | Review depth                                        |
+| ---------- | -------------------------------------------------------------------------------- | --------------------------------------------------- |
+| `trivial`  | Single-file rename, config change, typo fix, documentation-only                  | Skip inline review; covered by final `/code-review` |
+| `standard` | New function, test, module, or behavioral change within existing patterns        | Spec-compliance + relevant quality agents           |
+| `complex`  | Architectural change, security-sensitive, cross-cutting concern, new abstraction | Full agent suite including opus-tier agents         |
 
 ## Pre-PR Quality Gate
 
@@ -123,6 +124,7 @@ Replace the placeholder pages (About, Dashboard, Home) with three purpose-built 
 All four review personas approved (Acceptance Test Critic approved after one revision round).
 
 **Key warnings addressed in revision:**
+
 - Added explicit acceptance criterion for `_authenticated` as the single centralized auth guard
 - Added error-path criterion confirming existing OAuth callback error redirects are preserved (not new work)
 - Step 3 RED now explicitly tests the "not found" UI content (heading + back link), not just the data lookup
@@ -131,6 +133,7 @@ All four review personas approved (Acceptance Test Critic approved after one rev
 - Shared event data extracted into `src/data/camera-events.ts` from the start (Step 1), not deferred
 
 **Remaining warnings (non-blocking):**
+
 - Ensure `_authenticated.tsx` `beforeLoad` delegates to the pure `getAuthRedirect` function so tests cover the actual guard logic
 - `getHeaderAuthState` return shape change in Step 5 is a non-trivial refactor of the existing pure function contract
 - Existing `/about` link in `index.tsx` ("About This Starter") must be removed during Step 6 front page rework

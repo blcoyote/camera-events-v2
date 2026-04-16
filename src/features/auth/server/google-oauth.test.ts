@@ -1,5 +1,9 @@
 import { describe, expect, it, vi } from 'vitest'
-import { parseIdTokenClaims, validateIdTokenClaims, getAppOrigin } from './google-oauth'
+import {
+  parseIdTokenClaims,
+  validateIdTokenClaims,
+  getAppOrigin,
+} from './google-oauth'
 
 describe('parseIdTokenClaims', () => {
   it('extracts sub, firstName, email, avatarUrl from full claims', () => {
@@ -69,9 +73,16 @@ describe('parseIdTokenClaims', () => {
   })
 
   it('coerces non-string claim values via String()', () => {
-    const claims = { sub: 12345, email: true, given_name: null, picture: undefined }
+    const claims = {
+      sub: 12345,
+      email: true,
+      given_name: null,
+      picture: undefined,
+    }
 
-    const result = parseIdTokenClaims(claims as unknown as Record<string, unknown>)
+    const result = parseIdTokenClaims(
+      claims as unknown as Record<string, unknown>,
+    )
 
     expect(result.sub).toBe('12345')
     expect(result.email).toBe('true')
@@ -96,14 +107,22 @@ describe('validateIdTokenClaims', () => {
 
   it('rejects wrong issuer', () => {
     vi.stubEnv('GOOGLE_CLIENT_ID', 'test-client-id')
-    const claims = { iss: 'https://evil.com', aud: 'test-client-id', exp: futureExp }
+    const claims = {
+      iss: 'https://evil.com',
+      aud: 'test-client-id',
+      exp: futureExp,
+    }
     expect(validateIdTokenClaims(claims)).toBe(false)
     vi.unstubAllEnvs()
   })
 
   it('rejects wrong audience', () => {
     vi.stubEnv('GOOGLE_CLIENT_ID', 'test-client-id')
-    const claims = { iss: 'https://accounts.google.com', aud: 'wrong-id', exp: futureExp }
+    const claims = {
+      iss: 'https://accounts.google.com',
+      aud: 'wrong-id',
+      exp: futureExp,
+    }
     expect(validateIdTokenClaims(claims)).toBe(false)
     vi.unstubAllEnvs()
   })
@@ -111,7 +130,11 @@ describe('validateIdTokenClaims', () => {
   it('rejects expired token', () => {
     vi.stubEnv('GOOGLE_CLIENT_ID', 'test-client-id')
     const pastExp = Math.floor(Date.now() / 1000) - 60
-    const claims = { iss: 'https://accounts.google.com', aud: 'test-client-id', exp: pastExp }
+    const claims = {
+      iss: 'https://accounts.google.com',
+      aud: 'test-client-id',
+      exp: pastExp,
+    }
     expect(validateIdTokenClaims(claims)).toBe(false)
     vi.unstubAllEnvs()
   })
@@ -127,7 +150,9 @@ describe('validateIdTokenClaims', () => {
 describe('getAppOrigin', () => {
   it('returns APP_URL when set', () => {
     vi.stubEnv('APP_URL', 'https://myapp.example.com')
-    expect(getAppOrigin('http://localhost:3000')).toBe('https://myapp.example.com')
+    expect(getAppOrigin('http://localhost:3000')).toBe(
+      'https://myapp.example.com',
+    )
     vi.unstubAllEnvs()
   })
 

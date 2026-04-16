@@ -3,11 +3,7 @@ import { Video } from 'lucide-react'
 import { MediaCard } from '#/features/shared/components/MediaCard'
 import type { FrigateResult } from '#/features/shared/server/frigate/config'
 import type { FrigateEvent } from '#/features/shared/server/frigate/types'
-import {
-  formatRelativeTime,
-  formatLabelName,
-  getLabelDotColor,
-} from '../utils'
+import { formatRelativeTime, formatLabelName, getLabelDotColor } from '../utils'
 
 // ─── Pure functions (exported for testing) ───
 
@@ -306,9 +302,7 @@ export function CameraEventsListPage({
                     key={l}
                     label={formatLabelName(l)}
                     active={labelFilter === l}
-                    onClick={() =>
-                      setLabelFilter(labelFilter === l ? null : l)
-                    }
+                    onClick={() => setLabelFilter(labelFilter === l ? null : l)}
                     count={events.filter((e) => e.label === l).length}
                   />
                 ))}

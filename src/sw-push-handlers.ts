@@ -27,7 +27,10 @@ export function parsePushPayload(data: unknown): PushPayload {
 
   const obj = data as Record<string, unknown>
   return {
-    title: typeof obj.title === 'string' && obj.title ? obj.title : DEFAULT_PAYLOAD.title,
+    title:
+      typeof obj.title === 'string' && obj.title
+        ? obj.title
+        : DEFAULT_PAYLOAD.title,
     body: typeof obj.body === 'string' ? obj.body : DEFAULT_PAYLOAD.body,
     url: typeof obj.url === 'string' && obj.url ? obj.url : DEFAULT_PAYLOAD.url,
     icon: typeof obj.icon === 'string' && obj.icon ? obj.icon : undefined,
@@ -37,7 +40,9 @@ export function parsePushPayload(data: unknown): PushPayload {
 /**
  * Build the options object for showNotification.
  */
-export function buildNotificationOptions(payload: PushPayload): NotificationOptions {
+export function buildNotificationOptions(
+  payload: PushPayload,
+): NotificationOptions {
   return {
     body: payload.body,
     icon: payload.icon ?? '/logo192.png',
@@ -57,7 +62,11 @@ export function getNotificationClickUrl(notificationData: unknown): string {
     typeof (notificationData as Record<string, unknown>).url === 'string'
   ) {
     const url = (notificationData as Record<string, unknown>).url as string
-    if (url.startsWith('/') && !url.startsWith('//') && !url.startsWith('/\\')) {
+    if (
+      url.startsWith('/') &&
+      !url.startsWith('//') &&
+      !url.startsWith('/\\')
+    ) {
       return url
     }
   }

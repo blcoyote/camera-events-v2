@@ -114,23 +114,23 @@ Feature: MQTT-driven push notifications with per-camera opt-out
 
 ## Files Changed / Created
 
-| File | Action | Step |
-|---|---|---|
-| `src/server/push-store.ts` | Modified — preference queries | 1 |
-| `src/server/push-store.test.ts` | Modified — preference tests | 1 |
-| `src/server/push.ts` | Modified — icon field | 2 |
-| `src/sw-push-handlers.ts` | Modified — icon support | 2 |
-| `src/sw-push-handlers.test.ts` | Modified — icon tests | 2 |
-| `src/server/event-batcher.ts` | **New** — per-camera batcher | 3 |
-| `src/server/event-batcher.test.ts` | **New** — batcher tests | 3 |
-| `src/server/push-notify.ts` | **New** — notification dispatcher | 4 |
-| `src/server/push-notify.test.ts` | **New** — dispatcher tests | 4 |
-| `src/server/mqtt.ts` | Modified — event parsing + batcher wiring | 5 |
-| `src/server/mqtt.test.ts` | Modified — parseFrigateEvent tests | 5 |
-| `src/routes/api/push/preferences.ts` | **New** — GET + PUT routes | 6 |
-| `src/routes/api/push/-push-handlers.ts` | Modified — preference handlers | 6 |
-| `src/routes/api/push/-push-endpoints.test.ts` | Modified — preference endpoint tests | 6 |
-| `src/pages/settings/NotificationSettings.tsx` | Modified — camera toggles | 7 |
+| File                                          | Action                                    | Step |
+| --------------------------------------------- | ----------------------------------------- | ---- |
+| `src/server/push-store.ts`                    | Modified — preference queries             | 1    |
+| `src/server/push-store.test.ts`               | Modified — preference tests               | 1    |
+| `src/server/push.ts`                          | Modified — icon field                     | 2    |
+| `src/sw-push-handlers.ts`                     | Modified — icon support                   | 2    |
+| `src/sw-push-handlers.test.ts`                | Modified — icon tests                     | 2    |
+| `src/server/event-batcher.ts`                 | **New** — per-camera batcher              | 3    |
+| `src/server/event-batcher.test.ts`            | **New** — batcher tests                   | 3    |
+| `src/server/push-notify.ts`                   | **New** — notification dispatcher         | 4    |
+| `src/server/push-notify.test.ts`              | **New** — dispatcher tests                | 4    |
+| `src/server/mqtt.ts`                          | Modified — event parsing + batcher wiring | 5    |
+| `src/server/mqtt.test.ts`                     | Modified — parseFrigateEvent tests        | 5    |
+| `src/routes/api/push/preferences.ts`          | **New** — GET + PUT routes                | 6    |
+| `src/routes/api/push/-push-handlers.ts`       | Modified — preference handlers            | 6    |
+| `src/routes/api/push/-push-endpoints.test.ts` | Modified — preference endpoint tests      | 6    |
+| `src/pages/settings/NotificationSettings.tsx` | Modified — camera toggles                 | 7    |
 
 ## Pre-PR Quality Gate
 

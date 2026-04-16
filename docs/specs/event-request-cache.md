@@ -68,10 +68,10 @@ Feature: Server-side event cache
 
 **Components affected:**
 
-| Component | Change |
-|-----------|--------|
-| `src/server/frigate/cache.ts` | New — TTL cache implementation with `get`, `set`, `has`, `clear` |
-| `src/server/frigate/client.ts` | Wrap `frigateGet` calls in cache lookup/store logic |
+| Component                      | Change                                                           |
+| ------------------------------ | ---------------------------------------------------------------- |
+| `src/server/frigate/cache.ts`  | New — TTL cache implementation with `get`, `set`, `has`, `clear` |
+| `src/server/frigate/client.ts` | Wrap `frigateGet` calls in cache lookup/store logic              |
 
 **Cache design:**
 
@@ -84,28 +84,30 @@ Feature: Server-side event cache
 - **No external dependencies**: No Redis, no npm cache library, no docker-compose changes
 
 **What is NOT cached:**
+
 - Binary endpoints (`frigateBinary`): thumbnails, snapshots, clips — already use HTTP `Cache-Control` headers
 - Error responses from Frigate
 - Non-event endpoints (config, stats, cameras) — these are out of scope per the request
 
 **Constraints:**
+
 - Cache is process-local — restarting the server clears it (acceptable for this use case)
 - No cache invalidation beyond TTL (events are historical and don't change frequently)
 - Thread-safety is not a concern — Node.js is single-threaded
 
 ## Acceptance Criteria
 
-| # | Criterion | Pass condition |
-|---|-----------|----------------|
-| 1 | Cached JSON responses return within 1ms | Second call to `frigateGet` for the same URL completes without `fetch` being called |
-| 2 | TTL of 10 minutes | Cache entries expire after 600,000ms; a request after expiry triggers a new Frigate fetch |
-| 3 | Cache key correctness | Different URLs (different endpoints, different query params) produce different cache entries |
-| 4 | Errors are not cached | `FrigateResult` with `ok: false` is never stored in the cache |
-| 5 | Binary endpoints bypass cache | `frigateBinary` calls are never cached in memory |
-| 6 | Memory bounded | Cache enforces a max entry count; evicts oldest when full |
-| 7 | No new infrastructure | No Redis, no new docker-compose services, no new npm dependencies |
-| 8 | Tests pass | Unit tests cover: cache hit, cache miss, TTL expiry, error exclusion, eviction, key isolation |
-| 9 | Type safety | `tsc --noEmit` passes with no errors |
+| #   | Criterion                               | Pass condition                                                                                |
+| --- | --------------------------------------- | --------------------------------------------------------------------------------------------- |
+| 1   | Cached JSON responses return within 1ms | Second call to `frigateGet` for the same URL completes without `fetch` being called           |
+| 2   | TTL of 10 minutes                       | Cache entries expire after 600,000ms; a request after expiry triggers a new Frigate fetch     |
+| 3   | Cache key correctness                   | Different URLs (different endpoints, different query params) produce different cache entries  |
+| 4   | Errors are not cached                   | `FrigateResult` with `ok: false` is never stored in the cache                                 |
+| 5   | Binary endpoints bypass cache           | `frigateBinary` calls are never cached in memory                                              |
+| 6   | Memory bounded                          | Cache enforces a max entry count; evicts oldest when full                                     |
+| 7   | No new infrastructure                   | No Redis, no new docker-compose services, no new npm dependencies                             |
+| 8   | Tests pass                              | Unit tests cover: cache hit, cache miss, TTL expiry, error exclusion, eviction, key isolation |
+| 9   | Type safety                             | `tsc --noEmit` passes with no errors                                                          |
 
 ## Consistency Gate
 

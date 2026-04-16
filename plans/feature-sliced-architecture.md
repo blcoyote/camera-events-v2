@@ -39,9 +39,11 @@ Restructure the codebase from a technical-role layout (`components/`, `hooks/`, 
 Move the entire directory (types, config, client, cache, mock-client, validation, assets, and all tests). Internal imports within the frigate directory are relative and won't break.
 
 **Files to move** (9 source + tests + asset):
+
 - `types.ts`, `config.ts`, `config.test.ts`, `client.ts`, `client.test.ts`, `cache.ts`, `cache.test.ts`, `mock-client.ts`, `mock-client.test.ts`, `validation.ts`, `validation.test.ts`, `assets/placeholder.jpeg`
 
 **Import updates needed**:
+
 - `src/server.ts` (server entry): does not import frigate directly — no change
 - All other importers will be updated when their own feature moves in later steps
 
@@ -68,6 +70,7 @@ Also move `useEventLimit.test.ts`.
 Move server-side auth modules into `src/features/auth/server/`.
 
 **Files to move**:
+
 - `src/server/auth.ts` → `src/features/auth/server/auth.ts`
 - `src/server/auth.test.ts` → `src/features/auth/server/auth.test.ts`
 - `src/server/auth-crypto.ts` → `src/features/auth/server/auth-crypto.ts`
@@ -75,6 +78,7 @@ Move server-side auth modules into `src/features/auth/server/`.
 - `src/server/google-oauth.test.ts` → `src/features/auth/server/google-oauth.test.ts`
 
 **Import updates**:
+
 - `auth.ts`: update `./session` → `#/features/shared/server/session`
 - `auth-crypto.ts`: update `./session` → `#/features/shared/server/session`
 - `google-oauth.ts`: update `./session` → `#/features/shared/server/session`
@@ -90,6 +94,7 @@ Move server-side auth modules into `src/features/auth/server/`.
 Move all server-side push/mqtt modules into `src/features/push-notifications/server/`.
 
 **Files to move**:
+
 - `src/server/push.ts` → `src/features/push-notifications/server/push.ts`
 - `src/server/push.test.ts` → `src/features/push-notifications/server/push.test.ts`
 - `src/server/push-store.ts` → `src/features/push-notifications/server/push-store.ts`
@@ -104,6 +109,7 @@ Move all server-side push/mqtt modules into `src/features/push-notifications/ser
 - `src/routes/api/push/-push-handlers.ts` → `src/features/push-notifications/server/push-handlers.ts`
 
 **Import updates**:
+
 - `push.ts`: update `./push-store` → `./push-store` (stays relative within feature)
 - `push-notify.ts`: update `./event-batcher`, `./push`, `./push-store` → relative (same feature dir)
 - `mqtt.ts`: update `./frigate/cache` → `#/features/shared/server/frigate/cache`; update `./event-batcher`, `./push-notify` → relative
@@ -121,6 +127,7 @@ Move all server-side push/mqtt modules into `src/features/push-notifications/ser
 ### 4a. Extract `camera-events/utils.ts`
 
 Create `src/features/camera-events/utils.ts` with these functions extracted from `CameraEventsListPage.tsx`:
+
 - `formatRelativeTime`
 - `formatLabelName`
 - `getLabelDotColor`
@@ -147,6 +154,7 @@ Create `src/features/camera-events/utils.ts` with these functions extracted from
 - `src/data/-camera-events.test.ts` → `src/features/camera-events/data/mock-events.test.ts`
 
 **Import updates**:
+
 - `CameraEventsListPage.tsx`: update `../../components/MediaCard` → `#/features/shared/components/MediaCard`; update `../../server/frigate/config` → `#/features/shared/server/frigate/config`; update `../../server/frigate/types` → `#/features/shared/server/frigate/types`; remove exported utils (now in `../utils`)
 - `CameraEventDetailPage.tsx`: update `./CameraEventsListPage` utils import → `../utils`; update server type imports → `#/features/shared/...`
 - Proxy handlers: update `#/server/frigate/...` → `#/features/shared/server/frigate/...`
@@ -167,6 +175,7 @@ Create `src/features/camera-events/utils.ts` with these functions extracted from
 - `src/routes/api/cameras/-snapshot-proxy.test.ts` → `src/features/cameras/server/snapshot-proxy.test.ts`
 
 **Import updates**:
+
 - `CamerasPage.tsx`: update `#/components/MediaCard` → `#/features/shared/components/MediaCard`; update `#/server/frigate/config` → `#/features/shared/server/frigate/config`
 - Snapshot proxy: update `#/server/frigate/...` → `#/features/shared/server/frigate/...`
 - Route file (`cameras.tsx`): update `#/pages/cameras/...` → `#/features/cameras/components/...`; update `#/server/frigate/...` → `#/features/shared/server/frigate/...`
@@ -187,6 +196,7 @@ Create `src/features/camera-events/utils.ts` with these functions extracted from
 - `src/hooks/usePushSubscription.test.ts` → `src/features/settings/hooks/usePushSubscription.test.ts`
 
 **Import updates**:
+
 - `SettingsPage.tsx`: update `#/hooks/useEventLimit` → `#/features/shared/hooks/useEventLimit`
 - `NotificationSettings.tsx`: update `#/hooks/usePushSubscription` → `../hooks/usePushSubscription`
 - Route file (`settings.tsx`): update `#/pages/settings/...` → `#/features/settings/components/...`
@@ -201,6 +211,7 @@ Create `src/features/camera-events/utils.ts` with these functions extracted from
 - `src/pages/home/HomePage.stories.tsx` → `src/features/home/components/HomePage.stories.tsx`
 
 **Import updates**:
+
 - `HomePage.tsx`: update `../../components/AlertBanner` → `#/features/shared/components/AlertBanner`
 - Route file (`index.tsx`): update `#/pages/home/...` → `#/features/home/components/...`
 
@@ -220,6 +231,7 @@ Create `src/features/camera-events/utils.ts` with these functions extracted from
 - `src/components/ServiceWorkerRegistration.tsx` → `src/features/shell/components/ServiceWorkerRegistration.tsx`
 
 **Import updates**:
+
 - `Header.tsx`: update `./ThemeToggle` → `./ThemeToggle` (still relative, same dir); update `../server/session` → `#/features/shared/server/session`
 - `src/routes/__root.tsx`: update all `../components/...` → `#/features/shell/components/...`; update `../server/auth` → `#/features/auth/server/auth`; update `../server/session` → `#/features/shared/server/session`
 
@@ -242,6 +254,7 @@ Review all route files for any remaining old-path imports:
 ## Step 10: Clean up old directories
 
 Delete the now-empty directories:
+
 - `src/components/` (should be empty)
 - `src/hooks/` (should be empty)
 - `src/pages/` (should be empty)

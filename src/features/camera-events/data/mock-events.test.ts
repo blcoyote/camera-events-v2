@@ -1,8 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import {
-  PLACEHOLDER_EVENTS,
-  findEventById,
-} from './mock-events'
+import { PLACEHOLDER_EVENTS, findEventById } from './mock-events'
 
 describe('PLACEHOLDER_EVENTS', () => {
   it('is a non-empty array', () => {

@@ -80,12 +80,12 @@ Feature: Cameras page
 
 **Modified files**:
 
-| File | Change |
-|------|--------|
-| `src/routes/_authenticated/cameras.tsx` | New route — page component with `createServerFn` loader |
-| `src/routes/api/cameras/$name/latest.jpg.ts` | New API route — proxies snapshot from Frigate |
-| `src/server/frigate/client.ts` | Add `getLatestSnapshot(cameraName)` function |
-| `src/components/Header.tsx` | Add "Cameras" to `navLinks` array |
+| File                                         | Change                                                  |
+| -------------------------------------------- | ------------------------------------------------------- |
+| `src/routes/_authenticated/cameras.tsx`      | New route — page component with `createServerFn` loader |
+| `src/routes/api/cameras/$name/latest.jpg.ts` | New API route — proxies snapshot from Frigate           |
+| `src/server/frigate/client.ts`               | Add `getLatestSnapshot(cameraName)` function            |
+| `src/components/Header.tsx`                  | Add "Cameras" to `navLinks` array                       |
 
 **Data flow**:
 

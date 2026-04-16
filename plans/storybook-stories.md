@@ -127,55 +127,60 @@ Note: Stories are visual documentation, not logic. Steps follow a create-then-ve
 
 **Complexity**: complex
 **Create**:
+
 1. Import `../src/styles.css` in `.storybook/preview.ts` so design tokens are available in all stories
 2. Add dark mode toolbar toggle in `.storybook/preview.ts` — a `globalTypes` toolbar item that applies `.light`/`.dark` class to the preview iframe's `<html>` element via a decorator
 3. Configure responsive viewports in `.storybook/preview.ts` — mobile (375px), tablet (768px), desktop (1280px)
 4. Create `.storybook/decorators/withRouter.tsx` — exports a Storybook decorator that wraps stories in `RouterProvider` using `createRootRouteWithContext<{ user: SessionData | null }>()` + `createRouter` + `createMemoryHistory`. Accepts optional `routeContext` parameter for injecting `user`.
-**Verify**: Run `storybook build` — should succeed with existing placeholder stories still present
-**Files**: `.storybook/preview.ts`, `.storybook/decorators/withRouter.tsx`
-**Commit**: `feat(storybook): configure CSS, dark mode, viewports, and router decorator`
+   **Verify**: Run `storybook build` — should succeed with existing placeholder stories still present
+   **Files**: `.storybook/preview.ts`, `.storybook/decorators/withRouter.tsx`
+   **Commit**: `feat(storybook): configure CSS, dark mode, viewports, and router decorator`
 
 ### Step 2: Add stories for standalone components (Footer, ThemeToggle, AlertBanner)
 
 **Complexity**: standard
 **Create**: Story files:
+
 - `src/components/Footer.stories.tsx` — Default story
 - `src/components/ThemeToggle.stories.tsx` — Default story
 - `src/components/AlertBanner.stories.tsx` — Error (`error="login_failed"`), Success (`status="logged_out"`), NoAlert (no props)
-**Verify**: Run `storybook build` — new stories compile without errors
-**Files**: `src/components/Footer.stories.tsx`, `src/components/ThemeToggle.stories.tsx`, `src/components/AlertBanner.stories.tsx`
-**Commit**: `feat(storybook): add Footer, ThemeToggle, and AlertBanner stories`
+  **Verify**: Run `storybook build` — new stories compile without errors
+  **Files**: `src/components/Footer.stories.tsx`, `src/components/ThemeToggle.stories.tsx`, `src/components/AlertBanner.stories.tsx`
+  **Commit**: `feat(storybook): add Footer, ThemeToggle, and AlertBanner stories`
 
 ### Step 3: Add Header stories (requires router decorator)
 
 **Complexity**: standard
 **Create**: `src/components/Header.stories.tsx`:
+
 - Authenticated story: router decorator with `routeContext: { user: { sub: '123', firstName: 'Jane', email: 'jane@example.com', avatarUrl: 'https://i.pravatar.cc/150' } }`. Layout fullscreen.
 - Unauthenticated story: router decorator with `routeContext: { user: null }`. Layout fullscreen.
-**Verify**: Run `storybook build` — Header stories compile and render
-**Files**: `src/components/Header.stories.tsx`
-**Commit**: `feat(storybook): add Header stories with auth states`
+  **Verify**: Run `storybook build` — Header stories compile and render
+  **Files**: `src/components/Header.stories.tsx`
+  **Commit**: `feat(storybook): add Header stories with auth states`
 
 ### Step 4: Add page stories without router context (CamerasPage, SettingsPage)
 
 **Complexity**: standard
 **Create**: Story files:
+
 - `src/pages/cameras/CamerasPage.stories.tsx` — WithCameras (`{ ok: true, data: ['backyard', 'front_door', 'garage'] }`), Empty (`{ ok: true, data: [] }`), Error (`{ ok: false, error: 'fetch failed' }`), Loading (renders `CamerasLoading`)
 - `src/pages/settings/SettingsPage.stories.tsx` — Default story
-**Verify**: Run `storybook build`
-**Files**: `src/pages/cameras/CamerasPage.stories.tsx`, `src/pages/settings/SettingsPage.stories.tsx`
-**Commit**: `feat(storybook): add CamerasPage and SettingsPage stories`
+  **Verify**: Run `storybook build`
+  **Files**: `src/pages/cameras/CamerasPage.stories.tsx`, `src/pages/settings/SettingsPage.stories.tsx`
+  **Commit**: `feat(storybook): add CamerasPage and SettingsPage stories`
 
 ### Step 5: Add page stories with router context (HomePage, CameraEventsListPage, CameraEventDetailPage)
 
 **Complexity**: standard
 **Create**: Story files:
+
 - `src/pages/home/HomePage.stories.tsx` — Default (no props), WithError (`error="login_failed"`), WithStatus (`status="logged_out"`). Router decorator for Link.
 - `src/pages/camera-events/CameraEventsListPage.stories.tsx` — Default. Router decorator. Data from PLACEHOLDER_EVENTS.
 - `src/pages/camera-events/CameraEventDetailPage.stories.tsx` — Found (`id="evt-001"`), NotFound (`id="nonexistent"`). Router decorator.
-**Verify**: Run `storybook build`
-**Files**: `src/pages/home/HomePage.stories.tsx`, `src/pages/camera-events/CameraEventsListPage.stories.tsx`, `src/pages/camera-events/CameraEventDetailPage.stories.tsx`
-**Commit**: `feat(storybook): add HomePage, CameraEventsListPage, and CameraEventDetailPage stories`
+  **Verify**: Run `storybook build`
+  **Files**: `src/pages/home/HomePage.stories.tsx`, `src/pages/camera-events/CameraEventsListPage.stories.tsx`, `src/pages/camera-events/CameraEventDetailPage.stories.tsx`
+  **Commit**: `feat(storybook): add HomePage, CameraEventsListPage, and CameraEventDetailPage stories`
 
 ### Step 6: Remove placeholder stories and run final build verification
 
@@ -187,11 +192,11 @@ Note: Stories are visual documentation, not logic. Steps follow a create-then-ve
 
 ## Complexity Classification
 
-| Rating | Criteria | Review depth |
-|--------|----------|--------------|
-| `trivial` | Single-file rename, config change, typo fix, documentation-only | Skip inline review; covered by final `/code-review` |
-| `standard` | New function, test, module, or behavioral change within existing patterns | Spec-compliance + relevant quality agents |
-| `complex` | Architectural change, security-sensitive, cross-cutting concern, new abstraction | Full agent suite including opus-tier agents |
+| Rating     | Criteria                                                                         | Review depth                                        |
+| ---------- | -------------------------------------------------------------------------------- | --------------------------------------------------- |
+| `trivial`  | Single-file rename, config change, typo fix, documentation-only                  | Skip inline review; covered by final `/code-review` |
+| `standard` | New function, test, module, or behavioral change within existing patterns        | Spec-compliance + relevant quality agents           |
+| `complex`  | Architectural change, security-sensitive, cross-cutting concern, new abstraction | Full agent suite including opus-tier agents         |
 
 ## Pre-PR Quality Gate
 
@@ -213,6 +218,7 @@ Note: Stories are visual documentation, not logic. Steps follow a create-then-ve
 Four review perspectives were consulted. One approved outright; three flagged revisions.
 
 **Addressed blockers:**
+
 - Dropped forced TDD RED/GREEN/REFACTOR framing — stories use create-then-verify pattern (Strategic Critic, Acceptance Critic)
 - Added dark mode toolbar toggle configuration (UX Critic)
 - Added responsive viewport configuration (UX Critic)
@@ -220,9 +226,11 @@ Four review perspectives were consulted. One approved outright; three flagged re
 - Merged "remove placeholders" and "verify build" into single step (Strategic Critic)
 
 **Addressed warnings:**
+
 - Noted that CameraEventsListPage uses hardcoded PLACEHOLDER_EVENTS — it has no empty/error states to cover (Acceptance Critic)
 - a11y addon is already installed at `'todo'` level — upgrading to `'error'` is a separate concern, not part of story creation scope (Acceptance Critic)
 
 **Noted for future consideration:**
+
 - Individual dark-mode variant stories per component would further increase coverage but doubles story count — deferred, since the toolbar toggle allows manual dark-mode testing of any story
 - Play functions for interactive states (menu open, alert dismiss, theme cycling) could be added as a fast-follow to exercise user interactions programmatically

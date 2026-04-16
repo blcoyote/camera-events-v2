@@ -56,21 +56,23 @@ Feature: Download clip and snapshot from camera event detail page
 
 **Components affected**:
 
-| Component | Change |
-|-----------|--------|
+| Component                                           | Change                                                                |
+| --------------------------------------------------- | --------------------------------------------------------------------- |
 | `src/pages/camera-events/CameraEventDetailPage.tsx` | Make Clip/Snapshot `InfoCard` render as download links when available |
-| `src/routes/api/events/$id/clip.ts` | New API proxy route for clip downloads |
-| `src/routes/api/events/-clip-proxy.ts` | Extracted handler logic (testable) |
-| `src/server/frigate/client.ts` | Add `getEventClip(eventId)` function |
-| `src/routeTree.gen.ts` | Register the new clip route |
+| `src/routes/api/events/$id/clip.ts`                 | New API proxy route for clip downloads                                |
+| `src/routes/api/events/-clip-proxy.ts`              | Extracted handler logic (testable)                                    |
+| `src/server/frigate/client.ts`                      | Add `getEventClip(eventId)` function                                  |
+| `src/routeTree.gen.ts`                              | Register the new clip route                                           |
 
 **Data flow**:
+
 1. User clicks Clip/Snapshot card → browser navigates to `/api/events/{id}/clip` or `/api/events/{id}/snapshot?download=true`
 2. Proxy route authenticates via session, validates event ID, forwards to Frigate
 3. Proxy adds `Content-Disposition: attachment; filename="..."` header
 4. Browser handles the download natively
 
 **Constraints**:
+
 - Proxy routes follow the existing pattern (`-snapshot-proxy.ts` / `$id/snapshot.ts`)
 - The existing snapshot proxy needs a `download` query param to set `Content-Disposition`
 - Clip endpoint in Frigate: `GET /api/events/{id}/clip.mp4` returns `video/mp4`
@@ -78,26 +80,27 @@ Feature: Download clip and snapshot from camera event detail page
 - No new client-side state or hooks required
 
 **Not in scope**:
+
 - Inline video playback
 - Batch downloads
 - Progress indicators
 
 ## Acceptance Criteria
 
-| # | Criterion | Pass condition |
-|---|-----------|----------------|
-| 1 | Snapshot card is an `<a>` tag with `download` attribute when `has_snapshot` is true | Inspectable in DOM |
-| 2 | Clip card is an `<a>` tag with `download` attribute when `has_clip` is true | Inspectable in DOM |
-| 3 | Cards remain non-interactive `<div>` when media is unavailable | No `<a>` tag rendered |
-| 4 | Snapshot proxy responds with `Content-Disposition: attachment` when `?download=true` | Response header check |
-| 5 | Clip proxy responds with `Content-Type: video/mp4` and `Content-Disposition: attachment` | Response header check |
-| 6 | Clip proxy returns 401 for unauthenticated requests | HTTP status check |
-| 7 | Clip proxy returns 400 for invalid event IDs | HTTP status check |
-| 8 | Clip proxy returns 502 when Frigate is unreachable | HTTP status check |
-| 9 | Download links have accessible names (aria-label or visible text) | Accessibility audit |
-| 10 | Minimum 44px touch target on download cards | Visual inspection |
-| 11 | Unit tests cover clip proxy handler (auth, validation, success, failure) | `vitest run` passes |
-| 12 | `getEventClip` added to Frigate client with tests | `vitest run` passes |
+| #   | Criterion                                                                                | Pass condition        |
+| --- | ---------------------------------------------------------------------------------------- | --------------------- |
+| 1   | Snapshot card is an `<a>` tag with `download` attribute when `has_snapshot` is true      | Inspectable in DOM    |
+| 2   | Clip card is an `<a>` tag with `download` attribute when `has_clip` is true              | Inspectable in DOM    |
+| 3   | Cards remain non-interactive `<div>` when media is unavailable                           | No `<a>` tag rendered |
+| 4   | Snapshot proxy responds with `Content-Disposition: attachment` when `?download=true`     | Response header check |
+| 5   | Clip proxy responds with `Content-Type: video/mp4` and `Content-Disposition: attachment` | Response header check |
+| 6   | Clip proxy returns 401 for unauthenticated requests                                      | HTTP status check     |
+| 7   | Clip proxy returns 400 for invalid event IDs                                             | HTTP status check     |
+| 8   | Clip proxy returns 502 when Frigate is unreachable                                       | HTTP status check     |
+| 9   | Download links have accessible names (aria-label or visible text)                        | Accessibility audit   |
+| 10  | Minimum 44px touch target on download cards                                              | Visual inspection     |
+| 11  | Unit tests cover clip proxy handler (auth, validation, success, failure)                 | `vitest run` passes   |
+| 12  | `getEventClip` added to Frigate client with tests                                        | `vitest run` passes   |
 
 ## Consistency Gate
 

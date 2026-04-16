@@ -17,7 +17,7 @@ vi.mock('mqtt', () => {
 
 async function getMockClient() {
   const mod = await import('mqtt')
-   
+
   return (mod as any).__mockClient
 }
 
@@ -37,7 +37,8 @@ describe('onFrigateMessage', () => {
 
   it('clears the Frigate cache when called with frigate/events', async () => {
     const { onFrigateMessage } = await import('./mqtt')
-    const { frigateCache } = await import('#/features/shared/server/frigate/cache')
+    const { frigateCache } =
+      await import('#/features/shared/server/frigate/cache')
 
     frigateCache.set('test-key', { ok: true, data: 'cached' })
     expect(frigateCache.size).toBe(1)
@@ -48,7 +49,8 @@ describe('onFrigateMessage', () => {
 
   it('clears the Frigate cache when called with frigate/reviews', async () => {
     const { onFrigateMessage } = await import('./mqtt')
-    const { frigateCache } = await import('#/features/shared/server/frigate/cache')
+    const { frigateCache } =
+      await import('#/features/shared/server/frigate/cache')
 
     frigateCache.set('test-key', { ok: true, data: 'cached' })
     expect(frigateCache.size).toBe(1)
@@ -123,31 +125,39 @@ describe('parseFrigateEvent', () => {
     const { parseFrigateEvent } = await import('./mqtt')
     // Missing id
     expect(
-      parseFrigateEvent(makePayload({
-        type: 'new',
-        after: { camera: 'c', label: 'person', start_time: 1 },
-      })),
+      parseFrigateEvent(
+        makePayload({
+          type: 'new',
+          after: { camera: 'c', label: 'person', start_time: 1 },
+        }),
+      ),
     ).toBeNull()
     // Missing camera
     expect(
-      parseFrigateEvent(makePayload({
-        type: 'new',
-        after: { id: 'x', label: 'person', start_time: 1 },
-      })),
+      parseFrigateEvent(
+        makePayload({
+          type: 'new',
+          after: { id: 'x', label: 'person', start_time: 1 },
+        }),
+      ),
     ).toBeNull()
     // Missing label
     expect(
-      parseFrigateEvent(makePayload({
-        type: 'new',
-        after: { id: 'x', camera: 'c', start_time: 1 },
-      })),
+      parseFrigateEvent(
+        makePayload({
+          type: 'new',
+          after: { id: 'x', camera: 'c', start_time: 1 },
+        }),
+      ),
     ).toBeNull()
     // Non-numeric start_time
     expect(
-      parseFrigateEvent(makePayload({
-        type: 'new',
-        after: { id: 'x', camera: 'c', label: 'person', start_time: 'bad' },
-      })),
+      parseFrigateEvent(
+        makePayload({
+          type: 'new',
+          after: { id: 'x', camera: 'c', label: 'person', start_time: 'bad' },
+        }),
+      ),
     ).toBeNull()
   })
 })

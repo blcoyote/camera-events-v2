@@ -53,7 +53,11 @@ export function NotificationSettings() {
   // Before the client effect runs, render a neutral placeholder so SSR
   // and initial client markup match (avoids hydration mismatch).
   if (!hasMounted) {
-    return <NotificationSection><div className="h-6" /></NotificationSection>
+    return (
+      <NotificationSection>
+        <div className="h-6" />
+      </NotificationSection>
+    )
   }
 
   // Browser doesn't support Push API
@@ -86,9 +90,10 @@ export function NotificationSettings() {
           Notifications are blocked in your browser settings.
         </p>
         <p className="mt-2 text-xs text-(--sea-ink-soft)">
-          To unblock: in <strong>Chrome</strong>, click the lock icon in the address bar &gt;
-          Site settings &gt; Notifications &gt; Allow. In <strong>Safari</strong>, go to
-          Settings &gt; Websites &gt; Notifications and allow this site.
+          To unblock: in <strong>Chrome</strong>, click the lock icon in the
+          address bar &gt; Site settings &gt; Notifications &gt; Allow. In{' '}
+          <strong>Safari</strong>, go to Settings &gt; Websites &gt;
+          Notifications and allow this site.
         </p>
       </NotificationSection>
     )
@@ -126,7 +131,9 @@ export function NotificationSettings() {
       if (!res.ok) {
         // Revert on failure
         setCameraPrefs((prev) =>
-          prev.map((c) => (c.name === camera ? { ...c, enabled: !enabled } : c)),
+          prev.map((c) =>
+            c.name === camera ? { ...c, enabled: !enabled } : c,
+          ),
         )
       }
     } catch {
@@ -143,7 +150,10 @@ export function NotificationSettings() {
         {isSubscribed ? (
           <>
             <div className="flex items-center gap-3">
-              <span className="inline-block h-2.5 w-2.5 rounded-full bg-emerald-500" aria-hidden="true" />
+              <span
+                className="inline-block h-2.5 w-2.5 rounded-full bg-emerald-500"
+                aria-hidden="true"
+              />
               <span className="text-sm font-medium text-(--sea-ink)">
                 Notifications are enabled
               </span>
@@ -196,7 +206,9 @@ export function NotificationSettings() {
             <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
           )}
           {testResult && !error && (
-            <p className="text-sm text-emerald-600 dark:text-emerald-400">{testResult}</p>
+            <p className="text-sm text-emerald-600 dark:text-emerald-400">
+              {testResult}
+            </p>
           )}
         </div>
       </div>
@@ -205,9 +217,7 @@ export function NotificationSettings() {
 }
 
 function formatCameraName(name: string): string {
-  return name
-    .replace(/_/g, ' ')
-    .replace(/\b\w/g, (c) => c.toUpperCase())
+  return name.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
 }
 
 function CameraPreferences({
@@ -243,9 +253,7 @@ function CameraPreferences({
                 aria-label={`Notifications for ${formatCameraName(cam.name)}`}
                 onClick={() => onToggle(cam.name, !cam.enabled)}
                 className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors ${
-                  cam.enabled
-                    ? 'bg-emerald-500'
-                    : 'bg-(--chip-line)'
+                  cam.enabled ? 'bg-emerald-500' : 'bg-(--chip-line)'
                 }`}
               >
                 <span

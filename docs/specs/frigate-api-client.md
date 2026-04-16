@@ -113,11 +113,11 @@ Feature: Frigate API Client (Read Operations)
 
 **New module**: `src/server/frigate/`
 
-| File | Purpose |
-|------|---------|
-| `types.ts` | TypeScript types for all Frigate API request params and response schemas (read AND write — types documented now for future use) |
-| `client.ts` | HTTP client functions for read (GET) endpoints only. Server-only |
-| `config.ts` | `getFrigateUrl()` function that reads and validates `FRIGATE_URL` from env |
+| File        | Purpose                                                                                                                         |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `types.ts`  | TypeScript types for all Frigate API request params and response schemas (read AND write — types documented now for future use) |
+| `client.ts` | HTTP client functions for read (GET) endpoints only. Server-only                                                                |
+| `config.ts` | `getFrigateUrl()` function that reads and validates `FRIGATE_URL` from env                                                      |
 
 **Module boundary**: Server-only. Must NOT be imported by client-side code. Same constraint as `src/server/auth-crypto.ts`.
 
@@ -142,28 +142,28 @@ type FrigateResult<T> =
 
 ### Frigate API Reference — Read Endpoints (implemented)
 
-| Method | Path | Query Params | Response Type |
-|--------|------|-------------|---------------|
-| `GET` | `/api/events` | cameras, labels, zones, after, before, limit, has_clip, has_snapshot, include_thumbnails, favorites | `FrigateEvent[]` |
-| `GET` | `/api/events/summary` | timezone, has_clip, has_snapshot | `FrigateEventSummary` |
-| `GET` | `/api/events/:id/thumbnail.jpg` | download, timestamp, bbox, crop, height, quality | `ArrayBuffer` (JPEG) |
-| `GET` | `/api/events/:id/snapshot.jpg` | download, timestamp, bbox, crop, height, quality | `ArrayBuffer` (JPEG) |
-| `GET` | `/api/review` | cameras, labels, zones, reviewed, limit, severity, before, after | `FrigateReview[]` |
-| `GET` | `/api/review/event/:event_id` | — | `FrigateReview` |
-| `GET` | `/api/review/summary` | cameras, labels, zones, timezone | `FrigateReviewSummary` |
-| `GET` | `/api/timeline` | camera, limit, source_id | `FrigateTimelineEntry[]` |
-| `GET` | `/api/stats` | — | `FrigateStats` |
-| `GET` | `/api/config` | — | `FrigateConfig` |
+| Method | Path                            | Query Params                                                                                        | Response Type            |
+| ------ | ------------------------------- | --------------------------------------------------------------------------------------------------- | ------------------------ |
+| `GET`  | `/api/events`                   | cameras, labels, zones, after, before, limit, has_clip, has_snapshot, include_thumbnails, favorites | `FrigateEvent[]`         |
+| `GET`  | `/api/events/summary`           | timezone, has_clip, has_snapshot                                                                    | `FrigateEventSummary`    |
+| `GET`  | `/api/events/:id/thumbnail.jpg` | download, timestamp, bbox, crop, height, quality                                                    | `ArrayBuffer` (JPEG)     |
+| `GET`  | `/api/events/:id/snapshot.jpg`  | download, timestamp, bbox, crop, height, quality                                                    | `ArrayBuffer` (JPEG)     |
+| `GET`  | `/api/review`                   | cameras, labels, zones, reviewed, limit, severity, before, after                                    | `FrigateReview[]`        |
+| `GET`  | `/api/review/event/:event_id`   | —                                                                                                   | `FrigateReview`          |
+| `GET`  | `/api/review/summary`           | cameras, labels, zones, timezone                                                                    | `FrigateReviewSummary`   |
+| `GET`  | `/api/timeline`                 | camera, limit, source_id                                                                            | `FrigateTimelineEntry[]` |
+| `GET`  | `/api/stats`                    | —                                                                                                   | `FrigateStats`           |
+| `GET`  | `/api/config`                   | —                                                                                                   | `FrigateConfig`          |
 
 ### Frigate API Reference — Write Endpoints (types only, not implemented)
 
-| Method | Path | Request Body | Purpose |
-|--------|------|-------------|---------|
-| `DELETE` | `/api/events/:id` | — | Delete an event |
-| `POST` | `/api/events/:id/retain` | — | Toggle event retention |
-| `POST` | `/api/events/:id/sub_label` | `{ subLabel: string, subLabelScore: number, camera: string }` | Set event sub-label |
-| `POST` | `/api/events/:id/description` | `{ description: string }` | Set event description |
-| `POST` | `/api/review/:id/viewed` | — | Mark review as viewed |
+| Method   | Path                          | Request Body                                                  | Purpose                |
+| -------- | ----------------------------- | ------------------------------------------------------------- | ---------------------- |
+| `DELETE` | `/api/events/:id`             | —                                                             | Delete an event        |
+| `POST`   | `/api/events/:id/retain`      | —                                                             | Toggle event retention |
+| `POST`   | `/api/events/:id/sub_label`   | `{ subLabel: string, subLabelScore: number, camera: string }` | Set event sub-label    |
+| `POST`   | `/api/events/:id/description` | `{ description: string }`                                     | Set event description  |
+| `POST`   | `/api/review/:id/viewed`      | —                                                             | Mark review as viewed  |
 
 ### Key Type Schemas (from Frigate API docs)
 

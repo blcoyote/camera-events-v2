@@ -58,7 +58,10 @@ export class TtlCache<T> {
 }
 
 /** Module-level singleton used by the Frigate client. */
-export const frigateCache = new TtlCache<unknown>(CACHE_TTL_MS, CACHE_MAX_ENTRIES)
+export const frigateCache = new TtlCache<unknown>(
+  CACHE_TTL_MS,
+  CACHE_MAX_ENTRIES,
+)
 
 /** Clear the singleton cache. Exported for test isolation. */
 export function clearFrigateCache(): void {

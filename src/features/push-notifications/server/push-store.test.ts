@@ -52,7 +52,12 @@ describe('push-store table initialization', () => {
 
 describe('saveSubscription', () => {
   it('inserts a new subscription', () => {
-    store.saveSubscription('user1', 'https://push.example.com/1', 'p256dh-key', 'auth-key')
+    store.saveSubscription(
+      'user1',
+      'https://push.example.com/1',
+      'p256dh-key',
+      'auth-key',
+    )
 
     const subs = store.getSubscriptionsByUserId('user1')
     expect(subs).toHaveLength(1)
@@ -65,8 +70,18 @@ describe('saveSubscription', () => {
   })
 
   it('upserts on same (user_id, endpoint) — updates keys', () => {
-    store.saveSubscription('user1', 'https://push.example.com/1', 'old-p256dh', 'old-auth')
-    store.saveSubscription('user1', 'https://push.example.com/1', 'new-p256dh', 'new-auth')
+    store.saveSubscription(
+      'user1',
+      'https://push.example.com/1',
+      'old-p256dh',
+      'old-auth',
+    )
+    store.saveSubscription(
+      'user1',
+      'https://push.example.com/1',
+      'new-p256dh',
+      'new-auth',
+    )
 
     const subs = store.getSubscriptionsByUserId('user1')
     expect(subs).toHaveLength(1)

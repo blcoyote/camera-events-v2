@@ -13,9 +13,7 @@ import { getPushStore } from './push-store'
 
 /** Format a camera name for display: replace underscores, title-case words. */
 export function formatCameraName(name: string): string {
-  return name
-    .replace(/_/g, ' ')
-    .replace(/\b\w/g, (c) => c.toUpperCase())
+  return name.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
 }
 
 /** Format a label for display: capitalize first letter. */
@@ -49,11 +47,10 @@ export function buildBundledPayload(
 ): PushPayload {
   const cameraDisplay = formatCameraName(camera)
   const uniqueLabels = [...new Set(events.map((e) => formatLabel(e.label)))]
-  const labelSummary = uniqueLabels.slice(0, 3).join(', ')
-    + (uniqueLabels.length > 3 ? ` +${uniqueLabels.length - 3} more` : '')
-  const latestTime = formatTime(
-    Math.max(...events.map((e) => e.startTime)),
-  )
+  const labelSummary =
+    uniqueLabels.slice(0, 3).join(', ') +
+    (uniqueLabels.length > 3 ? ` +${uniqueLabels.length - 3} more` : '')
+  const latestTime = formatTime(Math.max(...events.map((e) => e.startTime)))
   return {
     title: cameraDisplay,
     body: `${events.length} new events \u2014 ${labelSummary} at ${latestTime}`,
@@ -88,7 +85,10 @@ export async function notifyUsersForCamera(
     for (const sub of subscriptions) {
       try {
         await sendPushNotification(
-          { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+          {
+            endpoint: sub.endpoint,
+            keys: { p256dh: sub.p256dh, auth: sub.auth },
+          },
           payload,
         )
       } catch (err) {

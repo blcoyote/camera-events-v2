@@ -84,14 +84,14 @@ Feature: Google SSO Login
 
 ### Components
 
-| Component | Change | New/Modified |
-|-----------|--------|--------------|
-| **Server middleware** | Session middleware that reads/writes an HTTP-only cookie, deserializes session data (name, email, avatar, Google sub ID) | New |
-| **OAuth server functions** | Two server endpoints: (1) `/api/auth/google` — initiates OAuth redirect to Google, (2) `/api/auth/google/callback` — handles the callback, exchanges code for tokens, extracts claims, creates session, sets cookie | New |
-| **Logout server function** | `/api/auth/logout` — clears session cookie, redirects to `/` | New |
-| **Header component** | Conditionally renders "Sign in with Google" button or user's first name + "Sign out" link based on auth state | Modified |
-| **`/dashboard` route** | New protected route; reuses home page content; route guard checks session via middleware and redirects if unauthenticated | New |
-| **Root route (`__root.tsx`)** | Passes session state (from middleware/server context) down to layout so Header can access it | Modified |
+| Component                     | Change                                                                                                                                                                                                              | New/Modified |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ |
+| **Server middleware**         | Session middleware that reads/writes an HTTP-only cookie, deserializes session data (name, email, avatar, Google sub ID)                                                                                            | New          |
+| **OAuth server functions**    | Two server endpoints: (1) `/api/auth/google` — initiates OAuth redirect to Google, (2) `/api/auth/google/callback` — handles the callback, exchanges code for tokens, extracts claims, creates session, sets cookie | New          |
+| **Logout server function**    | `/api/auth/logout` — clears session cookie, redirects to `/`                                                                                                                                                        | New          |
+| **Header component**          | Conditionally renders "Sign in with Google" button or user's first name + "Sign out" link based on auth state                                                                                                       | Modified     |
+| **`/dashboard` route**        | New protected route; reuses home page content; route guard checks session via middleware and redirects if unauthenticated                                                                                           | New          |
+| **Root route (`__root.tsx`)** | Passes session state (from middleware/server context) down to layout so Header can access it                                                                                                                        | Modified     |
 
 ### Interfaces
 
@@ -114,21 +114,21 @@ Feature: Google SSO Login
 
 ## Acceptance Criteria
 
-| # | Criterion | Pass condition |
-|---|-----------|---------------|
-| 1 | **Cookie security** | Session cookie has `HttpOnly`, `Secure` (in production), `SameSite=Lax` flags set |
-| 2 | **Cookie lifetime** | Cookie `Max-Age` or `Expires` is 7 days from creation |
-| 3 | **No client-side tokens** | Google access/ID tokens are never sent to the browser; no tokens in `localStorage`, `sessionStorage`, or non-HTTP-only cookies |
-| 4 | **Session data completeness** | Session contains `sub`, `firstName`, `email`, `avatarUrl` after successful login |
-| 5 | **Cookie is signed or encrypted** | Cookie value cannot be tampered with; modified cookies are rejected and treated as unauthenticated |
-| 6 | **Login redirects to Google** | Clicking "Sign in with Google" sends the user to `accounts.google.com` with correct `client_id`, `redirect_uri`, `scope=openid profile email`, and `response_type=code` |
-| 7 | **Callback exchanges code** | OAuth callback endpoint exchanges the authorization code for tokens server-side and does not expose the code or tokens to the client |
-| 8 | **Header reflects auth state** | Logged-in: user's first name + sign out visible. Logged-out: "Sign in with Google" button visible |
-| 9 | **Logout clears session** | After clicking "Sign out", session cookie is deleted and header reverts to unauthenticated state |
-| 10 | **Dashboard protected** | `/dashboard` renders home page content when authenticated; redirects to Google OAuth when unauthenticated |
-| 11 | **Consent denial handled** | Denying Google consent returns the user to the app with no session created |
-| 12 | **OAuth error handled** | An error from Google's callback displays an error message on the home page with no session created |
-| 13 | **Environment variables externalized** | `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` are loaded from a `.env` file (gitignored) or environment-level configuration, never hardcoded or committed to the repository. App fails fast with a clear error if either is missing at startup. |
+| #   | Criterion                              | Pass condition                                                                                                                                                                                                                                  |
+| --- | -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | **Cookie security**                    | Session cookie has `HttpOnly`, `Secure` (in production), `SameSite=Lax` flags set                                                                                                                                                               |
+| 2   | **Cookie lifetime**                    | Cookie `Max-Age` or `Expires` is 7 days from creation                                                                                                                                                                                           |
+| 3   | **No client-side tokens**              | Google access/ID tokens are never sent to the browser; no tokens in `localStorage`, `sessionStorage`, or non-HTTP-only cookies                                                                                                                  |
+| 4   | **Session data completeness**          | Session contains `sub`, `firstName`, `email`, `avatarUrl` after successful login                                                                                                                                                                |
+| 5   | **Cookie is signed or encrypted**      | Cookie value cannot be tampered with; modified cookies are rejected and treated as unauthenticated                                                                                                                                              |
+| 6   | **Login redirects to Google**          | Clicking "Sign in with Google" sends the user to `accounts.google.com` with correct `client_id`, `redirect_uri`, `scope=openid profile email`, and `response_type=code`                                                                         |
+| 7   | **Callback exchanges code**            | OAuth callback endpoint exchanges the authorization code for tokens server-side and does not expose the code or tokens to the client                                                                                                            |
+| 8   | **Header reflects auth state**         | Logged-in: user's first name + sign out visible. Logged-out: "Sign in with Google" button visible                                                                                                                                               |
+| 9   | **Logout clears session**              | After clicking "Sign out", session cookie is deleted and header reverts to unauthenticated state                                                                                                                                                |
+| 10  | **Dashboard protected**                | `/dashboard` renders home page content when authenticated; redirects to Google OAuth when unauthenticated                                                                                                                                       |
+| 11  | **Consent denial handled**             | Denying Google consent returns the user to the app with no session created                                                                                                                                                                      |
+| 12  | **OAuth error handled**                | An error from Google's callback displays an error message on the home page with no session created                                                                                                                                              |
+| 13  | **Environment variables externalized** | `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` are loaded from a `.env` file (gitignored) or environment-level configuration, never hardcoded or committed to the repository. App fails fast with a clear error if either is missing at startup. |
 
 ## Consistency Gate
 

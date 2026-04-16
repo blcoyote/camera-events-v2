@@ -19,12 +19,18 @@ declare global {
     readonly registration: ServiceWorkerRegistration
     addEventListener: {
       (type: 'push', listener: (event: PushEvent) => void): void
-      (type: 'notificationclick', listener: (event: NotificationEvent) => void): void
+      (
+        type: 'notificationclick',
+        listener: (event: NotificationEvent) => void,
+      ): void
     }
   }
 
   interface Clients {
-    matchAll: (options?: { type?: string; includeUncontrolled?: boolean }) => Promise<WindowClient[]>
+    matchAll: (options?: {
+      type?: string
+      includeUncontrolled?: boolean
+    }) => Promise<WindowClient[]>
     openWindow: (url: string) => Promise<WindowClient | null>
   }
 
@@ -137,17 +143,19 @@ self.addEventListener('notificationclick', (event: NotificationEvent) => {
   const url = getNotificationClickUrl(event.notification.data)
 
   event.waitUntil(
-    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-      // Focus an existing window if one is open
-      for (const client of clientList) {
-        if ('focus' in client) {
-          client.focus()
-          client.navigate(url)
-          return
+    self.clients
+      .matchAll({ type: 'window', includeUncontrolled: true })
+      .then((clientList) => {
+        // Focus an existing window if one is open
+        for (const client of clientList) {
+          if ('focus' in client) {
+            client.focus()
+            client.navigate(url)
+            return
+          }
         }
-      }
-      // Otherwise open a new window
-      return self.clients.openWindow(url)
-    }),
+        // Otherwise open a new window
+        return self.clients.openWindow(url)
+      }),
   )
 })
