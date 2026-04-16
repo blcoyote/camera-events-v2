@@ -1,4 +1,4 @@
-name: PR Quality Checks
+name: PR Checks
 
 on:
   pull_request:
@@ -12,7 +12,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  quality:
+  code_quality:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -38,7 +38,7 @@ jobs:
       - name: Format
         run: pnpm exec prettier --check .
 
-  test:
+  tests:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -61,7 +61,7 @@ jobs:
       - name: Test
         run: pnpm exec vitest run
 
-  docker:
+  docker_build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
