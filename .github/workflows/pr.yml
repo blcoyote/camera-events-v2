@@ -7,6 +7,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 jobs:
   quality:
     runs-on: ubuntu-latest
@@ -22,16 +26,20 @@ jobs:
           node-version: 24
           cache: pnpm
 
-      - run: pnpm install --frozen-lockfile
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Type Check
         run: pnpm exec tsc --noEmit
 
       - name: Lint
-        run: pnpm lint
+        run: pnpm exec eslint
+
+      - name: Format
+        run: pnpm exec prettier --check .
 
       - name: Test
-        run: pnpm test
+        run: pnpm exec vitest run
 
   docker:
     runs-on: ubuntu-latest
