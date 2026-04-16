@@ -210,13 +210,20 @@ function SkeletonCard({ index }: { index: number }) {
 
 export function CameraEventsLoading() {
   return (
-    <main id="main-content" className="page-wrap px-4 pb-8 pt-14">
+    <main
+      id="main-content"
+      aria-busy="true"
+      className="page-wrap px-4 pb-8 pt-14"
+    >
       <section className="island-shell rise-in relative overflow-hidden rounded-4xl px-6 py-10 sm:px-10 sm:py-14">
         <p className="island-kicker mb-3">Camera Events</p>
         <h1 className="display-title mb-5 max-w-3xl text-4xl leading-tight font-bold tracking-tight text-(--sea-ink) sm:text-6xl">
           Loading events…
         </h1>
       </section>
+      <p className="sr-only" role="status">
+        Loading camera events
+      </p>
       <section
         className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
         aria-label="Loading events"
@@ -363,7 +370,7 @@ export function CameraEventsListPage({
                   setLabelFilter(null)
                   setCameraFilter(null)
                 }}
-                className="mt-2 text-sm font-medium text-(--lagoon-deep) hover:text-(--sea-ink)"
+                className="mt-2 min-h-11 text-sm font-medium text-(--lagoon-deep) hover:text-(--sea-ink)"
               >
                 Clear filters
               </button>

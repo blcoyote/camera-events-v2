@@ -53,6 +53,7 @@ export function SettingsPage() {
               value={eventLimit}
               onChange={(e) => setEventLimit(Number(e.target.value))}
               aria-label="Number of events to display"
+              aria-describedby="event-limit-desc"
               aria-valuemin={MIN_EVENT_LIMIT}
               aria-valuemax={MAX_EVENT_LIMIT}
               aria-valuenow={eventLimit}
@@ -65,7 +66,7 @@ export function SettingsPage() {
               {eventLimit} events
             </span>
           </div>
-          <p className="text-xs text-(--sea-ink-soft)">
+          <p id="event-limit-desc" className="text-xs text-(--sea-ink-soft)">
             Controls how many events are loaded on the Camera Events page.
             Range: {MIN_EVENT_LIMIT}–{MAX_EVENT_LIMIT}.
           </p>
