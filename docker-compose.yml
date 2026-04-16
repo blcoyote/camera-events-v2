@@ -2,7 +2,7 @@ services:
   ce-v2:
     build: .
     ports:
-      - '3000:80'
+      - '3000:3000'
     environment:
       NODE_ENV: production
       MQTT_URL: mqtt://${RABBITMQ_USER}:${RABBITMQ_PASS}@rabbitmq:1883
@@ -21,7 +21,7 @@ services:
       - traefik.http.routers.ce.rule=Host(`$DNS_NAME`)
       - traefik.http.routers.ce.tls=true
       - traefik.http.routers.ce.tls.certresolver=lets-encrypt
-      - traefik.http.services.ce.loadbalancer.server.port=80
+      - traefik.http.services.ce.loadbalancer.server.port=3000
     depends_on:
       rabbitmq:
         condition: service_healthy
