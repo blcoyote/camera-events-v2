@@ -38,6 +38,9 @@ jobs:
       - name: Format
         run: pnpm exec prettier --check .
 
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps
+
       - name: Test
         run: pnpm exec vitest run
 
