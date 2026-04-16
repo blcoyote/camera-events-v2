@@ -48,9 +48,7 @@ const preview: Preview = {
         },
       },
     },
-    a11y: {
-      test: 'todo',
-    },
+    a11y: {},
   },
 }
 

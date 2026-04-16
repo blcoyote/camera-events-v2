@@ -66,12 +66,20 @@ export function getDownloadUrl(
 
 // ─── Components ───
 
-function EventSnapshot({ eventId }: { eventId: string }) {
+function EventSnapshot({
+  eventId,
+  camera,
+  label,
+}: {
+  eventId: string
+  camera: string
+  label: string
+}) {
   return (
     <div className="overflow-hidden rounded-2xl border border-(--line) bg-(--surface)">
       <img
         src={`/api/events/${eventId}/snapshot`}
-        alt="Event snapshot"
+        alt={`Snapshot of ${formatLabelName(label)} detected by ${formatCameraName(camera)}`}
         className="h-auto w-full object-contain"
         loading="eager"
       />
@@ -100,21 +108,28 @@ function InfoCard({
       </dt>
       <dd className="mt-1 flex items-center gap-1.5 text-base font-medium text-(--sea-ink)">
         {value}
-        {href && <Download className="h-3.5 w-3.5 text-(--lagoon-deep)" />}
+        {href && (
+          <Download
+            className="h-3.5 w-3.5 text-(--lagoon-deep)"
+            aria-hidden="true"
+          />
+        )}
       </dd>
     </>
   )
 
   if (href) {
     return (
-      <a
-        href={href}
-        download
-        aria-label={ariaLabel}
-        className="rounded-xl border border-(--line) bg-(--surface) p-4 no-underline transition hover:border-(--lagoon-deep) hover:bg-[rgba(79,184,178,0.06)]"
-      >
-        {inner}
-      </a>
+      <div className="rounded-xl border border-(--line) bg-(--surface) transition hover:border-(--lagoon-deep) hover:bg-[rgba(79,184,178,0.06)]">
+        <a
+          href={href}
+          download
+          aria-label={ariaLabel}
+          className="block p-4 no-underline"
+        >
+          {inner}
+        </a>
+      </div>
     )
   }
 
@@ -178,6 +193,7 @@ export function CameraEventDetailPage({
           <span
             className="inline-block h-3.5 w-3.5 shrink-0 rounded-full"
             style={{ backgroundColor: dotColor }}
+            aria-hidden="true"
           />
           {formatLabelName(event.label)}
           {event.sub_label && (
@@ -194,7 +210,11 @@ export function CameraEventDetailPage({
 
         {event.has_snapshot && (
           <div className="mb-8">
-            <EventSnapshot eventId={event.id} />
+            <EventSnapshot
+              eventId={event.id}
+              camera={event.camera}
+              label={event.label}
+            />
           </div>
         )}
 
@@ -259,7 +279,14 @@ export function CameraEventDetailPage({
               Detection confidence
             </h2>
             <div className="flex items-center gap-3">
-              <div className="h-2 flex-1 overflow-hidden rounded-full bg-(--line)">
+              <div
+                className="h-2 flex-1 overflow-hidden rounded-full bg-(--line)"
+                role="progressbar"
+                aria-valuenow={Math.round(event.data.top_score * 100)}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-label="Detection confidence"
+              >
                 <div
                   className="h-full rounded-full bg-(--lagoon-deep) transition-all"
                   style={{
