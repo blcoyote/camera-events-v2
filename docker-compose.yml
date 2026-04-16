@@ -1,14 +1,14 @@
 services:
-  app:
+  ce-v2:
     build: .
     ports:
-      - '3000:3000'
+      - '3000:80'
     environment:
       NODE_ENV: production
       MQTT_URL: mqtt://${RABBITMQ_USER}:${RABBITMQ_PASS}@rabbitmq:1883
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
-      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
-      SESSION_SECRET: ${SESSION_SECRET}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      SESSION_SECRET: ${SESSION_SECRET:-}
       APP_URL: ${APP_URL:-}
       FRIGATE_URL: ${FRIGATE_URL}
       FRIGATE_MOCK: ${FRIGATE_MOCK:-}
@@ -16,7 +16,12 @@ services:
       VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:-}
       VAPID_SUBJECT: ${VAPID_SUBJECT:-}
     volumes:
-      - app-data:/app/data
+      - ce-v2-data:/app/data
+    labels:
+      - traefik.http.routers.ce.rule=Host(`$DNS_NAME`)
+      - traefik.http.routers.ce.tls=true
+      - traefik.http.routers.ce.tls.certresolver=lets-encrypt
+      - traefik.http.services.ce.loadbalancer.server.port=80
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -41,5 +46,5 @@ services:
       retries: 5
 
 volumes:
-  app-data:
+  ce-v2-data:
   rabbitmq-data:
