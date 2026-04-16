@@ -1,4 +1,4 @@
-name: PR Quality Checks
+name: PR Checks
 
 on:
   pull_request:
@@ -7,31 +7,61 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 jobs:
-  quality:
+  code_quality:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
       - uses: pnpm/action-setup@v4
+        with:
+          version: latest
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           cache: pnpm
 
-      - run: pnpm install --frozen-lockfile
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Type Check
         run: pnpm exec tsc --noEmit
 
       - name: Lint
-        run: pnpm lint
+        run: pnpm run lint
+
+      - name: Format
+        run: pnpm exec prettier --check .
+
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: latest
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps
 
       - name: Test
-        run: pnpm test
+        run: pnpm exec vitest run
 
-  docker:
+  docker_build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
