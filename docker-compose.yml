@@ -27,7 +27,7 @@ services:
         condition: service_healthy
 
   rabbitmq:
-    image: rabbitmq:4-management-alpine
+    build: ./rabbitmq
     hostname: rabbitmq
     ports:
       - '1883:1883'
@@ -37,11 +37,6 @@ services:
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS}
     volumes:
       - rabbitmq-data:/var/lib/rabbitmq
-    configs:
-      - source: rabbitmq_enabled_plugins
-        target: /etc/rabbitmq/enabled_plugins
-      - source: rabbitmq_conf
-        target: /etc/rabbitmq/conf.d/custom.conf
     healthcheck:
       test: ['CMD', 'rabbitmq-diagnostics', '-q', 'ping']
       interval: 10s
@@ -51,14 +46,3 @@ services:
 volumes:
   ce-v2-data:
   rabbitmq-data:
-
-configs:
-  rabbitmq_enabled_plugins:
-    content: '[rabbitmq_management,rabbitmq_mqtt].'
-  rabbitmq_conf:
-    content: |
-      mqtt.listeners.tcp.default = 1883
-      mqtt.allow_anonymous = false
-      mqtt.exchange = amq.topic
-      mqtt.vhost = /
-      mqtt.max_session_expiry_interval_seconds = 86400
