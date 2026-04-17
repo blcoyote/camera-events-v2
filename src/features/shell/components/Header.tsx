@@ -154,9 +154,9 @@ export default function Header() {
     <header className="sticky top-0 z-50 border-b border-(--line) bg-(--header-bg) px-4 backdrop-blur-lg">
       <nav
         aria-label="Site navigation"
-        className="page-wrap flex items-center gap-x-3 py-3 sm:py-4"
+        className="page-wrap flex items-center gap-x-2 py-3 sm:gap-x-3 sm:py-4"
       >
-        <div className="flex items-center gap-x-4 text-sm font-semibold">
+        <div className="flex items-center gap-x-2 text-xs font-semibold whitespace-nowrap sm:gap-x-4 sm:text-sm">
           {state.navLinks.map((link) => (
             <Link
               key={link.to}
@@ -173,7 +173,9 @@ export default function Header() {
         </div>
 
         <div className="ml-auto flex items-center gap-2">
-          <ThemeToggle />
+          <div className="sm:flex">
+            <ThemeToggle />
+          </div>
 
           {state.showSignIn ? (
             <a

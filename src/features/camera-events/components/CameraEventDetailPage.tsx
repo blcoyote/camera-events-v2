@@ -150,12 +150,12 @@ export function CameraEventDetailPage({
   if (state.kind === 'error') {
     return (
       <main id="main-content" className="page-wrap px-4 py-12">
-        <section className="island-shell rise-in rounded-4xl px-6 py-10 text-center sm:px-10 sm:py-14">
-          <p className="island-kicker mb-3">Camera Events</p>
-          <h1 className="display-title mb-5 text-4xl font-bold text-(--sea-ink) sm:text-6xl">
+        <section className="island-shell rise-in rounded-4xl px-5 py-6 text-center sm:px-8 sm:py-8">
+          <p className="island-kicker mb-1">Camera Events</p>
+          <h1 className="display-title mb-3 text-2xl font-bold text-(--sea-ink) sm:text-4xl">
             Event not found
           </h1>
-          <p className="mx-auto mb-8 max-w-md text-base text-(--sea-ink-soft) sm:text-lg">
+          <p className="mx-auto mb-6 max-w-md text-base text-(--sea-ink-soft) sm:text-lg">
             {state.message}
           </p>
           <Link
@@ -183,13 +183,13 @@ export function CameraEventDetailPage({
         </Link>
       </div>
 
-      <section className="island-shell rise-in relative overflow-hidden rounded-4xl px-6 py-10 sm:px-10 sm:py-14">
+      <section className="island-shell rise-in relative overflow-hidden rounded-4xl px-5 py-6 sm:px-8 sm:py-8">
         <div className="pointer-events-none absolute -left-20 -top-24 h-56 w-56 rounded-full bg-[radial-gradient(circle,rgba(79,184,178,0.32),transparent_66%)]" />
         <div className="pointer-events-none absolute -bottom-20 -right-20 h-56 w-56 rounded-full bg-[radial-gradient(circle,rgba(47,106,74,0.18),transparent_66%)]" />
 
-        <p className="island-kicker mb-3">{formatCameraName(event.camera)}</p>
+        <p className="island-kicker mb-1">{formatCameraName(event.camera)}</p>
 
-        <h1 className="display-title mb-2 flex max-w-3xl items-center gap-3 text-4xl leading-[1.02] font-bold tracking-tight text-(--sea-ink) sm:text-6xl">
+        <h1 className="display-title mb-2 flex max-w-3xl items-center gap-3 text-2xl leading-tight font-bold tracking-tight text-(--sea-ink) sm:text-4xl">
           <span
             className="inline-block h-3.5 w-3.5 shrink-0 rounded-full"
             style={{ backgroundColor: dotColor }}
@@ -197,7 +197,7 @@ export function CameraEventDetailPage({
           />
           {formatLabelName(event.label)}
           {event.sub_label && (
-            <span className="text-2xl font-normal text-(--sea-ink-soft) sm:text-4xl">
+            <span className="text-xl font-normal text-(--sea-ink-soft) sm:text-2xl">
               — {event.sub_label}
             </span>
           )}
