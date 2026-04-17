@@ -1,7 +1,6 @@
 services:
   app:
-    build: .
-    pull_policy: build
+    image: ghcr.io/blcoyote/camera-events-v2:latest
     ports:
       - '3000:3000'
     environment:
