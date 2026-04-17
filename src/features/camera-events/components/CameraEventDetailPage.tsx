@@ -102,15 +102,15 @@ function InfoCard({
 }) {
   const inner = (
     <>
-      <dt className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-(--sea-ink-soft)">
-        <Icon className="h-3.5 w-3.5" />
+      <dt className="flex items-center gap-1 text-[0.65rem] font-semibold uppercase tracking-wider text-(--sea-ink-soft) sm:gap-1.5 sm:text-xs">
+        <Icon className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
         {label}
       </dt>
-      <dd className="mt-1 flex items-center gap-1.5 text-base font-medium text-(--sea-ink)">
+      <dd className="mt-0.5 flex items-center gap-1 text-sm font-medium text-(--sea-ink) sm:mt-1 sm:gap-1.5 sm:text-base">
         {value}
         {href && (
           <Download
-            className="h-3.5 w-3.5 text-(--lagoon-deep)"
+            className="h-3 w-3 text-(--lagoon-deep) sm:h-3.5 sm:w-3.5"
             aria-hidden="true"
           />
         )}
@@ -125,7 +125,7 @@ function InfoCard({
           href={href}
           download
           aria-label={ariaLabel}
-          className="block p-4 no-underline"
+          className="block px-3 py-2.5 no-underline sm:p-4"
         >
           {inner}
         </a>
@@ -134,7 +134,7 @@ function InfoCard({
   }
 
   return (
-    <div className="rounded-xl border border-(--line) bg-(--surface) p-4">
+    <div className="rounded-xl border border-(--line) bg-(--surface) px-3 py-2.5 sm:p-4">
       {inner}
     </div>
   )
@@ -218,7 +218,7 @@ export function CameraEventDetailPage({
           </div>
         )}
 
-        <dl className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <dl className="mt-6 grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-3">
           <InfoCard
             icon={Camera}
             label="Camera"
@@ -274,7 +274,7 @@ export function CameraEventDetailPage({
         </dl>
 
         {event.data.score > 0 && (
-          <div className="mt-6 rounded-xl border border-(--line) bg-(--surface) p-4">
+          <div className="mt-2.5 rounded-xl border border-(--line) bg-(--surface) px-3 py-2.5 sm:mt-6 sm:p-4">
             <h2 className="mb-2 text-xs font-semibold uppercase tracking-wider text-(--sea-ink-soft)">
               Detection confidence
             </h2>
