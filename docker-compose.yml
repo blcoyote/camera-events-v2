@@ -1,6 +1,7 @@
 services:
   app:
     build: .
+    pull_policy: build
     ports:
       - '3000:3000'
     environment:
