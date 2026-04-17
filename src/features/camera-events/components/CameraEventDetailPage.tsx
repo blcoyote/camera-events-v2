@@ -131,11 +131,11 @@ function InfoCard({
 
   const inner = (
     <>
-      <dt className="flex items-center gap-1 text-[0.65rem] font-semibold uppercase tracking-wider text-(--sea-ink-soft) sm:gap-1.5 sm:text-xs">
-        <Icon className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+      <dt className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-(--sea-ink-soft)">
+        <Icon className="h-3.5 w-3.5" />
         {label}
       </dt>
-      <dd className="mt-0.5 flex items-center gap-1 text-sm font-medium text-(--sea-ink) sm:mt-1 sm:gap-1.5 sm:text-base">
+      <dd className="mt-0.5 flex items-center gap-1.5 text-sm font-medium text-(--sea-ink) sm:mt-1 sm:text-base">
         {value}
         {downloadUrl && (
           <Download
@@ -179,7 +179,7 @@ export function CameraEventDetailPage({
 
   if (state.kind === 'error') {
     return (
-      <main id="main-content" className="page-wrap px-4 py-12">
+      <main id="main-content" className="page-wrap px-4 py-6 sm:py-12">
         <section className="island-shell rise-in rounded-4xl px-5 py-6 text-center sm:px-8 sm:py-8">
           <p className="island-kicker mb-1">Camera Events</p>
           <h1 className="display-title mb-3 text-2xl font-bold text-(--sea-ink) sm:text-4xl">
@@ -203,7 +203,7 @@ export function CameraEventDetailPage({
   const dotColor = getLabelDotColor(event.label)
 
   return (
-    <main id="main-content" className="page-wrap px-4 pb-8 pt-14">
+    <main id="main-content" className="page-wrap px-4 pb-8 pt-6 sm:pt-14">
       <div className="mb-6">
         <Link
           to="/camera-events"
@@ -248,7 +248,7 @@ export function CameraEventDetailPage({
           </div>
         )}
 
-        <dl className="mt-6 grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-3">
+        <dl className="mt-6 grid grid-cols-1 gap-2.5 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
           <InfoCard
             icon={Camera}
             label="Camera"
@@ -258,21 +258,6 @@ export function CameraEventDetailPage({
             icon={Clock}
             label="Duration"
             value={formatDuration(event.start_time, event.end_time)}
-          />
-          <InfoCard
-            icon={Tag}
-            label="Label"
-            value={
-              <>
-                {formatLabelName(event.label)}
-                {event.sub_label && (
-                  <span className="text-(--sea-ink-soft)">
-                    {' '}
-                    ({event.sub_label})
-                  </span>
-                )}
-              </>
-            }
           />
           {event.zones.length > 0 && (
             <InfoCard

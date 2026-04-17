@@ -51,7 +51,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       },
       {
         name: 'apple-mobile-web-app-status-bar-style',
-        content: 'default',
+        content: 'black-translucent',
       },
       {
         name: 'apple-mobile-web-app-title',
@@ -78,7 +78,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
 
 function NotFound() {
   return (
-    <main id="main-content" className="page-wrap px-4 py-12">
+    <main id="main-content" className="page-wrap px-4 py-6 sm:py-12">
       <section className="island-shell rise-in rounded-4xl px-6 py-10 text-center sm:px-10 sm:py-14">
         <p className="island-kicker mb-3">404</p>
         <h1 className="display-title mb-5 text-4xl font-bold text-(--sea-ink) sm:text-6xl">
@@ -90,7 +90,7 @@ function NotFound() {
         <Link
           to="/"
           search={{ error: undefined, status: undefined, returnTo: undefined }}
-          className="inline-block rounded-full border border-[rgba(50,143,151,0.3)] bg-[rgba(79,184,178,0.14)] px-5 py-2.5 text-sm font-semibold text-(--lagoon-deep) no-underline transition hover:-translate-y-0.5 hover:bg-[rgba(79,184,178,0.24)]"
+          className="inline-flex min-h-11 items-center rounded-full border border-[rgba(50,143,151,0.3)] bg-[rgba(79,184,178,0.14)] px-5 py-2.5 text-sm font-semibold text-(--lagoon-deep) no-underline transition hover:-translate-y-0.5 hover:bg-[rgba(79,184,178,0.24)]"
         >
           Back to Home
         </Link>

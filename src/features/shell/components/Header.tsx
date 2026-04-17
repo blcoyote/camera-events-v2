@@ -142,7 +142,7 @@ function AvatarMenu({
               })
               window.location.assign('/')
             }}
-            className="w-full px-4 py-3 text-left text-sm font-medium text-(--sea-ink) transition hover:bg-(--link-bg-hover)"
+            className="w-full min-h-11 px-4 py-3 text-left text-sm font-medium text-(--sea-ink) transition hover:bg-(--link-bg-hover)"
           >
             Sign out
           </button>
@@ -163,7 +163,7 @@ export default function Header() {
         aria-label="Site navigation"
         className="page-wrap flex items-center gap-x-2 py-3 sm:gap-x-3 sm:py-4"
       >
-        <div className="flex items-center gap-x-2 text-xs font-semibold whitespace-nowrap sm:gap-x-4 sm:text-sm">
+        <div className="flex min-w-0 items-center gap-x-2 overflow-x-auto text-xs font-semibold whitespace-nowrap sm:gap-x-4 sm:text-sm">
           {state.navLinks.map((link) => (
             <Link
               key={link.to}

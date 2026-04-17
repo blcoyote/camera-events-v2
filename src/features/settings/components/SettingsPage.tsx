@@ -27,7 +27,7 @@ export function SettingsPage() {
   const { mode, setTheme } = useTheme()
 
   return (
-    <main id="main-content" className="page-wrap px-4 pb-8 pt-14">
+    <main id="main-content" className="page-wrap px-4 pb-8 pt-6 sm:pt-14">
       <section className="island-shell rise-in relative overflow-hidden rounded-4xl px-5 py-6 sm:px-8 sm:py-8">
         <div className="pointer-events-none absolute -left-20 -top-24 h-56 w-56 rounded-full bg-[radial-gradient(circle,rgba(79,184,178,0.32),transparent_66%)]" />
         <div className="pointer-events-none absolute -bottom-20 -right-20 h-56 w-56 rounded-full bg-[radial-gradient(circle,rgba(47,106,74,0.18),transparent_66%)]" />
@@ -45,7 +45,7 @@ export function SettingsPage() {
           <legend className="text-sm font-medium text-(--sea-ink)">
             Theme
           </legend>
-          <div className="mt-3 flex gap-2">
+          <div className="mt-3 flex flex-wrap gap-2">
             {themeOptions.map((opt) => (
               <button
                 key={opt.value}

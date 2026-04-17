@@ -213,7 +213,7 @@ export function CameraEventsLoading() {
     <main
       id="main-content"
       aria-busy="true"
-      className="page-wrap px-4 pb-8 pt-14"
+      className="page-wrap px-4 pb-8 pt-6 sm:pt-14"
     >
       <section className="island-shell rise-in relative overflow-hidden rounded-4xl px-5 py-6 sm:px-8 sm:py-8">
         <p className="island-kicker mb-1">Camera Events</p>
@@ -251,7 +251,7 @@ export function CameraEventsListPage({
   const filtered = filterEvents(events, labelFilter, cameraFilter)
 
   return (
-    <main id="main-content" className="page-wrap px-4 pb-8 pt-14">
+    <main id="main-content" className="page-wrap px-4 pb-8 pt-6 sm:pt-14">
       {/* Hero header */}
       <section className="island-shell rise-in relative overflow-hidden rounded-4xl px-5 py-6 sm:px-8 sm:py-8">
         <div className="pointer-events-none absolute -left-20 -top-24 h-56 w-56 rounded-full bg-[radial-gradient(circle,rgba(79,184,178,0.32),transparent_66%)]" />

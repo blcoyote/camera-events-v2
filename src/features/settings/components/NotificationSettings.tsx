@@ -166,7 +166,7 @@ export function NotificationSettings() {
                 type="button"
                 onClick={handleUnsubscribe}
                 disabled={isLoading}
-                className="rounded-full border border-(--chip-line) bg-(--chip-bg) px-4 py-2 text-sm font-medium text-(--sea-ink) transition hover:bg-(--chip-bg)/80 disabled:opacity-50"
+                className="min-h-11 rounded-full border border-(--chip-line) bg-(--chip-bg) px-4 py-2 text-sm font-medium text-(--sea-ink) transition hover:bg-(--chip-bg)/80 disabled:opacity-50"
               >
                 {isLoading ? 'Working...' : 'Disable Notifications'}
               </button>
@@ -174,7 +174,7 @@ export function NotificationSettings() {
                 type="button"
                 onClick={handleSendTest}
                 disabled={isLoading}
-                className="rounded-full border border-[rgba(50,143,151,0.3)] bg-[rgba(79,184,178,0.14)] px-4 py-2 text-sm font-semibold text-(--lagoon-deep) transition hover:bg-[rgba(79,184,178,0.24)] disabled:opacity-50"
+                className="min-h-11 rounded-full border border-[rgba(50,143,151,0.3)] bg-[rgba(79,184,178,0.14)] px-4 py-2 text-sm font-semibold text-(--lagoon-deep) transition hover:bg-[rgba(79,184,178,0.24)] disabled:opacity-50"
               >
                 {isLoading ? 'Sending...' : 'Send Test Notification'}
               </button>
@@ -196,7 +196,7 @@ export function NotificationSettings() {
               type="button"
               onClick={handleSubscribe}
               disabled={isLoading}
-              className="w-fit rounded-full border border-[rgba(50,143,151,0.3)] bg-[rgba(79,184,178,0.14)] px-5 py-2.5 text-sm font-semibold text-(--lagoon-deep) transition hover:bg-[rgba(79,184,178,0.24)] disabled:opacity-50"
+              className="min-h-11 w-fit rounded-full border border-[rgba(50,143,151,0.3)] bg-[rgba(79,184,178,0.14)] px-5 py-2.5 text-sm font-semibold text-(--lagoon-deep) transition hover:bg-[rgba(79,184,178,0.24)] disabled:opacity-50"
             >
               {isLoading ? 'Working...' : 'Enable Notifications'}
             </button>
@@ -255,16 +255,20 @@ function CameraPreferences({
                 aria-checked={cam.enabled}
                 aria-label={`Notifications for ${formatCameraName(cam.name)}`}
                 onClick={() => onToggle(cam.name, !cam.enabled)}
-                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors ${
-                  cam.enabled ? 'bg-emerald-500' : 'bg-(--chip-line)'
-                }`}
+                className="relative inline-flex min-h-11 shrink-0 cursor-pointer items-center px-1"
               >
                 <span
-                  aria-hidden="true"
-                  className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow ring-0 transition-transform ${
-                    cam.enabled ? 'translate-x-5' : 'translate-x-0'
+                  className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors ${
+                    cam.enabled ? 'bg-emerald-500' : 'bg-(--chip-line)'
                   }`}
-                />
+                >
+                  <span
+                    aria-hidden="true"
+                    className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow ring-0 transition-transform ${
+                      cam.enabled ? 'translate-x-5' : 'translate-x-0'
+                    }`}
+                  />
+                </span>
               </button>
             </li>
           ))}
