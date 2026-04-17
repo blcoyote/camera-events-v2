@@ -1,19 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useSyncExternalStore } from 'react'
 
 export type ThemeMode = 'light' | 'dark' | 'auto'
-
-function getInitialMode(): ThemeMode {
-  if (typeof window === 'undefined') {
-    return 'auto'
-  }
-
-  const stored = window.localStorage.getItem('theme')
-  if (stored === 'light' || stored === 'dark' || stored === 'auto') {
-    return stored
-  }
-
-  return 'auto'
-}
 
 const THEME_COLORS = { light: '#173a40', dark: '#0d1f23' } as const
 
@@ -38,40 +25,77 @@ function applyThemeMode(mode: ThemeMode) {
   }
 }
 
+let currentMode: ThemeMode = 'auto'
+const listeners = new Set<() => void>()
+
+function getSnapshot(): ThemeMode {
+  return currentMode
+}
+
+function getServerSnapshot(): ThemeMode {
+  return 'auto'
+}
+
+function subscribe(listener: () => void): () => void {
+  listeners.add(listener)
+  return () => listeners.delete(listener)
+}
+
+function emitChange() {
+  for (const listener of listeners) {
+    listener()
+  }
+}
+
+function setThemeStore(nextMode: ThemeMode) {
+  currentMode = nextMode
+  applyThemeMode(nextMode)
+  window.localStorage.setItem('theme', nextMode)
+  emitChange()
+}
+
 export function useTheme() {
-  const [mode, setMode] = useState<ThemeMode>('auto')
+  const mode = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
 
   useEffect(() => {
-    const initialMode = getInitialMode()
-    setMode(initialMode)
-    applyThemeMode(initialMode)
+    const stored = window.localStorage.getItem('theme')
+    const initial: ThemeMode =
+      stored === 'light' || stored === 'dark' || stored === 'auto'
+        ? stored
+        : 'auto'
+
+    if (initial !== currentMode) {
+      currentMode = initial
+      applyThemeMode(initial)
+      emitChange()
+    } else {
+      applyThemeMode(initial)
+    }
   }, [])
 
   useEffect(() => {
-    if (mode !== 'auto') {
-      return
-    }
+    if (mode !== 'auto') return
 
     const media = window.matchMedia('(prefers-color-scheme: dark)')
     const onChange = () => applyThemeMode('auto')
 
     media.addEventListener('change', onChange)
-    return () => {
-      media.removeEventListener('change', onChange)
-    }
+    return () => media.removeEventListener('change', onChange)
   }, [mode])
 
-  function setTheme(nextMode: ThemeMode) {
-    setMode(nextMode)
-    applyThemeMode(nextMode)
-    window.localStorage.setItem('theme', nextMode)
-  }
+  const setTheme = useCallback((nextMode: ThemeMode) => {
+    setThemeStore(nextMode)
+  }, [])
 
-  function cycleTheme() {
-    const nextMode: ThemeMode =
-      mode === 'light' ? 'dark' : mode === 'dark' ? 'auto' : 'light'
-    setTheme(nextMode)
-  }
+  const cycleTheme = useCallback(() => {
+    const next: ThemeMode =
+      currentMode === 'light'
+        ? 'dark'
+        : currentMode === 'dark'
+          ? 'auto'
+          : 'light'
+    setThemeStore(next)
+  }, [])
 
   return { mode, setTheme, cycleTheme } as const
 }
