@@ -44,7 +44,7 @@ export function parsePushPayload(data: unknown): PushPayload {
  */
 export function buildNotificationOptions(
   payload: PushPayload,
-): NotificationOptions {
+): NotificationOptions & { renotify: boolean } {
   return {
     body: payload.body,
     icon: payload.icon ?? '/logo192.png',
