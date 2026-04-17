@@ -4,7 +4,8 @@ import {
   MAX_EVENT_LIMIT,
   EVENT_LIMIT_STEP,
 } from '#/features/shared/hooks/useEventLimit'
-import { useTheme, type ThemeMode } from '#/features/shared/hooks/useTheme'
+import { useTheme } from '#/features/shared/hooks/useTheme'
+import type { ThemeMode } from '#/features/shared/hooks/useTheme'
 import { NotificationSettings } from './NotificationSettings'
 
 export function getSettingsContent(): { heading: string; description: string } {

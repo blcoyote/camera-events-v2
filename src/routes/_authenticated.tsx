@@ -10,7 +10,7 @@ export function getAuthRedirect(
   currentPath: string,
 ): string | null {
   if (user) return null
-  return `/api/auth/google?returnTo=${currentPath}`
+  return `/?returnTo=${encodeURIComponent(currentPath)}`
 }
 
 export const Route = createFileRoute('/_authenticated')({

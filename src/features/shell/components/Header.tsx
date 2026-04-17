@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useRouteContext } from '@tanstack/react-router'
 import ThemeToggle from './ThemeToggle'
+import { useStandaloneAuth } from '#/features/auth/hooks/useStandaloneAuth'
 import type { SessionData } from '#/features/shared/server/session'
 
 interface NavLink {
@@ -149,6 +150,7 @@ function AvatarMenu({
 export default function Header() {
   const { user } = useRouteContext({ from: '__root__' })
   const state = getHeaderAuthState(user)
+  const { onClick: onSignIn } = useStandaloneAuth(state.signInHref)
 
   return (
     <header className="sticky top-0 z-50 border-b border-(--line) bg-(--header-bg) px-4 backdrop-blur-lg">
@@ -180,6 +182,7 @@ export default function Header() {
           {state.showSignIn ? (
             <a
               href={state.signInHref}
+              onClick={onSignIn}
               className="inline-flex min-h-11 items-center rounded-full border border-[rgba(50,143,151,0.3)] bg-[rgba(79,184,178,0.14)] px-4 py-2 text-sm font-semibold text-(--lagoon-deep) no-underline transition hover:-translate-y-0.5 hover:bg-[rgba(79,184,178,0.24)]"
             >
               Sign in with Google

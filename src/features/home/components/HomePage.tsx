@@ -1,12 +1,20 @@
 import AlertBanner from '#/features/shared/components/AlertBanner'
+import { useStandaloneAuth } from '#/features/auth/hooks/useStandaloneAuth'
 
 export function HomePage({
   error,
   status,
+  returnTo,
 }: {
   error?: string
   status?: string
+  returnTo?: string
 }) {
+  const signInHref = returnTo
+    ? `/api/auth/google?returnTo=${encodeURIComponent(returnTo)}`
+    : '/api/auth/google'
+  const { onClick: onSignIn } = useStandaloneAuth(signInHref)
+
   return (
     <main id="main-content" className="page-wrap px-4 pb-8 pt-14">
       <AlertBanner error={error} status={status} />
@@ -23,7 +31,8 @@ export function HomePage({
         </p>
         <div className="flex flex-wrap gap-3">
           <a
-            href="/api/auth/google"
+            href={signInHref}
+            onClick={onSignIn}
             className="inline-flex min-h-11 items-center rounded-full border border-[rgba(50,143,151,0.3)] bg-[rgba(79,184,178,0.14)] px-5 py-2.5 text-sm font-semibold text-(--lagoon-deep) no-underline transition hover:-translate-y-0.5 hover:bg-[rgba(79,184,178,0.24)]"
           >
             Sign in with Google

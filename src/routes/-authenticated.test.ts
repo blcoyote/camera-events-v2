@@ -13,21 +13,19 @@ describe('getAuthRedirect', () => {
     expect(getAuthRedirect(user, '/camera-events')).toBeNull()
   })
 
-  it('returns Google login URL with returnTo when user is null', () => {
+  it('returns home page with returnTo when user is null', () => {
     expect(getAuthRedirect(null, '/camera-events')).toBe(
-      '/api/auth/google?returnTo=/camera-events',
+      '/?returnTo=%2Fcamera-events',
     )
   })
 
   it('handles dynamic paths in returnTo', () => {
     expect(getAuthRedirect(null, '/camera-events/abc-123')).toBe(
-      '/api/auth/google?returnTo=/camera-events/abc-123',
+      '/?returnTo=%2Fcamera-events%2Fabc-123',
     )
   })
 
   it('handles /settings path', () => {
-    expect(getAuthRedirect(null, '/settings')).toBe(
-      '/api/auth/google?returnTo=/settings',
-    )
+    expect(getAuthRedirect(null, '/settings')).toBe('/?returnTo=%2Fsettings')
   })
 })
