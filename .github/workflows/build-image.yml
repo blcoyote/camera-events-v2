@@ -49,3 +49,11 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Prune old images (keep 3 most recent)
+        uses: actions/delete-package-versions@v5
+        with:
+          package-name: camera-events-v2
+          package-type: container
+          min-versions-to-keep: 3
+          delete-only-untagged-versions: false
