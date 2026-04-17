@@ -15,6 +15,7 @@ RUN pnpm run build
 FROM base AS runtime
 RUN addgroup -g 1234 -S app && adduser -u 1234 -S app -G app
 WORKDIR /app
+RUN mkdir -p /app/data && chown 1234:1234 /app/data
 COPY --chown=1234:1234 --from=deps /app/node_modules ./node_modules
 COPY --chown=1234:1234 --from=build /app/dist ./dist
 COPY --chown=1234:1234 --from=build /app/package.json ./
