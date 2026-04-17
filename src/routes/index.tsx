@@ -11,6 +11,7 @@ export const Route = createFileRoute('/')({
   validateSearch: (search: Record<string, unknown>) => ({
     error: typeof search.error === 'string' ? search.error : undefined,
     status: typeof search.status === 'string' ? search.status : undefined,
+    returnTo: typeof search.returnTo === 'string' ? search.returnTo : undefined,
   }),
   beforeLoad: ({ context }) => {
     const redirectPath = getHomeRedirect(context.user)
@@ -22,6 +23,6 @@ export const Route = createFileRoute('/')({
 })
 
 function HomeRoute() {
-  const { error, status } = Route.useSearch()
-  return <HomePage error={error} status={status} />
+  const { error, status, returnTo } = Route.useSearch()
+  return <HomePage error={error} status={status} returnTo={returnTo} />
 }

@@ -23,6 +23,7 @@ declare global {
         type: 'notificationclick',
         listener: (event: NotificationEvent) => void,
       ): void
+      (type: 'message', listener: (event: MessageEvent) => void): void
     }
   }
 
@@ -61,13 +62,13 @@ declare const self: WorkerGlobalScope
 
 const serwist = new Serwist({
   precacheEntries: self.__SW_MANIFEST,
-  skipWaiting: true,
+  skipWaiting: false,
   clientsClaim: true,
   navigationPreload: true,
   runtimeCaching: [
     {
-      // Cache page navigations with network-first strategy
-      matcher: ({ request }) => request.mode === 'navigate',
+      matcher: ({ request, url }) =>
+        request.mode === 'navigate' && !url.pathname.startsWith('/api/'),
       handler: new NetworkFirst({
         cacheName: 'pages',
         networkTimeoutSeconds: 3,
@@ -120,6 +121,13 @@ const serwist = new Serwist({
 })
 
 serwist.addEventListeners()
+
+// Allow the client to trigger skipWaiting when the user accepts an update
+self.addEventListener('message', (event: MessageEvent) => {
+  if (event.data?.type === 'SKIP_WAITING') {
+    ;(self as any).skipWaiting()
+  }
+})
 
 // --- Web Push handlers ---
 
