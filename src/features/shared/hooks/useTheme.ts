@@ -15,6 +15,8 @@ function getInitialMode(): ThemeMode {
   return 'auto'
 }
 
+const THEME_COLORS = { light: '#173a40', dark: '#0d1f23' } as const
+
 function applyThemeMode(mode: ThemeMode) {
   const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
   const resolved = mode === 'auto' ? (prefersDark ? 'dark' : 'light') : mode
@@ -29,6 +31,11 @@ function applyThemeMode(mode: ThemeMode) {
   }
 
   document.documentElement.style.colorScheme = resolved
+
+  const meta = document.querySelector('meta[name="theme-color"]')
+  if (meta) {
+    meta.setAttribute('content', THEME_COLORS[resolved])
+  }
 }
 
 export function useTheme() {

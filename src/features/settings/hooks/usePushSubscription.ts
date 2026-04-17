@@ -51,7 +51,9 @@ export function usePushSubscription(): UsePushSubscriptionReturn {
     async function init() {
       try {
         // Fetch VAPID public key
-        const res = await fetch('/api/push/vapid-public-key')
+        const res = await fetch('/api/push/vapid-public-key', {
+          credentials: 'include',
+        })
         if (res.ok) {
           const data = await res.json()
           if (!cancelled) {
@@ -99,7 +101,9 @@ export function usePushSubscription(): UsePushSubscriptionReturn {
       // Get VAPID key if not already fetched
       let key = vapidPublicKey
       if (!key) {
-        const res = await fetch('/api/push/vapid-public-key')
+        const res = await fetch('/api/push/vapid-public-key', {
+          credentials: 'include',
+        })
         if (!res.ok) throw new Error('Could not fetch VAPID key')
         const data = await res.json()
         key = data.publicKey
@@ -117,6 +121,7 @@ export function usePushSubscription(): UsePushSubscriptionReturn {
       const subJson = subscription.toJSON()
       const res = await fetch('/api/push/subscribe', {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           endpoint: subJson.endpoint,
@@ -158,6 +163,7 @@ export function usePushSubscription(): UsePushSubscriptionReturn {
 
         await fetch('/api/push/unsubscribe', {
           method: 'POST',
+          credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ endpoint }),
         })
@@ -179,6 +185,7 @@ export function usePushSubscription(): UsePushSubscriptionReturn {
     try {
       const res = await fetch('/api/push/test', {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
       })
 

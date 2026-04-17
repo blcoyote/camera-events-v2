@@ -1,3 +1,4 @@
+import { useCallback, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { Camera, Clock, Tag, MapPin, Film, Image, Download } from 'lucide-react'
 import type { FrigateResult } from '#/features/shared/server/frigate/config'
@@ -87,19 +88,47 @@ function EventSnapshot({
   )
 }
 
+function useBlobDownload() {
+  const [downloading, setDownloading] = useState(false)
+
+  const download = useCallback(async (url: string) => {
+    setDownloading(true)
+    try {
+      const res = await fetch(url, { credentials: 'include' })
+      const blob = await res.blob()
+      const blobUrl = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = blobUrl
+      const disposition = res.headers.get('Content-Disposition')
+      const match = disposition?.match(/filename="?([^"]+)"?/)
+      a.download = match?.[1] ?? url.split('/').pop() ?? 'download'
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      URL.revokeObjectURL(blobUrl)
+    } finally {
+      setDownloading(false)
+    }
+  }, [])
+
+  return { download, downloading }
+}
+
 function InfoCard({
   icon: Icon,
   label,
   value,
-  href,
+  downloadUrl,
   'aria-label': ariaLabel,
 }: {
   icon: React.ComponentType<{ className?: string }>
   label: string
   value: React.ReactNode
-  href?: string
+  downloadUrl?: string
   'aria-label'?: string
 }) {
+  const { download, downloading } = useBlobDownload()
+
   const inner = (
     <>
       <dt className="flex items-center gap-1 text-[0.65rem] font-semibold uppercase tracking-wider text-(--sea-ink-soft) sm:gap-1.5 sm:text-xs">
@@ -108,7 +137,7 @@ function InfoCard({
       </dt>
       <dd className="mt-0.5 flex items-center gap-1 text-sm font-medium text-(--sea-ink) sm:mt-1 sm:gap-1.5 sm:text-base">
         {value}
-        {href && (
+        {downloadUrl && (
           <Download
             className="h-3 w-3 text-(--lagoon-deep) sm:h-3.5 sm:w-3.5"
             aria-hidden="true"
@@ -118,17 +147,18 @@ function InfoCard({
     </>
   )
 
-  if (href) {
+  if (downloadUrl) {
     return (
       <div className="rounded-xl border border-(--line) bg-(--surface) transition hover:border-(--lagoon-deep) hover:bg-[rgba(79,184,178,0.06)]">
-        <a
-          href={href}
-          download
+        <button
+          type="button"
+          onClick={() => download(downloadUrl)}
+          disabled={downloading}
           aria-label={ariaLabel}
-          className="block px-3 py-2.5 no-underline sm:p-4"
+          className="block w-full cursor-pointer px-3 py-2.5 text-left sm:p-4"
         >
           {inner}
-        </a>
+        </button>
       </div>
     )
   }
@@ -255,14 +285,16 @@ export function CameraEventDetailPage({
             icon={Film}
             label="Clip"
             value={event.has_clip ? 'Available' : 'None'}
-            href={event.has_clip ? getDownloadUrl(event.id, 'clip') : undefined}
+            downloadUrl={
+              event.has_clip ? getDownloadUrl(event.id, 'clip') : undefined
+            }
             aria-label={event.has_clip ? 'Download video clip' : undefined}
           />
           <InfoCard
             icon={Image}
             label="Snapshot"
             value={event.has_snapshot ? 'Available' : 'None'}
-            href={
+            downloadUrl={
               event.has_snapshot
                 ? getDownloadUrl(event.id, 'snapshot')
                 : undefined

@@ -31,6 +31,17 @@ export function ServiceWorkerRegistration() {
         console.error('Service worker registration failed:', error)
       })
 
+    navigator.serviceWorker.addEventListener('message', (event) => {
+      if (
+        event.data?.type === 'NAVIGATE' &&
+        typeof event.data.url === 'string' &&
+        event.data.url.startsWith('/') &&
+        !event.data.url.startsWith('//')
+      ) {
+        window.location.assign(event.data.url)
+      }
+    })
+
     let refreshing = false
     navigator.serviceWorker.addEventListener('controllerchange', () => {
       if (refreshing) return
@@ -53,7 +64,7 @@ export function ServiceWorkerRegistration() {
   return (
     <div
       role="alert"
-      className="fixed bottom-4 left-4 right-4 z-50 mx-auto max-w-md animate-[slideUp_300ms_ease-out] rounded-2xl border border-(--line) bg-(--surface-strong) px-5 py-4 shadow-[0_8px_32px_rgba(30,90,72,0.18)] backdrop-blur-lg sm:left-auto"
+      className="fixed bottom-[calc(1rem+env(safe-area-inset-bottom))] left-4 right-4 z-50 mx-auto max-w-md animate-[slideUp_300ms_ease-out] rounded-2xl border border-(--line) bg-(--surface-strong) px-5 py-4 shadow-[0_8px_32px_rgba(30,90,72,0.18)] backdrop-blur-lg sm:left-auto"
     >
       <p className="text-sm font-medium text-(--sea-ink)">
         A new version is available.

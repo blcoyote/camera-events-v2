@@ -8,6 +8,7 @@ export interface PushPayload {
   body: string
   url: string
   icon?: string
+  tag?: string
 }
 
 const DEFAULT_PAYLOAD: PushPayload = {
@@ -34,6 +35,7 @@ export function parsePushPayload(data: unknown): PushPayload {
     body: typeof obj.body === 'string' ? obj.body : DEFAULT_PAYLOAD.body,
     url: typeof obj.url === 'string' && obj.url ? obj.url : DEFAULT_PAYLOAD.url,
     icon: typeof obj.icon === 'string' && obj.icon ? obj.icon : undefined,
+    tag: typeof obj.tag === 'string' && obj.tag ? obj.tag : undefined,
   }
 }
 
@@ -42,10 +44,12 @@ export function parsePushPayload(data: unknown): PushPayload {
  */
 export function buildNotificationOptions(
   payload: PushPayload,
-): NotificationOptions {
+): NotificationOptions & { renotify: boolean } {
   return {
     body: payload.body,
     icon: payload.icon ?? '/logo192.png',
+    tag: payload.tag ?? 'camera-event',
+    renotify: true,
     data: { url: payload.url },
   }
 }
