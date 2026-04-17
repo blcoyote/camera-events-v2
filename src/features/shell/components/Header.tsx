@@ -153,7 +153,7 @@ export default function Header() {
   const { onClick: onSignIn } = useStandaloneAuth(state.signInHref)
 
   return (
-    <header className="sticky top-0 z-50 border-b border-(--line) bg-(--header-bg) px-4 backdrop-blur-lg">
+    <header className="sticky top-0 z-50 border-b border-(--line) bg-(--header-bg) px-4 pt-[env(safe-area-inset-top)] backdrop-blur-lg">
       <nav
         aria-label="Site navigation"
         className="page-wrap flex items-center gap-x-2 py-3 sm:gap-x-3 sm:py-4"
