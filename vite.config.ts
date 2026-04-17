@@ -16,6 +16,9 @@ const dirname =
 
 // Vitest 3.x bundles Vite 7 types; cast needed until Vitest 4 supports Vite 8
 export default defineConfig({
+  preview: {
+    allowedHosts: true,
+  },
   resolve: {
     tsconfigPaths: true,
   },
