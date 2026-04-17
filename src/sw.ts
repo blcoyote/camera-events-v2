@@ -86,7 +86,8 @@ const serwist = new Serwist({
     },
     {
       // Cache images with cache-first strategy
-      matcher: ({ request }) => request.destination === 'image',
+      matcher: ({ request, url }) =>
+        request.destination === 'image' && !url.pathname.startsWith('/api/'),
       handler: new CacheFirst({
         cacheName: 'images',
         plugins: [

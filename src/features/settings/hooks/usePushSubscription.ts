@@ -1,5 +1,16 @@
 import { useState, useEffect, useCallback } from 'react'
 
+function urlBase64ToUint8Array(base64String: string): Uint8Array {
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/')
+  const raw = atob(base64)
+  const output = new Uint8Array(raw.length)
+  for (let i = 0; i < raw.length; i++) {
+    output[i] = raw.charCodeAt(i)
+  }
+  return output
+}
+
 export interface UsePushSubscriptionReturn {
   /** Browser supports Push API */
   isSupported: boolean
@@ -111,10 +122,13 @@ export function usePushSubscription(): UsePushSubscriptionReturn {
       }
 
       // Subscribe via PushManager
+      // Safari/iOS requires applicationServerKey as a Uint8Array
       const registration = await navigator.serviceWorker.ready
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: key!,
+        applicationServerKey: urlBase64ToUint8Array(
+          key!,
+        ) as Uint8Array<ArrayBuffer>,
       })
 
       // Send to server
@@ -130,9 +144,23 @@ export function usePushSubscription(): UsePushSubscriptionReturn {
       })
 
       if (!res.ok) {
-        // Roll back local subscription
         await subscription.unsubscribe()
-        setError('Could not enable notifications. Please try again.')
+        if (res.status === 401) {
+          setError(
+            'Your session has expired. Please sign in again, then enable notifications.',
+          )
+        } else {
+          let detail = ''
+          try {
+            const body = await res.json()
+            detail = body.error ? `: ${body.error}` : ''
+          } catch {
+            // no parseable body
+          }
+          setError(
+            `Could not enable notifications (${res.status}${detail}). Please try again.`,
+          )
+        }
         return
       }
 
