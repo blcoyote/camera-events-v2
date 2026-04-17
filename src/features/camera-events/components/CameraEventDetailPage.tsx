@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react'
 import { Link } from '@tanstack/react-router'
-import { Camera, Clock, Tag, MapPin, Film, Image, Download } from 'lucide-react'
+import { Camera, Clock, MapPin, Film, Image, Download } from 'lucide-react'
 import type { FrigateResult } from '#/features/shared/server/frigate/config'
 import type { FrigateEvent } from '#/features/shared/server/frigate/types'
 import { formatRelativeTime, formatLabelName, getLabelDotColor } from '../utils'
