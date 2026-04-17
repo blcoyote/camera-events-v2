@@ -130,17 +130,22 @@ function AvatarMenu({
           onKeyDown={handleMenuKeyDown}
           className="absolute right-0 top-full z-50 mt-2 min-w-40 overflow-hidden rounded-xl border border-(--line) bg-(--surface-strong) shadow-[0_8px_24px_rgba(30,90,72,0.12)]"
         >
-          <form method="post" action={signOutAction}>
-            <button
-              ref={menuItemRef}
-              type="submit"
-              role="menuitem"
-              tabIndex={-1}
-              className="w-full px-4 py-3 text-left text-sm font-medium text-(--sea-ink) transition hover:bg-(--link-bg-hover)"
-            >
-              Sign out
-            </button>
-          </form>
+          <button
+            ref={menuItemRef}
+            type="button"
+            role="menuitem"
+            tabIndex={-1}
+            onClick={async () => {
+              await fetch(signOutAction, {
+                method: 'POST',
+                credentials: 'include',
+              })
+              window.location.assign('/')
+            }}
+            className="w-full px-4 py-3 text-left text-sm font-medium text-(--sea-ink) transition hover:bg-(--link-bg-hover)"
+          >
+            Sign out
+          </button>
         </div>
       )}
     </div>
