@@ -153,16 +153,19 @@ self.addEventListener('notificationclick', (event: NotificationEvent) => {
   event.waitUntil(
     self.clients
       .matchAll({ type: 'window', includeUncontrolled: true })
-      .then((clientList) => {
-        // Focus an existing window if one is open
+      .then(async (clientList) => {
         for (const client of clientList) {
           if ('focus' in client) {
-            client.focus()
-            client.navigate(url)
+            await client.focus()
+            // navigate() is Chromium-only; fall back to postMessage for Safari/Firefox
+            if ('navigate' in client) {
+              await client.navigate(url)
+            } else {
+              client.postMessage({ type: 'NAVIGATE', url })
+            }
             return
           }
         }
-        // Otherwise open a new window
         return self.clients.openWindow(url)
       }),
   )

@@ -31,7 +31,9 @@ export function NotificationSettings() {
   const loadPreferences = useCallback(async () => {
     setPrefsLoading(true)
     try {
-      const res = await fetch('/api/push/preferences')
+      const res = await fetch('/api/push/preferences', {
+        credentials: 'include',
+      })
       if (res.ok) {
         const data = await res.json()
         setCameraPrefs(data.cameras ?? [])
@@ -125,6 +127,7 @@ export function NotificationSettings() {
     try {
       const res = await fetch('/api/push/preferences', {
         method: 'PUT',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ camera, enabled }),
       })

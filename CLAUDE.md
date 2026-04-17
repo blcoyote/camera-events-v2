@@ -17,6 +17,12 @@
 - `src/features/shared/` is the only place for code that is used by multiple features. Shared code should be genuinely reusable, not a dumping ground for convenience.
 - When creating a new feature, give it its own folder under `src/features/` with everything it needs. Prefer duplication over coupling between features.
 
+## Cross-Platform PWA
+
+- This app is a PWA that must work on all major platforms: iOS Safari (standalone), Android Chrome, and desktop browsers (Chrome, Firefox, Safari, Edge).
+- Every feature — including push notifications, service worker interactions, OAuth, and cookie-dependent API calls — must be implemented with cross-platform compatibility in mind.
+- When you spot a platform-specific issue or limitation (e.g. an API not supported on iOS, cookie behavior differences in standalone mode, etc.), **do not silently fix it**. Flag it to me first, explain the issue and your proposed fix, and wait for confirmation before implementing.
+
 ## SSR & Hydration
 
 - This project uses TanStack Start with server-side rendering. All pages and components must produce identical HTML on server and client during the initial render.

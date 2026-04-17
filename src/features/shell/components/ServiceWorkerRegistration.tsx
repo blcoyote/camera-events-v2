@@ -31,6 +31,17 @@ export function ServiceWorkerRegistration() {
         console.error('Service worker registration failed:', error)
       })
 
+    navigator.serviceWorker.addEventListener('message', (event) => {
+      if (
+        event.data?.type === 'NAVIGATE' &&
+        typeof event.data.url === 'string' &&
+        event.data.url.startsWith('/') &&
+        !event.data.url.startsWith('//')
+      ) {
+        window.location.assign(event.data.url)
+      }
+    })
+
     let refreshing = false
     navigator.serviceWorker.addEventListener('controllerchange', () => {
       if (refreshing) return

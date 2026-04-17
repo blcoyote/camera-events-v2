@@ -79,6 +79,8 @@ describe('buildNotificationOptions', () => {
     expect(result).toEqual({
       body: 'Hello',
       icon: '/logo192.png',
+      tag: 'camera-event',
+      renotify: true,
       data: { url: '/events/42' },
     })
   })
