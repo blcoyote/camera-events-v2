@@ -2,7 +2,6 @@ import { createServerFn } from '@tanstack/react-start'
 import { getFrigateUrl, DEFAULT_TIMEOUT_MS } from './config'
 import type { FrigateResult } from './config'
 import { frigateCache, clearFrigateCache as clearCache } from './cache'
-import * as mockFrigate from './mock-client'
 import type {
   FrigateConfig,
   FrigateEvent,
@@ -18,6 +17,10 @@ import type {
   GetReviewSummaryParams,
   GetTimelineParams,
 } from './types'
+
+function loadMock() {
+  return import('./mock-client')
+}
 
 type QueryParams = Record<string, string | number | boolean | undefined>
 
@@ -109,7 +112,7 @@ export async function getEvents(
   timeoutMs?: number,
 ): Promise<FrigateResult<FrigateEvent[]>> {
   if (process.env.FRIGATE_MOCK === 'true')
-    return mockFrigate.getEvents(params, timeoutMs)
+    return (await loadMock()).getEvents(params, timeoutMs)
   return frigateGet('/api/events', params as QueryParams, timeoutMs)
 }
 
@@ -118,7 +121,7 @@ export async function getEvent(
   timeoutMs?: number,
 ): Promise<FrigateResult<FrigateEvent>> {
   if (process.env.FRIGATE_MOCK === 'true')
-    return mockFrigate.getEvent(eventId, timeoutMs)
+    return (await loadMock()).getEvent(eventId, timeoutMs)
   return frigateGet(`/api/events/${eventId}`, undefined, timeoutMs)
 }
 
@@ -128,7 +131,7 @@ export async function getEventThumbnail(
   timeoutMs?: number,
 ): Promise<FrigateResult<ArrayBuffer>> {
   if (process.env.FRIGATE_MOCK === 'true')
-    return mockFrigate.getEventThumbnail(eventId, params, timeoutMs)
+    return (await loadMock()).getEventThumbnail(eventId, params, timeoutMs)
   return frigateBinary(
     `/api/events/${eventId}/thumbnail.jpg`,
     params as QueryParams,
@@ -142,7 +145,7 @@ export async function getEventSnapshot(
   timeoutMs?: number,
 ): Promise<FrigateResult<ArrayBuffer>> {
   if (process.env.FRIGATE_MOCK === 'true')
-    return mockFrigate.getEventSnapshot(eventId, params, timeoutMs)
+    return (await loadMock()).getEventSnapshot(eventId, params, timeoutMs)
   return frigateBinary(
     `/api/events/${eventId}/snapshot.jpg`,
     params as QueryParams,
@@ -155,7 +158,7 @@ export async function getEventClip(
   timeoutMs?: number,
 ): Promise<FrigateResult<ArrayBuffer>> {
   if (process.env.FRIGATE_MOCK === 'true')
-    return mockFrigate.getEventClip(eventId, timeoutMs)
+    return (await loadMock()).getEventClip(eventId, timeoutMs)
   return frigateBinary(`/api/events/${eventId}/clip.mp4`, undefined, timeoutMs)
 }
 
@@ -164,7 +167,7 @@ export async function getEventSummary(
   timeoutMs?: number,
 ): Promise<FrigateResult<FrigateEventSummary>> {
   if (process.env.FRIGATE_MOCK === 'true')
-    return mockFrigate.getEventSummary(params, timeoutMs)
+    return (await loadMock()).getEventSummary(params, timeoutMs)
   return frigateGet('/api/events/summary', params as QueryParams, timeoutMs)
 }
 
@@ -175,7 +178,7 @@ export async function getReviews(
   timeoutMs?: number,
 ): Promise<FrigateResult<FrigateReview[]>> {
   if (process.env.FRIGATE_MOCK === 'true')
-    return mockFrigate.getReviews(params, timeoutMs)
+    return (await loadMock()).getReviews(params, timeoutMs)
   return frigateGet('/api/review', params as QueryParams, timeoutMs)
 }
 
@@ -184,7 +187,7 @@ export async function getReviewByEvent(
   timeoutMs?: number,
 ): Promise<FrigateResult<FrigateReview>> {
   if (process.env.FRIGATE_MOCK === 'true')
-    return mockFrigate.getReviewByEvent(eventId, timeoutMs)
+    return (await loadMock()).getReviewByEvent(eventId, timeoutMs)
   return frigateGet(`/api/review/event/${eventId}`, undefined, timeoutMs)
 }
 
@@ -193,7 +196,7 @@ export async function getReviewSummary(
   timeoutMs?: number,
 ): Promise<FrigateResult<FrigateReviewSummary>> {
   if (process.env.FRIGATE_MOCK === 'true')
-    return mockFrigate.getReviewSummary(params, timeoutMs)
+    return (await loadMock()).getReviewSummary(params, timeoutMs)
   return frigateGet('/api/review/summary', params as QueryParams, timeoutMs)
 }
 
@@ -204,7 +207,7 @@ export async function getTimeline(
   timeoutMs?: number,
 ): Promise<FrigateResult<FrigateTimelineEntry[]>> {
   if (process.env.FRIGATE_MOCK === 'true')
-    return mockFrigate.getTimeline(params, timeoutMs)
+    return (await loadMock()).getTimeline(params, timeoutMs)
   return frigateGet('/api/timeline', params as QueryParams, timeoutMs)
 }
 
@@ -212,7 +215,7 @@ export async function getStats(
   timeoutMs?: number,
 ): Promise<FrigateResult<FrigateStats>> {
   if (process.env.FRIGATE_MOCK === 'true')
-    return mockFrigate.getStats(timeoutMs)
+    return (await loadMock()).getStats(timeoutMs)
   return frigateGet('/api/stats', undefined, timeoutMs)
 }
 
@@ -220,7 +223,7 @@ export async function getConfig(
   timeoutMs?: number,
 ): Promise<FrigateResult<FrigateConfig>> {
   if (process.env.FRIGATE_MOCK === 'true')
-    return mockFrigate.getConfig(timeoutMs)
+    return (await loadMock()).getConfig(timeoutMs)
   return frigateGet('/api/config', undefined, timeoutMs)
 }
 
@@ -231,7 +234,7 @@ export async function getLatestSnapshot(
   timeoutMs?: number,
 ): Promise<FrigateResult<ArrayBuffer>> {
   if (process.env.FRIGATE_MOCK === 'true')
-    return mockFrigate.getLatestSnapshot(cameraName, timeoutMs)
+    return (await loadMock()).getLatestSnapshot(cameraName, timeoutMs)
   return frigateBinary(`/api/${cameraName}/latest.jpg`, undefined, timeoutMs)
 }
 
@@ -242,7 +245,7 @@ export async function getCameras(
   timeoutMs?: number,
 ): Promise<FrigateResult<string[]>> {
   if (process.env.FRIGATE_MOCK === 'true')
-    return mockFrigate.getCameras(timeoutMs)
+    return (await loadMock()).getCameras(timeoutMs)
   const result = await getConfig(timeoutMs)
   if (!result.ok) return result
   return { ok: true, data: Object.keys(result.data.cameras ?? {}).sort() }

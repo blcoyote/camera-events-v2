@@ -159,7 +159,7 @@ self.addEventListener('notificationclick', (event: NotificationEvent) => {
           if ('focus' in client) {
             await client.focus()
             // navigate() is Chromium-only; fall back to postMessage for Safari/Firefox
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
             const c = client as any
             if (typeof c.navigate === 'function') {
               await c.navigate(url)
