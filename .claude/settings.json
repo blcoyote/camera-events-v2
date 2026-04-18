@@ -13,5 +13,8 @@
       "Bash(curl -s --max-time 10 'http://devpi:5000/api/events?limit=5')",
       "Bash(docker compose:*)"
     ]
+  },
+  "enabledPlugins": {
+    "agentic-dev-team@bfinster": true
   }
 }

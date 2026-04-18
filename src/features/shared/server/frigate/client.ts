@@ -1,6 +1,7 @@
+import { createServerFn } from '@tanstack/react-start'
 import { getFrigateUrl, DEFAULT_TIMEOUT_MS } from './config'
 import type { FrigateResult } from './config'
-import { frigateCache } from './cache'
+import { frigateCache, clearFrigateCache as clearCache } from './cache'
 import * as mockFrigate from './mock-client'
 import type {
   FrigateConfig,
@@ -248,3 +249,9 @@ export async function getCameras(
 }
 
 export { clearFrigateCache } from './cache'
+
+export const clearCacheFn = createServerFn({ method: 'POST' }).handler(
+  async () => {
+    clearCache()
+  },
+)

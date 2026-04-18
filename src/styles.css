@@ -98,6 +98,7 @@ body,
 body {
   margin: 0;
   padding-bottom: env(safe-area-inset-bottom);
+  overscroll-behavior-y: contain;
   color: var(--sea-ink);
   font-family: var(--font-sans);
   background-color: var(--bg-base);

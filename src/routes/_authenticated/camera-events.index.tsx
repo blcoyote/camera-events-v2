@@ -1,7 +1,10 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useRouter } from '@tanstack/react-router'
 import { createServerFn } from '@tanstack/react-start'
 import { getRequestHeader } from '@tanstack/react-start/server'
-import { getEvents } from '#/features/shared/server/frigate/client'
+import {
+  getEvents,
+  clearCacheFn,
+} from '#/features/shared/server/frigate/client'
 import {
   CameraEventsListPage,
   CameraEventsLoading,
@@ -9,6 +12,10 @@ import {
 import type { FrigateResult } from '#/features/shared/server/frigate/config'
 import type { FrigateEvent } from '#/features/shared/server/frigate/types'
 import { readEventLimitFromCookies } from '#/features/shared/hooks/useEventLimit'
+import { usePullToRefresh } from '#/features/shared/hooks/usePullToRefresh'
+import { PullToRefreshIndicator } from '#/features/shared/components/PullToRefreshIndicator'
+
+const PULL_THRESHOLD = 80
 
 const loadEvents = createServerFn({ method: 'GET' }).handler(
   async (): Promise<FrigateResult<FrigateEvent[]>> => {
@@ -26,5 +33,24 @@ export const Route = createFileRoute('/_authenticated/camera-events/')({
 
 function CameraEventsRoute() {
   const result = Route.useLoaderData()
-  return <CameraEventsListPage result={result} />
+  const router = useRouter()
+  const { pullDistance, isRefreshing, isComplete } = usePullToRefresh({
+    threshold: PULL_THRESHOLD,
+    onRefresh: async () => {
+      await clearCacheFn()
+      await router.invalidate()
+    },
+  })
+
+  return (
+    <>
+      <PullToRefreshIndicator
+        pullDistance={pullDistance}
+        isRefreshing={isRefreshing}
+        isComplete={isComplete}
+        threshold={PULL_THRESHOLD}
+      />
+      <CameraEventsListPage result={result} />
+    </>
+  )
 }
