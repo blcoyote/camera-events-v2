@@ -1,20 +1,58 @@
 {
   "permissions": {
     "allow": [
-      "Bash(curl -s --max-time 10 http://devpi:5000/api/events/summary)",
-      "Bash(curl -s --max-time 10 'http://devpi:5000/api/timeline?limit=5')",
-      "Bash(curl -s --max-time 10 'http://devpi:5000/api/events?limit=1')",
-      "Bash(python3 -c ':*)",
-      "Bash(curl -s --max-time 10 'http://devpi:5000/api/review?limit=1')",
-      "Bash(curl -s --max-time 10 'http://devpi:5000/api/review/summary?timezone=Europe/Oslo')",
-      "Bash(curl -s --max-time 10 'http://devpi:5000/api/review/summary?timezone=Europe/Oslo' -v)",
-      "Bash(curl -s --max-time 10 'http://devpi:5000/api/review/summary')",
-      "Bash(curl -s --max-time 10 'http://devpi:5000/api/events/summary')",
-      "Bash(curl -s --max-time 10 'http://devpi:5000/api/events?limit=5')",
-      "Bash(docker compose:*)"
-    ]
+      "Bash",
+      "Edit",
+      "Write",
+      "Read",
+      "Glob",
+      "Grep",
+      "WebFetch",
+      "WebSearch",
+      "Agent",
+      "NotebookEdit",
+      "mcp__*"
+    ],
+    "deny": ["Bash(rm *)", "Bash(git push *)"]
   },
-  "enabledPlugins": {
-    "agentic-dev-team@bfinster": true
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          { "type": "command", "command": "bash hooks/pre-tool-guard.sh" }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          { "type": "command", "command": "bash hooks/destructive-guard.sh" },
+          { "type": "command", "command": "bash hooks/pre-commit-review.sh" }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          { "type": "command", "command": "bash hooks/js-fp-review.sh" },
+          {
+            "type": "command",
+            "command": "bash hooks/token-efficiency-review.sh"
+          },
+          {
+            "type": "command",
+            "command": "bash hooks/eval-compliance-check.sh"
+          },
+          { "type": "command", "command": "bash hooks/tdd-guard.sh" }
+        ]
+      },
+      {
+        "matcher": "Read",
+        "hooks": [
+          { "type": "command", "command": "bash hooks/version-check.sh" }
+        ]
+      }
+    ]
   }
 }
