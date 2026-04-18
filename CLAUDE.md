@@ -19,7 +19,7 @@
 
 ## Cross-Platform PWA
 
-- This app is a PWA that must work on all major platforms: iOS Safari (standalone), Android Chrome, and desktop browsers (Chrome, Firefox, Safari, Edge).
+- **Cross-platform support is a top priority.** This app is a PWA that must work seamlessly on both iOS (Safari standalone) and Android (Chrome), as well as desktop browsers. Never ship a feature that only works on one platform — always test and account for both iOS and Android behavior differences.
 - Every feature — including push notifications, service worker interactions, OAuth, and cookie-dependent API calls — must be implemented with cross-platform compatibility in mind.
 - When you spot a platform-specific issue or limitation (e.g. an API not supported on iOS, cookie behavior differences in standalone mode, etc.), **do not silently fix it**. Flag it to me first, explain the issue and your proposed fix, and wait for confirmation before implementing.
 

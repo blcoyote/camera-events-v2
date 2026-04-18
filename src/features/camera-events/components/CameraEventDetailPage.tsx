@@ -1,9 +1,18 @@
 import { useCallback, useState } from 'react'
 import { Link } from '@tanstack/react-router'
-import { Camera, Clock, MapPin, Film, Image, Download } from 'lucide-react'
+import {
+  Camera,
+  Clock,
+  MapPin,
+  Film,
+  Image,
+  Download,
+  ZoomIn,
+} from 'lucide-react'
 import type { FrigateResult } from '#/features/shared/server/frigate/config'
 import type { FrigateEvent } from '#/features/shared/server/frigate/types'
 import { formatRelativeTime, formatLabelName, getLabelDotColor } from '../utils'
+import { SnapshotLightbox } from './SnapshotLightbox'
 
 // ─── Pure functions (exported for testing) ───
 
@@ -71,20 +80,31 @@ function EventSnapshot({
   eventId,
   camera,
   label,
+  onZoom,
 }: {
   eventId: string
   camera: string
   label: string
+  onZoom: () => void
 }) {
+  const altText = `Snapshot of ${formatLabelName(label)} detected by ${formatCameraName(camera)}`
   return (
-    <div className="overflow-hidden rounded-2xl border border-(--line) bg-(--surface)">
+    <button
+      type="button"
+      onClick={onZoom}
+      aria-label={`${altText} — tap to zoom`}
+      className="group relative block w-full cursor-zoom-in overflow-hidden border border-(--line) bg-(--surface) sm:rounded-2xl"
+    >
       <img
         src={`/api/events/${eventId}/snapshot`}
-        alt={`Snapshot of ${formatLabelName(label)} detected by ${formatCameraName(camera)}`}
+        alt={altText}
         className="h-auto w-full object-contain"
         loading="eager"
       />
-    </div>
+      <span className="absolute bottom-2 right-2 flex h-8 w-8 items-center justify-center rounded-full bg-black/40 text-white opacity-60 transition group-hover:opacity-100">
+        <ZoomIn className="h-4 w-4" />
+      </span>
+    </button>
   )
 }
 
@@ -149,7 +169,7 @@ function InfoCard({
 
   if (downloadUrl) {
     return (
-      <div className="rounded-xl border border-(--line) bg-(--surface) transition hover:border-(--lagoon-deep) hover:bg-[rgba(79,184,178,0.06)]">
+      <div className="sm:rounded-xl sm:border sm:border-(--line) sm:bg-(--surface) sm:transition sm:hover:border-(--lagoon-deep) sm:hover:bg-[rgba(79,184,178,0.06)]">
         <button
           type="button"
           onClick={() => download(downloadUrl)}
@@ -164,7 +184,7 @@ function InfoCard({
   }
 
   return (
-    <div className="rounded-xl border border-(--line) bg-(--surface) px-3 py-2.5 sm:p-4">
+    <div className="px-3 py-2.5 sm:rounded-xl sm:border sm:border-(--line) sm:bg-(--surface) sm:p-4">
       {inner}
     </div>
   )
@@ -176,6 +196,7 @@ export function CameraEventDetailPage({
   result: FrigateResult<FrigateEvent>
 }) {
   const state = getDetailPageState(result)
+  const [lightboxOpen, setLightboxOpen] = useState(false)
 
   if (state.kind === 'error') {
     return (
@@ -202,6 +223,9 @@ export function CameraEventDetailPage({
   const { event } = state
   const dotColor = getLabelDotColor(event.label)
 
+  const snapshotSrc = `/api/events/${event.id}/snapshot`
+  const snapshotAlt = `Snapshot of ${formatLabelName(event.label)} detected by ${formatCameraName(event.camera)}`
+
   return (
     <main id="main-content" className="page-wrap px-4 pb-8 pt-6 sm:pt-14">
       <div className="mb-6">
@@ -213,9 +237,9 @@ export function CameraEventDetailPage({
         </Link>
       </div>
 
-      <section className="island-shell rise-in relative overflow-hidden rounded-4xl px-5 py-6 sm:px-8 sm:py-8">
-        <div className="pointer-events-none absolute -left-20 -top-24 h-56 w-56 rounded-full bg-[radial-gradient(circle,rgba(79,184,178,0.32),transparent_66%)]" />
-        <div className="pointer-events-none absolute -bottom-20 -right-20 h-56 w-56 rounded-full bg-[radial-gradient(circle,rgba(47,106,74,0.18),transparent_66%)]" />
+      <section className="rise-in relative overflow-hidden island-shell-sm sm:rounded-4xl sm:px-8 sm:py-8">
+        <div className="pointer-events-none absolute -left-20 -top-24 hidden h-56 w-56 rounded-full bg-[radial-gradient(circle,rgba(79,184,178,0.32),transparent_66%)] sm:block" />
+        <div className="pointer-events-none absolute -bottom-20 -right-20 hidden h-56 w-56 rounded-full bg-[radial-gradient(circle,rgba(47,106,74,0.18),transparent_66%)] sm:block" />
 
         <p className="island-kicker mb-1">{formatCameraName(event.camera)}</p>
 
@@ -239,16 +263,17 @@ export function CameraEventDetailPage({
         </p>
 
         {event.has_snapshot && (
-          <div className="mb-8">
+          <div className="-mx-4 mb-6 sm:mx-0 sm:mb-8">
             <EventSnapshot
               eventId={event.id}
               camera={event.camera}
               label={event.label}
+              onZoom={() => setLightboxOpen(true)}
             />
           </div>
         )}
 
-        <dl className="mt-6 grid grid-cols-1 gap-2.5 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
+        <dl className="mt-4 grid grid-cols-1 gap-0 divide-y divide-(--line) sm:mt-6 sm:grid-cols-2 sm:gap-4 sm:divide-y-0 lg:grid-cols-3">
           <InfoCard
             icon={Camera}
             label="Camera"
@@ -291,7 +316,7 @@ export function CameraEventDetailPage({
         </dl>
 
         {event.data.score > 0 && (
-          <div className="mt-2.5 rounded-xl border border-(--line) bg-(--surface) px-3 py-2.5 sm:mt-6 sm:p-4">
+          <div className="mt-4 border-t border-(--line) pt-4 sm:mt-6 sm:rounded-xl sm:border sm:bg-(--surface) sm:p-4 sm:pt-4">
             <h2 className="mb-2 text-xs font-semibold uppercase tracking-wider text-(--sea-ink-soft)">
               Detection confidence
             </h2>
@@ -318,6 +343,15 @@ export function CameraEventDetailPage({
           </div>
         )}
       </section>
+
+      {event.has_snapshot && (
+        <SnapshotLightbox
+          src={snapshotSrc}
+          alt={snapshotAlt}
+          open={lightboxOpen}
+          onClose={() => setLightboxOpen(false)}
+        />
+      )}
     </main>
   )
 }

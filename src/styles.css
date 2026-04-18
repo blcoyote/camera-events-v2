@@ -203,6 +203,22 @@ pre code {
   backdrop-filter: blur(4px);
 }
 
+.island-shell-sm {
+  /* island-shell applied only at sm+ breakpoint */
+}
+
+@media (min-width: 640px) {
+  .island-shell-sm {
+    border: 1px solid var(--line);
+    background: linear-gradient(165deg, var(--surface-strong), var(--surface));
+    box-shadow:
+      0 1px 0 var(--inset-glint) inset,
+      0 22px 44px rgba(30, 90, 72, 0.1),
+      0 6px 18px rgba(23, 58, 64, 0.08);
+    backdrop-filter: blur(4px);
+  }
+}
+
 .feature-card {
   background: linear-gradient(
     165deg,
@@ -222,6 +238,7 @@ pre code {
 
 button,
 .island-shell,
+.island-shell-sm,
 a {
   transition:
     background-color 180ms ease,
@@ -438,6 +455,16 @@ a {
     0 6px 18px rgba(0, 0, 0, 0.2);
 }
 
+@media (min-width: 640px) {
+  :root[data-theme='dark'] .island-shell-sm {
+    box-shadow:
+      0 1px 0 var(--inset-glint) inset,
+      0 0 40px rgba(79, 184, 178, 0.06),
+      0 22px 44px rgba(0, 0, 0, 0.35),
+      0 6px 18px rgba(0, 0, 0, 0.2);
+  }
+}
+
 :root[data-theme='dark'] .feature-card {
   box-shadow:
     0 1px 0 var(--inset-glint) inset,
@@ -484,6 +511,16 @@ a {
       0 0 40px rgba(79, 184, 178, 0.06),
       0 22px 44px rgba(0, 0, 0, 0.35),
       0 6px 18px rgba(0, 0, 0, 0.2);
+  }
+
+  @media (min-width: 640px) {
+    :root:not([data-theme='light']) .island-shell-sm {
+      box-shadow:
+        0 1px 0 var(--inset-glint) inset,
+        0 0 40px rgba(79, 184, 178, 0.06),
+        0 22px 44px rgba(0, 0, 0, 0.35),
+        0 6px 18px rgba(0, 0, 0, 0.2);
+    }
   }
 
   :root:not([data-theme='light']) .feature-card {
