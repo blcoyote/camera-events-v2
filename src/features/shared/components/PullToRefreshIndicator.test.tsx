@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest'
-import { createElement } from 'react'
 import { PullToRefreshIndicator } from './PullToRefreshIndicator'
 
 describe('PullToRefreshIndicator', () => {

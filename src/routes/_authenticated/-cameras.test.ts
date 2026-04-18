@@ -58,4 +58,16 @@ describe('getCameraCardData', () => {
     expect(card.imgSrc).toBe('/api/cameras/backyard/latest')
     expect(card.altText).toBe('Latest snapshot from backyard')
   })
+
+  it('appends cache-busting parameter when refreshKey is provided', () => {
+    const card = getCameraCardData('front_door', 3)
+
+    expect(card.imgSrc).toBe('/api/cameras/front_door/latest?t=3')
+  })
+
+  it('omits cache-busting parameter when refreshKey is 0', () => {
+    const card = getCameraCardData('front_door', 0)
+
+    expect(card.imgSrc).toBe('/api/cameras/front_door/latest')
+  })
 })

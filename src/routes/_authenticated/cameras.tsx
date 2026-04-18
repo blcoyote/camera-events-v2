@@ -1,3 +1,4 @@
+import { useState, useCallback } from 'react'
 import { createFileRoute, useRouter } from '@tanstack/react-router'
 import { createServerFn } from '@tanstack/react-start'
 import {
@@ -30,10 +31,12 @@ export const Route = createFileRoute('/_authenticated/cameras')({
 function CamerasRoute() {
   const result = Route.useLoaderData()
   const router = useRouter()
-  const onRefresh = async () => {
+  const [refreshKey, setRefreshKey] = useState(0)
+  const onRefresh = useCallback(async () => {
     await clearCacheFn()
     await router.invalidate()
-  }
+    setRefreshKey((k) => k + 1)
+  }, [router])
 
   const { pullDistance, isRefreshing, isComplete } = usePullToRefresh({
     threshold: PULL_THRESHOLD,
@@ -50,7 +53,7 @@ function CamerasRoute() {
         isComplete={isComplete}
         threshold={PULL_THRESHOLD}
       />
-      <CamerasPage result={result} />
+      <CamerasPage result={result} refreshKey={refreshKey} />
     </>
   )
 }

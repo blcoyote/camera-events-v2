@@ -22,14 +22,18 @@ export function getCamerasPageState(
   return { kind: 'cameras', cameras: result.data }
 }
 
-export function getCameraCardData(name: string): {
+export function getCameraCardData(
+  name: string,
+  refreshKey?: number,
+): {
   name: string
   imgSrc: string
   altText: string
 } {
+  const base = `/api/cameras/${name}/latest`
   return {
     name,
-    imgSrc: `/api/cameras/${name}/latest`,
+    imgSrc: refreshKey ? `${base}?t=${refreshKey}` : base,
     altText: `Latest snapshot from ${name}`,
   }
 }
@@ -82,7 +86,13 @@ function SnapshotImage({
   )
 }
 
-export function CamerasPage({ result }: { result: FrigateResult<string[]> }) {
+export function CamerasPage({
+  result,
+  refreshKey,
+}: {
+  result: FrigateResult<string[]>
+  refreshKey?: number
+}) {
   const state = getCamerasPageState(result)
 
   return (
@@ -117,7 +127,7 @@ export function CamerasPage({ result }: { result: FrigateResult<string[]> }) {
           className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
         >
           {state.cameras.map((name, index) => {
-            const card = getCameraCardData(name)
+            const card = getCameraCardData(name, refreshKey)
             return (
               <MediaCard
                 key={name}
