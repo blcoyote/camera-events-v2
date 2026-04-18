@@ -13,6 +13,7 @@ import type { FrigateResult } from '#/features/shared/server/frigate/config'
 import type { FrigateEvent } from '#/features/shared/server/frigate/types'
 import { readEventLimitFromCookies } from '#/features/shared/hooks/useEventLimit'
 import { usePullToRefresh } from '#/features/shared/hooks/usePullToRefresh'
+import { useRefetchOnFocus } from '#/features/shared/hooks/useRefetchOnFocus'
 import { PullToRefreshIndicator } from '#/features/shared/components/PullToRefreshIndicator'
 
 const PULL_THRESHOLD = 80
@@ -34,13 +35,17 @@ export const Route = createFileRoute('/_authenticated/camera-events/')({
 function CameraEventsRoute() {
   const result = Route.useLoaderData()
   const router = useRouter()
+  const onRefresh = async () => {
+    await clearCacheFn()
+    await router.invalidate()
+  }
+
   const { pullDistance, isRefreshing, isComplete } = usePullToRefresh({
     threshold: PULL_THRESHOLD,
-    onRefresh: async () => {
-      await clearCacheFn()
-      await router.invalidate()
-    },
+    onRefresh,
   })
+
+  useRefetchOnFocus({ onRefresh })
 
   return (
     <>
