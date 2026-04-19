@@ -8,12 +8,14 @@ import { notifyUsersForCamera } from './push-notify'
 /** MQTT topics to subscribe to for Frigate event updates. */
 export const SUBSCRIBED_TOPICS = ['frigate/events', 'frigate/reviews'] as const
 
+const batchWindowMs = Number(process.env.EVENT_BATCH_WINDOW_MS) || 30_000
+
 /** Singleton event batcher — flushes per-camera batches to push notifications. */
 const eventBatcher = new EventBatcher((camera, events) => {
   notifyUsersForCamera(camera, events).catch((err) => {
     console.error('[mqtt] Push notification dispatch failed:', err)
   })
-})
+}, batchWindowMs)
 
 /**
  * Parse a Frigate MQTT event payload into a FrigateEventInfo, or null

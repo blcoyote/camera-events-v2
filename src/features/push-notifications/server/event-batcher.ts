@@ -2,7 +2,7 @@
  * Per-camera event batcher.
  *
  * Collects Frigate events into per-camera buffers and flushes each buffer
- * after a configurable window (default 10 s). This reduces notification
+ * after a configurable window (default 30 s). This reduces notification
  * spam when Frigate emits many events for the same camera in a short burst.
  */
 
@@ -21,7 +21,7 @@ export class EventBatcher {
   private readonly windowMs: number
   private readonly onFlush: FlushCallback
 
-  constructor(onFlush: FlushCallback, windowMs = 10_000) {
+  constructor(onFlush: FlushCallback, windowMs = 30_000) {
     this.onFlush = onFlush
     this.windowMs = windowMs
   }
