@@ -2,6 +2,7 @@ import { createServerFn } from '@tanstack/react-start'
 import { getFrigateUrl, DEFAULT_TIMEOUT_MS } from './config'
 import type { FrigateResult } from './config'
 import { frigateCache, clearFrigateCache as clearCache } from './cache'
+import { requireSession } from '#/features/shared/server/session'
 import type {
   FrigateConfig,
   FrigateEvent,
@@ -255,6 +256,7 @@ export { clearFrigateCache } from './cache'
 
 export const clearCacheFn = createServerFn({ method: 'POST' }).handler(
   async () => {
+    await requireSession()
     clearCache()
   },
 )

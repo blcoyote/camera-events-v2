@@ -11,6 +11,7 @@ import {
 } from '#/features/camera-events/components/CameraEventsListPage'
 import type { FrigateResult } from '#/features/shared/server/frigate/config'
 import type { FrigateEvent } from '#/features/shared/server/frigate/types'
+import { requireSession } from '#/features/shared/server/session'
 import { readEventLimitFromCookies } from '#/features/shared/hooks/useEventLimit'
 import { usePullToRefresh } from '#/features/shared/hooks/usePullToRefresh'
 import { useRefetchOnFocus } from '#/features/shared/hooks/useRefetchOnFocus'
@@ -20,6 +21,7 @@ const PULL_THRESHOLD = 80
 
 const loadEvents = createServerFn({ method: 'GET' }).handler(
   async (): Promise<FrigateResult<FrigateEvent[]>> => {
+    await requireSession()
     const cookies = getRequestHeader('cookie') ?? ''
     const limit = readEventLimitFromCookies(cookies)
     return getEvents({ limit, include_thumbnails: false })

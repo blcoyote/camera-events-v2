@@ -1,4 +1,5 @@
 import type { SessionConfig } from '@tanstack/react-start/server'
+import { useSession } from '@tanstack/react-start/server'
 
 export type SessionData = {
   /** Google OpenID Connect subject identifier (unique per user) */
@@ -37,4 +38,19 @@ export function getSessionConfig(): SessionConfig {
     ...SESSION_CONFIG_BASE,
     password,
   }
+}
+
+/**
+ * Require an authenticated session. Returns the user's subject ID.
+ * Throws if the session is missing, corrupted, or unauthenticated.
+ *
+ * Use this inside createServerFn handlers — route-level layout guards
+ * only protect client-side navigation, not direct server function calls.
+ */
+export async function requireSession(): Promise<string> {
+  const session = await useSession<SessionData>(getSessionConfig())
+  if (!session.data.sub) {
+    throw new Error('Unauthorized')
+  }
+  return session.data.sub
 }

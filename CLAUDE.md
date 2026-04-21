@@ -23,6 +23,13 @@
 - Every feature — including push notifications, service worker interactions, OAuth, and cookie-dependent API calls — must be implemented with cross-platform compatibility in mind.
 - When you spot a platform-specific issue or limitation (e.g. an API not supported on iOS, cookie behavior differences in standalone mode, etc.), **do not silently fix it**. Flag it to me first, explain the issue and your proposed fix, and wait for confirmation before implementing.
 
+## Server Function Authentication
+
+- **TanStack Start `createServerFn` endpoints are directly callable via HTTP** at `/_serverFn/{hash}`. Route-level layout guards (like `_authenticated.tsx`'s `beforeLoad`) only protect client-side navigation — they do NOT protect server functions from direct HTTP access.
+- **Every `createServerFn` handler that accesses protected data MUST call `await requireSession()`** (from `#/features/shared/server/session`) as its first operation. Never rely on the route hierarchy for server-side authentication.
+- When adding a new server function inside an `_authenticated` route, always include the auth check. The function hash is discoverable in client-side JavaScript bundles, so security-through-obscurity does not apply.
+- For server functions that accept user input (e.g. via `inputValidator`), always validate the input inside the handler as well — use validators like `isValidEventId()` and `isValidCameraName()` to prevent SSRF and path traversal against the Frigate backend.
+
 ## SSR & Hydration
 
 - This project uses TanStack Start with server-side rendering. All pages and components must produce identical HTML on server and client during the initial render.

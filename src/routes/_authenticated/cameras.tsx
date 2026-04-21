@@ -10,6 +10,7 @@ import {
   CamerasLoading,
 } from '#/features/cameras/components/CamerasPage'
 import type { FrigateResult } from '#/features/shared/server/frigate/config'
+import { requireSession } from '#/features/shared/server/session'
 import { usePullToRefresh } from '#/features/shared/hooks/usePullToRefresh'
 import { useRefetchOnFocus } from '#/features/shared/hooks/useRefetchOnFocus'
 import { PullToRefreshIndicator } from '#/features/shared/components/PullToRefreshIndicator'
@@ -18,6 +19,7 @@ const PULL_THRESHOLD = 80
 
 const loadCameras = createServerFn({ method: 'GET' }).handler(
   async (): Promise<FrigateResult<string[]>> => {
+    await requireSession()
     return getCameras()
   },
 )
