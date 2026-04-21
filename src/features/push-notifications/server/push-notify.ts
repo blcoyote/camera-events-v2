@@ -36,7 +36,7 @@ export function buildSinglePayload(event: FrigateEventInfo): PushPayload {
     title: camera,
     body: `${label} detected at ${time}`,
     url: `/camera-events/${event.id}`,
-    icon: '/logo192.png',
+    icon: '/icon-192.png',
   }
 }
 
@@ -55,7 +55,7 @@ export function buildBundledPayload(
     title: cameraDisplay,
     body: `${events.length} new events \u2014 ${labelSummary} at ${latestTime}`,
     url: '/camera-events',
-    icon: '/logo192.png',
+    icon: '/icon-192.png',
   }
 }
 

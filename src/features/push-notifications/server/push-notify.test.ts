@@ -60,7 +60,7 @@ describe('buildSinglePayload', () => {
     expect(payload.title).toBe('Front Porch')
     expect(payload.body).toContain('Person detected at')
     expect(payload.url).toBe('/camera-events/1713182400.123-abc')
-    expect(payload.icon).toBe('/logo192.png')
+    expect(payload.icon).toBe('/icon-192.png')
   })
 
   it('includes the label and time in the body', () => {
@@ -83,7 +83,7 @@ describe('buildBundledPayload', () => {
     expect(payload.body).toContain('Car')
     expect(payload.body).toContain('Dog')
     expect(payload.url).toBe('/camera-events')
-    expect(payload.icon).toBe('/logo192.png')
+    expect(payload.icon).toBe('/icon-192.png')
   })
 
   it('deduplicates labels', () => {

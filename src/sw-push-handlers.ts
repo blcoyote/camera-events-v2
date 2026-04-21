@@ -47,7 +47,7 @@ export function buildNotificationOptions(
 ): NotificationOptions & { renotify: boolean } {
   return {
     body: payload.body,
-    icon: payload.icon ?? '/logo192.png',
+    icon: payload.icon ?? '/icon-192.png',
     tag: payload.tag ?? 'camera-event',
     renotify: true,
     data: { url: payload.url },

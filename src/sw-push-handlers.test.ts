@@ -24,9 +24,9 @@ describe('parsePushPayload', () => {
       title: 'Test',
       body: 'body',
       url: '/',
-      icon: '/logo192.png',
+      icon: '/icon-192.png',
     })
-    expect(result.icon).toBe('/logo192.png')
+    expect(result.icon).toBe('/icon-192.png')
   })
 
   it('returns undefined icon when not provided', () => {
@@ -78,7 +78,7 @@ describe('buildNotificationOptions', () => {
     })
     expect(result).toEqual({
       body: 'Hello',
-      icon: '/logo192.png',
+      icon: '/icon-192.png',
       tag: 'camera-event',
       renotify: true,
       data: { url: '/events/42' },
@@ -102,7 +102,7 @@ describe('buildNotificationOptions', () => {
       url: '/',
       icon: undefined,
     })
-    expect(result.icon).toBe('/logo192.png')
+    expect(result.icon).toBe('/icon-192.png')
   })
 })
 
