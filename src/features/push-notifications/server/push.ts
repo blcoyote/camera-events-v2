@@ -1,11 +1,16 @@
 import webPush from 'web-push'
 import { getPushStore } from './push-store'
 
+export type PushPayloadEvent =
+  | { kind: 'single'; label: string; timestamp: number }
+  | { kind: 'bundled'; count: number; labels: string; timestamp: number }
+
 export interface PushPayload {
   title: string
   body: string
   url: string
   icon?: string
+  event?: PushPayloadEvent
 }
 
 export interface PushSubscriptionInfo {

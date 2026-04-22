@@ -11,7 +11,10 @@ import { fileURLToPath } from 'node:url'
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const publicDir = join(__dirname, '..', 'public')
 
-const originalSvg = readFileSync(join(publicDir, 'surveillance-camera-1.svg'), 'utf-8')
+const originalSvg = readFileSync(
+  join(publicDir, 'surveillance-camera-1.svg'),
+  'utf-8',
+)
 
 // Extract just the path data from the SVG for reuse
 const pathData = `
@@ -63,14 +66,49 @@ const sharp = (await import('sharp')).default
 // PWA icons - use the app's theme colors
 const variants = [
   // Standard icons (any) - colored bg matching the app theme
-  { name: 'icon-192.png', size: 192, fg: '#e7f3ec', bg: '#173a40', padding: 20, purpose: 'any' },
-  { name: 'icon-512.png', size: 512, fg: '#e7f3ec', bg: '#173a40', padding: 52, purpose: 'any' },
+  {
+    name: 'icon-192.png',
+    size: 192,
+    fg: '#e7f3ec',
+    bg: '#173a40',
+    padding: 20,
+    purpose: 'any',
+  },
+  {
+    name: 'icon-512.png',
+    size: 512,
+    fg: '#e7f3ec',
+    bg: '#173a40',
+    padding: 52,
+    purpose: 'any',
+  },
   // Maskable icons - extra padding (safe zone is inner 80% circle)
   // padding = size * 0.1 (10% on each side = 80% content area)
-  { name: 'icon-maskable-192.png', size: 192, fg: '#e7f3ec', bg: '#173a40', padding: 56, purpose: 'maskable' },
-  { name: 'icon-maskable-512.png', size: 512, fg: '#e7f3ec', bg: '#173a40', padding: 148, purpose: 'maskable' },
+  {
+    name: 'icon-maskable-192.png',
+    size: 192,
+    fg: '#e7f3ec',
+    bg: '#173a40',
+    padding: 56,
+    purpose: 'maskable',
+  },
+  {
+    name: 'icon-maskable-512.png',
+    size: 512,
+    fg: '#e7f3ec',
+    bg: '#173a40',
+    padding: 148,
+    purpose: 'maskable',
+  },
   // Apple touch icon (180x180) - Apple requires opaque bg
-  { name: 'apple-touch-icon.png', size: 180, fg: '#e7f3ec', bg: '#173a40', padding: 22, purpose: 'apple' },
+  {
+    name: 'apple-touch-icon.png',
+    size: 180,
+    fg: '#e7f3ec',
+    bg: '#173a40',
+    padding: 22,
+    purpose: 'apple',
+  },
 ]
 
 for (const v of variants) {
@@ -109,22 +147,22 @@ function buildIco(images) {
   const ico = Buffer.alloc(totalSize)
 
   // ICO header
-  ico.writeUInt16LE(0, 0)      // reserved
-  ico.writeUInt16LE(1, 2)      // type: 1 = ICO
+  ico.writeUInt16LE(0, 0) // reserved
+  ico.writeUInt16LE(1, 2) // type: 1 = ICO
   ico.writeUInt16LE(images.length, 4)
 
   let offset = dataOffset
   for (let i = 0; i < images.length; i++) {
     const img = images[i]
     const pos = headerSize + i * dirEntrySize
-    ico.writeUInt8(img.size < 256 ? img.size : 0, pos)       // width
-    ico.writeUInt8(img.size < 256 ? img.size : 0, pos + 1)   // height
-    ico.writeUInt8(0, pos + 2)   // color palette
-    ico.writeUInt8(0, pos + 3)   // reserved
-    ico.writeUInt16LE(1, pos + 4)  // color planes
+    ico.writeUInt8(img.size < 256 ? img.size : 0, pos) // width
+    ico.writeUInt8(img.size < 256 ? img.size : 0, pos + 1) // height
+    ico.writeUInt8(0, pos + 2) // color palette
+    ico.writeUInt8(0, pos + 3) // reserved
+    ico.writeUInt16LE(1, pos + 4) // color planes
     ico.writeUInt16LE(32, pos + 6) // bits per pixel
-    ico.writeUInt32LE(img.buf.length, pos + 8)  // size
-    ico.writeUInt32LE(offset, pos + 12)          // offset
+    ico.writeUInt32LE(img.buf.length, pos + 8) // size
+    ico.writeUInt32LE(offset, pos + 12) // offset
     img.buf.copy(ico, offset)
     offset += img.buf.length
   }
@@ -136,4 +174,6 @@ const ico = buildIco(icoBuffers)
 writeFileSync(join(publicDir, 'favicon.ico'), ico)
 console.log('✓ favicon.ico (16x16, 32x32, 48x48)')
 
-console.log('\nDone! Update manifest.json and __root.tsx to reference new icons.')
+console.log(
+  '\nDone! Update manifest.json and __root.tsx to reference new icons.',
+)

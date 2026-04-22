@@ -37,6 +37,7 @@ export function buildSinglePayload(event: FrigateEventInfo): PushPayload {
     body: `${label} detected at ${time}`,
     url: `/camera-events/${event.id}`,
     icon: '/icon-192.png',
+    event: { kind: 'single', label, timestamp: event.startTime },
   }
 }
 
@@ -50,12 +51,19 @@ export function buildBundledPayload(
   const labelSummary =
     uniqueLabels.slice(0, 3).join(', ') +
     (uniqueLabels.length > 3 ? ` +${uniqueLabels.length - 3} more` : '')
-  const latestTime = formatTime(Math.max(...events.map((e) => e.startTime)))
+  const latestTimestamp = Math.max(...events.map((e) => e.startTime))
+  const latestTime = formatTime(latestTimestamp)
   return {
     title: cameraDisplay,
     body: `${events.length} new events \u2014 ${labelSummary} at ${latestTime}`,
     url: '/camera-events',
     icon: '/icon-192.png',
+    event: {
+      kind: 'bundled',
+      count: events.length,
+      labels: labelSummary,
+      timestamp: latestTimestamp,
+    },
   }
 }
 

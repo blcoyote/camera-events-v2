@@ -19,6 +19,56 @@ describe('parsePushPayload', () => {
     })
   })
 
+  it('re-formats body from structured single event using local time', () => {
+    // 1713182400 = 2024-04-15T12:00:00Z
+    const result = parsePushPayload({
+      title: 'Front Porch',
+      body: 'Person detected at 12:00',
+      url: '/camera-events/abc',
+      event: { kind: 'single', label: 'Person', timestamp: 1713182400 },
+    })
+    const localTime = new Date(1713182400 * 1000).toLocaleTimeString('en-GB', {
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+    expect(result.body).toBe(`Person detected at ${localTime}`)
+    expect(result.event).toEqual({
+      kind: 'single',
+      label: 'Person',
+      timestamp: 1713182400,
+    })
+  })
+
+  it('re-formats body from structured bundled event using local time', () => {
+    const result = parsePushPayload({
+      title: 'Driveway',
+      body: '3 new events - Person, Car, Dog at 12:00',
+      url: '/camera-events',
+      event: {
+        kind: 'bundled',
+        count: 3,
+        labels: 'Person, Car, Dog',
+        timestamp: 1713182400,
+      },
+    })
+    const localTime = new Date(1713182400 * 1000).toLocaleTimeString('en-GB', {
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+    expect(result.body).toBe(`3 new events — Person, Car, Dog at ${localTime}`)
+  })
+
+  it('falls back to raw body when event is malformed', () => {
+    const result = parsePushPayload({
+      title: 'T',
+      body: 'raw body text',
+      url: '/',
+      event: { kind: 'single' }, // missing label/timestamp
+    })
+    expect(result.body).toBe('raw body text')
+    expect(result.event).toBeUndefined()
+  })
+
   it('parses icon when provided', () => {
     const result = parsePushPayload({
       title: 'Test',

@@ -67,6 +67,15 @@ describe('buildSinglePayload', () => {
     const payload = buildSinglePayload(makeEvent({ label: 'car' }))
     expect(payload.body).toMatch(/Car detected at \d{2}:\d{2}/)
   })
+
+  it('includes a structured event with raw unix timestamp for client-side formatting', () => {
+    const payload = buildSinglePayload(makeEvent({ startTime: 1713182400 }))
+    expect(payload.event).toEqual({
+      kind: 'single',
+      label: 'Person',
+      timestamp: 1713182400,
+    })
+  })
 })
 
 describe('buildBundledPayload', () => {
@@ -122,5 +131,19 @@ describe('buildBundledPayload', () => {
       minute: '2-digit',
     })
     expect(payload.body).toContain(time)
+  })
+
+  it('includes a structured event with raw unix timestamp for client-side formatting', () => {
+    const events = [
+      makeEvent({ id: 'e1', label: 'person', startTime: 1713182400 }),
+      makeEvent({ id: 'e2', label: 'car', startTime: 1713182500 }),
+    ]
+    const payload = buildBundledPayload('front_porch', events)
+    expect(payload.event).toEqual({
+      kind: 'bundled',
+      count: 2,
+      labels: 'Person, Car',
+      timestamp: 1713182500,
+    })
   })
 })
