@@ -102,7 +102,7 @@ export function CamerasPage({
         <div className="pointer-events-none absolute -bottom-20 -right-20 h-56 w-56 rounded-full bg-[radial-gradient(circle,rgba(47,106,74,0.18),transparent_66%)]" />
         <p className="island-kicker mb-1">Cameras</p>
         <h1 className="display-title mb-0 max-w-3xl text-2xl leading-tight font-bold tracking-tight text-(--sea-ink) sm:text-4xl">
-          Latest image
+          Latest snapshots
         </h1>
       </section>
 
