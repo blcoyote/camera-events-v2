@@ -129,3 +129,45 @@ export function getNotificationClickUrl(notificationData: unknown): string {
   }
   return '/'
 }
+
+const PENDING_NAV_CACHE = 'camera-events-pending-nav-v1'
+const PENDING_NAV_KEY = '/__pending-nav'
+
+/**
+ * Persist the target URL for the most recent notification click.
+ * Stored in Cache Storage so it survives service worker termination between
+ * notificationclick firing and the newly-launched window becoming ready —
+ * this is the reliable path on iOS standalone PWAs, where openWindow(url)
+ * ignores the URL argument and launches the app at its start_url instead.
+ */
+export async function setPendingNavigationUrl(
+  cacheStorage: CacheStorage,
+  url: string,
+): Promise<void> {
+  const cache = await cacheStorage.open(PENDING_NAV_CACHE)
+  await cache.put(PENDING_NAV_KEY, new Response(url))
+}
+
+/**
+ * Read and clear the pending navigation URL, if any.
+ * Returns null when no URL is queued or when the queued value is not a safe
+ * relative path (defense-in-depth against a tampered cache entry).
+ */
+export async function popPendingNavigationUrl(
+  cacheStorage: CacheStorage,
+): Promise<string | null> {
+  const cache = await cacheStorage.open(PENDING_NAV_CACHE)
+  const response = await cache.match(PENDING_NAV_KEY)
+  if (!response) return null
+  const url = await response.text()
+  await cache.delete(PENDING_NAV_KEY)
+  if (
+    typeof url === 'string' &&
+    url.startsWith('/') &&
+    !url.startsWith('//') &&
+    !url.startsWith('/\\')
+  ) {
+    return url
+  }
+  return null
+}

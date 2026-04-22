@@ -3,7 +3,30 @@ import {
   parsePushPayload,
   buildNotificationOptions,
   getNotificationClickUrl,
+  setPendingNavigationUrl,
+  popPendingNavigationUrl,
 } from './sw-push-handlers'
+
+function createMockCacheStorage(): CacheStorage {
+  const stores = new Map<string, Map<string, Response>>()
+  return {
+    open: async (name: string) => {
+      let store = stores.get(name)
+      if (!store) {
+        store = new Map()
+        stores.set(name, store)
+      }
+      const s = store
+      return {
+        put: async (key: string, response: Response) => {
+          s.set(key, response)
+        },
+        match: async (key: string) => s.get(key),
+        delete: async (key: string) => s.delete(key),
+      } as unknown as Cache
+    },
+  } as unknown as CacheStorage
+}
 
 describe('parsePushPayload', () => {
   it('parses a valid payload', () => {
@@ -193,5 +216,40 @@ describe('getNotificationClickUrl', () => {
   it('allows valid relative paths', () => {
     expect(getNotificationClickUrl({ url: '/events/42' })).toBe('/events/42')
     expect(getNotificationClickUrl({ url: '/' })).toBe('/')
+  })
+})
+
+describe('pending navigation storage', () => {
+  it('returns null when nothing has been queued', async () => {
+    const caches = createMockCacheStorage()
+    expect(await popPendingNavigationUrl(caches)).toBeNull()
+  })
+
+  it('round-trips a URL and clears it after pop', async () => {
+    const caches = createMockCacheStorage()
+    await setPendingNavigationUrl(caches, '/camera-events/abc')
+    expect(await popPendingNavigationUrl(caches)).toBe('/camera-events/abc')
+    expect(await popPendingNavigationUrl(caches)).toBeNull()
+  })
+
+  it('overwrites a previously queued URL', async () => {
+    const caches = createMockCacheStorage()
+    await setPendingNavigationUrl(caches, '/camera-events/abc')
+    await setPendingNavigationUrl(caches, '/camera-events/xyz')
+    expect(await popPendingNavigationUrl(caches)).toBe('/camera-events/xyz')
+  })
+
+  it('rejects a queued URL that fails the open-redirect guard', async () => {
+    const caches = createMockCacheStorage()
+    const cache = await caches.open('camera-events-pending-nav-v1')
+    await cache.put('/__pending-nav', new Response('https://attacker.com'))
+    expect(await popPendingNavigationUrl(caches)).toBeNull()
+  })
+
+  it('rejects a queued protocol-relative URL', async () => {
+    const caches = createMockCacheStorage()
+    const cache = await caches.open('camera-events-pending-nav-v1')
+    await cache.put('/__pending-nav', new Response('//evil.com'))
+    expect(await popPendingNavigationUrl(caches)).toBeNull()
   })
 })
