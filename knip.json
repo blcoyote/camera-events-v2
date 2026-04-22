@@ -11,13 +11,11 @@
   "project": ["src/**/*.{ts,tsx}"],
   "ignoreDependencies": [
     "@tailwindcss/typography",
-    "@tanstack/eslint-config",
     "@tanstack/react-router-ssr-query",
     "@tanstack/router-plugin",
     "@testing-library/dom",
     "@testing-library/react",
-    "eslint-plugin-storybook",
     "tailwindcss"
   ],
-  "ignoreBinaries": ["only-allow", "eslint"]
+  "ignoreBinaries": ["only-allow"]
 }
