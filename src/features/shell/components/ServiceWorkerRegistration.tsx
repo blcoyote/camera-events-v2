@@ -31,16 +31,41 @@ export function ServiceWorkerRegistration() {
         console.error('Service worker registration failed:', error)
       })
 
+    const claimPendingNavigation = () => {
+      navigator.serviceWorker.ready
+        .then((reg) => {
+          const worker = reg.active ?? navigator.serviceWorker.controller
+          worker?.postMessage({ type: 'CLAIM_NAVIGATION' })
+        })
+        .catch(() => {
+          // No active SW yet; controllerchange will claim on next activation
+        })
+    }
+
     navigator.serviceWorker.addEventListener('message', (event) => {
+      const data = event.data as { type?: string; url?: string } | null
+      if (data?.type === 'PENDING_NAVIGATION_AVAILABLE') {
+        claimPendingNavigation()
+        return
+      }
       if (
-        event.data?.type === 'NAVIGATE' &&
-        typeof event.data.url === 'string' &&
-        event.data.url.startsWith('/') &&
-        !event.data.url.startsWith('//')
+        data?.type === 'NAVIGATE' &&
+        typeof data.url === 'string' &&
+        data.url.startsWith('/') &&
+        !data.url.startsWith('//') &&
+        !data.url.startsWith('/\\')
       ) {
-        window.location.assign(event.data.url)
+        const currentPath = window.location.pathname + window.location.search
+        if (data.url !== currentPath) {
+          window.location.assign(data.url)
+        }
       }
     })
+
+    // On every mount, ask the SW whether a notificationclick queued a URL
+    // we still need to navigate to. Handles the iOS cold-start case where
+    // the PWA launched at start_url instead of the notification's URL.
+    claimPendingNavigation()
 
     let refreshing = false
     navigator.serviceWorker.addEventListener('controllerchange', () => {

@@ -10,6 +10,8 @@ import {
   parsePushPayload,
   buildNotificationOptions,
   getNotificationClickUrl,
+  setPendingNavigationUrl,
+  popPendingNavigationUrl,
 } from './sw-push-handlers'
 
 declare global {
@@ -17,13 +19,15 @@ declare global {
     __SW_MANIFEST: (PrecacheEntry | string)[] | undefined
     readonly clients: Clients
     readonly registration: ServiceWorkerRegistration
+    readonly caches: CacheStorage
+    readonly location: { origin: string }
     addEventListener: {
       (type: 'push', listener: (event: PushEvent) => void): void
       (
         type: 'notificationclick',
         listener: (event: NotificationEvent) => void,
       ): void
-      (type: 'message', listener: (event: MessageEvent) => void): void
+      (type: 'message', listener: (event: ExtendableMessageEvent) => void): void
     }
   }
 
@@ -36,8 +40,15 @@ declare global {
   }
 
   interface WindowClient {
+    readonly url: string
     focus: () => Promise<WindowClient>
     navigate: (url: string) => Promise<WindowClient | null>
+    postMessage: (message: unknown) => void
+  }
+
+  interface ExtendableMessageEvent extends ExtendableEvent {
+    readonly data: unknown
+    readonly source: WindowClient | null
   }
 
   interface PushEvent extends ExtendableEvent {
@@ -123,10 +134,26 @@ const serwist = new Serwist({
 
 serwist.addEventListeners()
 
-// Allow the client to trigger skipWaiting when the user accepts an update
-self.addEventListener('message', (event: MessageEvent) => {
-  if (event.data?.type === 'SKIP_WAITING') {
-    ;(self as any).skipWaiting()
+// Handle messages from window clients:
+//   - SKIP_WAITING: client accepted an update and wants the new SW to activate
+//   - CLAIM_NAVIGATION: newly-loaded client is asking for any URL queued by
+//     a prior notificationclick. This is how we reliably navigate on iOS
+//     standalone PWAs, where openWindow(url) is not honored.
+self.addEventListener('message', (event: ExtendableMessageEvent) => {
+  const data = event.data as { type?: string } | null
+  if (data?.type === 'SKIP_WAITING') {
+    ;(self as unknown as { skipWaiting: () => void }).skipWaiting()
+    return
+  }
+  if (data?.type === 'CLAIM_NAVIGATION') {
+    const source = event.source
+    if (!source) return
+    event.waitUntil(
+      (async () => {
+        const url = await popPendingNavigationUrl(self.caches)
+        if (url) source.postMessage({ type: 'NAVIGATE', url })
+      })(),
+    )
   }
 })
 
@@ -152,24 +179,32 @@ self.addEventListener('notificationclick', (event: NotificationEvent) => {
   const url = getNotificationClickUrl(event.notification.data)
 
   event.waitUntil(
-    self.clients
-      .matchAll({ type: 'window', includeUncontrolled: true })
-      .then(async (clientList) => {
-        for (const client of clientList) {
-          if ('focus' in client) {
-            await client.focus()
-            // navigate() is Chromium-only; fall back to postMessage for Safari/Firefox
+    (async () => {
+      // Queue the URL so the client can claim it on mount. This is the
+      // reliable path on iOS, where openWindow(url) launches the PWA at
+      // its start_url rather than the requested URL.
+      await setPendingNavigationUrl(self.caches, url)
 
-            const c = client as any
-            if (typeof c.navigate === 'function') {
-              await c.navigate(url)
-            } else {
-              c.postMessage({ type: 'NAVIGATE', url })
-            }
-            return
-          }
+      const clientList = await self.clients.matchAll({
+        type: 'window',
+        includeUncontrolled: true,
+      })
+      const sameOrigin = clientList.filter((client) => {
+        try {
+          return new URL(client.url).origin === self.location.origin
+        } catch {
+          return false
         }
-        return self.clients.openWindow(url)
-      }),
+      })
+
+      if (sameOrigin.length > 0) {
+        const client = sameOrigin[0]
+        await client.focus()
+        client.postMessage({ type: 'PENDING_NAVIGATION_AVAILABLE' })
+        return
+      }
+
+      await self.clients.openWindow(url)
+    })(),
   )
 })
