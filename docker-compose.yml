@@ -24,6 +24,16 @@ services:
       - traefik.http.routers.ce2.tls=true
       - traefik.http.routers.ce2.tls.certresolver=lets-encrypt
       - traefik.http.services.ce2.loadbalancer.server.port=3000
+      - traefik.http.routers.ce2.middlewares=ce2-sec@docker
+      - traefik.http.middlewares.ce2-sec.headers.stsSeconds=31536000
+      - traefik.http.middlewares.ce2-sec.headers.stsIncludeSubdomains=true
+      - traefik.http.middlewares.ce2-sec.headers.stsPreload=true
+      - traefik.http.middlewares.ce2-sec.headers.contentTypeNosniff=true
+      - traefik.http.middlewares.ce2-sec.headers.frameDeny=true
+      - traefik.http.middlewares.ce2-sec.headers.referrerPolicy=strict-origin-when-cross-origin
+      - traefik.http.middlewares.ce2-sec.headers.permissionsPolicy=camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=()
+      - traefik.http.middlewares.ce2-sec.headers.customResponseHeaders.Cross-Origin-Opener-Policy=same-origin
+      - traefik.http.middlewares.ce2-sec.headers.customResponseHeaders.Cross-Origin-Resource-Policy=same-origin
     depends_on:
       rabbitmq:
         condition: service_healthy
