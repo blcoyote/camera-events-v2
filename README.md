@@ -1,201 +1,109 @@
-Welcome to your new TanStack Start app!
+# Camera Events v2
 
-# Getting Started
+A self-hosted PWA for browsing and monitoring [Frigate NVR](https://frigate.video/) events. Receives live motion events from Frigate over MQTT and pushes notifications to subscribed devices (iOS, Android, desktop). Built as a TanStack Start SSR app with offline-capable service worker caching.
 
-To run this application:
+## Features
+
+- **Live event feed** — paginated browsing of Frigate events, with label/camera filters and thumbnail previews.
+- **Event detail view** — clip playback, snapshot, and one-tap download of the clip/snapshot for sharing.
+- **Camera overview** — per-camera status and livestream access.
+- **Web Push notifications** — subscribe from any device; MQTT events are batched per camera and delivered as push notifications with deep links straight to the event. Per-camera opt-in controls.
+- **Google SSO login** with session cookies; route-level and server-function-level authentication.
+- **PWA-first** — installable on iOS (Safari standalone) and Android (Chrome), with a Serwist-backed service worker for offline assets and push handling.
+- **Mock Frigate backend** for local development without a live NVR.
+
+## Tech Stack
+
+- **Runtime:** Node.js 22, TanStack Start (SSR), React 19, Vite 8
+- **Routing:** TanStack Router (file-based)
+- **Styling:** Tailwind CSS v4
+- **Data:** better-sqlite3 (push subscriptions + preferences), MQTT (Frigate event stream)
+- **Auth:** Google OAuth via Arctic, encrypted session cookies
+- **Push:** web-push (VAPID), Serwist service worker
+- **Testing:** Vitest, Testing Library, Playwright browser mode, Storybook
+- **Package manager:** pnpm (enforced via `only-allow`)
+
+## Architecture
+
+- **Feature-sliced** — each feature owns its own folder under [src/features/](src/features/) with its components, hooks, server logic, and types. Features never import from each other; genuinely shared code lives in [src/features/shared/](src/features/shared/).
+- **Server functions & API routes** — TanStack Start `createServerFn` handlers and file-based API routes under [src/routes/api/](src/routes/api/). All protected server functions call `requireSession()` — route guards don't protect direct HTTP access to the function hash.
+- **Event pipeline** — Frigate publishes events to RabbitMQ (MQTT), the app subscribes via [src/features/push-notifications/server/mqtt.ts](src/features/push-notifications/server/mqtt.ts), batches per camera, and dispatches web push notifications through the stored subscriptions.
+- **Feature specs** live in [docs/specs/](docs/specs/) — each significant feature has a design doc documenting intent, approach, and trade-offs.
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js 22+
+- pnpm 9+ (corepack works: `corepack enable`)
+- A Frigate instance reachable from the server (or use `FRIGATE_MOCK=1` for development)
+- RabbitMQ with MQTT plugin (see [rabbitmq/](rabbitmq/))
+- Google OAuth client (for login)
+- VAPID keys (for push notifications — `npx web-push generate-vapid-keys`)
+
+### Local Development
 
 ```bash
-npm install
-npm run dev
+pnpm install
+cp .env.example .env   # then fill in the values below
+pnpm dev
 ```
 
-# Building For Production
+The dev server runs on http://localhost:3000. Route tree (`src/routeTree.gen.ts`) is regenerated automatically by the `tanstackStart()` Vite plugin — never run `npx tsr generate`, that's an unrelated destructive tool.
 
-To build this application for production:
+### Environment Variables
+
+| Variable                                    | Purpose                                                              |
+| ------------------------------------------- | -------------------------------------------------------------------- |
+| `APP_URL`                                   | Public URL of the app, used for OAuth redirect and cookie scope.     |
+| `SESSION_SECRET`                            | Secret for encrypting the session cookie (32+ chars).                |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google OAuth credentials for `/api/auth/google/callback`.            |
+| `FRIGATE_URL`                               | Base URL of the Frigate backend (e.g. `http://frigate:5000`).        |
+| `FRIGATE_MOCK`                              | Set to `1` to use the in-memory mock Frigate client for development. |
+| `MQTT_URL`                                  | MQTT broker URL (e.g. `mqtt://user:pass@rabbitmq:1883`).             |
+| `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY`    | Web Push VAPID key pair.                                             |
+| `VAPID_SUBJECT`                             | Contact URL or `mailto:` for push provider (e.g. `mailto:you@x.dk`). |
+
+Push notifications are silently disabled at startup if any VAPID variable is missing — a warning is logged.
+
+## Scripts
 
 ```bash
-npm run build
+pnpm dev              # Start dev server on :3000
+pnpm build            # Production build (also generates routeTree + service worker)
+pnpm preview          # Serve the production build locally
+pnpm test             # Run Vitest once
+pnpm lint             # ESLint
+pnpm format           # Prettier check
+pnpm check            # Prettier write + ESLint --fix
+pnpm storybook        # Component explorer on :6006
+pnpm knip             # Unused-code report
 ```
 
 ## Testing
 
-This project uses [Vitest](https://vitest.dev/) for testing. You can run the tests with:
+- Unit + integration tests with Vitest live alongside the code they test (`*.test.ts`).
+- Component Storybook in `*.stories.tsx` files, with a11y and Vitest addons enabled.
+- Tests run in jsdom by default; Playwright browser mode is available via `@vitest/browser`.
+
+## Deployment
+
+A multi-stage [Dockerfile](Dockerfile) produces a small runtime image that runs as a non-root user. [docker-compose.yml](docker-compose.yml) wires the app, RabbitMQ (with MQTT + management plugins), and Traefik for TLS via Let's Encrypt. Security headers (HSTS, X-Content-Type-Options, X-Frame-Options, Referrer-Policy, Permissions-Policy, COOP/CORP) are applied via Traefik middleware labels.
 
 ```bash
-npm run test
+docker compose up -d --build
 ```
 
-## Styling
+Persistent state:
 
-This project uses [Tailwind CSS](https://tailwindcss.com/) for styling.
+- `ce-v2-data` — SQLite database (push subscriptions + per-camera preferences).
+- `rabbitmq-data` — RabbitMQ broker state.
 
-### Removing Tailwind CSS
+## Conventions
 
-If you prefer not to use Tailwind CSS:
+Project-wide rules are in [CLAUDE.md](CLAUDE.md). Highlights:
 
-1. Remove the demo pages in `src/routes/demo/`
-2. Replace the Tailwind import in `src/styles.css` with your own styles
-3. Remove `tailwindcss()` from the plugins array in `vite.config.ts`
-4. Uninstall the packages: `npm install @tailwindcss/vite tailwindcss -D`
-
-## Linting & Formatting
-
-This project uses [eslint](https://eslint.org/) and [prettier](https://prettier.io/) for linting and formatting. Eslint is configured using [tanstack/eslint-config](https://tanstack.com/config/latest/docs/eslint). The following scripts are available:
-
-```bash
-npm run lint
-npm run format
-npm run check
-```
-
-## Routing
-
-This project uses [TanStack Router](https://tanstack.com/router) with file-based routing. Routes are managed as files in `src/routes`.
-
-### Adding A Route
-
-To add a new route to your application just add a new file in the `./src/routes` directory.
-
-TanStack will automatically generate the content of the route file for you.
-
-Now that you have two routes you can use a `Link` component to navigate between them.
-
-### Adding Links
-
-To use SPA (Single Page Application) navigation you will need to import the `Link` component from `@tanstack/react-router`.
-
-```tsx
-import { Link } from '@tanstack/react-router'
-```
-
-Then anywhere in your JSX you can use it like so:
-
-```tsx
-<Link to="/about">About</Link>
-```
-
-This will create a link that will navigate to the `/about` route.
-
-More information on the `Link` component can be found in the [Link documentation](https://tanstack.com/router/v1/docs/framework/react/api/router/linkComponent).
-
-### Using A Layout
-
-In the File Based Routing setup the layout is located in `src/routes/__root.tsx`. Anything you add to the root route will appear in all the routes. The route content will appear in the JSX where you render `{children}` in the `shellComponent`.
-
-Here is an example layout that includes a header:
-
-```tsx
-import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'
-
-export const Route = createRootRoute({
-  head: () => ({
-    meta: [
-      { charSet: 'utf-8' },
-      { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-      { title: 'My App' },
-    ],
-  }),
-  shellComponent: ({ children }) => (
-    <html lang="en">
-      <head>
-        <HeadContent />
-      </head>
-      <body>
-        <header>
-          <nav>
-            <Link to="/">Home</Link>
-            <Link to="/about">About</Link>
-          </nav>
-        </header>
-        {children}
-        <Scripts />
-      </body>
-    </html>
-  ),
-})
-```
-
-More information on layouts can be found in the [Layouts documentation](https://tanstack.com/router/latest/docs/framework/react/guide/routing-concepts#layouts).
-
-## Server Functions
-
-TanStack Start provides server functions that allow you to write server-side code that seamlessly integrates with your client components.
-
-```tsx
-import { createServerFn } from '@tanstack/react-start'
-
-const getServerTime = createServerFn({
-  method: 'GET',
-}).handler(async () => {
-  return new Date().toISOString()
-})
-
-// Use in a component
-function MyComponent() {
-  const [time, setTime] = useState('')
-
-  useEffect(() => {
-    getServerTime().then(setTime)
-  }, [])
-
-  return <div>Server time: {time}</div>
-}
-```
-
-## API Routes
-
-You can create API routes by using the `server` property in your route definitions:
-
-```tsx
-import { createFileRoute } from '@tanstack/react-router'
-import { json } from '@tanstack/react-start'
-
-export const Route = createFileRoute('/api/hello')({
-  server: {
-    handlers: {
-      GET: () => json({ message: 'Hello, World!' }),
-    },
-  },
-})
-```
-
-## Data Fetching
-
-There are multiple ways to fetch data in your application. You can use TanStack Query to fetch data from a server. But you can also use the `loader` functionality built into TanStack Router to load the data for a route before it's rendered.
-
-For example:
-
-```tsx
-import { createFileRoute } from '@tanstack/react-router'
-
-export const Route = createFileRoute('/people')({
-  loader: async () => {
-    const response = await fetch('https://swapi.dev/api/people')
-    return response.json()
-  },
-  component: PeopleComponent,
-})
-
-function PeopleComponent() {
-  const data = Route.useLoaderData()
-  return (
-    <ul>
-      {data.results.map((person) => (
-        <li key={person.name}>{person.name}</li>
-      ))}
-    </ul>
-  )
-}
-```
-
-Loaders simplify your data fetching logic dramatically. Check out more information in the [Loader documentation](https://tanstack.com/router/latest/docs/framework/react/guide/data-loading#loader-parameters).
-
-# Demo files
-
-Files prefixed with `demo` can be safely deleted. They are there to provide a starting point for you to play around with the features you've installed.
-
-# Learn More
-
-You can learn more about all of the offerings from TanStack in the [TanStack documentation](https://tanstack.com).
-
-For TanStack Start specific documentation, visit [TanStack Start](https://tanstack.com/start).
+- **Cross-platform first** — every feature must work on both iOS Safari and Android Chrome. Flag platform-specific quirks before silently working around them.
+- **SSR-safe rendering** — never read `window` / `navigator` / `Notification` during render; defer to `useEffect` with safe defaults to avoid hydration mismatches.
+- **Server function auth** — every `createServerFn` handler that touches protected data must `await requireSession()` as its first operation.
+- **Tailwind canonical classes** — use built-in utilities (`text-(--var)`, `min-h-11`, `rounded-4xl`) over arbitrary-value syntax when an equivalent exists.
