@@ -67,8 +67,14 @@ export function ServiceWorkerRegistration() {
     // the PWA launched at start_url instead of the notification's URL.
     claimPendingNavigation()
 
+    // Only reload when an existing controller is replaced (user accepted an
+    // update). On the very first install, the page was uncontrolled at load
+    // and clientsClaim triggers a controllerchange mid-hydration — reloading
+    // there steals the user's first click.
+    const hadControllerAtLoad = Boolean(navigator.serviceWorker.controller)
     let refreshing = false
     navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!hadControllerAtLoad) return
       if (refreshing) return
       refreshing = true
       window.location.reload()
