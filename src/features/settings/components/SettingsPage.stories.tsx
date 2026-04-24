@@ -11,3 +11,13 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 export const Default: Story = {}
+
+export const Mobile: Story = {
+  name: 'Mobile viewport',
+  globals: { viewport: { value: 'mobile', isRotated: false } },
+}
+
+export const Tablet: Story = {
+  name: 'Tablet viewport',
+  globals: { viewport: { value: 'tablet', isRotated: false } },
+}
