@@ -1,6 +1,7 @@
 import type { FrigateResult } from '#/features/shared/server/frigate/config'
 import { useCameraOrder } from '#/features/cameras/hooks/useCameraOrder'
 import { SortableCamerasGrid } from '#/features/cameras/components/SortableCamerasGrid'
+import { Check, Pencil } from 'lucide-react'
 
 type CamerasState =
   | { kind: 'cameras'; cameras: string[] }
@@ -63,7 +64,7 @@ export function CamerasPage({
       <section className="island-shell rise-in relative overflow-hidden rounded-4xl px-5 py-6 sm:px-8 sm:py-8">
         <div className="pointer-events-none absolute -left-20 -top-24 h-56 w-56 rounded-full bg-[radial-gradient(circle,rgba(79,184,178,0.32),transparent_66%)]" />
         <div className="pointer-events-none absolute -bottom-20 -right-20 h-56 w-56 rounded-full bg-[radial-gradient(circle,rgba(47,106,74,0.18),transparent_66%)]" />
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex items-center justify-between gap-4">
           <div>
             <p className="island-kicker mb-1">Cameras</p>
             <h1 className="display-title mb-0 max-w-3xl text-2xl leading-tight font-bold tracking-tight text-(--sea-ink) sm:text-4xl">
@@ -78,19 +79,16 @@ export function CamerasPage({
                   isEditing ? 'Done reordering cameras' : 'Reorder cameras'
                 }
                 aria-pressed={isEditing}
-                aria-describedby="camera-order-hint"
                 title="Reorder cameras on this device"
                 onClick={() => onEditingChange(!isEditing)}
-                className="rounded-lg border border-(--sea-ink-soft)/30 px-3 py-1.5 text-sm font-medium text-(--sea-ink) transition-colors hover:bg-(--surface-raised)"
+                className="flex size-9 items-center justify-center rounded-lg border border-(--sea-ink-soft)/30 text-sm font-medium text-(--sea-ink) transition-colors hover:bg-(--surface-raised)"
               >
-                {isEditing ? 'Done' : 'Edit'}
+                {isEditing ? (
+                  <Check size={16} aria-hidden="true" />
+                ) : (
+                  <Pencil size={16} aria-hidden="true" />
+                )}
               </button>
-              <span
-                id="camera-order-hint"
-                className="text-xs text-(--sea-ink-soft)"
-              >
-                Order saved on this device
-              </span>
             </div>
           )}
         </div>
