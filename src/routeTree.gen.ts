@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiTestAuthRouteImport } from './routes/api/test-auth'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedCamerasRouteImport } from './routes/_authenticated/cameras'
 import { Route as AuthenticatedCameraEventsIndexRouteImport } from './routes/_authenticated/camera-events.index'
@@ -35,6 +36,11 @@ const AuthenticatedRoute = AuthenticatedRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiTestAuthRoute = ApiTestAuthRouteImport.update({
+  id: '/api/test-auth',
+  path: '/api/test-auth',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
@@ -124,6 +130,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/cameras': typeof AuthenticatedCamerasRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/api/test-auth': typeof ApiTestAuthRoute
   '/camera-events/$id': typeof AuthenticatedCameraEventsIdRoute
   '/api/auth/google': typeof ApiAuthGoogleRouteWithChildren
   '/api/auth/logout': typeof ApiAuthLogoutRoute
@@ -143,6 +150,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/cameras': typeof AuthenticatedCamerasRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/api/test-auth': typeof ApiTestAuthRoute
   '/camera-events/$id': typeof AuthenticatedCameraEventsIdRoute
   '/api/auth/google': typeof ApiAuthGoogleRouteWithChildren
   '/api/auth/logout': typeof ApiAuthLogoutRoute
@@ -164,6 +172,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/_authenticated/cameras': typeof AuthenticatedCamerasRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/api/test-auth': typeof ApiTestAuthRoute
   '/_authenticated/camera-events/$id': typeof AuthenticatedCameraEventsIdRoute
   '/api/auth/google': typeof ApiAuthGoogleRouteWithChildren
   '/api/auth/logout': typeof ApiAuthLogoutRoute
@@ -185,6 +194,7 @@ export interface FileRouteTypes {
     | '/'
     | '/cameras'
     | '/settings'
+    | '/api/test-auth'
     | '/camera-events/$id'
     | '/api/auth/google'
     | '/api/auth/logout'
@@ -204,6 +214,7 @@ export interface FileRouteTypes {
     | '/'
     | '/cameras'
     | '/settings'
+    | '/api/test-auth'
     | '/camera-events/$id'
     | '/api/auth/google'
     | '/api/auth/logout'
@@ -224,6 +235,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/_authenticated/cameras'
     | '/_authenticated/settings'
+    | '/api/test-auth'
     | '/_authenticated/camera-events/$id'
     | '/api/auth/google'
     | '/api/auth/logout'
@@ -243,6 +255,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
+  ApiTestAuthRoute: typeof ApiTestAuthRoute
   ApiAuthGoogleRoute: typeof ApiAuthGoogleRouteWithChildren
   ApiAuthLogoutRoute: typeof ApiAuthLogoutRoute
   ApiPushPreferencesRoute: typeof ApiPushPreferencesRoute
@@ -270,6 +283,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/test-auth': {
+      id: '/api/test-auth'
+      path: '/api/test-auth'
+      fullPath: '/api/test-auth'
+      preLoaderRoute: typeof ApiTestAuthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/settings': {
@@ -420,6 +440,7 @@ const ApiAuthGoogleRouteWithChildren = ApiAuthGoogleRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
+  ApiTestAuthRoute: ApiTestAuthRoute,
   ApiAuthGoogleRoute: ApiAuthGoogleRouteWithChildren,
   ApiAuthLogoutRoute: ApiAuthLogoutRoute,
   ApiPushPreferencesRoute: ApiPushPreferencesRoute,

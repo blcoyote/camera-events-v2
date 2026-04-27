@@ -34,12 +34,10 @@ function CamerasRoute() {
   const result = Route.useLoaderData()
   const router = useRouter()
   const [isEditing, setIsEditing] = useState(false)
-  const [refreshKey, setRefreshKey] = useState(0)
 
   const onRefresh = useCallback(async () => {
     await clearCacheFn()
     await router.invalidate()
-    setRefreshKey((k) => k + 1)
   }, [router])
 
   const { pullDistance, isRefreshing, isComplete } = usePullToRefresh({
@@ -60,7 +58,6 @@ function CamerasRoute() {
       />
       <CamerasPage
         result={result}
-        refreshKey={refreshKey}
         isEditing={isEditing}
         onEditingChange={setIsEditing}
       />

@@ -75,7 +75,6 @@ describe('CamerasPage', () => {
   it('renders Edit button when cameras are present and isEditing=false', () => {
     const output = CamerasPage({
       result: ok(['front', 'back']),
-      refreshKey: 0,
       isEditing: false,
       onEditingChange: vi.fn(),
     })
@@ -86,7 +85,6 @@ describe('CamerasPage', () => {
   it('renders Done button when isEditing=true', () => {
     const output = CamerasPage({
       result: ok(['front', 'back']),
-      refreshKey: 0,
       isEditing: true,
       onEditingChange: vi.fn(),
     })
@@ -98,7 +96,6 @@ describe('CamerasPage', () => {
     const onEditingChange = vi.fn()
     const output = CamerasPage({
       result: ok(['front', 'back']),
-      refreshKey: 0,
       isEditing: false,
       onEditingChange,
     })
@@ -142,7 +139,6 @@ describe('CamerasPage', () => {
   it('does not render Edit button when state is empty', () => {
     const output = CamerasPage({
       result: emptyResult,
-      refreshKey: 0,
       isEditing: false,
       onEditingChange: vi.fn(),
     })
@@ -154,7 +150,6 @@ describe('CamerasPage', () => {
   it('does not render Edit button when state is error', () => {
     const output = CamerasPage({
       result: errorResult,
-      refreshKey: 0,
       isEditing: false,
       onEditingChange: vi.fn(),
     })
@@ -165,7 +160,6 @@ describe('CamerasPage', () => {
   it('passes isEditing to SortableCamerasGrid', () => {
     const editOutput = CamerasPage({
       result: ok(['front']),
-      refreshKey: 0,
       isEditing: true,
       onEditingChange: vi.fn(),
     })
@@ -175,7 +169,6 @@ describe('CamerasPage', () => {
   it('renders per-device scope note', () => {
     const output = CamerasPage({
       result: ok(['front']),
-      refreshKey: 0,
       isEditing: false,
       onEditingChange: vi.fn(),
     })

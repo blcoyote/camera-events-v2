@@ -1,9 +1,5 @@
-import { useState } from 'react'
 import type { FrigateResult } from '#/features/shared/server/frigate/config'
-import {
-  useCameraOrder,
-  SAVE_ERROR_MESSAGE,
-} from '#/features/cameras/hooks/useCameraOrder'
+import { useCameraOrder } from '#/features/cameras/hooks/useCameraOrder'
 import { SortableCamerasGrid } from '#/features/cameras/components/SortableCamerasGrid'
 
 type CamerasState =
@@ -64,12 +60,10 @@ export function CamerasLoading() {
 
 export function CamerasPage({
   result,
-  refreshKey,
   isEditing,
   onEditingChange,
 }: {
   result: FrigateResult<string[]>
-  refreshKey?: number
   isEditing: boolean
   onEditingChange: (editing: boolean) => void
 }) {
