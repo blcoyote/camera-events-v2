@@ -4,6 +4,7 @@ interface UsePullToRefreshOptions {
   onRefresh: () => Promise<void>
   threshold?: number
   maxPull?: number
+  disabled?: boolean
 }
 
 interface UsePullToRefreshResult {
@@ -24,6 +25,7 @@ export function usePullToRefresh({
   onRefresh,
   threshold = DEFAULT_THRESHOLD,
   maxPull = DEFAULT_MAX_PULL,
+  disabled = false,
 }: UsePullToRefreshOptions): UsePullToRefreshResult {
   const [pullDistance, setPullDistance] = useState(0)
   const [isRefreshing, setIsRefreshing] = useState(false)
@@ -55,6 +57,7 @@ export function usePullToRefresh({
   }, [])
 
   useEffect(() => {
+    if (disabled) return
     if (!('ontouchstart' in window)) return
 
     const onTouchStart = (e: TouchEvent) => {
@@ -127,7 +130,7 @@ export function usePullToRefresh({
       window.removeEventListener('touchmove', onTouchMove)
       window.removeEventListener('touchend', onTouchEnd)
     }
-  }, [threshold, maxPull, handleRefresh])
+  }, [threshold, maxPull, handleRefresh, disabled])
 
   return { pullDistance, isRefreshing, isComplete }
 }
