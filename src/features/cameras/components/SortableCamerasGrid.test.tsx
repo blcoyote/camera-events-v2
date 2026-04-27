@@ -1,12 +1,47 @@
-import React from 'react'
+import type { ReactNode } from 'react'
 import { describe, expect, it, vi } from 'vitest'
-import { reorderOnDragEnd } from './SortableCamerasGrid'
+import { reorderOnDragEnd, SortableCamerasGrid } from './SortableCamerasGrid'
 
 // Tests cover reorderOnDragEnd (AC-1, AC-4) — the pure drag-end handler.
 // The grid's rendering and sensor wiring are validated by the CamerasPage
 // integration tests in Step 8 and the Playwright e2e in Step 10.
 
 type DragEndEvent = Parameters<typeof reorderOnDragEnd>[1]
+
+vi.mock('@dnd-kit/core', () => ({
+  DndContext: ({ children }: { children: ReactNode }) => children,
+  PointerSensor: class {},
+  TouchSensor: class {},
+  KeyboardSensor: class {},
+  useSensor: () => ({}),
+  useSensors: (...args: unknown[]) => args,
+  closestCenter: () => null,
+}))
+vi.mock('@dnd-kit/sortable', () => ({
+  SortableContext: ({ children }: { children: ReactNode }) => children,
+  verticalListSortingStrategy: {},
+  sortableKeyboardCoordinates: () => ({}),
+  useSortable: () => ({
+    attributes: {},
+    listeners: {},
+    setNodeRef: () => {},
+    transform: null,
+    transition: undefined,
+    isDragging: false,
+  }),
+  arrayMove: <T,>(arr: T[], from: number, to: number) => {
+    const next = [...arr]
+    const [item] = next.splice(from, 1)
+    next.splice(to, 0, item)
+    return next
+  },
+}))
+vi.mock('@dnd-kit/modifiers', () => ({
+  restrictToParentElement: () => ({ x: 0, y: 0 }),
+}))
+vi.mock('@dnd-kit/utilities', () => ({
+  CSS: { Transform: { toString: () => '' } },
+}))
 
 describe('reorderOnDragEnd', () => {
   it('moves an item backward (drag to earlier position)', () => {
@@ -56,43 +91,6 @@ describe('reorderOnDragEnd', () => {
 
 // Verify the grid component renders SortableCameraTile elements
 // with the correct keys and props (structural check via JSX).
-vi.mock('@dnd-kit/core', () => ({
-  DndContext: ({ children }: { children: React.ReactNode }) => children,
-  PointerSensor: class {},
-  TouchSensor: class {},
-  KeyboardSensor: class {},
-  useSensor: () => ({}),
-  useSensors: (...args: unknown[]) => args,
-  closestCenter: () => null,
-}))
-vi.mock('@dnd-kit/sortable', () => ({
-  SortableContext: ({ children }: { children: React.ReactNode }) => children,
-  verticalListSortingStrategy: {},
-  sortableKeyboardCoordinates: () => ({}),
-  useSortable: () => ({
-    attributes: {},
-    listeners: {},
-    setNodeRef: () => {},
-    transform: null,
-    transition: undefined,
-    isDragging: false,
-  }),
-  arrayMove: <T,>(arr: T[], from: number, to: number) => {
-    const next = [...arr]
-    const [item] = next.splice(from, 1)
-    next.splice(to, 0, item)
-    return next
-  },
-}))
-vi.mock('@dnd-kit/modifiers', () => ({
-  restrictToParentElement: () => ({ x: 0, y: 0 }),
-}))
-vi.mock('@dnd-kit/utilities', () => ({
-  CSS: { Transform: { toString: () => '' } },
-}))
-
-import { SortableCamerasGrid } from './SortableCamerasGrid'
-
 describe('SortableCamerasGrid structure', () => {
   it('renders one child per camera', () => {
     const cameras = ['front', 'back', 'garage']

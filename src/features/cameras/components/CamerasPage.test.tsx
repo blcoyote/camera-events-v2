@@ -1,6 +1,6 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import React from 'react'
-import { getCamerasPageState } from './CamerasPage'
+import { getCamerasPageState, CamerasPage } from './CamerasPage'
 import type { FrigateResult } from '#/features/shared/server/frigate/config'
 
 // CamerasPage is tested here by calling it as a function and inspecting
@@ -36,8 +36,6 @@ vi.mock('#/features/cameras/components/SortableCamerasGrid', () => ({
       ),
     ),
 }))
-
-import { CamerasPage } from './CamerasPage'
 
 function ok(cameras: string[]): FrigateResult<string[]> {
   return { ok: true, data: cameras }
@@ -114,12 +112,12 @@ describe('CamerasPage', () => {
         title?: string
       }>
       if (
-        el.props?.title === 'Reorder cameras on this device' &&
-        typeof el.props?.onClick === 'function'
+        el.props.title === 'Reorder cameras on this device' &&
+        typeof el.props.onClick === 'function'
       ) {
         return el as React.ReactElement<{ onClick: () => void }>
       }
-      const children = el.props?.children
+      const children = el.props.children
       if (Array.isArray(children)) {
         for (const child of children) {
           const found = findEditButton(child)

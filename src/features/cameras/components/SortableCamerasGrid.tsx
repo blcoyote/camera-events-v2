@@ -1,3 +1,4 @@
+import type { DragEndEvent } from '@dnd-kit/core'
 import {
   DndContext,
   PointerSensor,
@@ -6,7 +7,6 @@ import {
   useSensor,
   useSensors,
   closestCenter,
-  type DragEndEvent,
 } from '@dnd-kit/core'
 import {
   SortableContext,

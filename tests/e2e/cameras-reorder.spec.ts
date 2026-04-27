@@ -1,3 +1,4 @@
+import type { Page } from 'playwright/test'
 import { test, expect } from 'playwright/test'
 
 // Single-column layout (below sm:640px breakpoint) so verticalListSortingStrategy
@@ -15,12 +16,12 @@ const MOCK_CAMERAS = [
   'side_gate',
 ]
 
-async function signIn(page: import('playwright').Page) {
+async function signIn(page: Page) {
   await page.goto('/api/test-auth?redirect=/cameras')
   await page.waitForURL('/cameras')
 }
 
-function cameraHeadings(page: import('playwright').Page) {
+function cameraHeadings(page: Page) {
   return page.locator('[aria-label="Camera list"] h2').allTextContents()
 }
 
