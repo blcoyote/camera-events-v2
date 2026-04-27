@@ -1,4 +1,10 @@
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import {
+  useState,
+  useEffect,
+  useLayoutEffect,
+  useCallback,
+  useMemo,
+} from 'react'
 import {
   loadOrder,
   saveOrder,
@@ -8,11 +14,14 @@ import { mergeCameraOrder } from '#/features/cameras/utils/mergeCameraOrder'
 export const SAVE_ERROR_MESSAGE =
   'Order saved for this session only — storage is full or disabled'
 
+const useIsomorphicLayoutEffect =
+  typeof window !== 'undefined' ? useLayoutEffect : useEffect
+
 export function useCameraOrder(frigateCameras: string[]) {
   const [savedOrder, setSavedOrder] = useState<string[] | null>(null)
   const [saveError, setSaveError] = useState<string | null>(null)
 
-  useEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     setSavedOrder(loadOrder())
   }, [])
 
