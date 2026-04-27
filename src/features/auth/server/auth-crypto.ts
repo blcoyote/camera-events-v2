@@ -2,15 +2,14 @@ import {
   createCipheriv,
   createDecipheriv,
   randomBytes,
-  createHash,
+  hkdfSync,
 } from 'node:crypto'
 import { getSessionConfig } from '#/features/shared/server/session'
 
-/**
- * Derive a 256-bit encryption key from the session secret.
- */
 function deriveKey(secret: string): Buffer {
-  return createHash('sha256').update(secret).digest()
+  return Buffer.from(
+    hkdfSync('sha256', secret, '', 'oauth-state-encryption', 32),
+  )
 }
 
 /**

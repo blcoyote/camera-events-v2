@@ -161,7 +161,7 @@ export default function Header() {
     <header className="sticky top-0 z-50 border-b border-(--line) bg-(--header-bg) px-4 pt-[env(safe-area-inset-top)] backdrop-blur-lg">
       <nav
         aria-label="Site navigation"
-        className="page-wrap flex items-center gap-x-2 py-3 sm:gap-x-3 sm:py-4"
+        className="page-wrap flex items-center gap-x-2 py-1.5 sm:gap-x-3 sm:py-2"
       >
         <div className="flex min-w-0 items-center gap-x-2 overflow-x-auto text-xs font-semibold whitespace-nowrap sm:gap-x-4 sm:text-sm">
           {state.navLinks.map((link) => (
