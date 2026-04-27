@@ -70,37 +70,37 @@ describe('CamerasPage', () => {
     vi.clearAllMocks()
   })
 
-  it('renders Edit button when cameras are present and isEditing=false', () => {
+  it('renders pencil icon button when cameras are present and isEditing=false', () => {
     const output = CamerasPage({
       result: ok(['front', 'back']),
       isEditing: false,
       onEditingChange: vi.fn(),
     })
     const json = JSON.stringify(output)
-    expect(json).toContain('Edit')
+    expect(json).toContain('Reorder cameras on this device')
   })
 
-  it('renders Done button when isEditing=true', () => {
+  it('renders checkmark icon button when isEditing=true', () => {
     const output = CamerasPage({
       result: ok(['front', 'back']),
       isEditing: true,
       onEditingChange: vi.fn(),
     })
     const json = JSON.stringify(output)
-    expect(json).toContain('Done')
+    expect(json).toContain('Done reordering cameras')
   })
 
-  it('calls onEditingChange when Edit button is clicked', () => {
+  it('calls onEditingChange when reorder button is clicked', () => {
     const onEditingChange = vi.fn()
     const output = CamerasPage({
       result: ok(['front', 'back']),
       isEditing: false,
       onEditingChange,
     })
-    // Find the Edit button's onClick handler in the JSX and invoke it
+    // Find the reorder button's onClick handler in the JSX and invoke it
     const json = JSON.stringify(output)
     // Button is present
-    expect(json).toContain('Edit')
+    expect(json).toContain('Reorder cameras on this device')
     // Simulate the click by finding onClick in the element tree
     function findEditButton(
       node: unknown,
@@ -162,15 +162,5 @@ describe('CamerasPage', () => {
       onEditingChange: vi.fn(),
     })
     expect(JSON.stringify(editOutput)).toContain('"isEditing":true')
-  })
-
-  it('renders per-device scope note', () => {
-    const output = CamerasPage({
-      result: ok(['front']),
-      isEditing: false,
-      onEditingChange: vi.fn(),
-    })
-    const json = JSON.stringify(output)
-    expect(json).toContain('Order saved on this device')
   })
 })
