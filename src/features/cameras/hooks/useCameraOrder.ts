@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import {
   loadOrder,
   saveOrder,
@@ -16,7 +16,10 @@ export function useCameraOrder(frigateCameras: string[]) {
     setSavedOrder(loadOrder())
   }, [])
 
-  const visibleOrder = mergeCameraOrder(savedOrder, frigateCameras)
+  const visibleOrder = useMemo(
+    () => mergeCameraOrder(savedOrder, frigateCameras),
+    [savedOrder, frigateCameras],
+  )
 
   const setOrder = useCallback((next: string[]) => {
     setSavedOrder(next)

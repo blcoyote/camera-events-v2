@@ -65,8 +65,10 @@ test('pointer drag reorders cameras and persists across reload', async ({
   await page.mouse.move(targetX, targetY, { steps: 20 })
   await page.mouse.up()
 
-  // Allow React state to settle
-  await page.waitForTimeout(200)
+  // Wait for dnd-kit to commit the reorder to React state
+  await expect(
+    page.locator('[aria-label="Camera list"] h2').first(),
+  ).toHaveText('driveway', { timeout: 2000 })
 
   // --- Post-drag assertion ---
   const afterDragOrder = await cameraHeadings(page)

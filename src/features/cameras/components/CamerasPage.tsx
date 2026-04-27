@@ -22,22 +22,6 @@ export function getCamerasPageState(
   return { kind: 'cameras', cameras: result.data }
 }
 
-export function getCameraCardData(
-  name: string,
-  refreshKey?: number,
-): {
-  name: string
-  imgSrc: string
-  altText: string
-} {
-  const base = `/api/cameras/${name}/latest`
-  return {
-    name,
-    imgSrc: refreshKey ? `${base}?t=${refreshKey}` : base,
-    altText: `Latest snapshot from ${name}`,
-  }
-}
-
 export function CamerasLoading() {
   return (
     <main
@@ -90,13 +74,21 @@ export function CamerasPage({
             <div className="flex shrink-0 flex-col items-end gap-1">
               <button
                 type="button"
+                aria-label={
+                  isEditing ? 'Done reordering cameras' : 'Reorder cameras'
+                }
+                aria-pressed={isEditing}
+                aria-describedby="camera-order-hint"
                 title="Reorder cameras on this device"
                 onClick={() => onEditingChange(!isEditing)}
                 className="rounded-lg border border-(--sea-ink-soft)/30 px-3 py-1.5 text-sm font-medium text-(--sea-ink) transition-colors hover:bg-(--surface-raised)"
               >
                 {isEditing ? 'Done' : 'Edit'}
               </button>
-              <span className="text-xs text-(--sea-ink-soft)">
+              <span
+                id="camera-order-hint"
+                className="text-xs text-(--sea-ink-soft)"
+              >
                 Order saved on this device
               </span>
             </div>
