@@ -1,5 +1,4 @@
-import type { UserConfig } from 'vite'
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vitest/config'
 import { devtools } from '@tanstack/devtools-vite'
 import { tanstackStart } from '@tanstack/react-start/plugin/vite'
 import viteReact from '@vitejs/plugin-react'
@@ -8,13 +7,13 @@ import { swPlugin } from './vite-plugin-sw'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { storybookTest } from '@storybook/addon-vitest/vitest-plugin'
+import { playwright } from '@vitest/browser-playwright'
 
 const dirname =
   typeof __dirname !== 'undefined'
     ? __dirname
     : path.dirname(fileURLToPath(import.meta.url))
 
-// Vitest 3.x bundles Vite 7 types; cast needed until Vitest 4 supports Vite 8
 export default defineConfig({
   preview: {
     allowedHosts: true,
@@ -52,7 +51,7 @@ export default defineConfig({
           browser: {
             enabled: true,
             headless: true,
-            provider: 'playwright',
+            provider: playwright(),
             instances: [
               {
                 browser: 'chromium',
@@ -63,4 +62,4 @@ export default defineConfig({
       },
     ],
   },
-} as UserConfig & { test: unknown })
+})
