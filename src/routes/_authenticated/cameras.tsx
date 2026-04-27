@@ -33,16 +33,17 @@ export const Route = createFileRoute('/_authenticated/cameras')({
 function CamerasRoute() {
   const result = Route.useLoaderData()
   const router = useRouter()
-  const [refreshKey, setRefreshKey] = useState(0)
+  const [isEditing, setIsEditing] = useState(false)
+
   const onRefresh = useCallback(async () => {
     await clearCacheFn()
     await router.invalidate()
-    setRefreshKey((k) => k + 1)
   }, [router])
 
   const { pullDistance, isRefreshing, isComplete } = usePullToRefresh({
     threshold: PULL_THRESHOLD,
     onRefresh,
+    disabled: isEditing,
   })
 
   useRefetchOnFocus({ onRefresh })
@@ -55,7 +56,11 @@ function CamerasRoute() {
         isComplete={isComplete}
         threshold={PULL_THRESHOLD}
       />
-      <CamerasPage result={result} refreshKey={refreshKey} />
+      <CamerasPage
+        result={result}
+        isEditing={isEditing}
+        onEditingChange={setIsEditing}
+      />
     </>
   )
 }

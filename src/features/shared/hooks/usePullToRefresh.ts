@@ -4,6 +4,7 @@ interface UsePullToRefreshOptions {
   onRefresh: () => Promise<void>
   threshold?: number
   maxPull?: number
+  disabled?: boolean
 }
 
 interface UsePullToRefreshResult {
@@ -24,6 +25,7 @@ export function usePullToRefresh({
   onRefresh,
   threshold = DEFAULT_THRESHOLD,
   maxPull = DEFAULT_MAX_PULL,
+  disabled = false,
 }: UsePullToRefreshOptions): UsePullToRefreshResult {
   const [pullDistance, setPullDistance] = useState(0)
   const [isRefreshing, setIsRefreshing] = useState(false)
@@ -35,6 +37,8 @@ export function usePullToRefresh({
   const directionLockedRef = useRef(false)
   const isHorizontalRef = useRef(false)
   const refreshingRef = useRef(false)
+  const pullDistanceRef = useRef(0)
+  const isCompleteTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const onRefreshRef = useRef(onRefresh)
 
   onRefreshRef.current = onRefresh
@@ -50,11 +54,19 @@ export function usePullToRefresh({
       setIsRefreshing(false)
       setIsComplete(true)
       setPullDistance(0)
-      setTimeout(() => setIsComplete(false), 600)
+      if (isCompleteTimerRef.current) clearTimeout(isCompleteTimerRef.current)
+      isCompleteTimerRef.current = setTimeout(() => setIsComplete(false), 600)
     }
   }, [])
 
   useEffect(() => {
+    return () => {
+      if (isCompleteTimerRef.current) clearTimeout(isCompleteTimerRef.current)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (disabled) return
     if (!('ontouchstart' in window)) return
 
     const onTouchStart = (e: TouchEvent) => {
@@ -96,12 +108,14 @@ export function usePullToRefresh({
       }
 
       if (deltaY <= 0) {
+        pullDistanceRef.current = 0
         setPullDistance(0)
         return
       }
 
       e.preventDefault()
       const dampened = Math.min(deltaY * DAMPING, maxPull)
+      pullDistanceRef.current = dampened
       setPullDistance(dampened)
     }
 
@@ -109,13 +123,13 @@ export function usePullToRefresh({
       if (!activeRef.current) return
       activeRef.current = false
 
-      setPullDistance((current) => {
-        if (current >= threshold) {
-          handleRefresh()
-          return current
-        }
-        return 0
-      })
+      const dist = pullDistanceRef.current
+      pullDistanceRef.current = 0
+      if (dist >= threshold) {
+        handleRefresh()
+      } else {
+        setPullDistance(0)
+      }
     }
 
     window.addEventListener('touchstart', onTouchStart, { passive: true })
@@ -127,7 +141,7 @@ export function usePullToRefresh({
       window.removeEventListener('touchmove', onTouchMove)
       window.removeEventListener('touchend', onTouchEnd)
     }
-  }, [threshold, maxPull, handleRefresh])
+  }, [threshold, maxPull, handleRefresh, disabled])
 
   return { pullDistance, isRefreshing, isComplete }
 }
