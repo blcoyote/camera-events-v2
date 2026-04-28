@@ -8,6 +8,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { storybookTest } from '@storybook/addon-vitest/vitest-plugin'
 import { playwright } from '@vitest/browser-playwright'
+import { nitro } from 'nitro/vite'
 
 const dirname =
   typeof __dirname !== 'undefined'
@@ -25,6 +26,7 @@ export default defineConfig({
     devtools(),
     tailwindcss(),
     tanstackStart(),
+    nitro({ preset: 'bun' }),
     viteReact(),
     swPlugin(),
   ],
