@@ -1,7 +1,5 @@
-import {
-  openSqlite,
-  type SqliteDatabase,
-} from '#/features/shared/server/sqlite'
+import { openSqlite } from '#/features/shared/server/sqlite'
+import type { SqliteDatabase } from '#/features/shared/server/sqlite'
 import { mkdirSync, existsSync } from 'node:fs'
 import { dirname } from 'node:path'
 
@@ -162,7 +160,7 @@ export async function createPushStore(
     },
 
     countRows(sql, ...params) {
-      const rows = db.prepare(sql).all(...params) as unknown[]
+      const rows = db.prepare(sql).all(...params)
       return rows.length
     },
 

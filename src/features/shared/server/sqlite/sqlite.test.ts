@@ -9,7 +9,8 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
-import { openSqlite, type SqliteDatabase } from './index'
+import { openSqlite } from './index'
+import type { SqliteDatabase } from './index'
 
 let db: SqliteDatabase
 let tmpDir: string

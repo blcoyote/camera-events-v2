@@ -15,15 +15,7 @@
  *   3. Dynamic-import failure of bun:sqlite produces an actionable error
  *      mentioning "bun:sqlite is not available" (covers AC-8).
  */
-import {
-  describe,
-  it,
-  expect,
-  vi,
-  beforeEach,
-  afterEach,
-  type Mock,
-} from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
 // Capture better-sqlite3 default-export so we can spy on its constructor.
 // If the Bun branch leaks into the Node-driver code, this spy would fire.
@@ -38,7 +30,7 @@ vi.mock('better-sqlite3', () => ({
 // so that `new Database(...)` works inside openSqlite.
 const fakeStmt = {
   run: vi.fn(() => ({ lastInsertRowid: 1, changes: 1 })),
-  get: vi.fn(() => ({ value: 'mocked' }) as unknown),
+  get: vi.fn(() => ({ value: 'mocked' })),
   all: vi.fn((): unknown[] => [{ value: 'mocked' }]),
 }
 const fakeDb = {
@@ -47,7 +39,7 @@ const fakeDb = {
   exec: vi.fn(),
   close: vi.fn(),
 }
-const FakeBunDatabase = vi.fn(function FakeBunDatabase(this: unknown) {
+const FakeBunDatabase = vi.fn(function (this: unknown) {
   return fakeDb
 })
 vi.mock('bun:sqlite', () => ({
@@ -178,7 +170,3 @@ describe('openSqlite Bun branch error path', () => {
     vi.doUnmock('bun:sqlite')
   })
 })
-
-// Sanity: confirm the Mock import works as expected in this file
-const _typeCheck: Mock = vi.fn()
-void _typeCheck

@@ -14,24 +14,24 @@
  */
 
 export interface SqliteStatement {
-  run(...params: unknown[]): unknown
-  get(...params: unknown[]): unknown
-  all(...params: unknown[]): unknown[]
+  run: (...params: unknown[]) => unknown
+  get: (...params: unknown[]) => unknown
+  all: (...params: unknown[]) => unknown[]
 }
 
 export interface SqliteDatabase {
-  prepare(sql: string): SqliteStatement
-  exec(sql: string): void
+  prepare: (sql: string) => SqliteStatement
+  exec: (sql: string) => void
   /** Read a PRAGMA value. Returns rows in `[{ name: value }]` form. */
-  pragmaRead(name: string): unknown[]
+  pragmaRead: (name: string) => unknown[]
   /** Set a PRAGMA value. No return. */
-  pragmaWrite(stmt: string): void
-  close(): void
+  pragmaWrite: (stmt: string) => void
+  close: () => void
 }
 
 function isBunRuntime(): boolean {
   return (
-    typeof process !== 'undefined' && typeof process.versions?.bun === 'string'
+    typeof process !== 'undefined' && typeof process.versions.bun === 'string'
   )
 }
 
@@ -57,9 +57,9 @@ async function openNodeSqlite(dbPath: string): Promise<SqliteDatabase> {
     prepare(sql) {
       const stmt = db.prepare(sql)
       return {
-        run: (...params) => stmt.run(...(params as unknown[])),
-        get: (...params) => stmt.get(...(params as unknown[])),
-        all: (...params) => stmt.all(...(params as unknown[])) as unknown[],
+        run: (...params) => stmt.run(...params),
+        get: (...params) => stmt.get(...params),
+        all: (...params) => stmt.all(...params),
       }
     },
     exec(sql) {
@@ -68,7 +68,7 @@ async function openNodeSqlite(dbPath: string): Promise<SqliteDatabase> {
     pragmaRead(name) {
       // better-sqlite3's `pragma()` returns an array of row objects for
       // read pragmas; normalize via prepare().all() so both drivers agree.
-      return db.prepare(`PRAGMA ${name}`).all() as unknown[]
+      return db.prepare(`PRAGMA ${name}`).all()
     },
     pragmaWrite(stmt) {
       db.exec(`PRAGMA ${stmt}`)
@@ -87,14 +87,14 @@ async function openNodeSqlite(dbPath: string): Promise<SqliteDatabase> {
  * Node-side tsc happy without adding a transitive dependency.
  */
 interface BunSqliteStatement {
-  run(...params: unknown[]): unknown
-  get(...params: unknown[]): unknown
-  all(...params: unknown[]): unknown[]
+  run: (...params: unknown[]) => unknown
+  get: (...params: unknown[]) => unknown
+  all: (...params: unknown[]) => unknown[]
 }
 interface BunSqliteDatabase {
-  prepare(sql: string): BunSqliteStatement
-  run(sql: string, ...params: unknown[]): unknown
-  close(): void
+  prepare: (sql: string) => BunSqliteStatement
+  run: (sql: string, ...params: unknown[]) => unknown
+  close: () => void
 }
 interface BunSqliteModule {
   Database: new (
@@ -147,7 +147,7 @@ async function openBunSqlite(dbPath: string): Promise<SqliteDatabase> {
       return {
         run: (...params) => stmt.run(...(params as [])),
         get: (...params) => stmt.get(...(params as [])),
-        all: (...params) => stmt.all(...(params as [])) as unknown[],
+        all: (...params) => stmt.all(...(params as [])),
       }
     },
     exec(sql) {
@@ -157,7 +157,7 @@ async function openBunSqlite(dbPath: string): Promise<SqliteDatabase> {
       db.run(sql)
     },
     pragmaRead(name) {
-      return db.prepare(`PRAGMA ${name}`).all() as unknown[]
+      return db.prepare(`PRAGMA ${name}`).all()
     },
     pragmaWrite(stmt) {
       db.run(`PRAGMA ${stmt}`)
