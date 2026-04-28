@@ -80,9 +80,7 @@ describe('parseIdTokenClaims', () => {
       picture: undefined,
     }
 
-    const result = parseIdTokenClaims(
-      claims as unknown as Record<string, unknown>,
-    )
+    const result = parseIdTokenClaims(claims)
 
     expect(result.sub).toBe('12345')
     expect(result.email).toBe('true')

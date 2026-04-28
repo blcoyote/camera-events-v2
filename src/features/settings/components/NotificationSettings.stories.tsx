@@ -25,7 +25,7 @@ const meta = {
     Object.assign(mockHookValues, {
       isSupported: true,
       isPushEnabled: true,
-      permissionState: 'granted' as NotificationPermission,
+      permissionState: 'granted',
       isSubscribed: true,
       isLoading: false,
       error: null,
@@ -44,7 +44,7 @@ export const Disabled: Story = {
   name: 'Notifications Disabled (Not Subscribed)',
   beforeEach: () => {
     Object.assign(mockHookValues, {
-      permissionState: 'default' as NotificationPermission,
+      permissionState: 'default',
       isSubscribed: false,
     })
   },
@@ -63,7 +63,7 @@ export const Blocked: Story = {
   name: 'Permission Blocked',
   beforeEach: () => {
     Object.assign(mockHookValues, {
-      permissionState: 'denied' as NotificationPermission,
+      permissionState: 'denied',
       isSubscribed: false,
     })
   },
@@ -92,7 +92,7 @@ export const WithError: Story = {
     Object.assign(mockHookValues, {
       error: 'Could not enable notifications. Please try again.',
       isSubscribed: false,
-      permissionState: 'default' as NotificationPermission,
+      permissionState: 'default',
     })
   },
 }
