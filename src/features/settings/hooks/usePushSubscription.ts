@@ -11,6 +11,35 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
   return output
 }
 
+/**
+ * Produce the user-facing error message for a non-OK /api/push/subscribe
+ * response. Exported so it can be unit-tested directly.
+ *
+ * 5xx responses never surface server error details: a server crash should
+ * not leak internal text (library names, stack-trace fragments) into a
+ * user-facing toast that screen readers will announce verbatim.
+ *
+ * 4xx responses may surface server-supplied details because the user can
+ * usually act on them (invalid input, validation failures).
+ */
+export function formatSubscribeError(
+  status: number,
+  parsedBody: { error?: unknown } | null,
+): string {
+  if (status === 401) {
+    return 'Your session has expired. Please sign in again, then enable notifications.'
+  }
+  if (status >= 500) {
+    return 'Notifications are temporarily unavailable. Please try again later.'
+  }
+  // 4xx: surface server-supplied detail when present.
+  const detail =
+    parsedBody && typeof parsedBody.error === 'string'
+      ? `: ${parsedBody.error}`
+      : ''
+  return `Could not enable notifications${detail}. Please try again.`
+}
+
 export interface UsePushSubscriptionReturn {
   /** Browser supports Push API */
   isSupported: boolean
@@ -145,22 +174,13 @@ export function usePushSubscription(): UsePushSubscriptionReturn {
 
       if (!res.ok) {
         await subscription.unsubscribe()
-        if (res.status === 401) {
-          setError(
-            'Your session has expired. Please sign in again, then enable notifications.',
-          )
-        } else {
-          let detail = ''
-          try {
-            const body = await res.json()
-            detail = body.error ? `: ${body.error}` : ''
-          } catch {
-            // no parseable body
-          }
-          setError(
-            `Could not enable notifications (${res.status}${detail}). Please try again.`,
-          )
+        let parsedBody: { error?: unknown } | null = null
+        try {
+          parsedBody = await res.json()
+        } catch {
+          // no parseable body — fall through with null
         }
+        setError(formatSubscribeError(res.status, parsedBody))
         return
       }
 

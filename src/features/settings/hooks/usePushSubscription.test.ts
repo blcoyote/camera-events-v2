@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
+import { formatSubscribeError } from './usePushSubscription'
 
 /**
  * Tests for the push subscription logic.
@@ -8,6 +9,52 @@ import { describe, it, expect, vi, afterEach } from 'vitest'
  * helper functions and verify the hook's browser API interactions through
  * integration-style mocking.
  */
+
+describe('formatSubscribeError', () => {
+  it('returns generic copy for 5xx responses without leaking server detail', () => {
+    const msg = formatSubscribeError(500, {
+      error: "'better-sqlite3' is not yet supported in Bun",
+    })
+    expect(msg).toBe(
+      'Notifications are temporarily unavailable. Please try again later.',
+    )
+    expect(msg).not.toContain('better-sqlite3')
+    expect(msg).not.toContain('Bun')
+  })
+
+  it('returns generic copy for 502/503 the same way as 500', () => {
+    const a = formatSubscribeError(502, { error: 'gateway down' })
+    const b = formatSubscribeError(503, { error: 'maintenance' })
+    expect(a).toBe(
+      'Notifications are temporarily unavailable. Please try again later.',
+    )
+    expect(b).toBe(a)
+  })
+
+  it('returns the session-expired copy for 401', () => {
+    const msg = formatSubscribeError(401, null)
+    expect(msg).toContain('session has expired')
+  })
+
+  it('surfaces server-supplied detail on 4xx', () => {
+    const msg = formatSubscribeError(400, {
+      error: 'Invalid subscription endpoint URL',
+    })
+    expect(msg).toBe(
+      'Could not enable notifications: Invalid subscription endpoint URL. Please try again.',
+    )
+  })
+
+  it('falls back to generic 4xx copy when body has no error string', () => {
+    const msg = formatSubscribeError(400, null)
+    expect(msg).toBe('Could not enable notifications. Please try again.')
+  })
+
+  it('treats non-string body.error as missing detail', () => {
+    const msg = formatSubscribeError(400, { error: 42 })
+    expect(msg).toBe('Could not enable notifications. Please try again.')
+  })
+})
 
 describe('usePushSubscription helpers', () => {
   describe('browser support detection', () => {
