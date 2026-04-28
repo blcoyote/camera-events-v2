@@ -33,12 +33,14 @@ interface SortableCamerasGridProps {
   cameras: string[]
   isEditing: boolean
   onOrderChange: (next: string[]) => void
+  refreshKey?: number
 }
 
 export function SortableCamerasGrid({
   cameras,
   isEditing,
   onOrderChange,
+  refreshKey = 0,
 }: SortableCamerasGridProps) {
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -71,7 +73,11 @@ export function SortableCamerasGrid({
               key={name}
               name={name}
               isEditing={isEditing}
-              imgSrc={`/api/cameras/${name}/latest`}
+              imgSrc={
+                refreshKey > 0
+                  ? `/api/cameras/${name}/latest?t=${refreshKey}`
+                  : `/api/cameras/${name}/latest`
+              }
               index={index}
             />
           ))}

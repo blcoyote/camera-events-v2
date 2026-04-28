@@ -15,6 +15,8 @@ const dirname =
     ? __dirname
     : path.dirname(fileURLToPath(import.meta.url))
 
+const isTest = !!process.env.VITEST
+
 export default defineConfig({
   preview: {
     allowedHosts: true,
@@ -23,12 +25,10 @@ export default defineConfig({
     tsconfigPaths: true,
   },
   plugins: [
-    devtools(),
     tailwindcss(),
-    tanstackStart(),
-    nitro({ preset: 'bun' }),
+    ...(isTest ? [] : [devtools(), tanstackStart(), nitro({ preset: 'bun' })]),
     viteReact(),
-    swPlugin(),
+    ...(isTest ? [] : [swPlugin()]),
   ],
   test: {
     projects: [

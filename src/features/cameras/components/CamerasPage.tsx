@@ -47,10 +47,12 @@ export function CamerasPage({
   result,
   isEditing,
   onEditingChange,
+  imgRefreshKey = 0,
 }: {
   result: FrigateResult<string[]>
   isEditing: boolean
   onEditingChange: (editing: boolean) => void
+  imgRefreshKey?: number
 }) {
   const state = getCamerasPageState(result)
   const frigateCameras = state.kind === 'cameras' ? state.cameras : []
@@ -133,6 +135,7 @@ export function CamerasPage({
           cameras={visibleOrder}
           isEditing={isEditing}
           onOrderChange={setOrder}
+          refreshKey={imgRefreshKey}
         />
       )}
     </main>

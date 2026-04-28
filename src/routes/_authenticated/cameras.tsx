@@ -34,9 +34,11 @@ function CamerasRoute() {
   const result = Route.useLoaderData()
   const router = useRouter()
   const [isEditing, setIsEditing] = useState(false)
+  const [imgRefreshKey, setImgRefreshKey] = useState(0)
 
   const onRefresh = useCallback(async () => {
     await clearCacheFn()
+    setImgRefreshKey((k) => k + 1)
     await router.invalidate()
   }, [router])
 
@@ -60,6 +62,7 @@ function CamerasRoute() {
         result={result}
         isEditing={isEditing}
         onEditingChange={setIsEditing}
+        imgRefreshKey={imgRefreshKey}
       />
     </>
   )
