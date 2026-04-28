@@ -1,4 +1,7 @@
-import Database from 'better-sqlite3'
+import {
+  openSqlite,
+  type SqliteDatabase,
+} from '#/features/shared/server/sqlite'
 import { mkdirSync, existsSync } from 'node:fs'
 import { dirname } from 'node:path'
 
@@ -14,7 +17,6 @@ export interface PushSubscriptionRow {
 }
 
 export interface PushStore {
-  db: Database.Database
   saveSubscription: (
     userId: string,
     endpoint: string,
@@ -28,18 +30,26 @@ export interface PushStore {
   getDisabledCameras: (userId: string) => string[]
   isCameraEnabledForUser: (userId: string, camera: string) => boolean
   setPreference: (userId: string, camera: string, enabled: boolean) => void
+  /** Inspection helper for tests: list user table names. */
+  tableNames: () => string[]
+  /** Inspection helper for tests: list column names of `table`. */
+  tableColumns: (table: string) => string[]
+  /** Inspection helper for tests: count rows matching SQL + params. */
+  countRows: (sql: string, ...params: unknown[]) => number
   close: () => void
 }
 
-export function createPushStore(dbPath: string = DEFAULT_DB_PATH): PushStore {
+export async function createPushStore(
+  dbPath: string = DEFAULT_DB_PATH,
+): Promise<PushStore> {
   const dir = dirname(dbPath)
   if (!existsSync(dir)) {
     mkdirSync(dir, { recursive: true })
   }
-  const db = new Database(dbPath)
+  const db: SqliteDatabase = await openSqlite(dbPath)
 
   // Enable WAL mode for concurrent reads
-  db.pragma('journal_mode = WAL')
+  db.pragmaWrite('journal_mode = WAL')
 
   db.exec(`
     CREATE TABLE IF NOT EXISTS push_subscriptions (
@@ -97,8 +107,6 @@ export function createPushStore(dbPath: string = DEFAULT_DB_PATH): PushStore {
   }
 
   return {
-    db,
-
     saveSubscription(userId, endpoint, p256dh, auth) {
       stmts.upsert.run(userId, endpoint, p256dh, auth)
     },
@@ -139,6 +147,25 @@ export function createPushStore(dbPath: string = DEFAULT_DB_PATH): PushStore {
       stmts.upsertPref.run(userId, camera, enabled ? 1 : 0)
     },
 
+    tableNames() {
+      const rows = db
+        .prepare("SELECT name FROM sqlite_master WHERE type='table'")
+        .all() as Array<{ name: string }>
+      return rows.map((r) => r.name)
+    },
+
+    tableColumns(table) {
+      const rows = db.pragmaRead(`table_info(${table})`) as Array<{
+        name: string
+      }>
+      return rows.map((r) => r.name)
+    },
+
+    countRows(sql, ...params) {
+      const rows = db.prepare(sql).all(...params) as unknown[]
+      return rows.length
+    },
+
     close() {
       db.close()
     },
@@ -146,11 +173,11 @@ export function createPushStore(dbPath: string = DEFAULT_DB_PATH): PushStore {
 }
 
 /** Lazily initialized singleton store for production use. */
-let _store: PushStore | null = null
+let _storePromise: Promise<PushStore> | null = null
 
-export function getPushStore(): PushStore {
-  if (!_store) {
-    _store = createPushStore()
+export function getPushStore(): Promise<PushStore> {
+  if (!_storePromise) {
+    _storePromise = createPushStore()
   }
-  return _store
+  return _storePromise
 }

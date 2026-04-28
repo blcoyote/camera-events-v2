@@ -57,7 +57,7 @@ export async function handleSubscribe(
     }
   }
 
-  getPushStore().saveSubscription(userId, endpoint, p256dh, auth)
+  ;(await getPushStore()).saveSubscription(userId, endpoint, p256dh, auth)
   return { status: 200, body: { ok: true } }
 }
 
@@ -77,7 +77,7 @@ export async function handleUnsubscribe(
     }
   }
 
-  getPushStore().removeSubscription(userId, endpoint)
+  ;(await getPushStore()).removeSubscription(userId, endpoint)
   return { status: 200, body: { ok: true } }
 }
 
@@ -94,7 +94,7 @@ export async function handleTest(
     }
   }
 
-  const subscriptions = getPushStore().getSubscriptionsByUserId(userId)
+  const subscriptions = (await getPushStore()).getSubscriptionsByUserId(userId)
   const payload = {
     title: 'Test Notification',
     body: 'Push notifications are working!',
@@ -128,7 +128,7 @@ export async function handleGetPreferences(
     return { status: 502, body: { error: 'Failed to fetch camera list' } }
   }
 
-  const disabledSet = new Set(getPushStore().getDisabledCameras(userId))
+  const disabledSet = new Set((await getPushStore()).getDisabledCameras(userId))
   const cameras = camerasResult.data.map((name) => ({
     name,
     enabled: !disabledSet.has(name),
@@ -158,6 +158,6 @@ export async function handleSetPreference(
     }
   }
 
-  getPushStore().setPreference(userId, camera, enabled)
+  ;(await getPushStore()).setPreference(userId, camera, enabled)
   return { status: 200, body: { ok: true } }
 }

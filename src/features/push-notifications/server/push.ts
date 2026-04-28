@@ -55,7 +55,8 @@ export async function sendPushNotification(
   } catch (err: any) {
     if (err.statusCode === 410 || err.statusCode === 404) {
       // Subscription expired or invalid — clean up
-      getPushStore().removeSubscriptionByEndpoint(subscription.endpoint)
+      const store = await getPushStore()
+      store.removeSubscriptionByEndpoint(subscription.endpoint)
       return
     }
     throw err

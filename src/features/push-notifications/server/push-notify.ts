@@ -78,7 +78,7 @@ export async function notifyUsersForCamera(
 ): Promise<void> {
   if (!isPushEnabled() || events.length === 0) return
 
-  const store = getPushStore()
+  const store = await getPushStore()
   const userIds = store.getAllSubscribedUserIds()
 
   for (const userId of userIds) {

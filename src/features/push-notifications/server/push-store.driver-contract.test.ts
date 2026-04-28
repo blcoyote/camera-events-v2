@@ -19,10 +19,10 @@ let store: PushStore
 let tmpDir: string
 let dbPath: string
 
-beforeEach(() => {
+beforeEach(async () => {
   tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'push-store-contract-'))
   dbPath = path.join(tmpDir, 'test.db')
-  store = createPushStore(dbPath)
+  store = await createPushStore(dbPath)
 })
 
 afterEach(() => {
@@ -32,21 +32,13 @@ afterEach(() => {
 
 describe('PushStore driver contract: schema', () => {
   it('initializes both required tables', () => {
-    const tables = store.db
-      .prepare(
-        "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name",
-      )
-      .all() as Array<{ name: string }>
-    const names = tables.map((t) => t.name)
+    const names = store.tableNames()
     expect(names).toContain('push_subscriptions')
     expect(names).toContain('push_notification_preferences')
   })
 
   it('preferences table has the expected columns', () => {
-    const columns = store.db
-      .prepare('PRAGMA table_info(push_notification_preferences)')
-      .all() as Array<{ name: string }>
-    const names = columns.map((c) => c.name)
+    const names = store.tableColumns('push_notification_preferences')
     for (const expected of [
       'user_id',
       'category',
@@ -160,12 +152,12 @@ describe('PushStore driver contract: camera preferences', () => {
     store.setPreference('u1', 'front_porch', false)
     store.setPreference('u1', 'front_porch', true)
 
-    const rows = store.db
-      .prepare(
-        "SELECT id FROM push_notification_preferences WHERE user_id = ? AND category = 'camera' AND resource_id = ?",
-      )
-      .all('u1', 'front_porch') as Array<{ id: number }>
-    expect(rows).toHaveLength(1)
+    const count = store.countRows(
+      "SELECT id FROM push_notification_preferences WHERE user_id = ? AND category = 'camera' AND resource_id = ?",
+      'u1',
+      'front_porch',
+    )
+    expect(count).toBe(1)
   })
 
   it('isolates preferences between users', () => {
@@ -178,12 +170,12 @@ describe('PushStore driver contract: camera preferences', () => {
 })
 
 describe('PushStore driver contract: persistence', () => {
-  it('retains data after close + reopen against the same path', () => {
+  it('retains data after close + reopen against the same path', async () => {
     store.saveSubscription('u1', 'https://p.example/1', 'p1', 'a1')
     store.setPreference('u1', 'front_porch', false)
     store.close()
 
-    const reopened = createPushStore(dbPath)
+    const reopened = await createPushStore(dbPath)
     try {
       expect(reopened.getSubscriptionsByUserId('u1')).toHaveLength(1)
       expect(reopened.getDisabledCameras('u1')).toEqual(['front_porch'])
@@ -192,6 +184,6 @@ describe('PushStore driver contract: persistence', () => {
     }
 
     // Re-assign so afterEach.close() doesn't double-close the prior handle.
-    store = createPushStore(path.join(tmpDir, 'dummy.db'))
+    store = await createPushStore(path.join(tmpDir, 'dummy.db'))
   })
 })

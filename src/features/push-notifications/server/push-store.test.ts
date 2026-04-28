@@ -8,9 +8,9 @@ import { createPushStore } from './push-store'
 let store: PushStore
 let tmpDir: string
 
-beforeEach(() => {
+beforeEach(async () => {
   tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'push-store-test-'))
-  store = createPushStore(path.join(tmpDir, 'test.db'))
+  store = await createPushStore(path.join(tmpDir, 'test.db'))
 })
 
 afterEach(() => {
@@ -20,28 +20,15 @@ afterEach(() => {
 
 describe('push-store table initialization', () => {
   it('creates push_subscriptions table on init', () => {
-    const tables = store.db
-      .prepare(
-        "SELECT name FROM sqlite_master WHERE type='table' AND name='push_subscriptions'",
-      )
-      .all()
-    expect(tables).toHaveLength(1)
+    expect(store.tableNames()).toContain('push_subscriptions')
   })
 
   it('creates push_notification_preferences table on init', () => {
-    const tables = store.db
-      .prepare(
-        "SELECT name FROM sqlite_master WHERE type='table' AND name='push_notification_preferences'",
-      )
-      .all()
-    expect(tables).toHaveLength(1)
+    expect(store.tableNames()).toContain('push_notification_preferences')
   })
 
   it('preferences table has correct columns', () => {
-    const columns = store.db
-      .prepare('PRAGMA table_info(push_notification_preferences)')
-      .all() as Array<{ name: string }>
-    const names = columns.map((c) => c.name)
+    const names = store.tableColumns('push_notification_preferences')
     expect(names).toContain('user_id')
     expect(names).toContain('category')
     expect(names).toContain('resource_id')
@@ -204,23 +191,23 @@ describe('camera notification preferences', () => {
     store.setPreference('user1', 'front_porch', false)
     store.setPreference('user1', 'front_porch', true)
 
-    const rows = store.db
-      .prepare(
-        "SELECT * FROM push_notification_preferences WHERE user_id = ? AND category = 'camera' AND resource_id = ?",
-      )
-      .all('user1', 'front_porch')
-    expect(rows).toHaveLength(1)
+    const count = store.countRows(
+      "SELECT id FROM push_notification_preferences WHERE user_id = ? AND category = 'camera' AND resource_id = ?",
+      'user1',
+      'front_porch',
+    )
+    expect(count).toBe(1)
   })
 })
 
 describe('persistence across close/reopen', () => {
-  it('retains subscriptions after closing and re-opening the database', () => {
+  it('retains subscriptions after closing and re-opening the database', async () => {
     store.saveSubscription('user1', 'https://push.example.com/1', 'k1', 'a1')
     const dbPath = path.join(tmpDir, 'test.db')
 
     store.close()
 
-    const store2 = createPushStore(dbPath)
+    const store2 = await createPushStore(dbPath)
     const subs = store2.getSubscriptionsByUserId('user1')
     expect(subs).toHaveLength(1)
     expect(subs[0]).toMatchObject({
@@ -230,6 +217,6 @@ describe('persistence across close/reopen', () => {
     store2.close()
 
     // Re-assign so afterEach close doesn't fail
-    store = createPushStore(path.join(tmpDir, 'dummy.db'))
+    store = await createPushStore(path.join(tmpDir, 'dummy.db'))
   })
 })
