@@ -8,7 +8,7 @@ type JsonValue = JsonPrimitive | JsonValue[] | { [key: string]: JsonValue }
 /** Bounding box as [x, y, width, height] in normalized coordinates (0–1). */
 type BoundingBox = [number, number, number, number]
 
-export interface FrigateEventData {
+interface FrigateEventData {
   attributes: string[]
   box: BoundingBox
   region: BoundingBox
@@ -36,7 +36,7 @@ export interface FrigateEvent {
   data: FrigateEventData
 }
 
-export interface FrigateEventSummaryItem {
+interface FrigateEventSummaryItem {
   camera: string
   count: number
   day: string
@@ -82,7 +82,7 @@ export interface FrigateReviewSummary {
 
 // ─── Timeline types ───
 
-export interface FrigateTimelineData {
+interface FrigateTimelineData {
   attribute: string
   box: BoundingBox
   label: string
@@ -100,7 +100,7 @@ export interface FrigateTimelineEntry {
 
 // ─── System types ───
 
-export interface FrigateCameraStats {
+interface FrigateCameraStats {
   audio_dBFS: number
   audio_rms: number
   camera_fps: number
@@ -113,36 +113,36 @@ export interface FrigateCameraStats {
   skipped_fps: number
 }
 
-export interface FrigateCpuUsage {
+interface FrigateCpuUsage {
   cmdline: string
   cpu: string
   cpu_average: string
   mem: string
 }
 
-export interface FrigateDetectorStats {
+interface FrigateDetectorStats {
   detection_start: number
   inference_speed: number
   pid: number
 }
 
-export interface FrigateGpuUsage {
+interface FrigateGpuUsage {
   gpu: number
   mem: number
 }
 
-export interface FrigateProcessInfo {
+interface FrigateProcessInfo {
   pid: number
 }
 
-export interface FrigateStorageInfo {
+interface FrigateStorageInfo {
   free: number
   mount_type: string
   total: number
   used: number
 }
 
-export interface FrigateServiceInfo {
+interface FrigateServiceInfo {
   last_updated: number
   latest_version: string
   storage: Record<string, FrigateStorageInfo>
@@ -163,7 +163,7 @@ export interface FrigateStats {
 
 // ─── Config types ───
 
-export interface FrigateCameraConfig {
+interface FrigateCameraConfig {
   name: string
   enabled: boolean
   detect: {

@@ -5,7 +5,7 @@ import { dirname } from 'node:path'
 
 const DEFAULT_DB_PATH = 'data/camera-events.db'
 
-export interface PushSubscriptionRow {
+interface PushSubscriptionRow {
   id: number
   user_id: string
   endpoint: string

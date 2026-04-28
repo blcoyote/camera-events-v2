@@ -13,7 +13,7 @@
  * against the same database file.
  */
 
-export interface SqliteStatement {
+interface SqliteStatement {
   run: (...params: unknown[]) => unknown
   get: (...params: unknown[]) => unknown
   all: (...params: unknown[]) => unknown[]
