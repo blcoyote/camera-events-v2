@@ -50,16 +50,16 @@ bun run knip         # Unused-code report
 
 ### Feature Map
 
-| Feature | Location | What it owns |
-|---------|----------|--------------|
-| `auth` | `src/features/auth/` | Google OAuth flow, session helpers, `useStandaloneAuth` hook |
-| `camera-events` | `src/features/camera-events/` | Event list/detail pages, snapshot lightbox, clip/snapshot/thumbnail proxies, mock data |
-| `cameras` | `src/features/cameras/` | Camera grid page, sortable tiles, camera order persistence, snapshot proxy |
-| `home` | `src/features/home/` | Home/landing page component |
-| `push-notifications` | `src/features/push-notifications/` | MQTT subscriber, event batcher, push dispatcher, SQLite push store |
-| `settings` | `src/features/settings/` | Settings page, notification preferences UI, `usePushSubscription` hook |
-| `shared` | `src/features/shared/` | Frigate API client + cache + types + validation, session, SQLite driver, shared components + hooks |
-| `shell` | `src/features/shell/` | App header, theme toggle, service worker registration |
+| Feature              | Location                           | What it owns                                                                                       |
+| -------------------- | ---------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `auth`               | `src/features/auth/`               | Google OAuth flow, session helpers, `useStandaloneAuth` hook                                       |
+| `camera-events`      | `src/features/camera-events/`      | Event list/detail pages, snapshot lightbox, clip/snapshot/thumbnail proxies, mock data             |
+| `cameras`            | `src/features/cameras/`            | Camera grid page, sortable tiles, camera order persistence, snapshot proxy                         |
+| `home`               | `src/features/home/`               | Home/landing page component                                                                        |
+| `push-notifications` | `src/features/push-notifications/` | MQTT subscriber, event batcher, push dispatcher, SQLite push store                                 |
+| `settings`           | `src/features/settings/`           | Settings page, notification preferences UI, `usePushSubscription` hook                             |
+| `shared`             | `src/features/shared/`             | Frigate API client + cache + types + validation, session, SQLite driver, shared components + hooks |
+| `shell`              | `src/features/shell/`              | App header, theme toggle, service worker registration                                              |
 
 ## Route Structure
 
@@ -168,6 +168,7 @@ bun run test -- validation     # Filter by filename substring
 ```
 
 The Vitest config in `vite.config.ts` defines two projects:
+
 - `unit` — jsdom environment, matches `src/**/*.test.ts` and `src/**/*.test.tsx`
 - `storybook` — Playwright Chromium, matches `*.stories.tsx` files via `@storybook/addon-vitest`
 
@@ -245,7 +246,9 @@ expect(flush).toHaveBeenCalledWith('front_porch', [makeEvent()])
 
 ```ts
 const originalFetch = globalThis.fetch
-afterEach(() => { globalThis.fetch = originalFetch })
+afterEach(() => {
+  globalThis.fetch = originalFetch
+})
 
 globalThis.fetch = vi.fn().mockResolvedValue({
   ok: true,
@@ -258,7 +261,9 @@ globalThis.fetch = vi.fn().mockResolvedValue({
 
 ```ts
 const original = process.env.FRIGATE_URL
-beforeEach(() => { process.env.FRIGATE_URL = 'http://frigate.local:5000' })
+beforeEach(() => {
+  process.env.FRIGATE_URL = 'http://frigate.local:5000'
+})
 afterEach(() => {
   if (original === undefined) delete process.env.FRIGATE_URL
   else process.env.FRIGATE_URL = original
@@ -268,8 +273,16 @@ afterEach(() => {
 **Factory helpers** — use a `make*` helper to create default test fixtures, then spread overrides:
 
 ```ts
-function makeEvent(overrides: Partial<FrigateEventInfo> = {}): FrigateEventInfo {
-  return { id: '1234.5678-abc', camera: 'front_porch', label: 'person', startTime: 1713182400, ...overrides }
+function makeEvent(
+  overrides: Partial<FrigateEventInfo> = {},
+): FrigateEventInfo {
+  return {
+    id: '1234.5678-abc',
+    camera: 'front_porch',
+    label: 'person',
+    startTime: 1713182400,
+    ...overrides,
+  }
 }
 ```
 
@@ -301,19 +314,19 @@ Security-critical validators like `isValidCameraName` and `isValidEventId` must 
 
 ## Environment Variables
 
-| Variable | Required | Purpose |
-|----------|----------|---------|
-| `SESSION_SECRET` | Yes | Cookie encryption key (≥32 chars) |
-| `GOOGLE_CLIENT_ID` | Yes | Google OAuth client ID |
-| `GOOGLE_CLIENT_SECRET` | Yes | Google OAuth client secret |
-| `FRIGATE_URL` | Yes (unless mock) | Base URL of Frigate instance (e.g. `http://frigate:5000`) |
-| `FRIGATE_MOCK` | No | Set to `true` to use mock Frigate client |
-| `MQTT_URL` | No | MQTT broker URL (e.g. `mqtt://rabbitmq:1883`); push/cache-invalidation disabled if unset |
-| `VAPID_PUBLIC_KEY` | No | Web Push VAPID public key; push disabled if any VAPID var missing |
-| `VAPID_PRIVATE_KEY` | No | Web Push VAPID private key |
-| `VAPID_SUBJECT` | No | Push contact (`mailto:...`); push disabled if any VAPID var missing |
-| `APP_URL` | No | Public app URL for OAuth redirect; falls back to request origin in dev |
-| `EVENT_BATCH_WINDOW_MS` | No | Push notification batching window (default 30000ms) |
+| Variable                | Required          | Purpose                                                                                  |
+| ----------------------- | ----------------- | ---------------------------------------------------------------------------------------- |
+| `SESSION_SECRET`        | Yes               | Cookie encryption key (≥32 chars)                                                        |
+| `GOOGLE_CLIENT_ID`      | Yes               | Google OAuth client ID                                                                   |
+| `GOOGLE_CLIENT_SECRET`  | Yes               | Google OAuth client secret                                                               |
+| `FRIGATE_URL`           | Yes (unless mock) | Base URL of Frigate instance (e.g. `http://frigate:5000`)                                |
+| `FRIGATE_MOCK`          | No                | Set to `true` to use mock Frigate client                                                 |
+| `MQTT_URL`              | No                | MQTT broker URL (e.g. `mqtt://rabbitmq:1883`); push/cache-invalidation disabled if unset |
+| `VAPID_PUBLIC_KEY`      | No                | Web Push VAPID public key; push disabled if any VAPID var missing                        |
+| `VAPID_PRIVATE_KEY`     | No                | Web Push VAPID private key                                                               |
+| `VAPID_SUBJECT`         | No                | Push contact (`mailto:...`); push disabled if any VAPID var missing                      |
+| `APP_URL`               | No                | Public app URL for OAuth redirect; falls back to request origin in dev                   |
+| `EVENT_BATCH_WINDOW_MS` | No                | Push notification batching window (default 30000ms)                                      |
 
 Generate VAPID keys with: `npx web-push generate-vapid-keys`
 
