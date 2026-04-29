@@ -56,7 +56,6 @@ services:
       timeout: 5s
       retries: 5
 
-
   prometheus:
     image: prom/prometheus:v2.54.1
     restart: unless-stopped
