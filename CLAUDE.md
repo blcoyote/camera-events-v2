@@ -1,14 +1,45 @@
 # Project Instructions
 
+## Project Overview
+
+Camera Events v2 is a self-hosted PWA for browsing and monitoring [Frigate NVR](https://frigate.video/) events. It receives live motion events from Frigate over MQTT, batches them per camera, and delivers Web Push notifications to subscribed iOS/Android/desktop devices. Built with TanStack Start (SSR), React 19, Tailwind CSS v4, and deployed via Bun.
+
+**Tech stack:** TanStack Start + TanStack Router (file-based, SSR) · React 19 · Vite 8 · Tailwind CSS v4 · better-sqlite3 / bun:sqlite · MQTT (RabbitMQ) · Google OAuth via Arctic · web-push (VAPID) · Serwist service worker · Vitest + Playwright + Storybook
+
+**Package manager:** Bun (enforced via `preinstall: only-allow bun`). Use `bun` for all installs and script runs.
+
+## Path Aliases
+
+- `#/*` maps to `./src/*` (defined in `package.json` `imports` and `tsconfig.json` `paths`).
+- Always use `#/features/...` for cross-directory imports within `src/`.
+
+## Development Commands
+
+```bash
+bun install
+bun run dev          # Dev server on :3000 (auto-regenerates routeTree)
+bun run build        # Production build
+bun run preview      # Serve production build locally
+bun run test         # Vitest (unit + Storybook browser tests)
+bun run lint         # ESLint
+bun run format       # Prettier check
+bun run check        # Prettier write + ESLint --fix
+bun run storybook    # Component explorer on :6006
+bun run knip         # Unused-code report
+```
+
 ## Tailwind CSS
 
 - Always use Tailwind CSS canonical class names instead of arbitrary value syntax when a built-in utility exists. For example, use `text-(--sea-ink)` instead of `text-[var(--sea-ink)]`, `min-h-11` instead of `min-h-[44px]`, `rounded-4xl` instead of `rounded-[2rem]`, `shrink-0` instead of `flex-shrink-0`.
+- Design tokens are defined in `src/styles.css` under `@theme` and `:root`. The palette uses CSS custom properties: `--sea-ink`, `--sea-ink-soft`, `--lagoon`, `--lagoon-deep`, `--palm`, `--sand`, `--foam`, `--surface`, `--surface-strong`, `--line`, `--bg-base`, `--header-bg`, etc. Dark mode swaps are applied via `[data-theme='dark']` and `@media (prefers-color-scheme: dark)`.
+- Fonts: `Manrope` (body, sans-serif), `Fraunces` (display headings).
+- The theme is stored in `localStorage` under the key `'theme'` (`'light'`, `'dark'`, or `'auto'`). A blocking inline script in `__root.tsx` sets the `data-theme` attribute and class before paint to prevent FOUC.
 
 ## Route Generation
 
 - **NEVER run `npx tsr generate`**. The `tsr` npm package is an unrelated unused-code removal tool that will **delete** test files, story files, Storybook config, and `vite.config.ts`. Running it with `--write` is destructive and irreversible without git.
-- Route tree generation (`src/routeTree.gen.ts`) is handled automatically by the `tanstackStart()` Vite plugin during `pnpm dev` and `pnpm build`. No separate CLI step is needed.
-- If you add a new route file under `src/routes/`, start the dev server (`pnpm dev`) to trigger route tree regeneration.
+- Route tree generation (`src/routeTree.gen.ts`) is handled automatically by the `tanstackStart()` Vite plugin during `bun run dev` and `bun run build`. No separate CLI step is needed.
+- If you add a new route file under `src/routes/`, start the dev server (`bun run dev`) to trigger route tree regeneration.
 
 ## Feature-Sliced Architecture
 
@@ -17,18 +48,96 @@
 - `src/features/shared/` is the only place for code that is used by multiple features. Shared code should be genuinely reusable, not a dumping ground for convenience.
 - When creating a new feature, give it its own folder under `src/features/` with everything it needs. Prefer duplication over coupling between features.
 
+### Feature Map
+
+| Feature | Location | What it owns |
+|---------|----------|--------------|
+| `auth` | `src/features/auth/` | Google OAuth flow, session helpers, `useStandaloneAuth` hook |
+| `camera-events` | `src/features/camera-events/` | Event list/detail pages, snapshot lightbox, clip/snapshot/thumbnail proxies, mock data |
+| `cameras` | `src/features/cameras/` | Camera grid page, sortable tiles, camera order persistence, snapshot proxy |
+| `home` | `src/features/home/` | Home/landing page component |
+| `push-notifications` | `src/features/push-notifications/` | MQTT subscriber, event batcher, push dispatcher, SQLite push store |
+| `settings` | `src/features/settings/` | Settings page, notification preferences UI, `usePushSubscription` hook |
+| `shared` | `src/features/shared/` | Frigate API client + cache + types + validation, session, SQLite driver, shared components + hooks |
+| `shell` | `src/features/shell/` | App header, theme toggle, service worker registration |
+
+## Route Structure
+
+```
+src/routes/
+  __root.tsx                      # Root layout: Header, ServiceWorkerRegistration, TanStack devtools
+  index.tsx                       # Landing / login page
+  _authenticated.tsx              # Auth guard layout (redirects unauthenticated users)
+  _authenticated/
+    camera-events.index.tsx       # /camera-events — paginated event list
+    camera-events.$id.tsx         # /camera-events/:id — event detail
+    cameras.tsx                   # /cameras — camera grid with drag-reorder
+    settings.tsx                  # /settings — push notification preferences
+  api/
+    auth/google.ts                # GET /api/auth/google — OAuth initiation
+    auth/google/callback.ts       # GET /api/auth/google/callback — OAuth callback
+    auth/logout.ts                # POST /api/auth/logout
+    cameras/$name/latest.ts       # GET /api/cameras/:name/latest — proxied live snapshot
+    events/$id/clip.ts            # GET /api/events/:id/clip
+    events/$id/snapshot.ts        # GET /api/events/:id/snapshot
+    events/$id/thumbnail.ts       # GET /api/events/:id/thumbnail
+    push/subscribe.ts             # POST /api/push/subscribe
+    push/unsubscribe.ts           # POST /api/push/unsubscribe
+    push/preferences.ts           # GET/POST /api/push/preferences
+    push/vapid-public-key.ts      # GET /api/push/vapid-public-key
+    push/test.ts                  # POST /api/push/test
+```
+
 ## Cross-Platform PWA
 
 - **Cross-platform support is a top priority.** This app is a PWA that must work seamlessly on both iOS (Safari standalone) and Android (Chrome), as well as desktop browsers. Never ship a feature that only works on one platform — always test and account for both iOS and Android behavior differences.
 - Every feature — including push notifications, service worker interactions, OAuth, and cookie-dependent API calls — must be implemented with cross-platform compatibility in mind.
 - When you spot a platform-specific issue or limitation (e.g. an API not supported on iOS, cookie behavior differences in standalone mode, etc.), **do not silently fix it**. Flag it to me first, explain the issue and your proposed fix, and wait for confirmation before implementing.
+- The service worker is built by `vite-plugin-sw.ts` (custom plugin) using Serwist. The SW source is `src/sw.ts`; push handler logic lives in `src/sw-push-handlers.ts`.
 
 ## Server Function Authentication
 
 - **TanStack Start `createServerFn` endpoints are directly callable via HTTP** at `/_serverFn/{hash}`. Route-level layout guards (like `_authenticated.tsx`'s `beforeLoad`) only protect client-side navigation — they do NOT protect server functions from direct HTTP access.
 - **Every `createServerFn` handler that accesses protected data MUST call `await requireSession()`** (from `#/features/shared/server/session`) as its first operation. Never rely on the route hierarchy for server-side authentication.
 - When adding a new server function inside an `_authenticated` route, always include the auth check. The function hash is discoverable in client-side JavaScript bundles, so security-through-obscurity does not apply.
-- For server functions that accept user input (e.g. via `inputValidator`), always validate the input inside the handler as well — use validators like `isValidEventId()` and `isValidCameraName()` to prevent SSRF and path traversal against the Frigate backend.
+- For server functions that accept user input (e.g. via `inputValidator`), always validate the input inside the handler as well — use validators like `isValidEventId()` and `isValidCameraName()` (from `#/features/shared/server/frigate/validation`) to prevent SSRF and path traversal against the Frigate backend.
+
+## Authentication
+
+- **Google OAuth via Arctic.** The flow is: `GET /api/auth/google` → Google → `GET /api/auth/google/callback` → set encrypted session cookie → redirect.
+- OAuth state (PKCE `codeVerifier` + `state` + optional `returnTo`) is encoded as base64 JSON in the `oauth_state` cookie (5-minute TTL, `httpOnly`, `sameSite: lax`).
+- `returnTo` paths are validated by `sanitizeReturnTo()` — only same-origin relative paths are accepted; absolute URLs, protocol-relative, and backslash paths are rejected.
+- Session cookie name: `google-sso`; 7-day TTL; `httpOnly`, `secure` in production, `sameSite: lax`.
+- `SESSION_SECRET` env var must be ≥ 32 characters. It is validated at call time (not module scope) to avoid env-access during SSR module init.
+- `requireSession()` → returns the user's Google `sub` ID or throws `'Unauthorized'`.
+- `getCurrentUserFn` is a server function called in `__root.tsx`'s `beforeLoad` to populate `context.user` for all routes.
+
+## Frigate Integration
+
+- All Frigate API calls go through `src/features/shared/server/frigate/client.ts`.
+- **Mock mode:** set `FRIGATE_MOCK=true` to use `mock-client.ts` which returns randomized data — no live Frigate needed.
+- **Caching:** successful JSON responses are memoized in-process by `cache.ts` (a `Map`). The cache is cleared whenever an MQTT event arrives (`frigate/events` or `frigate/reviews` topics).
+- **Input validation:** `isValidCameraName()` and `isValidEventId()` must be called before using user-supplied values in Frigate URL paths.
+- `FRIGATE_URL` must be set in production (e.g. `http://frigate:5000`).
+
+## MQTT & Push Notification Pipeline
+
+1. `src/server.ts` calls `startMqttSubscriber()` at server startup.
+2. MQTT subscriber connects to `MQTT_URL` and subscribes to `frigate/events` and `frigate/reviews`.
+3. Every incoming message clears the Frigate cache.
+4. New `frigate/events` messages are parsed by `parseFrigateEvent()` and fed into `EventBatcher`.
+5. `EventBatcher` accumulates events per camera and flushes after `EVENT_BATCH_WINDOW_MS` (default 30s).
+6. On flush, `notifyUsersForCamera()` loads all push subscriptions from SQLite, checks per-user camera preferences, and dispatches Web Push via `web-push`.
+7. Push subscriptions and per-camera opt-out preferences are stored in `data/camera-events.db` (SQLite, WAL mode).
+8. Push is silently disabled if `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, or `VAPID_SUBJECT` are missing.
+
+## SQLite (Runtime-Portable Driver)
+
+- `src/features/shared/server/sqlite/index.ts` exposes a single `openSqlite(path)` function that branches at runtime: **Node → `better-sqlite3`** (used by Vitest), **Bun → `bun:sqlite`** (production).
+- Both branches expose the same `SqliteDatabase` interface (`prepare`, `exec`, `pragmaRead`, `pragmaWrite`, `close`).
+- `better-sqlite3` is a devDependency (not bundled into the production Bun image).
+- Do not run a Node dev process and a Bun production server concurrently against the same DB file — WAL/SHM file ownership differs between drivers.
+- Default DB path: `data/camera-events.db` (relative to the working directory).
 
 ## SSR & Hydration
 
@@ -36,3 +145,178 @@
 - Never read browser-only globals (`window`, `navigator`, `document`, `Notification`, `PushManager`, `localStorage`, etc.) during render. These don't exist on the server and will cause hydration mismatches.
 - Defer browser-only checks to `useEffect`. Use safe defaults (e.g. `false`, `'default'`, `null`) as initial state so the server and client agree on the first paint.
 - When a component must branch on client-only state, render a neutral placeholder until a `useEffect` confirms the client has mounted, rather than conditionally rendering different content that the server can't predict.
+- Use `useIsomorphicLayoutEffect` (alias `useLayoutEffect` on client, `useEffect` on server) for DOM-measurement effects — see `useCameraOrder.ts` for the pattern.
+
+## Test-Driven Development
+
+All new behaviour must be written test-first. Follow the **Red → Green → Refactor** cycle strictly:
+
+1. **RED** — Write a failing test that describes the behaviour you intend to add. Run `bun run test` and confirm it fails for the right reason (assertion failure, not a syntax error or import crash).
+2. **GREEN** — Write the minimum production code to make that test pass. No extra logic, no "while I'm here" cleanup.
+3. **REFACTOR** — With the tests green, improve the design: rename, extract, simplify. Re-run tests after every change to stay green.
+
+Never write production code before a failing test exists. Never skip the refactor step.
+
+### Running Tests
+
+```bash
+bun run test                   # Run all tests once (unit + Storybook browser)
+bun run test -- --watch        # Watch mode — re-runs on file save
+bun run test -- --reporter=verbose   # Verbose per-test output
+bun run test -- src/features/cameras # Run a single feature's tests
+bun run test -- validation     # Filter by filename substring
+```
+
+The Vitest config in `vite.config.ts` defines two projects:
+- `unit` — jsdom environment, matches `src/**/*.test.ts` and `src/**/*.test.tsx`
+- `storybook` — Playwright Chromium, matches `*.stories.tsx` files via `@storybook/addon-vitest`
+
+### Test File Placement
+
+Every test file lives **next to the source file it tests**, named `<source>.test.ts` or `<source>.test.tsx`. No separate `__tests__/` directories.
+
+```
+src/features/cameras/utils/mergeCameraOrder.ts
+src/features/cameras/utils/mergeCameraOrder.test.ts   ← lives here
+```
+
+### Imports
+
+```ts
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+```
+
+Do not import from `@jest/*`. Do not use globals — always import `describe`, `it`, `expect`, etc. explicitly.
+
+### Structure: One `describe` per exported symbol
+
+Each top-level `describe` block covers one exported function or class. Nest `describe` blocks for logical sub-groups (e.g. error paths, edge cases). Keep each `it` focused on a single observable outcome.
+
+```ts
+describe('isValidCameraName', () => {
+  it('returns true for alphanumeric names', () => { ... })
+  it('returns false for path traversal with ../', () => { ... })
+  it('returns false for names containing spaces', () => { ... })
+})
+```
+
+### What to Test at Each Layer
+
+**Pure functions (utils, validators, parsers)** — test exhaustively. These are the easiest to TDD: write the test, watch it fail, implement the regex/logic, go green. See `validation.test.ts`, `mergeCameraOrder.test.ts`.
+
+**Pure component logic** — extract rendering-decision functions (e.g. `getCamerasPageState`, `getAlertMessage`) from the component and test them in isolation with plain `expect` calls. No render needed. See `CamerasPage.test.tsx`, `AlertBanner.test.ts`.
+
+**React hooks** — test via `renderHook` from `@testing-library/react` when the hook has meaningful state transitions. For hooks that only accept option shapes or export constants, a structural type-level test is sufficient (see `usePullToRefresh.test.ts`).
+
+**React components** — render with `@testing-library/react`, query by accessible role/label, assert on user-visible output. Use `vi.mock()` to stub child components that own their own tests. See `CamerasPage.test.tsx`.
+
+**Server-side logic (proxies, MQTT handlers, push pipeline)** — stub `globalThis.fetch` and `process.env` directly. Restore after each test with `beforeEach`/`afterEach`. See `clip-proxy.test.ts`, `mqtt.test.ts`.
+
+**Async behaviour with timers** — use `vi.useFakeTimers()` / `vi.advanceTimersByTime()`. Always call `vi.useRealTimers()` in `afterEach`. See `event-batcher.test.ts`.
+
+**Storybook stories** — `*.stories.tsx` files serve as component integration tests run in a real browser via Playwright. Write a story for every significant component state. The a11y addon checks WCAG compliance automatically on each story.
+
+### Mocking Patterns
+
+**Module mock** — stub an entire module for the whole file:
+
+```ts
+vi.mock('#/features/cameras/hooks/useCameraOrder', () => ({
+  useCameraOrder: (cameras: string[]) => ({
+    visibleOrder: cameras,
+    setOrder: vi.fn(),
+    saveError: null,
+    dismissError: vi.fn(),
+  }),
+}))
+```
+
+**Spy / stub** — mock a single function and assert on calls:
+
+```ts
+const flush = vi.fn()
+batcher.add(makeEvent())
+vi.advanceTimersByTime(30_000)
+expect(flush).toHaveBeenCalledOnce()
+expect(flush).toHaveBeenCalledWith('front_porch', [makeEvent()])
+```
+
+**Fetch mock** — stub `globalThis.fetch` per test, restore in `afterEach`:
+
+```ts
+const originalFetch = globalThis.fetch
+afterEach(() => { globalThis.fetch = originalFetch })
+
+globalThis.fetch = vi.fn().mockResolvedValue({
+  ok: true,
+  status: 200,
+  arrayBuffer: () => Promise.resolve(new ArrayBuffer(4)),
+})
+```
+
+**Environment variables** — mutate `process.env` directly, restore in `afterEach`:
+
+```ts
+const original = process.env.FRIGATE_URL
+beforeEach(() => { process.env.FRIGATE_URL = 'http://frigate.local:5000' })
+afterEach(() => {
+  if (original === undefined) delete process.env.FRIGATE_URL
+  else process.env.FRIGATE_URL = original
+})
+```
+
+**Factory helpers** — use a `make*` helper to create default test fixtures, then spread overrides:
+
+```ts
+function makeEvent(overrides: Partial<FrigateEventInfo> = {}): FrigateEventInfo {
+  return { id: '1234.5678-abc', camera: 'front_porch', label: 'person', startTime: 1713182400, ...overrides }
+}
+```
+
+### Special Test Variants
+
+- `*.driver-contract.test.ts` — validate that the `SqliteDatabase` abstraction behaves identically under both `better-sqlite3` (Node) and `bun:sqlite` (Bun). These tests create a real on-disk database in a temp path and must be self-contained.
+- `*.bun-runtime.test.ts` — skipped when running under Node (use `it.skipIf(!process.versions.bun, ...)`). Tests the Bun production code path.
+- `*.bun-branch.test.ts` — tests the Bun branch via module mocking so they can run under Node in CI.
+- `*.integration.test.ts` — hits real external dependencies (e.g. a live MQTT broker). Not part of `bun run test`; run manually.
+
+### TDD for Server Functions
+
+When adding a `createServerFn` handler:
+
+1. **RED** — write a test that calls the handler function directly (not via HTTP), asserts the correct return value or thrown error, and expects `requireSession()` to throw when called without a valid session.
+2. **GREEN** — implement the handler with `await requireSession()` as the first line.
+3. **REFACTOR** — extract any complex logic into a pure helper and test that helper independently.
+
+### TDD for Validators / Input Guards
+
+Security-critical validators like `isValidCameraName` and `isValidEventId` must have exhaustive test coverage before any production code reads from them. Write tests for valid inputs, path-traversal payloads, null bytes, control characters, empty strings, and maximum-length strings first.
+
+## Deployment
+
+- **Runtime:** Bun (Nitro preset `bun`). Production entry: `bun run .output/server`.
+- **Docker:** multi-stage `Dockerfile`. `docker-compose.yml` wires the app, RabbitMQ (MQTT + management plugins), and Traefik for TLS.
+- **Persistent volumes:** `ce-v2-data` (SQLite DB), `rabbitmq-data` (broker state).
+- Security headers (HSTS, X-Content-Type-Options, X-Frame-Options, Referrer-Policy, Permissions-Policy, COOP/CORP) are applied via Traefik middleware labels.
+
+## Environment Variables
+
+| Variable | Required | Purpose |
+|----------|----------|---------|
+| `SESSION_SECRET` | Yes | Cookie encryption key (≥32 chars) |
+| `GOOGLE_CLIENT_ID` | Yes | Google OAuth client ID |
+| `GOOGLE_CLIENT_SECRET` | Yes | Google OAuth client secret |
+| `FRIGATE_URL` | Yes (unless mock) | Base URL of Frigate instance (e.g. `http://frigate:5000`) |
+| `FRIGATE_MOCK` | No | Set to `true` to use mock Frigate client |
+| `MQTT_URL` | No | MQTT broker URL (e.g. `mqtt://rabbitmq:1883`); push/cache-invalidation disabled if unset |
+| `VAPID_PUBLIC_KEY` | No | Web Push VAPID public key; push disabled if any VAPID var missing |
+| `VAPID_PRIVATE_KEY` | No | Web Push VAPID private key |
+| `VAPID_SUBJECT` | No | Push contact (`mailto:...`); push disabled if any VAPID var missing |
+| `APP_URL` | No | Public app URL for OAuth redirect; falls back to request origin in dev |
+| `EVENT_BATCH_WINDOW_MS` | No | Push notification batching window (default 30000ms) |
+
+Generate VAPID keys with: `npx web-push generate-vapid-keys`
+
+## Design Docs
+
+Feature design documents live in `docs/specs/`. Each significant feature has a spec documenting problem statement, approach, alternatives, and trade-offs. Review the relevant spec before modifying a feature. Current specs include: `cameras-page`, `cross-platform-pwa-fixes`, `event-clip-snapshot-download`, `event-count-setting`, `event-request-cache`, `feature-sliced-architecture`, `focus-refetch`, `frigate-api-client`, `google-sso-login`, `mqtt-cache-invalidation`, `mqtt-push-notifications`, `pull-to-refresh`, `rearrange-cameras-on-feed`, `web-push-notifications`, and more.
