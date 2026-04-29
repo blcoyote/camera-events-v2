@@ -136,9 +136,10 @@ export async function createPushStore(
     isCameraEnabledForUser(userId, camera) {
       const row = stmts.isCameraEnabled.get(userId, camera) as
         | { enabled: number }
+        | null
         | undefined
       // No row = default enabled (opt-out model)
-      return row === undefined || row.enabled === 1
+      return row == null || row.enabled === 1
     },
 
     setPreference(userId, camera, enabled) {
