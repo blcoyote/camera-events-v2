@@ -56,38 +56,6 @@ services:
       timeout: 5s
       retries: 5
 
-  prometheus:
-    image: prom/prometheus:v2.54.1
-    restart: unless-stopped
-    volumes:
-      - prometheus-data:/prometheus
-      - ./observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--storage.tsdb.retention.time=30d'
-    depends_on:
-      - app
-
-  grafana:
-    image: grafana/grafana-oss:11.3.1
-    restart: unless-stopped
-    ports:
-      - '127.0.0.1:3001:3000'
-    environment:
-      GF_AUTH_ANONYMOUS_ENABLED: 'true'
-      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
-      GF_AUTH_DISABLE_LOGIN_FORM: 'true'
-    volumes:
-      - grafana-data:/var/lib/grafana
-      - ./observability/grafana/provisioning/datasources/prometheus.yml:/etc/grafana/provisioning/datasources/prometheus.yml:ro
-      - ./observability/grafana/provisioning/dashboards/provider.yml:/etc/grafana/provisioning/dashboards/provider.yml:ro
-      - ./observability/grafana/dashboards/camera-events.json:/etc/grafana/dashboards/camera-events.json:ro
-    depends_on:
-      - prometheus
-
 volumes:
   ce-v2-data:
   rabbitmq-data:
-  prometheus-data:
-  grafana-data:
