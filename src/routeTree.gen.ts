@@ -12,8 +12,6 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiTestAuthRouteImport } from './routes/api/test-auth'
-import { Route as ApiMetricsRouteImport } from './routes/api/metrics'
-import { Route as ApiHealthRouteImport } from './routes/api/health'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedCamerasRouteImport } from './routes/_authenticated/cameras'
 import { Route as AuthenticatedCameraEventsIndexRouteImport } from './routes/_authenticated/camera-events.index'
@@ -43,16 +41,6 @@ const IndexRoute = IndexRouteImport.update({
 const ApiTestAuthRoute = ApiTestAuthRouteImport.update({
   id: '/api/test-auth',
   path: '/api/test-auth',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiMetricsRoute = ApiMetricsRouteImport.update({
-  id: '/api/metrics',
-  path: '/api/metrics',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiHealthRoute = ApiHealthRouteImport.update({
-  id: '/api/health',
-  path: '/api/health',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
@@ -142,8 +130,6 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/cameras': typeof AuthenticatedCamerasRoute
   '/settings': typeof AuthenticatedSettingsRoute
-  '/api/health': typeof ApiHealthRoute
-  '/api/metrics': typeof ApiMetricsRoute
   '/api/test-auth': typeof ApiTestAuthRoute
   '/camera-events/$id': typeof AuthenticatedCameraEventsIdRoute
   '/api/auth/google': typeof ApiAuthGoogleRouteWithChildren
@@ -164,8 +150,6 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/cameras': typeof AuthenticatedCamerasRoute
   '/settings': typeof AuthenticatedSettingsRoute
-  '/api/health': typeof ApiHealthRoute
-  '/api/metrics': typeof ApiMetricsRoute
   '/api/test-auth': typeof ApiTestAuthRoute
   '/camera-events/$id': typeof AuthenticatedCameraEventsIdRoute
   '/api/auth/google': typeof ApiAuthGoogleRouteWithChildren
@@ -188,8 +172,6 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/_authenticated/cameras': typeof AuthenticatedCamerasRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
-  '/api/health': typeof ApiHealthRoute
-  '/api/metrics': typeof ApiMetricsRoute
   '/api/test-auth': typeof ApiTestAuthRoute
   '/_authenticated/camera-events/$id': typeof AuthenticatedCameraEventsIdRoute
   '/api/auth/google': typeof ApiAuthGoogleRouteWithChildren
@@ -212,8 +194,6 @@ export interface FileRouteTypes {
     | '/'
     | '/cameras'
     | '/settings'
-    | '/api/health'
-    | '/api/metrics'
     | '/api/test-auth'
     | '/camera-events/$id'
     | '/api/auth/google'
@@ -234,8 +214,6 @@ export interface FileRouteTypes {
     | '/'
     | '/cameras'
     | '/settings'
-    | '/api/health'
-    | '/api/metrics'
     | '/api/test-auth'
     | '/camera-events/$id'
     | '/api/auth/google'
@@ -257,8 +235,6 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/_authenticated/cameras'
     | '/_authenticated/settings'
-    | '/api/health'
-    | '/api/metrics'
     | '/api/test-auth'
     | '/_authenticated/camera-events/$id'
     | '/api/auth/google'
@@ -279,8 +255,6 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
-  ApiHealthRoute: typeof ApiHealthRoute
-  ApiMetricsRoute: typeof ApiMetricsRoute
   ApiTestAuthRoute: typeof ApiTestAuthRoute
   ApiAuthGoogleRoute: typeof ApiAuthGoogleRouteWithChildren
   ApiAuthLogoutRoute: typeof ApiAuthLogoutRoute
@@ -316,20 +290,6 @@ declare module '@tanstack/react-router' {
       path: '/api/test-auth'
       fullPath: '/api/test-auth'
       preLoaderRoute: typeof ApiTestAuthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/metrics': {
-      id: '/api/metrics'
-      path: '/api/metrics'
-      fullPath: '/api/metrics'
-      preLoaderRoute: typeof ApiMetricsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/health': {
-      id: '/api/health'
-      path: '/api/health'
-      fullPath: '/api/health'
-      preLoaderRoute: typeof ApiHealthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/settings': {
@@ -480,8 +440,6 @@ const ApiAuthGoogleRouteWithChildren = ApiAuthGoogleRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
-  ApiHealthRoute: ApiHealthRoute,
-  ApiMetricsRoute: ApiMetricsRoute,
   ApiTestAuthRoute: ApiTestAuthRoute,
   ApiAuthGoogleRoute: ApiAuthGoogleRouteWithChildren,
   ApiAuthLogoutRoute: ApiAuthLogoutRoute,

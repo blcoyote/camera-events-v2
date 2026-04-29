@@ -23,7 +23,6 @@ export default [
       'prettier.config.js',
       'storybook-static',
       'public/sw.js',
-      '.output',
     ],
   },
   ...storybook.configs['flat/recommended'],
