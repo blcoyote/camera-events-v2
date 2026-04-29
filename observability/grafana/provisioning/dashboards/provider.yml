@@ -1,9 +1,0 @@
-apiVersion: 1
-
-providers:
-  - name: camera-events
-    type: file
-    disableDeletion: true
-    updateIntervalSeconds: 30
-    options:
-      path: /etc/grafana/dashboards
