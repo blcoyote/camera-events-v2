@@ -10,6 +10,7 @@ import type { FrigateEventInfo } from './event-batcher'
 import { sendPushNotification, isPushEnabled } from './push'
 import type { PushPayload } from './push'
 import { getPushStore } from './push-store'
+import { pushDispatched } from '#/features/shared/server/metrics'
 
 /** Format a camera name for display: replace underscores, title-case words. */
 export function formatCameraName(name: string): string {
@@ -99,11 +100,13 @@ export async function notifyUsersForCamera(
           },
           payload,
         )
+        pushDispatched.inc({ camera, status: 'success' })
       } catch (err) {
         console.error(
           `[push-notify] Failed to send to ${sub.endpoint}:`,
           err instanceof Error ? err.message : err,
         )
+        pushDispatched.inc({ camera, status: 'failed' })
       }
     }
   }

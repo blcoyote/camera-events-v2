@@ -1,6 +1,7 @@
 import mqtt from 'mqtt'
 import type { MqttClient } from 'mqtt'
 import { clearFrigateCache } from '#/features/shared/server/frigate/cache'
+import { mqttEventsReceived } from '#/features/shared/server/metrics'
 import { EventBatcher } from './event-batcher'
 import type { FrigateEventInfo } from './event-batcher'
 import { notifyUsersForCamera } from './push-notify'
@@ -65,6 +66,7 @@ export function onFrigateMessage(topic: string, payload: Buffer): void {
       console.log(
         `[mqtt] New event: ${event.label} on ${event.camera} (${event.id})`,
       )
+      mqttEventsReceived.inc({ camera: event.camera })
       eventBatcher.add(event)
     }
   }

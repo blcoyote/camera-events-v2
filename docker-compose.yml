@@ -35,6 +35,13 @@ services:
       - traefik.http.middlewares.ce2-sec.headers.customResponseHeaders.Cross-Origin-Opener-Policy=same-origin
       - traefik.http.middlewares.ce2-sec.headers.customResponseHeaders.Cross-Origin-Resource-Policy=same-origin
       - "traefik.http.middlewares.ce2-sec.headers.customResponseHeaders.Content-Security-Policy=default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://*.googleusercontent.com; connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com https://*.googleusercontent.com; worker-src 'self' blob:; manifest-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests"
+      # Block /api/metrics from Traefik — Prometheus scrapes directly over the Docker network
+      - 'traefik.http.routers.ce2-metrics.rule=Host(`$DNS_NAME`) && PathPrefix(`/api/metrics`)'
+      - traefik.http.routers.ce2-metrics.tls=true
+      - traefik.http.routers.ce2-metrics.tls.certresolver=lets-encrypt
+      - traefik.http.routers.ce2-metrics.priority=100
+      - traefik.http.routers.ce2-metrics.middlewares=ce2-metrics-deny@docker
+      - traefik.http.middlewares.ce2-metrics-deny.ipallowlist.sourcerange=127.0.0.1/32
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -43,8 +50,8 @@ services:
     build: ./rabbitmq
     hostname: rabbitmq
     ports:
-      - '1883:1883'
-      - '15672:15672'
+      - '127.0.0.1:1883:1883'
+      - '127.0.0.1:15672:15672'
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS}
@@ -56,6 +63,37 @@ services:
       timeout: 5s
       retries: 5
 
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    restart: unless-stopped
+    volumes:
+      - ./observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+    depends_on:
+      - app
+
+  grafana:
+    image: grafana/grafana-oss:11.3.1
+    restart: unless-stopped
+    ports:
+      - '127.0.0.1:3001:3000'
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: 'true'
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      GF_AUTH_DISABLE_LOGIN_FORM: 'true'
+    volumes:
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./observability/grafana/dashboards:/etc/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      - prometheus
+
 volumes:
   ce-v2-data:
   rabbitmq-data:
+  prometheus-data:
+  grafana-data:
