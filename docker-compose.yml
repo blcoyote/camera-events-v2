@@ -56,6 +56,197 @@ services:
       timeout: 5s
       retries: 5
 
+
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    restart: unless-stopped
+    volumes:
+      - prometheus-data:/prometheus
+    configs:
+      - source: prometheus_config
+        target: /etc/prometheus/prometheus.yml
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+    depends_on:
+      - app
+
+  grafana:
+    image: grafana/grafana-oss:11.3.1
+    restart: unless-stopped
+    ports:
+      - '127.0.0.1:3001:3000'
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: 'true'
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      GF_AUTH_DISABLE_LOGIN_FORM: 'true'
+    volumes:
+      - grafana-data:/var/lib/grafana
+    configs:
+      - source: grafana_datasources
+        target: /etc/grafana/provisioning/datasources/prometheus.yml
+      - source: grafana_dashboard_provider
+        target: /etc/grafana/provisioning/dashboards/provider.yml
+      - source: grafana_dashboard
+        target: /etc/grafana/dashboards/camera-events.json
+    depends_on:
+      - prometheus
+
 volumes:
   ce-v2-data:
   rabbitmq-data:
+  prometheus-data:
+  grafana-data:
+
+configs:
+  prometheus_config:
+    content: |
+      global:
+        scrape_interval: 15s
+        evaluation_interval: 15s
+
+      scrape_configs:
+        - job_name: camera-events
+          static_configs:
+            - targets: ['app:3000']
+          metrics_path: /api/metrics
+
+  grafana_datasources:
+    content: |
+      apiVersion: 1
+
+      datasources:
+        - name: Prometheus
+          type: prometheus
+          access: proxy
+          url: http://prometheus:9090
+          isDefault: true
+          editable: false
+
+  grafana_dashboard_provider:
+    content: |
+      apiVersion: 1
+
+      providers:
+        - name: camera-events
+          type: file
+          disableDeletion: true
+          updateIntervalSeconds: 30
+          options:
+            path: /etc/grafana/dashboards
+
+  grafana_dashboard:
+    content: |
+      {
+        "title": "Camera Events",
+        "uid": "camera-events",
+        "schemaVersion": 38,
+        "version": 2,
+        "refresh": "30s",
+        "time": { "from": "now-1h", "to": "now" },
+        "templating": {
+          "list": [
+            {
+              "current": {},
+              "hide": 0,
+              "includeAll": false,
+              "label": "Data Source",
+              "multi": false,
+              "name": "datasource",
+              "options": [],
+              "query": "prometheus",
+              "refresh": 1,
+              "type": "datasource"
+            }
+          ]
+        },
+        "panels": [
+          {
+            "id": 1,
+            "title": "Push Notifications \u2014 Success Rate",
+            "type": "timeseries",
+            "datasource": { "type": "prometheus", "uid": "$${datasource}" },
+            "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
+            "targets": [
+              {
+                "datasource": { "type": "prometheus", "uid": "$${datasource}" },
+                "expr": "rate(push_dispatched_total{status=\"success\"}[5m])",
+                "legendFormat": "{{camera}} success"
+              },
+              {
+                "datasource": { "type": "prometheus", "uid": "$${datasource}" },
+                "expr": "rate(push_dispatched_total{status=\"failed\"}[5m])",
+                "legendFormat": "{{camera}} failed"
+              }
+            ]
+          },
+          {
+            "id": 2,
+            "title": "MQTT Events Received",
+            "type": "timeseries",
+            "datasource": { "type": "prometheus", "uid": "$${datasource}" },
+            "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
+            "targets": [
+              {
+                "datasource": { "type": "prometheus", "uid": "$${datasource}" },
+                "expr": "rate(mqtt_events_received_total[5m])",
+                "legendFormat": "{{camera}}"
+              }
+            ]
+          },
+          {
+            "id": 3,
+            "title": "HTTP Request Duration (p50 / p95 / p99)",
+            "type": "timeseries",
+            "datasource": { "type": "prometheus", "uid": "$${datasource}" },
+            "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
+            "targets": [
+              {
+                "datasource": { "type": "prometheus", "uid": "$${datasource}" },
+                "expr": "histogram_quantile(0.50, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, route))",
+                "legendFormat": "p50 {{route}}"
+              },
+              {
+                "datasource": { "type": "prometheus", "uid": "$${datasource}" },
+                "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, route))",
+                "legendFormat": "p95 {{route}}"
+              },
+              {
+                "datasource": { "type": "prometheus", "uid": "$${datasource}" },
+                "expr": "histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, route))",
+                "legendFormat": "p99 {{route}}"
+              }
+            ]
+          },
+          {
+            "id": 4,
+            "title": "Process Uptime",
+            "type": "stat",
+            "datasource": { "type": "prometheus", "uid": "$${datasource}" },
+            "gridPos": { "x": 12, "y": 8, "w": 6, "h": 8 },
+            "options": { "reduceOptions": { "calcs": ["lastNotNull"] } },
+            "targets": [
+              {
+                "datasource": { "type": "prometheus", "uid": "$${datasource}" },
+                "expr": "process_uptime_seconds",
+                "legendFormat": "uptime (s)"
+              }
+            ]
+          },
+          {
+            "id": 5,
+            "title": "HTTP Request Rate",
+            "type": "timeseries",
+            "datasource": { "type": "prometheus", "uid": "$${datasource}" },
+            "gridPos": { "x": 18, "y": 8, "w": 6, "h": 8 },
+            "targets": [
+              {
+                "datasource": { "type": "prometheus", "uid": "$${datasource}" },
+                "expr": "sum(rate(http_request_duration_seconds_count[5m])) by (status)",
+                "legendFormat": "HTTP {{status}}"
+              }
+            ]
+          }
+        ]
+      }
