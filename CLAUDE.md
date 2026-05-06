@@ -334,8 +334,8 @@ Generate VAPID keys with: `npx web-push generate-vapid-keys`
 
 Feature design documents live in `docs/specs/`. Each significant feature has a spec documenting problem statement, approach, alternatives, and trade-offs. Review the relevant spec before modifying a feature. Current specs include: `cameras-page`, `cross-platform-pwa-fixes`, `event-clip-snapshot-download`, `event-count-setting`, `event-request-cache`, `feature-sliced-architecture`, `focus-refetch`, `frigate-api-client`, `google-sso-login`, `mqtt-cache-invalidation`, `mqtt-push-notifications`, `pull-to-refresh`, `rearrange-cameras-on-feed`, `web-push-notifications`, and more.
 
-
 <!-- BEGIN BEADS INTEGRATION v:1 profile:minimal hash:ca08a54f -->
+
 ## Beads Issue Tracker
 
 This project uses **bd (beads)** for issue tracking. Run `bd prime` to see full workflow context and commands.
@@ -376,6 +376,7 @@ bd close <id>         # Complete work
 7. **Hand off** - Provide context for next session
 
 **CRITICAL RULES:**
+
 - Work is NOT complete until `git push` succeeds
 - NEVER stop before pushing - that leaves work stranded locally
 - NEVER say "ready to push when you are" - YOU must push
