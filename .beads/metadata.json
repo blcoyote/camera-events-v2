@@ -1,0 +1,7 @@
+{
+  "database": "dolt",
+  "backend": "dolt",
+  "dolt_mode": "embedded",
+  "dolt_database": "camera_events_v2",
+  "project_id": "1c2d856b-42e1-4239-8f9d-02fa7a83c628"
+}
