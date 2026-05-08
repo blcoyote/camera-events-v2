@@ -19,5 +19,8 @@ export const toggleFavoriteFn = createServerFn({ method: 'POST' })
   .inputValidator((data: string) => data)
   .handler(async ({ data: eventId }) => {
     const userId = await requireSession()
+    console.log(
+      `[favorites] toggleFavorite eventId=${eventId} userId=${userId}`,
+    )
     return handleToggleFavorite(eventId, userId)
   })

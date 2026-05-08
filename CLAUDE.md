@@ -50,16 +50,16 @@ bun run knip         # Unused-code report
 
 ### Feature Map
 
-| Feature              | Location                           | What it owns                                                                                       |
-| -------------------- | ---------------------------------- | -------------------------------------------------------------------------------------------------- |
-| `auth`               | `src/features/auth/`               | Google OAuth flow, session helpers, `useStandaloneAuth` hook                                       |
-| `camera-events`      | `src/features/camera-events/`      | Event list/detail pages, snapshot lightbox, clip/snapshot/thumbnail proxies, mock data             |
-| `cameras`            | `src/features/cameras/`            | Camera grid page, sortable tiles, camera order persistence, snapshot proxy                         |
-| `home`               | `src/features/home/`               | Home/landing page component                                                                        |
-| `push-notifications` | `src/features/push-notifications/` | MQTT subscriber, event batcher, push dispatcher, SQLite push store                                 |
-| `settings`           | `src/features/settings/`           | Settings page, notification preferences UI, `usePushSubscription` hook                             |
-| `shared`             | `src/features/shared/`             | Frigate API client + cache + types + validation, session, SQLite driver, shared components + hooks |
-| `shell`              | `src/features/shell/`              | App header, theme toggle, service worker registration                                              |
+| Feature              | Location                           | What it owns                                                                                             |
+| -------------------- | ---------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `auth`               | `src/features/auth/`               | Google OAuth flow, session helpers, `useStandaloneAuth` hook                                             |
+| `camera-events`      | `src/features/camera-events/`      | Event list/detail pages, snapshot lightbox, clip/snapshot/thumbnail proxies, mock data, favorites (stub) |
+| `cameras`            | `src/features/cameras/`            | Camera grid page, sortable tiles, camera order persistence, snapshot proxy                               |
+| `home`               | `src/features/home/`               | Home/landing page component                                                                              |
+| `push-notifications` | `src/features/push-notifications/` | MQTT subscriber, event batcher, push dispatcher, SQLite push store                                       |
+| `settings`           | `src/features/settings/`           | Settings page, notification preferences UI, `usePushSubscription` hook                                   |
+| `shared`             | `src/features/shared/`             | Frigate API client + cache + types + validation, session, SQLite driver, shared components + hooks       |
+| `shell`              | `src/features/shell/`              | App header, theme toggle, service worker registration                                                    |
 
 ## Route Structure
 
