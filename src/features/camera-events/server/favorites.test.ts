@@ -8,8 +8,13 @@ import {
   handleToggleFavorite,
   handleGetFavoritedEventIds,
   handleGetIsFavorited,
+  handleGetFavoriteEvents,
 } from './favorites'
-import type { FrigateRetainClient } from '#/features/shared/server/frigate/config'
+import type {
+  FrigateRetainClient,
+  FrigateEventClient,
+} from '#/features/shared/server/frigate/config'
+import type { FrigateEvent } from '#/features/shared/server/frigate/types'
 
 const VALID_ID = '1713095000.123456-abcdef'
 const USER = 'user-google-sub-123'
@@ -224,5 +229,78 @@ describe('handleGetIsFavorited', () => {
       ok: true,
       isFavorited: false,
     })
+  })
+})
+
+function makeEvent(id: string): FrigateEvent {
+  return {
+    id,
+    label: 'person',
+    sub_label: null,
+    camera: 'front_porch',
+    start_time: 1713095000,
+    end_time: 1713095010,
+    false_positive: null,
+    zones: [],
+    thumbnail: '',
+    has_clip: false,
+    has_snapshot: false,
+    retain_indefinitely: false,
+    plus_id: null,
+    box: null,
+    top_score: null,
+    data: {
+      attributes: [],
+      box: [0, 0, 0, 0],
+      region: [0, 0, 0, 0],
+      score: 0.9,
+      top_score: 0.9,
+      type: 'object',
+    },
+  }
+}
+
+describe('handleGetFavoriteEvents', () => {
+  it('returns empty array when user has no favorites', async () => {
+    const client: FrigateEventClient = { getEvent: vi.fn() }
+    expect(await handleGetFavoriteEvents(USER, store, client)).toEqual([])
+    expect(client.getEvent).not.toHaveBeenCalled()
+  })
+
+  it('fetches all favorited events and returns them', async () => {
+    store.addFavorite(USER, 'event-aaa')
+    store.addFavorite(USER, 'event-bbb')
+    const eventA = makeEvent('event-aaa')
+    const eventB = makeEvent('event-bbb')
+    const getEvent = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: true, data: eventA })
+      .mockResolvedValueOnce({ ok: true, data: eventB })
+    const result = await handleGetFavoriteEvents(USER, store, { getEvent })
+    expect(result).toHaveLength(2)
+    expect(result).toContainEqual(eventA)
+    expect(result).toContainEqual(eventB)
+    expect(getEvent).toHaveBeenCalledTimes(2)
+  })
+
+  it('silently drops events that Frigate can no longer find', async () => {
+    store.addFavorite(USER, 'event-aaa')
+    store.addFavorite(USER, 'event-gone')
+    const eventA = makeEvent('event-aaa')
+    const getEvent = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: true, data: eventA })
+      .mockResolvedValueOnce({ ok: false, error: 'HTTP 404', status: 404 })
+    const result = await handleGetFavoriteEvents(USER, store, { getEvent })
+    expect(result).toEqual([eventA])
+  })
+
+  it('returns empty array when all fetches fail', async () => {
+    store.addFavorite(USER, 'event-gone')
+    const getEvent = vi
+      .fn()
+      .mockResolvedValue({ ok: false, error: 'HTTP 404', status: 404 })
+    const result = await handleGetFavoriteEvents(USER, store, { getEvent })
+    expect(result).toEqual([])
   })
 })

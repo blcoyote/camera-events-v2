@@ -16,6 +16,13 @@ export interface FrigateRetainClient {
   unretainEvent: (eventId: string) => Promise<FrigateResult<void>>
 }
 
+/** Minimal Frigate client interface for fetching a single event by ID. */
+export interface FrigateEventClient {
+  getEvent: (
+    eventId: string,
+  ) => Promise<FrigateResult<import('./types').FrigateEvent>>
+}
+
 /**
  * Read and validate the FRIGATE_URL environment variable.
  * Throws a descriptive error if unset or empty.

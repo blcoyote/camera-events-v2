@@ -4,12 +4,17 @@ import { isValidEventId } from '#/features/shared/server/frigate/validation'
 import {
   retainEvent,
   unretainEvent,
+  getEvent,
 } from '#/features/shared/server/frigate/client'
 import { getFavoritesStore } from './favorites-store'
 import type { FavoritesStore } from './favorites-store'
-import type { FrigateRetainClient } from '#/features/shared/server/frigate/config'
+import type {
+  FrigateRetainClient,
+  FrigateEventClient,
+} from '#/features/shared/server/frigate/config'
+import type { FrigateEvent } from '#/features/shared/server/frigate/types'
 
-export type { FrigateRetainClient }
+export type { FrigateRetainClient, FrigateEventClient }
 
 export type ToggleFavoriteResult =
   | { ok: true; isFavorited: boolean }
@@ -103,3 +108,22 @@ export const getIsFavoritedFn = createServerFn({ method: 'GET' })
     const store = await getFavoritesStore()
     return handleGetIsFavorited(eventId, userId, store)
   })
+
+export async function handleGetFavoriteEvents(
+  userId: string,
+  store: FavoritesStore,
+  frigateClient: FrigateEventClient,
+): Promise<FrigateEvent[]> {
+  const ids = store.getFavoritedEventIds(userId)
+  if (ids.length === 0) return []
+  const results = await Promise.all(ids.map((id) => frigateClient.getEvent(id)))
+  return results.filter((r) => r.ok).map((r) => r.data)
+}
+
+export const getFavoriteEventsFn = createServerFn({ method: 'GET' }).handler(
+  async () => {
+    const userId = await requireSession()
+    const store = await getFavoritesStore()
+    return handleGetFavoriteEvents(userId, store, { getEvent })
+  },
+)
