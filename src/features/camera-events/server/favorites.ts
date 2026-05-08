@@ -1,8 +1,15 @@
 import { createServerFn } from '@tanstack/react-start'
 import { requireSession } from '#/features/shared/server/session'
 import { isValidEventId } from '#/features/shared/server/frigate/validation'
+import {
+  retainEvent,
+  unretainEvent,
+} from '#/features/shared/server/frigate/client'
 import { getFavoritesStore } from './favorites-store'
 import type { FavoritesStore } from './favorites-store'
+import type { FrigateRetainClient } from '#/features/shared/server/frigate/config'
+
+export type { FrigateRetainClient }
 
 export type ToggleFavoriteResult =
   | { ok: true; isFavorited: boolean }
@@ -12,20 +19,41 @@ export type GetIsFavoritedResult =
   | { ok: true; isFavorited: boolean }
   | { ok: false; isFavorited: false; error: string }
 
-export function handleToggleFavorite(
+async function syncRetentionForEvent(
+  eventId: string,
+  isFavorited: boolean,
+  remainingCount: number,
+  frigateClient: FrigateRetainClient,
+): Promise<void> {
+  if (isFavorited) {
+    const r = await frigateClient.retainEvent(eventId)
+    if (!r.ok) console.warn(`[favorites] retainEvent failed: ${r.error}`)
+  } else if (remainingCount === 0) {
+    const r = await frigateClient.unretainEvent(eventId)
+    if (!r.ok) console.warn(`[favorites] unretainEvent failed: ${r.error}`)
+  }
+}
+
+export async function handleToggleFavorite(
   eventId: string,
   userId: string,
   store: FavoritesStore,
-): ToggleFavoriteResult {
+  frigateClient: FrigateRetainClient,
+): Promise<ToggleFavoriteResult> {
   if (!isValidEventId(eventId)) {
     return { ok: false, error: 'Invalid event ID' }
   }
-  if (store.isFavorited(userId, eventId)) {
-    store.removeFavorite(userId, eventId)
-    return { ok: true, isFavorited: false }
-  }
-  store.addFavorite(userId, eventId)
-  return { ok: true, isFavorited: true }
+  const { isFavorited, remainingCount } = store.atomicToggleFavorite(
+    userId,
+    eventId,
+  )
+  await syncRetentionForEvent(
+    eventId,
+    isFavorited,
+    remainingCount,
+    frigateClient,
+  )
+  return { ok: true, isFavorited }
 }
 
 export function handleGetFavoritedEventIds(
@@ -54,7 +82,10 @@ export const toggleFavoriteFn = createServerFn({ method: 'POST' })
       `[favorites] toggleFavorite eventId=${eventId} userId=${userId}`,
     )
     const store = await getFavoritesStore()
-    return handleToggleFavorite(eventId, userId, store)
+    return handleToggleFavorite(eventId, userId, store, {
+      retainEvent,
+      unretainEvent,
+    })
   })
 
 export const getFavoritedEventIdsFn = createServerFn({ method: 'GET' }).handler(

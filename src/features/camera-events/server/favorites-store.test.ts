@@ -111,6 +111,74 @@ describe('getFavoritedEventIds', () => {
   })
 })
 
+describe('getFavoriteCount', () => {
+  it('returns 0 when no users have favorited the event', () => {
+    expect(store.getFavoriteCount('event-abc')).toBe(0)
+  })
+
+  it('returns 1 when one user has favorited the event', () => {
+    store.addFavorite('user1', 'event-abc')
+    expect(store.getFavoriteCount('event-abc')).toBe(1)
+  })
+
+  it('returns 2 when two users have favorited the same event', () => {
+    store.addFavorite('user1', 'event-abc')
+    store.addFavorite('user2', 'event-abc')
+    expect(store.getFavoriteCount('event-abc')).toBe(2)
+  })
+
+  it('returns 0 after all users unfavorite', () => {
+    store.addFavorite('user1', 'event-abc')
+    store.addFavorite('user2', 'event-abc')
+    store.removeFavorite('user1', 'event-abc')
+    store.removeFavorite('user2', 'event-abc')
+    expect(store.getFavoriteCount('event-abc')).toBe(0)
+  })
+
+  it('does not count favorites of other events', () => {
+    store.addFavorite('user1', 'event-abc')
+    store.addFavorite('user1', 'event-xyz')
+    expect(store.getFavoriteCount('event-abc')).toBe(1)
+  })
+
+  it('decrements correctly when one of multiple users unfavorites', () => {
+    store.addFavorite('user1', 'event-abc')
+    store.addFavorite('user2', 'event-abc')
+    store.removeFavorite('user1', 'event-abc')
+    expect(store.getFavoriteCount('event-abc')).toBe(1)
+  })
+})
+
+describe('atomicToggleFavorite', () => {
+  it('adds favorite and returns isFavorited:true on first call', () => {
+    const result = store.atomicToggleFavorite('user1', 'event-abc')
+    expect(result).toEqual({ isFavorited: true, remainingCount: 1 })
+    expect(store.isFavorited('user1', 'event-abc')).toBe(true)
+  })
+
+  it('removes favorite and returns isFavorited:false when last user unfavorites', () => {
+    store.addFavorite('user1', 'event-abc')
+    const result = store.atomicToggleFavorite('user1', 'event-abc')
+    expect(result).toEqual({ isFavorited: false, remainingCount: 0 })
+    expect(store.isFavorited('user1', 'event-abc')).toBe(false)
+  })
+
+  it('returns remainingCount:1 when another user still has it favorited', () => {
+    store.addFavorite('user1', 'event-abc')
+    store.addFavorite('user2', 'event-abc')
+    const result = store.atomicToggleFavorite('user1', 'event-abc')
+    expect(result).toEqual({ isFavorited: false, remainingCount: 1 })
+    expect(store.isFavorited('user2', 'event-abc')).toBe(true)
+  })
+
+  it('toggles back to true on re-add', () => {
+    store.atomicToggleFavorite('user1', 'event-abc')
+    store.atomicToggleFavorite('user1', 'event-abc')
+    const result = store.atomicToggleFavorite('user1', 'event-abc')
+    expect(result).toEqual({ isFavorited: true, remainingCount: 1 })
+  })
+})
+
 describe('persistence across close/reopen', () => {
   it('retains favorites after closing and re-opening the database', async () => {
     store.addFavorite('user1', 'event-abc')

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import fs from 'node:fs'
 import path from 'node:path'
 import os from 'node:os'
@@ -9,9 +9,15 @@ import {
   handleGetFavoritedEventIds,
   handleGetIsFavorited,
 } from './favorites'
+import type { FrigateRetainClient } from '#/features/shared/server/frigate/config'
 
 const VALID_ID = '1713095000.123456-abcdef'
 const USER = 'user-google-sub-123'
+
+const noopClient: FrigateRetainClient = {
+  retainEvent: async () => ({ ok: true, data: undefined }),
+  unretainEvent: async () => ({ ok: true, data: undefined }),
+}
 
 let store: FavoritesStore
 let tmpDir: string
@@ -27,46 +33,141 @@ afterEach(() => {
 })
 
 describe('handleToggleFavorite', () => {
-  it('returns error for path-traversal event ID', () => {
-    expect(handleToggleFavorite('../etc/passwd', USER, store)).toEqual({
+  it('returns error for path-traversal event ID', async () => {
+    expect(
+      await handleToggleFavorite('../etc/passwd', USER, store, noopClient),
+    ).toEqual({
       ok: false,
       error: 'Invalid event ID',
     })
   })
 
-  it('returns error for empty event ID', () => {
-    expect(handleToggleFavorite('', USER, store)).toEqual({
+  it('returns error for empty event ID', async () => {
+    expect(await handleToggleFavorite('', USER, store, noopClient)).toEqual({
       ok: false,
       error: 'Invalid event ID',
     })
   })
 
-  it('adds favorite and returns isFavorited:true on first call', () => {
-    const result = handleToggleFavorite(VALID_ID, USER, store)
+  it('adds favorite and returns isFavorited:true on first call', async () => {
+    const result = await handleToggleFavorite(VALID_ID, USER, store, noopClient)
     expect(result).toEqual({ ok: true, isFavorited: true })
     expect(store.isFavorited(USER, VALID_ID)).toBe(true)
   })
 
-  it('removes favorite and returns isFavorited:false on second call', () => {
-    handleToggleFavorite(VALID_ID, USER, store)
-    const result = handleToggleFavorite(VALID_ID, USER, store)
+  it('removes favorite and returns isFavorited:false on second call', async () => {
+    await handleToggleFavorite(VALID_ID, USER, store, noopClient)
+    const result = await handleToggleFavorite(VALID_ID, USER, store, noopClient)
     expect(result).toEqual({ ok: true, isFavorited: false })
     expect(store.isFavorited(USER, VALID_ID)).toBe(false)
   })
 
-  it('toggles back to true on third call', () => {
-    handleToggleFavorite(VALID_ID, USER, store)
-    handleToggleFavorite(VALID_ID, USER, store)
-    const result = handleToggleFavorite(VALID_ID, USER, store)
+  it('toggles back to true on third call', async () => {
+    await handleToggleFavorite(VALID_ID, USER, store, noopClient)
+    await handleToggleFavorite(VALID_ID, USER, store, noopClient)
+    const result = await handleToggleFavorite(VALID_ID, USER, store, noopClient)
     expect(result).toEqual({ ok: true, isFavorited: true })
   })
 
-  it('isolates toggle state per user', () => {
-    handleToggleFavorite(VALID_ID, 'user-a', store)
-    const result = handleToggleFavorite(VALID_ID, 'user-b', store)
+  it('isolates toggle state per user', async () => {
+    await handleToggleFavorite(VALID_ID, 'user-a', store, noopClient)
+    const result = await handleToggleFavorite(
+      VALID_ID,
+      'user-b',
+      store,
+      noopClient,
+    )
     expect(result).toEqual({ ok: true, isFavorited: true })
     expect(store.isFavorited('user-a', VALID_ID)).toBe(true)
     expect(store.isFavorited('user-b', VALID_ID)).toBe(true)
+  })
+})
+
+describe('handleToggleFavorite — Frigate retain sync', () => {
+  it('calls retainEvent when favoriting', async () => {
+    const retainEvent = vi.fn().mockResolvedValue({ ok: true, data: undefined })
+    const unretainEvent = vi
+      .fn()
+      .mockResolvedValue({ ok: true, data: undefined })
+    const result = await handleToggleFavorite(VALID_ID, USER, store, {
+      retainEvent,
+      unretainEvent,
+    })
+    expect(result).toEqual({ ok: true, isFavorited: true })
+    expect(retainEvent).toHaveBeenCalledWith(VALID_ID)
+    expect(unretainEvent).not.toHaveBeenCalled()
+  })
+
+  it('calls retainEvent even if another user already favorited (idempotent)', async () => {
+    store.addFavorite('user-other', VALID_ID)
+    const retainEvent = vi.fn().mockResolvedValue({ ok: true, data: undefined })
+    const unretainEvent = vi
+      .fn()
+      .mockResolvedValue({ ok: true, data: undefined })
+    await handleToggleFavorite(VALID_ID, USER, store, {
+      retainEvent,
+      unretainEvent,
+    })
+    expect(retainEvent).toHaveBeenCalledWith(VALID_ID)
+  })
+
+  it('calls unretainEvent when last user unfavorites', async () => {
+    store.addFavorite(USER, VALID_ID)
+    const retainEvent = vi.fn().mockResolvedValue({ ok: true, data: undefined })
+    const unretainEvent = vi
+      .fn()
+      .mockResolvedValue({ ok: true, data: undefined })
+    const result = await handleToggleFavorite(VALID_ID, USER, store, {
+      retainEvent,
+      unretainEvent,
+    })
+    expect(result).toEqual({ ok: true, isFavorited: false })
+    expect(store.isFavorited(USER, VALID_ID)).toBe(false)
+    expect(unretainEvent).toHaveBeenCalledWith(VALID_ID)
+    expect(retainEvent).not.toHaveBeenCalled()
+  })
+
+  it('does NOT call unretainEvent when another user still has it favorited', async () => {
+    store.addFavorite(USER, VALID_ID)
+    store.addFavorite('user-other', VALID_ID)
+    const retainEvent = vi.fn().mockResolvedValue({ ok: true, data: undefined })
+    const unretainEvent = vi
+      .fn()
+      .mockResolvedValue({ ok: true, data: undefined })
+    await handleToggleFavorite(VALID_ID, USER, store, {
+      retainEvent,
+      unretainEvent,
+    })
+    expect(unretainEvent).not.toHaveBeenCalled()
+  })
+
+  it('returns { ok: true } even when retainEvent fails', async () => {
+    const retainEvent = vi
+      .fn()
+      .mockResolvedValue({ ok: false, error: 'network error' })
+    const unretainEvent = vi
+      .fn()
+      .mockResolvedValue({ ok: true, data: undefined })
+    const result = await handleToggleFavorite(VALID_ID, USER, store, {
+      retainEvent,
+      unretainEvent,
+    })
+    expect(result).toEqual({ ok: true, isFavorited: true })
+    expect(store.isFavorited(USER, VALID_ID)).toBe(true)
+  })
+
+  it('returns { ok: true } even when unretainEvent fails', async () => {
+    store.addFavorite(USER, VALID_ID)
+    const retainEvent = vi.fn().mockResolvedValue({ ok: true, data: undefined })
+    const unretainEvent = vi
+      .fn()
+      .mockResolvedValue({ ok: false, error: 'timeout' })
+    const result = await handleToggleFavorite(VALID_ID, USER, store, {
+      retainEvent,
+      unretainEvent,
+    })
+    expect(result).toEqual({ ok: true, isFavorited: false })
+    expect(store.isFavorited(USER, VALID_ID)).toBe(false)
   })
 })
 

@@ -10,6 +10,14 @@ export interface FavoritesStore {
   removeFavorite: (userId: string, eventId: string) => void
   isFavorited: (userId: string, eventId: string) => boolean
   getFavoritedEventIds: (userId: string) => string[]
+  getFavoriteCount: (eventId: string) => number
+  /** Atomically toggles the favorite and returns the new state + remaining
+   *  count. Runs inside a BEGIN IMMEDIATE transaction so concurrent
+   *  unfavorites cannot both see count===0 and both trigger unretain. */
+  atomicToggleFavorite: (
+    userId: string,
+    eventId: string,
+  ) => { isFavorited: boolean; remainingCount: number }
   /** Inspection helper for tests: list table names. */
   tableNames: () => string[]
   /** Inspection helper for tests: list column names of `table`. */
@@ -52,6 +60,9 @@ export async function createFavoritesStore(
     getByUser: db.prepare(
       'SELECT event_id FROM favorite_events WHERE user_id = ?',
     ),
+    countByEvent: db.prepare(
+      'SELECT COUNT(*) as count FROM favorite_events WHERE event_id = ?',
+    ),
   }
 
   return {
@@ -70,6 +81,33 @@ export async function createFavoritesStore(
     getFavoritedEventIds(userId) {
       const rows = stmts.getByUser.all(userId) as { event_id: string }[]
       return rows.map((r) => r.event_id)
+    },
+
+    getFavoriteCount(eventId) {
+      const row = stmts.countByEvent.get(eventId) as { count: number }
+      return row.count
+    },
+
+    atomicToggleFavorite(userId, eventId) {
+      db.exec('BEGIN IMMEDIATE')
+      try {
+        const wasFavorited = stmts.isFavorited.get(userId, eventId) != null
+        if (wasFavorited) {
+          stmts.remove.run(userId, eventId)
+        } else {
+          stmts.add.run(userId, eventId)
+        }
+        const row = stmts.countByEvent.get(eventId) as { count: number }
+        db.exec('COMMIT')
+        return { isFavorited: !wasFavorited, remainingCount: row.count }
+      } catch (e) {
+        try {
+          db.exec('ROLLBACK')
+        } catch {
+          /* already rolled back */
+        }
+        throw e
+      }
     },
 
     tableNames() {

@@ -9,6 +9,13 @@ export type FrigateResult<T> =
 /** Default request timeout in milliseconds. */
 export const DEFAULT_TIMEOUT_MS = 10_000
 
+/** Minimal Frigate client interface for retain/unretain operations. Defined here
+ *  so consumers can depend on the abstraction rather than the concrete client. */
+export interface FrigateRetainClient {
+  retainEvent: (eventId: string) => Promise<FrigateResult<void>>
+  unretainEvent: (eventId: string) => Promise<FrigateResult<void>>
+}
+
 /**
  * Read and validate the FRIGATE_URL environment variable.
  * Throws a descriptive error if unset or empty.
