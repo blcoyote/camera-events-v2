@@ -15,6 +15,7 @@ import { requireSession } from '#/features/shared/server/session'
 import { readEventLimitFromCookies } from '#/features/shared/hooks/useEventLimit'
 import { usePullToRefresh } from '#/features/shared/hooks/usePullToRefresh'
 import { useRefetchOnFocus } from '#/features/shared/hooks/useRefetchOnFocus'
+import { useRefetchOnMount } from '#/features/shared/hooks/useRefetchOnMount'
 import { PullToRefreshIndicator } from '#/features/shared/components/PullToRefreshIndicator'
 
 const PULL_THRESHOLD = 80
@@ -47,6 +48,7 @@ function CameraEventsRoute() {
     onRefresh,
   })
 
+  useRefetchOnMount({ onRefresh })
   useRefetchOnFocus({ onRefresh })
 
   return (
