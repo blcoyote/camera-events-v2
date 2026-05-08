@@ -4,19 +4,19 @@
       {
         "hooks": [
           {
-            "command": "bash hooks/js-fp-review.sh",
+            "command": "bash .claude/hooks/js-fp-review.sh",
             "type": "command"
           },
           {
-            "command": "bash hooks/token-efficiency-review.sh",
+            "command": "bash .claude/hooks/token-efficiency-review.sh",
             "type": "command"
           },
           {
-            "command": "bash hooks/eval-compliance-check.sh",
+            "command": "bash .claude/hooks/eval-compliance-check.sh",
             "type": "command"
           },
           {
-            "command": "bash hooks/tdd-guard.sh",
+            "command": "bash .claude/hooks/tdd-guard.sh",
             "type": "command"
           }
         ],
@@ -25,7 +25,7 @@
       {
         "hooks": [
           {
-            "command": "bash hooks/version-check.sh",
+            "command": "bash .claude/hooks/version-check.sh",
             "type": "command"
           }
         ],
@@ -47,7 +47,7 @@
       {
         "hooks": [
           {
-            "command": "bash hooks/pre-tool-guard.sh",
+            "command": "bash .claude/hooks/pre-tool-guard.sh",
             "type": "command"
           }
         ],
@@ -56,11 +56,11 @@
       {
         "hooks": [
           {
-            "command": "bash hooks/destructive-guard.sh",
+            "command": "bash .claude/hooks/destructive-guard.sh",
             "type": "command"
           },
           {
-            "command": "bash hooks/pre-commit-review.sh",
+            "command": "bash .claude/hooks/pre-commit-review.sh",
             "type": "command"
           }
         ],
@@ -93,9 +93,6 @@
       "NotebookEdit",
       "mcp__*"
     ],
-    "deny": [
-      "Bash(rm *)",
-      "Bash(git push *)"
-    ]
+    "deny": ["Bash(rm *)", "Bash(git push *)"]
   }
 }

@@ -52,7 +52,7 @@ export function FavoriteButton({
         type="button"
         aria-label={label}
         aria-pressed={favorited}
-        className={`flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-full transition ${favorited ? 'text-red-500' : 'text-(--sea-ink-soft) hover:text-red-500'} ${className}`}
+        className={`flex min-h-6 min-w-8 shrink- items-center justify-center rounded-full transition ${favorited ? 'text-red-500' : 'text-(--sea-ink-soft) hover:text-red-500'} ${className}`}
         onClick={() => {
           void handleClick()
         }}
