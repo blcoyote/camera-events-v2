@@ -93,6 +93,9 @@
       "NotebookEdit",
       "mcp__*"
     ],
-    "deny": ["Bash(rm *)", "Bash(git push *)"]
+    "deny": [
+      "Bash(rm *)",
+      "Bash(git push *)"
+    ]
   }
 }

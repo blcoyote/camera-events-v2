@@ -1,4 +1,6 @@
 #!/usr/bin/env sh
+bunx lint-staged
+
 # --- BEGIN BEADS INTEGRATION v1.0.3 ---
 # This section is managed by beads. Do not remove these markers.
 if command -v bd >/dev/null 2>&1; then
