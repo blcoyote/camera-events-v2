@@ -19,18 +19,28 @@ type Story = StoryObj<typeof meta>
 export const WithEvents: Story = {
   args: {
     result: { ok: true, data: MOCK_FRIGATE_EVENTS },
+    favoriteEventIds: [],
+  },
+}
+
+export const WithFavorites: Story = {
+  args: {
+    result: { ok: true, data: MOCK_FRIGATE_EVENTS },
+    favoriteEventIds: MOCK_FRIGATE_EVENTS.slice(0, 2).map((e) => e.id),
   },
 }
 
 export const Empty: Story = {
   args: {
     result: { ok: true, data: [] },
+    favoriteEventIds: [],
   },
 }
 
 export const Error: Story = {
   args: {
     result: { ok: false, error: 'fetch failed' },
+    favoriteEventIds: [],
   },
 }
 

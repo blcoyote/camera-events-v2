@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Video } from 'lucide-react'
 import { MediaCard } from '#/features/shared/components/MediaCard'
 import { FavoriteButton } from './FavoriteButton'
@@ -119,7 +119,15 @@ function EventThumbnail({ eventId }: { eventId: string }) {
   )
 }
 
-function EventCard({ event, index }: { event: FrigateEvent; index: number }) {
+function EventCard({
+  event,
+  index,
+  isFavorited,
+}: {
+  event: FrigateEvent
+  index: number
+  isFavorited: boolean
+}) {
   const isRecent = Date.now() / 1000 - event.start_time < 300
 
   return (
@@ -189,6 +197,7 @@ function EventCard({ event, index }: { event: FrigateEvent; index: number }) {
       <FavoriteButton
         eventId={event.id}
         eventLabel={`${formatLabelName(event.label)} detected by ${event.camera}`}
+        isFavorited={isFavorited}
         className="absolute bottom-2.5 right-3 z-10"
       />
     </div>
@@ -246,17 +255,28 @@ export function CameraEventsLoading() {
 
 export function CameraEventsListPage({
   result,
+  favoriteEventIds,
 }: {
   result: FrigateResult<FrigateEvent[]>
+  favoriteEventIds: string[]
 }) {
   const state = getEventsPageState(result)
   const [labelFilter, setLabelFilter] = useState<string | null>(null)
   const [cameraFilter, setCameraFilter] = useState<string | null>(null)
 
+  const favoriteIdSet = useMemo(
+    () => new Set(favoriteEventIds),
+    [favoriteEventIds],
+  )
   const events = state.kind === 'events' ? state.events : []
   const labels = getUniqueLabels(events)
   const cameras = getUniqueCameras(events)
   const filtered = filterEvents(events, labelFilter, cameraFilter)
+  const labelCounts = useMemo(() => {
+    const counts = new Map<string, number>()
+    events.forEach((e) => counts.set(e.label, (counts.get(e.label) ?? 0) + 1))
+    return counts
+  }, [events])
 
   return (
     <main id="main-content" className="page-wrap px-4 pb-8 pt-6 sm:pt-14">
@@ -315,7 +335,7 @@ export function CameraEventsListPage({
                     label={formatLabelName(l)}
                     active={labelFilter === l}
                     onClick={() => setLabelFilter(labelFilter === l ? null : l)}
-                    count={events.filter((e) => e.label === l).length}
+                    count={labelCounts.get(l) ?? 0}
                   />
                 ))}
               </div>
@@ -361,7 +381,12 @@ export function CameraEventsListPage({
               className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
             >
               {filtered.map((event, i) => (
-                <EventCard key={event.id} event={event} index={i} />
+                <EventCard
+                  key={event.id}
+                  event={event}
+                  index={i}
+                  isFavorited={favoriteIdSet.has(event.id)}
+                />
               ))}
             </section>
           ) : (

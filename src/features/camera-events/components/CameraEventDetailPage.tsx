@@ -193,8 +193,10 @@ function InfoCard({
 
 export function CameraEventDetailPage({
   result,
+  isFavorited,
 }: {
   result: FrigateResult<FrigateEvent>
+  isFavorited: boolean
 }) {
   const state = getDetailPageState(result)
   const [lightboxOpen, setLightboxOpen] = useState(false)
@@ -261,6 +263,7 @@ export function CameraEventDetailPage({
           <FavoriteButton
             eventId={event.id}
             eventLabel={`${formatLabelName(event.label)} detected by ${formatCameraName(event.camera)}`}
+            isFavorited={isFavorited}
           />
         </div>
 
