@@ -4,11 +4,6 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
-patchedDependencies:
-  '@tanstack/start-server-core':
-    hash: 76bb67634f82bd05624f15821962e6c34efea09799e07f4e0fa833b68c347e33
-    path: patches/@tanstack__start-server-core.patch
-
 importers:
 
   .:
@@ -4986,7 +4981,7 @@ snapshots:
       '@tanstack/start-client-core': 1.167.20
       '@tanstack/start-fn-stubs': 1.161.6
       '@tanstack/start-plugin-core': 1.169.6(@tanstack/react-router@1.168.25(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(crossws@0.4.5(srvx@0.11.15))(vite@8.0.11(@types/node@24.12.3)(esbuild@0.27.7)(jiti@2.7.0)(yaml@2.8.4))
-      '@tanstack/start-server-core': 1.167.22(patch_hash=76bb67634f82bd05624f15821962e6c34efea09799e07f4e0fa833b68c347e33)(crossws@0.4.5(srvx@0.11.15))
+      '@tanstack/start-server-core': 1.167.22(crossws@0.4.5(srvx@0.11.15))
       '@tanstack/start-storage-context': 1.166.31
       pathe: 2.0.3
       react: 19.2.6
@@ -5005,7 +5000,7 @@ snapshots:
       '@tanstack/react-router': 1.168.25(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       '@tanstack/router-core': 1.168.17
       '@tanstack/start-client-core': 1.167.20
-      '@tanstack/start-server-core': 1.167.22(patch_hash=76bb67634f82bd05624f15821962e6c34efea09799e07f4e0fa833b68c347e33)(crossws@0.4.5(srvx@0.11.15))
+      '@tanstack/start-server-core': 1.167.22(crossws@0.4.5(srvx@0.11.15))
       react: 19.2.6
       react-dom: 19.2.6(react@19.2.6)
     transitivePeerDependencies:
@@ -5020,7 +5015,7 @@ snapshots:
       '@tanstack/router-utils': 1.161.7
       '@tanstack/start-client-core': 1.167.20
       '@tanstack/start-plugin-core': 1.169.6(@tanstack/react-router@1.168.25(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(crossws@0.4.5(srvx@0.11.15))(vite@8.0.11(@types/node@24.12.3)(esbuild@0.27.7)(jiti@2.7.0)(yaml@2.8.4))
-      '@tanstack/start-server-core': 1.167.22(patch_hash=76bb67634f82bd05624f15821962e6c34efea09799e07f4e0fa833b68c347e33)(crossws@0.4.5(srvx@0.11.15))
+      '@tanstack/start-server-core': 1.167.22(crossws@0.4.5(srvx@0.11.15))
       pathe: 2.0.3
       react: 19.2.6
       react-dom: 19.2.6(react@19.2.6)
@@ -5129,7 +5124,7 @@ snapshots:
       '@tanstack/router-plugin': 1.167.28(@tanstack/react-router@1.168.25(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(vite@8.0.11(@types/node@24.12.3)(esbuild@0.27.7)(jiti@2.7.0)(yaml@2.8.4))
       '@tanstack/router-utils': 1.161.7
       '@tanstack/start-client-core': 1.167.20
-      '@tanstack/start-server-core': 1.167.22(patch_hash=76bb67634f82bd05624f15821962e6c34efea09799e07f4e0fa833b68c347e33)(crossws@0.4.5(srvx@0.11.15))
+      '@tanstack/start-server-core': 1.167.22(crossws@0.4.5(srvx@0.11.15))
       cheerio: 1.2.0
       exsolve: 1.0.8
       lightningcss: 1.32.0
@@ -5152,7 +5147,7 @@ snapshots:
       - vite-plugin-solid
       - webpack
 
-  '@tanstack/start-server-core@1.167.22(patch_hash=76bb67634f82bd05624f15821962e6c34efea09799e07f4e0fa833b68c347e33)(crossws@0.4.5(srvx@0.11.15))':
+  '@tanstack/start-server-core@1.167.22(crossws@0.4.5(srvx@0.11.15))':
     dependencies:
       '@tanstack/history': 1.161.6
       '@tanstack/router-core': 1.168.17
