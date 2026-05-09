@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { fn } from 'storybook/test'
-import { CamerasPage, CamerasLoading } from './CamerasPage'
+import { CamerasPage } from './CamerasPage'
+import { CamerasLoading } from './CamerasLoading'
 
 const meta = {
   title: 'Pages/CamerasPage',

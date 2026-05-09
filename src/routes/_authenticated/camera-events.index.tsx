@@ -5,10 +5,8 @@ import {
   getEvents,
   clearCacheFn,
 } from '#/features/shared/server/frigate/client'
-import {
-  CameraEventsListPage,
-  CameraEventsLoading,
-} from '#/features/camera-events/components/CameraEventsListPage'
+import { CameraEventsListPage } from '#/features/camera-events/components/CameraEventsListPage'
+import { CameraEventsLoading } from '#/features/camera-events/components/CameraEventsLoading'
 import type { FrigateResult } from '#/features/shared/server/frigate/config'
 import type { FrigateEvent } from '#/features/shared/server/frigate/types'
 import { requireSession } from '#/features/shared/server/session'

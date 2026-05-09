@@ -5,10 +5,8 @@ import {
   getCameras,
   clearCacheFn,
 } from '#/features/shared/server/frigate/client'
-import {
-  CamerasPage,
-  CamerasLoading,
-} from '#/features/cameras/components/CamerasPage'
+import { CamerasPage } from '#/features/cameras/components/CamerasPage'
+import { CamerasLoading } from '#/features/cameras/components/CamerasLoading'
 import type { FrigateResult } from '#/features/shared/server/frigate/config'
 import { requireSession } from '#/features/shared/server/session'
 import { usePullToRefresh } from '#/features/shared/hooks/usePullToRefresh'

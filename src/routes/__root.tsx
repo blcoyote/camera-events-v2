@@ -1,6 +1,5 @@
 import {
   HeadContent,
-  Link,
   Scripts,
   createRootRouteWithContext,
 } from '@tanstack/react-router'
@@ -10,6 +9,7 @@ import Header from '#/features/shell/components/Header'
 import { ServiceWorkerRegistration } from '#/features/shell/components/ServiceWorkerRegistration'
 import { getCurrentUserFn } from '#/features/auth/server/auth'
 import type { SessionData } from '#/features/shared/server/session'
+import { NotFound } from './-not-found'
 
 import appCss from '../styles.css?url'
 
@@ -86,29 +86,6 @@ export const Route = createRootRouteWithContext<RouterContext>()({
   }),
   shellComponent: RootDocument,
 })
-
-function NotFound() {
-  return (
-    <main id="main-content" className="page-wrap px-4 py-6 sm:py-12">
-      <section className="island-shell rise-in rounded-4xl px-6 py-10 text-center sm:px-10 sm:py-14">
-        <p className="island-kicker mb-3">404</p>
-        <h1 className="display-title mb-5 text-4xl font-bold text-(--sea-ink) sm:text-6xl">
-          Page not found
-        </h1>
-        <p className="mx-auto mb-8 max-w-md text-base text-(--sea-ink-soft) sm:text-lg">
-          The page you're looking for doesn't exist or has been moved.
-        </p>
-        <Link
-          to="/"
-          search={{ error: undefined, status: undefined, returnTo: undefined }}
-          className="inline-flex min-h-11 items-center rounded-full border border-[rgba(50,143,151,0.3)] bg-[rgba(79,184,178,0.14)] px-5 py-2.5 text-sm font-semibold text-(--lagoon-deep) no-underline transition hover:-translate-y-0.5 hover:bg-[rgba(79,184,178,0.24)]"
-        >
-          Back to Home
-        </Link>
-      </section>
-    </main>
-  )
-}
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (

@@ -1,18 +1,17 @@
-import { useCallback, useState } from 'react'
+import { useState } from 'react'
 import { Link } from '@tanstack/react-router'
-import {
-  Camera,
-  Clock,
-  MapPin,
-  Film,
-  Image,
-  Download,
-  ZoomIn,
-} from 'lucide-react'
+import { Camera, Clock, MapPin, Film, Image } from 'lucide-react'
 import type { FrigateResult } from '#/features/shared/server/frigate/config'
 import type { FrigateEvent } from '#/features/shared/server/frigate/types'
-import { formatRelativeTime, formatLabelName, getLabelDotColor } from '../utils'
+import {
+  formatRelativeTime,
+  formatLabelName,
+  getLabelDotColor,
+  formatCameraName,
+} from '../utils'
 import { SnapshotLightbox } from './SnapshotLightbox'
+import { EventSnapshot } from './EventSnapshot'
+import { InfoCard } from './InfoCard'
 
 // ─── Pure functions (exported for testing) ───
 
@@ -37,13 +36,6 @@ export function getDetailPageState(
     }
   }
   return { kind: 'event', event: result.data }
-}
-
-export function formatCameraName(camera: string): string {
-  return camera
-    .split('_')
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-    .join(' ')
 }
 
 export function formatTimestamp(unixSeconds: number): string {
@@ -75,120 +67,6 @@ export function getDownloadUrl(
 }
 
 // ─── Components ───
-
-function EventSnapshot({
-  eventId,
-  camera,
-  label,
-  onZoom,
-}: {
-  eventId: string
-  camera: string
-  label: string
-  onZoom: () => void
-}) {
-  const altText = `Snapshot of ${formatLabelName(label)} detected by ${formatCameraName(camera)}`
-  return (
-    <button
-      type="button"
-      onClick={onZoom}
-      aria-label={`${altText} — tap to zoom`}
-      className="group relative block w-full cursor-zoom-in overflow-hidden border border-(--line) bg-(--surface) sm:rounded-2xl"
-    >
-      <img
-        src={`/api/events/${eventId}/snapshot`}
-        alt={altText}
-        className="h-auto w-full object-contain"
-        loading="eager"
-      />
-      <span className="absolute bottom-2 right-2 flex h-8 w-8 items-center justify-center rounded-full bg-black/40 text-white opacity-60 transition group-hover:opacity-100">
-        <ZoomIn className="h-4 w-4" />
-      </span>
-    </button>
-  )
-}
-
-function useBlobDownload() {
-  const [downloading, setDownloading] = useState(false)
-
-  const download = useCallback(async (url: string) => {
-    setDownloading(true)
-    try {
-      const res = await fetch(url, { credentials: 'include' })
-      const blob = await res.blob()
-      const blobUrl = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = blobUrl
-      const disposition = res.headers.get('Content-Disposition')
-      const match = disposition?.match(/filename="?([^"]+)"?/)
-      a.download = match?.[1] ?? url.split('/').pop() ?? 'download'
-      document.body.appendChild(a)
-      a.click()
-      a.remove()
-      URL.revokeObjectURL(blobUrl)
-    } finally {
-      setDownloading(false)
-    }
-  }, [])
-
-  return { download, downloading }
-}
-
-function InfoCard({
-  icon: Icon,
-  label,
-  value,
-  downloadUrl,
-  'aria-label': ariaLabel,
-}: {
-  icon: React.ComponentType<{ className?: string }>
-  label: string
-  value: React.ReactNode
-  downloadUrl?: string
-  'aria-label'?: string
-}) {
-  const { download, downloading } = useBlobDownload()
-
-  const inner = (
-    <>
-      <dt className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-(--sea-ink-soft)">
-        <Icon className="h-3.5 w-3.5" />
-        {label}
-      </dt>
-      <dd className="mt-0.5 flex items-center gap-1.5 text-sm font-medium text-(--sea-ink) sm:mt-1 sm:text-base">
-        {value}
-        {downloadUrl && (
-          <Download
-            className="h-3 w-3 text-(--lagoon-deep) sm:h-3.5 sm:w-3.5"
-            aria-hidden="true"
-          />
-        )}
-      </dd>
-    </>
-  )
-
-  if (downloadUrl) {
-    return (
-      <div className="sm:rounded-xl sm:border sm:border-(--line) sm:bg-(--surface) sm:transition sm:hover:border-(--lagoon-deep) sm:hover:bg-[rgba(79,184,178,0.06)]">
-        <button
-          type="button"
-          onClick={() => download(downloadUrl)}
-          disabled={downloading}
-          aria-label={ariaLabel}
-          className="block w-full cursor-pointer px-3 py-2.5 text-left sm:p-4"
-        >
-          {inner}
-        </button>
-      </div>
-    )
-  }
-
-  return (
-    <div className="px-3 py-2.5 sm:rounded-xl sm:border sm:border-(--line) sm:bg-(--surface) sm:p-4">
-      {inner}
-    </div>
-  )
-}
 
 export function CameraEventDetailPage({
   result,

@@ -1,8 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import {
-  CameraEventsListPage,
-  CameraEventsLoading,
-} from './CameraEventsListPage'
+import { CameraEventsListPage } from './CameraEventsListPage'
+import { CameraEventsLoading } from './CameraEventsLoading'
 import { MOCK_FRIGATE_EVENTS } from '../data/mock-events'
 import { withRouter } from '../../../../.storybook/decorators/withRouter'
 
