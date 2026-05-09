@@ -12,6 +12,8 @@ import {
 import { SnapshotLightbox } from './SnapshotLightbox'
 import { EventSnapshot } from './EventSnapshot'
 import { InfoCard } from './InfoCard'
+import { useFavoriteToggle } from '../hooks/useFavoriteToggle'
+import { FavoriteButton } from './FavoriteButton'
 
 // ─── Pure functions (exported for testing) ───
 
@@ -70,11 +72,21 @@ export function getDownloadUrl(
 
 export function CameraEventDetailPage({
   result,
+  initialFavorited = false,
 }: {
   result: FrigateResult<FrigateEvent>
+  initialFavorited?: boolean
 }) {
   const state = getDetailPageState(result)
   const [lightboxOpen, setLightboxOpen] = useState(false)
+  // Call hook unconditionally (React rules) — use empty string as sentinel in error branch
+  const eventId = state.kind === 'event' ? state.event.id : ''
+  const {
+    favorited,
+    pending,
+    error: favoriteError,
+    toggle,
+  } = useFavoriteToggle(eventId, initialFavorited)
 
   if (state.kind === 'error') {
     return (
@@ -135,10 +147,19 @@ export function CameraEventDetailPage({
           )}
         </h1>
 
-        <p className="mb-6 text-sm text-(--sea-ink-soft)">
-          {formatRelativeTime(event.start_time)} ·{' '}
-          {formatTimestamp(event.start_time)}
-        </p>
+        <div className="mb-6 flex items-center gap-3">
+          <p className="text-sm text-(--sea-ink-soft)">
+            {formatRelativeTime(event.start_time)} ·{' '}
+            {formatTimestamp(event.start_time)}
+          </p>
+          <FavoriteButton
+            eventId={event.id}
+            favorited={favorited}
+            pending={pending}
+            error={favoriteError}
+            onToggle={toggle}
+          />
+        </div>
 
         {event.has_snapshot && (
           <div className="-mx-4 mb-6 sm:mx-0 sm:mb-8">
