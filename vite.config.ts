@@ -9,6 +9,7 @@ import { fileURLToPath } from 'node:url'
 import { storybookTest } from '@storybook/addon-vitest/vitest-plugin'
 import { playwright } from '@vitest/browser-playwright'
 import { nitro } from 'nitro/vite'
+import type { Plugin } from 'vite'
 
 const dirname =
   typeof __dirname !== 'undefined'
@@ -17,6 +18,28 @@ const dirname =
 
 const isTest = !!process.env.VITEST
 
+// TanStack Start injects #tanstack-router-entry, #tanstack-start-entry, and
+// #tanstack-start-plugin-adapters as Vite virtual modules via tanstackStart().
+// In test mode the plugin is skipped, so resolution fails. This stub plugin
+// satisfies Vite's static analysis without executing anything — the dynamic
+// imports in createStartHandler never fire in unit tests.
+function tanstackStartTestStubs(): Plugin {
+  const STUBS = new Set([
+    '#tanstack-router-entry',
+    '#tanstack-start-entry',
+    '#tanstack-start-plugin-adapters',
+  ])
+  return {
+    name: 'tanstack-start-test-stubs',
+    resolveId(id) {
+      return STUBS.has(id) ? `\0${id}` : null
+    },
+    load(id) {
+      return STUBS.has(id.slice(1)) ? 'export default {}' : null
+    },
+  }
+}
+
 export default defineConfig({
   preview: {
     allowedHosts: true,
@@ -24,10 +47,10 @@ export default defineConfig({
   resolve: {
     tsconfigPaths: true,
   },
-  // TanStack Start server packages use lazy #tanstack-* import() specifiers that
-  // the optimizer can't resolve without the tanstackStart() plugin (excluded in
-  // test mode). Excluding them from optimization prevents the build-time failure;
-  // the specifiers never execute in unit tests because createStartHandler is never called.
+  // Mark TanStack Start server packages as external during dependency
+  // optimization so the optimizer never follows into createStartHandler.js
+  // (which contains unresolvable #tanstack-* virtual module specifiers that
+  // only exist when the tanstackStart() plugin is active).
   optimizeDeps: {
     exclude: isTest
       ? [
@@ -39,7 +62,9 @@ export default defineConfig({
   },
   plugins: [
     tailwindcss(),
-    ...(isTest ? [] : [devtools(), tanstackStart(), nitro({ preset: 'bun' })]),
+    ...(isTest
+      ? [tanstackStartTestStubs()]
+      : [devtools(), tanstackStart(), nitro({ preset: 'bun' })]),
     viteReact(),
     ...(isTest ? [] : [swPlugin()]),
   ],
