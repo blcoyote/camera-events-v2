@@ -42,3 +42,10 @@ const LABEL_DOT_COLORS: Record<string, string> = {
 export function getLabelDotColor(label: string): string {
   return LABEL_DOT_COLORS[label] ?? '#94a3b8'
 }
+
+export function formatCameraName(camera: string): string {
+  return camera
+    .split('_')
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ')
+}
