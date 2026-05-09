@@ -1,5 +1,12 @@
 import type { StorybookConfig } from '@storybook/react-vite'
-import type { PluginOption } from 'vite'
+import type { Plugin, PluginOption } from 'vite'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+const __dirname =
+  typeof globalThis.__dirname !== 'undefined'
+    ? globalThis.__dirname
+    : path.dirname(fileURLToPath(import.meta.url))
 
 const appOnlyPrefixes = [
   'tanstack-start',
@@ -42,6 +49,66 @@ const config: StorybookConfig = {
   framework: '@storybook/react-vite',
   viteFinal(viteConfig) {
     viteConfig.plugins = filterPlugins(viteConfig.plugins ?? [])
+
+    // Exclude @tanstack/react-start and its server packages from dep optimization.
+    // These packages require virtual modules (tanstack-start-manifest:v etc.) provided
+    // by the tanstackStart() Vite plugin, which is filtered out above. Excluding them
+    // prevents the optimizer from pre-bundling files that contain unresolvable imports.
+    viteConfig.optimizeDeps = {
+      ...viteConfig.optimizeDeps,
+      exclude: [
+        ...(viteConfig.optimizeDeps?.exclude ?? []),
+        '@tanstack/react-start',
+        '@tanstack/react-start/server',
+        '@tanstack/start-server-core',
+      ],
+    }
+
+    // Stub out virtual modules that tanstackStart() would provide. These may be
+    // encountered when @tanstack/react-start files are served directly (not pre-bundled).
+    // enforce: 'pre' ensures these run before Vite's internal resolver.
+    const TANSTACK_VIRTUAL_MODULES = new Set([
+      'tanstack-start-manifest:v',
+      'tanstack-start-injected-head-scripts:v',
+      '#tanstack-router-entry',
+      '#tanstack-start-entry',
+      '#tanstack-start-plugin-adapters',
+    ])
+
+    const virtualModuleStubs: Plugin = {
+      name: 'storybook-tanstack-start-stubs',
+      enforce: 'pre',
+      resolveId(id) {
+        return TANSTACK_VIRTUAL_MODULES.has(id) ? `\0${id}` : null
+      },
+      load(id) {
+        return TANSTACK_VIRTUAL_MODULES.has(id.slice(1))
+          ? 'export default {}'
+          : null
+      },
+    }
+
+    // Redirect the camera-events server/favorites module to a lightweight stub so
+    // @tanstack/react-start is never imported at story load time.
+    // enforce: 'pre' is required — without it, Vite's core resolver handles relative
+    // imports first and our resolveId hook never fires.
+    const favoritesStub: Plugin = {
+      name: 'storybook-favorites-stub',
+      enforce: 'pre',
+      resolveId(id, importer) {
+        if (id.endsWith('/server/favorites') && importer) {
+          return path.resolve(__dirname, './stubs/favorites.ts')
+        }
+        return null
+      },
+    }
+
+    viteConfig.plugins = [
+      ...(viteConfig.plugins ?? []),
+      virtualModuleStubs,
+      favoritesStub,
+    ]
+
     return viteConfig
   },
 }

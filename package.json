@@ -83,5 +83,10 @@
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx,md,json,css,yml,yaml}": "prettier --write"
+  },
+  "pnpm": {
+    "patchedDependencies": {
+      "@tanstack/start-server-core": "patches/@tanstack__start-server-core.patch"
+    }
   }
 }

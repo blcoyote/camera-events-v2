@@ -5,6 +5,7 @@ FROM base AS deps
 WORKDIR /app
 RUN apk add --no-cache python3 make g++
 COPY package.json pnpm-lock.yaml .npmrc ./
+COPY patches/ ./patches/
 RUN pnpm install --frozen-lockfile
 
 FROM base AS build
@@ -23,4 +24,4 @@ USER 1234
 ENV NODE_ENV=production
 ENV PORT=3000
 EXPOSE 3000
-CMD ["node", ".output/server"]
+CMD ["node", ".output/server/index.mjs"]

@@ -1,0 +1,43 @@
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    ports:
+      - '3000:3000'
+    environment:
+      NODE_ENV: production
+      MQTT_URL: mqtt://${RABBITMQ_USER:-frigate}:${RABBITMQ_PASS:-frigate}@rabbitmq:1883
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      SESSION_SECRET: ${SESSION_SECRET}
+      FRIGATE_URL: ${FRIGATE_URL:-}
+      FRIGATE_MOCK: ${FRIGATE_MOCK:-}
+      VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:-}
+      VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:-}
+      VAPID_SUBJECT: ${VAPID_SUBJECT:-}
+    volumes:
+      - ce-v2-local-data:/app/data
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  rabbitmq:
+    build: ./rabbitmq
+    hostname: rabbitmq
+    ports:
+      - '1883:1883'
+      - '15672:15672'
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-frigate}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS:-frigate}
+    volumes:
+      - ce-v2-local-rabbitmq:/var/lib/rabbitmq
+    healthcheck:
+      test: ['CMD', 'rabbitmq-diagnostics', '-q', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  ce-v2-local-data:
+  ce-v2-local-rabbitmq:
