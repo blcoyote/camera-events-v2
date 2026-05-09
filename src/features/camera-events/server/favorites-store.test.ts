@@ -102,6 +102,36 @@ describe('isFavorited', () => {
   })
 })
 
+describe('getFavoriteCount', () => {
+  it('returns 0 when no one has favorited the event', () => {
+    expect(store.getFavoriteCount('event-abc')).toBe(0)
+  })
+
+  it('returns 1 after one user favorites the event', () => {
+    store.addFavorite('user1', 'event-abc')
+    expect(store.getFavoriteCount('event-abc')).toBe(1)
+  })
+
+  it('returns 2 after two different users favorite the same event', () => {
+    store.addFavorite('user1', 'event-abc')
+    store.addFavorite('user2', 'event-abc')
+    expect(store.getFavoriteCount('event-abc')).toBe(2)
+  })
+
+  it('does not count rows for a different event (cross-event isolation)', () => {
+    store.addFavorite('user1', 'event-abc')
+    store.addFavorite('user1', 'event-xyz')
+    expect(store.getFavoriteCount('event-abc')).toBe(1)
+    expect(store.getFavoriteCount('event-xyz')).toBe(1)
+  })
+
+  it('returns 0 after the only favorite is removed', () => {
+    store.addFavorite('user1', 'event-abc')
+    store.removeFavorite('user1', 'event-abc')
+    expect(store.getFavoriteCount('event-abc')).toBe(0)
+  })
+})
+
 describe('persistence across close/reopen', () => {
   it('retains favorites after closing and re-opening the database', async () => {
     store.addFavorite('user1', 'event-abc')

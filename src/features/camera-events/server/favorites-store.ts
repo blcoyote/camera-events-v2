@@ -10,6 +10,7 @@ export interface FavoritesStore {
   removeFavorite: (userId: string, eventId: string) => void
   getUserFavoritedEventIds: (userId: string) => string[]
   isFavorited: (userId: string, eventId: string) => boolean
+  getFavoriteCount: (eventId: string) => number
   /** Inspection helper for tests: list table names. */
   tableNames: () => string[]
   /** Inspection helper for tests: count rows matching SQL + params. */
@@ -51,6 +52,9 @@ export async function createFavoritesStore(
     check: db.prepare(
       'SELECT 1 FROM event_favorites WHERE user_id = ? AND event_id = ? LIMIT 1',
     ),
+    count: db.prepare(
+      'SELECT COUNT(*) AS n FROM event_favorites WHERE event_id = ?',
+    ),
   }
 
   return {
@@ -70,6 +74,10 @@ export async function createFavoritesStore(
     isFavorited(userId, eventId) {
       const row = stmts.check.get(userId, eventId)
       return row != null
+    },
+
+    getFavoriteCount(eventId) {
+      return (stmts.count.get(eventId) as { n: number }).n
     },
 
     tableNames() {
