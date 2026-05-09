@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, screen, cleanup } from '@testing-library/react'
+import { render, cleanup } from '@testing-library/react'
 import '@testing-library/jest-dom/vitest'
 import React from 'react'
 import type { FrigateEvent } from '#/features/shared/server/frigate/types'
@@ -19,7 +19,7 @@ vi.mock('../hooks/useFavoriteToggle', () => ({
   useFavoriteToggle: mockUseFavoriteToggle,
 }))
 
-const mockFavoriteButton = vi.fn(() => null)
+const mockFavoriteButton = vi.fn((_props: unknown) => null)
 vi.mock('./FavoriteButton', () => ({
   FavoriteButton: (props: unknown) => mockFavoriteButton(props),
 }))
@@ -63,11 +63,23 @@ function makeEvent(overrides: Partial<FrigateEvent> = {}): FrigateEvent {
     sub_label: null,
     start_time: 1713095000,
     end_time: 1713095060,
+    false_positive: null,
+    thumbnail: '',
+    plus_id: null,
+    box: null,
+    top_score: null,
     has_clip: false,
     has_snapshot: true,
     retain_indefinitely: false,
     zones: [],
-    data: { top_score: 0.9, score: 0.9 },
+    data: {
+      top_score: 0.9,
+      score: 0.9,
+      attributes: [],
+      box: [0, 0, 0, 0],
+      region: [0, 0, 0, 0],
+      type: 'object',
+    },
     ...overrides,
   }
 }
