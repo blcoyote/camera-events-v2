@@ -16,11 +16,11 @@ export interface FrigateRetainClient {
   unretainEvent: (eventId: string) => Promise<FrigateResult<void>>
 }
 
+import type { FrigateEvent } from './types'
+
 /** Minimal Frigate client interface for fetching a single event by ID. */
 export interface FrigateEventClient {
-  getEvent: (
-    eventId: string,
-  ) => Promise<FrigateResult<import('./types').FrigateEvent>>
+  getEvent: (eventId: string) => Promise<FrigateResult<FrigateEvent>>
 }
 
 /**
