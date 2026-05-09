@@ -14,8 +14,6 @@ import {
   getConfig,
   getCameras,
   getLatestSnapshot,
-  retainEvent,
-  unretainEvent,
 } from './mock-client'
 
 const EXPECTED_CAMERAS = [
@@ -253,20 +251,6 @@ describe('mock-client', () => {
       if (!result.ok) return
       expect(result.data).toBeInstanceOf(ArrayBuffer)
       expect(result.data.byteLength).toBeGreaterThan(0)
-    })
-  })
-
-  describe('retainEvent', () => {
-    it('returns ok: true', async () => {
-      const result = await retainEvent('1678886400.123-abc')
-      expect(result).toEqual({ ok: true, data: undefined })
-    })
-  })
-
-  describe('unretainEvent', () => {
-    it('returns ok: true', async () => {
-      const result = await unretainEvent('1678886400.123-abc')
-      expect(result).toEqual({ ok: true, data: undefined })
     })
   })
 })

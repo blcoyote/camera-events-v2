@@ -25,7 +25,7 @@ if ! echo "$COMMAND" | grep -qE '^\s*git\s+commit\b'; then
 fi
 
 # Allow --no-verify bypass
-if echo "$COMMAND" | grep -qF -- '--no-verify'; then
+if echo "$COMMAND" | grep -qE '--no-verify'; then
   exit 0
 fi
 

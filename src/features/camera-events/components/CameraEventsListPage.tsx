@@ -1,5 +1,6 @@
-import { useState, useMemo } from 'react'
-import { EventCard } from './EventCard'
+import { useState } from 'react'
+import { Video } from 'lucide-react'
+import { MediaCard } from '#/features/shared/components/MediaCard'
 import type { FrigateResult } from '#/features/shared/server/frigate/config'
 import type { FrigateEvent } from '#/features/shared/server/frigate/types'
 import { formatRelativeTime, formatLabelName, getLabelDotColor } from '../utils'
@@ -81,6 +82,111 @@ function FilterPill({
   )
 }
 
+function EventThumbnail({ eventId }: { eventId: string }) {
+  const [failed, setFailed] = useState(false)
+
+  if (failed) {
+    return (
+      <div className="flex aspect-video items-center justify-center bg-(--surface) text-(--sea-ink-soft)">
+        <svg
+          width="32"
+          height="32"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+          className="opacity-40"
+        >
+          <path d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14" />
+          <rect x="1" y="6" width="14" height="12" rx="2" ry="2" />
+        </svg>
+      </div>
+    )
+  }
+
+  return (
+    <img
+      src={`/api/events/${eventId}/thumbnail`}
+      alt=""
+      loading="lazy"
+      onError={() => setFailed(true)}
+      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+    />
+  )
+}
+
+function EventCard({ event, index }: { event: FrigateEvent; index: number }) {
+  const isRecent = Date.now() / 1000 - event.start_time < 300
+
+  return (
+    <MediaCard
+      to="/camera-events/$id"
+      params={{ id: event.id }}
+      aria-label={`${formatLabelName(event.label)} detected by ${event.camera}, ${formatRelativeTime(event.start_time)}`}
+      index={index}
+      image={<EventThumbnail eventId={event.id} />}
+      overlay={
+        <>
+          <div className="absolute left-3 top-3 flex items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-black/50 px-2.5 py-1 text-xs font-bold text-white backdrop-blur-sm">
+              <span
+                className="h-1.5 w-1.5 rounded-full"
+                style={{ backgroundColor: getLabelDotColor(event.label) }}
+                aria-hidden="true"
+              />
+              {formatLabelName(event.label)}
+            </span>
+            {event.sub_label && (
+              <span className="rounded-full bg-white/20 px-2 py-0.5 text-xs font-medium text-white backdrop-blur-sm">
+                {event.sub_label}
+              </span>
+            )}
+          </div>
+          <div className="absolute right-3 top-3 flex items-center gap-1.5">
+            {isRecent && (
+              <span
+                className="live-pulse h-2.5 w-2.5 rounded-full bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.6)]"
+                role="img"
+                aria-label="Recent event"
+              />
+            )}
+            {event.has_clip && (
+              <span
+                className="flex h-6 w-6 items-center justify-center rounded-full bg-black/40 backdrop-blur-sm"
+                role="img"
+                aria-label="Has video clip"
+              >
+                <Video size={12} className="text-white" aria-hidden="true" />
+              </span>
+            )}
+          </div>
+        </>
+      }
+    >
+      <div className="flex items-center justify-between gap-2">
+        <p className="truncate text-sm font-semibold text-(--sea-ink)">
+          {event.camera}
+        </p>
+        <time
+          dateTime={new Date(event.start_time * 1000).toISOString()}
+          className="shrink-0 text-xs text-(--sea-ink-soft)"
+          suppressHydrationWarning
+        >
+          {formatRelativeTime(event.start_time)}
+        </time>
+      </div>
+      {event.zones.length > 0 && (
+        <p className="mt-1 truncate text-xs text-(--sea-ink-soft)">
+          {event.zones.join(' · ')}
+        </p>
+      )}
+    </MediaCard>
+  )
+}
+
 function SkeletonCard({ index }: { index: number }) {
   return (
     <div
@@ -132,28 +238,17 @@ export function CameraEventsLoading() {
 
 export function CameraEventsListPage({
   result,
-  favoriteEventIds,
 }: {
   result: FrigateResult<FrigateEvent[]>
-  favoriteEventIds: string[]
 }) {
   const state = getEventsPageState(result)
   const [labelFilter, setLabelFilter] = useState<string | null>(null)
   const [cameraFilter, setCameraFilter] = useState<string | null>(null)
 
-  const favoriteIdSet = useMemo(
-    () => new Set(favoriteEventIds),
-    [favoriteEventIds],
-  )
   const events = state.kind === 'events' ? state.events : []
   const labels = getUniqueLabels(events)
   const cameras = getUniqueCameras(events)
   const filtered = filterEvents(events, labelFilter, cameraFilter)
-  const labelCounts = useMemo(() => {
-    const counts = new Map<string, number>()
-    events.forEach((e) => counts.set(e.label, (counts.get(e.label) ?? 0) + 1))
-    return counts
-  }, [events])
 
   return (
     <main id="main-content" className="page-wrap px-4 pb-8 pt-6 sm:pt-14">
@@ -212,7 +307,7 @@ export function CameraEventsListPage({
                     label={formatLabelName(l)}
                     active={labelFilter === l}
                     onClick={() => setLabelFilter(labelFilter === l ? null : l)}
-                    count={labelCounts.get(l) ?? 0}
+                    count={events.filter((e) => e.label === l).length}
                   />
                 ))}
               </div>
@@ -258,12 +353,7 @@ export function CameraEventsListPage({
               className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
             >
               {filtered.map((event, i) => (
-                <EventCard
-                  key={event.id}
-                  event={event}
-                  index={i}
-                  isFavorited={favoriteIdSet.has(event.id)}
-                />
+                <EventCard key={event.id} event={event} index={i} />
               ))}
             </section>
           ) : (

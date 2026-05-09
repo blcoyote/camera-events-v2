@@ -2,11 +2,11 @@
 
 ## Project Overview
 
-Camera Events v2 is a self-hosted PWA for browsing and monitoring [Frigate NVR](https://frigate.video/) events. It receives live motion events from Frigate over MQTT, batches them per camera, and delivers Web Push notifications to subscribed iOS/Android/desktop devices. Built with TanStack Start (SSR), React 19, Tailwind CSS v4, and deployed via Node.js.
+Camera Events v2 is a self-hosted PWA for browsing and monitoring [Frigate NVR](https://frigate.video/) events. It receives live motion events from Frigate over MQTT, batches them per camera, and delivers Web Push notifications to subscribed iOS/Android/desktop devices. Built with TanStack Start (SSR), React 19, Tailwind CSS v4, and deployed via Bun.
 
-**Tech stack:** TanStack Start + TanStack Router (file-based, SSR) · React 19 · Vite 8 · Tailwind CSS v4 · better-sqlite3 · MQTT (RabbitMQ) · Google OAuth via Arctic · web-push (VAPID) · Serwist service worker · Vitest + Playwright + Storybook
+**Tech stack:** TanStack Start + TanStack Router (file-based, SSR) · React 19 · Vite 8 · Tailwind CSS v4 · better-sqlite3 / bun:sqlite · MQTT (RabbitMQ) · Google OAuth via Arctic · web-push (VAPID) · Serwist service worker · Vitest + Playwright + Storybook
 
-**Package manager:** pnpm (enforced via `preinstall: only-allow pnpm`). Use `pnpm` for all installs and script runs.
+**Package manager:** Bun (enforced via `preinstall: only-allow bun`). Use `bun` for all installs and script runs.
 
 ## Path Aliases
 
@@ -16,16 +16,16 @@ Camera Events v2 is a self-hosted PWA for browsing and monitoring [Frigate NVR](
 ## Development Commands
 
 ```bash
-pnpm install
-pnpm run dev         # Dev server on :3000 (auto-regenerates routeTree)
-pnpm run build       # Production build
-pnpm run preview     # Serve production build locally
-pnpm run test        # Vitest (unit + Storybook browser tests)
-pnpm run lint        # ESLint
-pnpm run format      # Prettier check
-pnpm run check       # Prettier write + ESLint --fix
-pnpm run storybook   # Component explorer on :6006
-pnpm run knip        # Unused-code report
+bun install
+bun run dev          # Dev server on :3000 (auto-regenerates routeTree)
+bun run build        # Production build
+bun run preview      # Serve production build locally
+bun run test         # Vitest (unit + Storybook browser tests)
+bun run lint         # ESLint
+bun run format       # Prettier check
+bun run check        # Prettier write + ESLint --fix
+bun run storybook    # Component explorer on :6006
+bun run knip         # Unused-code report
 ```
 
 ## Tailwind CSS
@@ -38,8 +38,8 @@ pnpm run knip        # Unused-code report
 ## Route Generation
 
 - **NEVER run `npx tsr generate`**. The `tsr` npm package is an unrelated unused-code removal tool that will **delete** test files, story files, Storybook config, and `vite.config.ts`. Running it with `--write` is destructive and irreversible without git.
-- Route tree generation (`src/routeTree.gen.ts`) is handled automatically by the `tanstackStart()` Vite plugin during `pnpm run dev` and `pnpm run build`. No separate CLI step is needed.
-- If you add a new route file under `src/routes/`, start the dev server (`pnpm run dev`) to trigger route tree regeneration.
+- Route tree generation (`src/routeTree.gen.ts`) is handled automatically by the `tanstackStart()` Vite plugin during `bun run dev` and `bun run build`. No separate CLI step is needed.
+- If you add a new route file under `src/routes/`, start the dev server (`bun run dev`) to trigger route tree regeneration.
 
 ## Feature-Sliced Architecture
 
@@ -50,16 +50,16 @@ pnpm run knip        # Unused-code report
 
 ### Feature Map
 
-| Feature              | Location                           | What it owns                                                                                                                            |
-| -------------------- | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| `auth`               | `src/features/auth/`               | Google OAuth flow, session helpers, `useStandaloneAuth` hook                                                                            |
-| `camera-events`      | `src/features/camera-events/`      | Event list/detail pages, snapshot lightbox, clip/snapshot/thumbnail proxies, mock data, favorites (optimistic toggle, SQLite-persisted) |
-| `cameras`            | `src/features/cameras/`            | Camera grid page, sortable tiles, camera order persistence, snapshot proxy                                                              |
-| `home`               | `src/features/home/`               | Home/landing page component                                                                                                             |
-| `push-notifications` | `src/features/push-notifications/` | MQTT subscriber, event batcher, push dispatcher, SQLite push store                                                                      |
-| `settings`           | `src/features/settings/`           | Settings page, notification preferences UI, `usePushSubscription` hook                                                                  |
-| `shared`             | `src/features/shared/`             | Frigate API client + cache + types + validation, session, SQLite driver, shared components + hooks                                      |
-| `shell`              | `src/features/shell/`              | App header, theme toggle, service worker registration                                                                                   |
+| Feature              | Location                           | What it owns                                                                                       |
+| -------------------- | ---------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `auth`               | `src/features/auth/`               | Google OAuth flow, session helpers, `useStandaloneAuth` hook                                       |
+| `camera-events`      | `src/features/camera-events/`      | Event list/detail pages, snapshot lightbox, clip/snapshot/thumbnail proxies, mock data             |
+| `cameras`            | `src/features/cameras/`            | Camera grid page, sortable tiles, camera order persistence, snapshot proxy                         |
+| `home`               | `src/features/home/`               | Home/landing page component                                                                        |
+| `push-notifications` | `src/features/push-notifications/` | MQTT subscriber, event batcher, push dispatcher, SQLite push store                                 |
+| `settings`           | `src/features/settings/`           | Settings page, notification preferences UI, `usePushSubscription` hook                             |
+| `shared`             | `src/features/shared/`             | Frigate API client + cache + types + validation, session, SQLite driver, shared components + hooks |
+| `shell`              | `src/features/shell/`              | App header, theme toggle, service worker registration                                              |
 
 ## Route Structure
 
@@ -131,11 +131,12 @@ src/routes/
 7. Push subscriptions and per-camera opt-out preferences are stored in `data/camera-events.db` (SQLite, WAL mode).
 8. Push is silently disabled if `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, or `VAPID_SUBJECT` are missing.
 
-## SQLite
+## SQLite (Runtime-Portable Driver)
 
-- `src/features/shared/server/sqlite/index.ts` exposes a single `openSqlite(path)` function backed by `better-sqlite3`. Both dev (Vitest/Node) and production (Node) use the same driver.
-- The function returns a `SqliteDatabase` interface (`prepare`, `exec`, `pragmaRead`, `pragmaWrite`, `close`).
-- `better-sqlite3` ships prebuilt binaries for Node 24 + Alpine (`node-v137-linuxmusl`) as of v12.9.0 — no native compilation needed in the Docker build.
+- `src/features/shared/server/sqlite/index.ts` exposes a single `openSqlite(path)` function that branches at runtime: **Node → `better-sqlite3`** (used by Vitest), **Bun → `bun:sqlite`** (production).
+- Both branches expose the same `SqliteDatabase` interface (`prepare`, `exec`, `pragmaRead`, `pragmaWrite`, `close`).
+- `better-sqlite3` is a devDependency (not bundled into the production Bun image).
+- Do not run a Node dev process and a Bun production server concurrently against the same DB file — WAL/SHM file ownership differs between drivers.
 - Default DB path: `data/camera-events.db` (relative to the working directory).
 
 ## SSR & Hydration
@@ -150,7 +151,7 @@ src/routes/
 
 All new behaviour must be written test-first. Follow the **Red → Green → Refactor** cycle strictly:
 
-1. **RED** — Write a failing test that describes the behaviour you intend to add. Run `pnpm run test` and confirm it fails for the right reason (assertion failure, not a syntax error or import crash).
+1. **RED** — Write a failing test that describes the behaviour you intend to add. Run `bun run test` and confirm it fails for the right reason (assertion failure, not a syntax error or import crash).
 2. **GREEN** — Write the minimum production code to make that test pass. No extra logic, no "while I'm here" cleanup.
 3. **REFACTOR** — With the tests green, improve the design: rename, extract, simplify. Re-run tests after every change to stay green.
 
@@ -159,11 +160,11 @@ Never write production code before a failing test exists. Never skip the refacto
 ### Running Tests
 
 ```bash
-pnpm run test                          # Run all tests once (unit + Storybook browser)
-pnpm run test -- --watch               # Watch mode — re-runs on file save
-pnpm run test -- --reporter=verbose    # Verbose per-test output
-pnpm run test -- src/features/cameras  # Run a single feature's tests
-pnpm run test -- validation            # Filter by filename substring
+bun run test                   # Run all tests once (unit + Storybook browser)
+bun run test -- --watch        # Watch mode — re-runs on file save
+bun run test -- --reporter=verbose   # Verbose per-test output
+bun run test -- src/features/cameras # Run a single feature's tests
+bun run test -- validation     # Filter by filename substring
 ```
 
 The Vitest config in `vite.config.ts` defines two projects:
@@ -287,8 +288,10 @@ function makeEvent(
 
 ### Special Test Variants
 
-- `*.driver-contract.test.ts` — validate the `SqliteDatabase` abstraction against the real `better-sqlite3` driver. These tests create a real on-disk database in a temp path and must be self-contained.
-- `*.integration.test.ts` — hits real external dependencies (e.g. a live MQTT broker). Not part of `pnpm run test`; run manually.
+- `*.driver-contract.test.ts` — validate that the `SqliteDatabase` abstraction behaves identically under both `better-sqlite3` (Node) and `bun:sqlite` (Bun). These tests create a real on-disk database in a temp path and must be self-contained.
+- `*.bun-runtime.test.ts` — skipped when running under Node (use `it.skipIf(!process.versions.bun, ...)`). Tests the Bun production code path.
+- `*.bun-branch.test.ts` — tests the Bun branch via module mocking so they can run under Node in CI.
+- `*.integration.test.ts` — hits real external dependencies (e.g. a live MQTT broker). Not part of `bun run test`; run manually.
 
 ### TDD for Server Functions
 
@@ -304,7 +307,7 @@ Security-critical validators like `isValidCameraName` and `isValidEventId` must 
 
 ## Deployment
 
-- **Runtime:** Node.js (Nitro preset `node-server`). Production entry: `node .output/server/index.mjs`.
+- **Runtime:** Bun (Nitro preset `bun`). Production entry: `bun run .output/server`.
 - **Docker:** multi-stage `Dockerfile`. `docker-compose.yml` wires the app, RabbitMQ (MQTT + management plugins), and Traefik for TLS.
 - **Persistent volumes:** `ce-v2-data` (SQLite DB), `rabbitmq-data` (broker state).
 - Security headers (HSTS, X-Content-Type-Options, X-Frame-Options, Referrer-Policy, Permissions-Policy, COOP/CORP) are applied via Traefik middleware labels.

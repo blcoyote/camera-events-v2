@@ -1,7 +1,6 @@
 import type { PrecacheEntry, SerwistGlobalConfig } from 'serwist'
 import {
   CacheFirst,
-  CacheableResponsePlugin,
   ExpirationPlugin,
   NetworkFirst,
   Serwist,
@@ -94,7 +93,6 @@ const serwist = new Serwist({
         request.destination === 'worker',
       handler: new StaleWhileRevalidate({
         cacheName: 'static-resources',
-        plugins: [new CacheableResponsePlugin({ statuses: [200] })],
       }),
     },
     {
@@ -104,7 +102,6 @@ const serwist = new Serwist({
       handler: new CacheFirst({
         cacheName: 'images',
         plugins: [
-          new CacheableResponsePlugin({ statuses: [200] }),
           new ExpirationPlugin({
             maxEntries: 60,
             maxAgeSeconds: 30 * 24 * 60 * 60, // 30 days
