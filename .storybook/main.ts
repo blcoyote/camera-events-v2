@@ -42,6 +42,8 @@ const config: StorybookConfig = {
   framework: '@storybook/react-vite',
   viteFinal(viteConfig) {
     viteConfig.plugins = filterPlugins(viteConfig.plugins ?? [])
+    viteConfig.resolve ??= {}
+    viteConfig.resolve.dedupe = ['react', 'react-dom', '@tanstack/react-router']
     return viteConfig
   },
 }
