@@ -33,7 +33,13 @@ export function FavoriteButton({
     <div className="relative flex items-center">
       <button
         type="button"
-        aria-label="Favorite"
+        aria-label={
+          pending
+            ? 'Saving…'
+            : favorited
+              ? 'Remove from favorites'
+              : 'Add to favorites'
+        }
         aria-pressed={favorited}
         disabled={pending}
         onClick={(e) => {

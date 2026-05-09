@@ -53,7 +53,7 @@ describe('FavoriteButton', () => {
 
     it('button has disabled attribute when pending=true', () => {
       renderFavoriteButton({ pending: true })
-      const btn = screen.getByRole('button', { name: /favorite/i })
+      const btn = screen.getByRole('button', { name: 'Saving…' })
       expect(btn).toBeDisabled()
     })
   })
@@ -69,7 +69,7 @@ describe('FavoriteButton', () => {
     it('does not call onToggle when disabled (pending=true)', () => {
       const onToggle = vi.fn()
       renderFavoriteButton({ pending: true, onToggle })
-      fireEvent.click(screen.getByRole('button', { name: /favorite/i }))
+      fireEvent.click(screen.getByRole('button', { name: 'Saving…' }))
       expect(onToggle).not.toHaveBeenCalled()
     })
   })
@@ -100,6 +100,27 @@ describe('FavoriteButton', () => {
       const btn = screen.getByRole('button', { name: /favorite/i })
       // Verify padding class applied (p-2.5 = 10px padding, plus icon = ≥44px)
       expect(btn.className).toMatch(/p-/)
+    })
+  })
+
+  describe('accessible name (AC10)', () => {
+    it('has aria-label "Add to favorites" when not favorited', () => {
+      renderFavoriteButton({ favorited: false, pending: false })
+      expect(
+        screen.getByRole('button', { name: 'Add to favorites' }),
+      ).toBeTruthy()
+    })
+
+    it('has aria-label "Remove from favorites" when favorited', () => {
+      renderFavoriteButton({ favorited: true, pending: false })
+      expect(
+        screen.getByRole('button', { name: 'Remove from favorites' }),
+      ).toBeTruthy()
+    })
+
+    it('has aria-label "Saving…" when pending', () => {
+      renderFavoriteButton({ pending: true })
+      expect(screen.getByRole('button', { name: 'Saving…' })).toBeTruthy()
     })
   })
 })
