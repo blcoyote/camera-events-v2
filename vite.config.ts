@@ -26,7 +26,9 @@ export default defineConfig({
   },
   plugins: [
     tailwindcss(),
-    ...(isTest ? [] : [devtools(), tanstackStart(), nitro({ preset: 'bun' })]),
+    ...(isTest
+      ? []
+      : [devtools(), tanstackStart(), nitro({ preset: 'node-server' })]),
     viteReact(),
     ...(isTest ? [] : [swPlugin()]),
   ],

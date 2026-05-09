@@ -13,6 +13,7 @@ import type { FrigateResult } from '#/features/shared/server/frigate/config'
 import type { FrigateEvent } from '#/features/shared/server/frigate/types'
 import { formatRelativeTime, formatLabelName, getLabelDotColor } from '../utils'
 import { SnapshotLightbox } from './SnapshotLightbox'
+import { FavoriteButton } from './FavoriteButton'
 
 // ─── Pure functions (exported for testing) ───
 
@@ -192,8 +193,10 @@ function InfoCard({
 
 export function CameraEventDetailPage({
   result,
+  isFavorited,
 }: {
   result: FrigateResult<FrigateEvent>
+  isFavorited: boolean
 }) {
   const state = getDetailPageState(result)
   const [lightboxOpen, setLightboxOpen] = useState(false)
@@ -243,19 +246,26 @@ export function CameraEventDetailPage({
 
         <p className="island-kicker mb-1">{formatCameraName(event.camera)}</p>
 
-        <h1 className="display-title mb-2 flex max-w-3xl items-center gap-3 text-2xl leading-tight font-bold tracking-tight text-(--sea-ink) sm:text-4xl">
-          <span
-            className="inline-block h-3.5 w-3.5 shrink-0 rounded-full"
-            style={{ backgroundColor: dotColor }}
-            aria-hidden="true"
+        <div className="mb-2 flex items-center gap-3">
+          <h1 className="display-title flex max-w-3xl items-center gap-3 text-2xl leading-tight font-bold tracking-tight text-(--sea-ink) sm:text-4xl">
+            <span
+              className="inline-block h-3.5 w-3.5 shrink-0 rounded-full"
+              style={{ backgroundColor: dotColor }}
+              aria-hidden="true"
+            />
+            {formatLabelName(event.label)}
+            {event.sub_label && (
+              <span className="text-xl font-normal text-(--sea-ink-soft) sm:text-2xl">
+                — {event.sub_label}
+              </span>
+            )}
+          </h1>
+          <FavoriteButton
+            eventId={event.id}
+            eventLabel={`${formatLabelName(event.label)} detected by ${formatCameraName(event.camera)}`}
+            isFavorited={isFavorited}
           />
-          {formatLabelName(event.label)}
-          {event.sub_label && (
-            <span className="text-xl font-normal text-(--sea-ink-soft) sm:text-2xl">
-              — {event.sub_label}
-            </span>
-          )}
-        </h1>
+        </div>
 
         <p className="mb-6 text-sm text-(--sea-ink-soft)">
           {formatRelativeTime(event.start_time)} ·{' '}

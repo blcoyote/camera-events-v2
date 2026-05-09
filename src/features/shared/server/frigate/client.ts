@@ -106,6 +106,34 @@ function frigateBinary(
   return frigateFetch(path, params, (res) => res.arrayBuffer(), timeoutMs)
 }
 
+async function frigateMutate(
+  method: 'POST' | 'DELETE',
+  path: string,
+  timeoutMs: number = DEFAULT_TIMEOUT_MS,
+): Promise<FrigateResult<void>> {
+  try {
+    const url = buildUrl(path)
+    const response = await fetch(url, {
+      method,
+      signal: AbortSignal.timeout(timeoutMs),
+    })
+    // Always drain the body so the underlying connection is released back to
+    // the pool immediately rather than waiting for GC.
+    await response.arrayBuffer()
+    if (!response.ok) {
+      return {
+        ok: false,
+        error: `HTTP ${response.status}`,
+        status: response.status,
+      }
+    }
+    return { ok: true, data: undefined }
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err)
+    return { ok: false, error: message }
+  }
+}
+
 // ─── Event endpoints ───
 
 export async function getEvents(
@@ -250,6 +278,24 @@ export async function getCameras(
   const result = await getConfig(timeoutMs)
   if (!result.ok) return result
   return { ok: true, data: Object.keys(result.data.cameras ?? {}).sort() }
+}
+
+export async function retainEvent(
+  eventId: string,
+  timeoutMs?: number,
+): Promise<FrigateResult<void>> {
+  if (process.env.FRIGATE_MOCK === 'true')
+    return (await loadMock()).retainEvent(eventId, timeoutMs)
+  return frigateMutate('POST', `/api/events/${eventId}/retain`, timeoutMs)
+}
+
+export async function unretainEvent(
+  eventId: string,
+  timeoutMs?: number,
+): Promise<FrigateResult<void>> {
+  if (process.env.FRIGATE_MOCK === 'true')
+    return (await loadMock()).unretainEvent(eventId, timeoutMs)
+  return frigateMutate('DELETE', `/api/events/${eventId}/retain`, timeoutMs)
 }
 
 export { clearFrigateCache } from './cache'

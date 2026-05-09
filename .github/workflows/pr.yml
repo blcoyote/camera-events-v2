@@ -17,39 +17,49 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: oven-sh/setup-bun@v2
+      - uses: actions/setup-node@v4
         with:
-          bun-version: latest
+          node-version-file: .nvmrc
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
 
       - name: Install dependencies
-        run: bun install --frozen-lockfile
+        run: pnpm install --frozen-lockfile
 
       - name: Type Check
-        run: bun x tsc --noEmit
+        run: pnpm exec tsc --noEmit
 
       - name: Lint
-        run: bun run lint
+        run: pnpm run lint
 
       - name: Format
-        run: bun x prettier --check .
+        run: pnpm exec prettier --check .
 
   tests:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - uses: oven-sh/setup-bun@v2
+      - uses: actions/setup-node@v4
         with:
-          bun-version: latest
+          node-version-file: .nvmrc
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
 
       - name: Install dependencies
-        run: bun install --frozen-lockfile
+        run: pnpm install --frozen-lockfile
 
       - name: Install Playwright browsers
-        run: bun x playwright install --with-deps
+        run: pnpm exec playwright install --with-deps
 
       - name: Test
-        run: bun x vitest run
+        run: pnpm exec vitest run
 
   docker_build:
     runs-on: ubuntu-latest

@@ -483,3 +483,17 @@ export async function getLatestSnapshot(
 ): Promise<FrigateResult<ArrayBuffer>> {
   return { ok: true, data: PLACEHOLDER_IMAGE }
 }
+
+export async function retainEvent(
+  _eventId: string,
+  _timeoutMs?: number,
+): Promise<FrigateResult<void>> {
+  return { ok: true, data: undefined }
+}
+
+export async function unretainEvent(
+  _eventId: string,
+  _timeoutMs?: number,
+): Promise<FrigateResult<void>> {
+  return { ok: true, data: undefined }
+}
