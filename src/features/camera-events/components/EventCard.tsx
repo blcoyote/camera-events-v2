@@ -3,14 +3,22 @@ import { MediaCard } from '#/features/shared/components/MediaCard'
 import type { FrigateEvent } from '#/features/shared/server/frigate/types'
 import { formatRelativeTime, formatLabelName, getLabelDotColor } from '../utils'
 import { EventThumbnail } from './EventThumbnail'
+import { useFavoriteToggle } from '../hooks/useFavoriteToggle'
+import { FavoriteButton } from './FavoriteButton'
 
 export function EventCard({
   event,
   index,
+  initialFavorited = false,
 }: {
   event: FrigateEvent
   index: number
+  initialFavorited?: boolean
 }) {
+  const { favorited, pending, error, toggle } = useFavoriteToggle(
+    event.id,
+    initialFavorited,
+  )
   const isRecent = Date.now() / 1000 - event.start_time < 300
 
   return (
@@ -59,16 +67,25 @@ export function EventCard({
       }
     >
       <div className="flex items-center justify-between gap-2">
-        <p className="truncate text-sm font-semibold text-(--sea-ink)">
-          {event.camera}
-        </p>
-        <time
-          dateTime={new Date(event.start_time * 1000).toISOString()}
-          className="shrink-0 text-xs text-(--sea-ink-soft)"
-          suppressHydrationWarning
-        >
-          {formatRelativeTime(event.start_time)}
-        </time>
+        <div className="flex min-w-0 flex-1 items-center gap-2">
+          <p className="truncate text-sm font-semibold text-(--sea-ink)">
+            {event.camera}
+          </p>
+          <time
+            dateTime={new Date(event.start_time * 1000).toISOString()}
+            className="shrink-0 text-xs text-(--sea-ink-soft)"
+            suppressHydrationWarning
+          >
+            {formatRelativeTime(event.start_time)}
+          </time>
+        </div>
+        <FavoriteButton
+          eventId={event.id}
+          favorited={favorited}
+          pending={pending}
+          error={error}
+          onToggle={toggle}
+        />
       </div>
       {event.zones.length > 0 && (
         <p className="mt-1 truncate text-xs text-(--sea-ink-soft)">

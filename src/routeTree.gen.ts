@@ -13,6 +13,7 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiTestAuthRouteImport } from './routes/api/test-auth'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as AuthenticatedFavoritesRouteImport } from './routes/_authenticated/favorites'
 import { Route as AuthenticatedCamerasRouteImport } from './routes/_authenticated/cameras'
 import { Route as AuthenticatedCameraEventsIndexRouteImport } from './routes/_authenticated/camera-events.index'
 import { Route as ApiPushVapidPublicKeyRouteImport } from './routes/api/push/vapid-public-key'
@@ -46,6 +47,11 @@ const ApiTestAuthRoute = ApiTestAuthRouteImport.update({
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedFavoritesRoute = AuthenticatedFavoritesRouteImport.update({
+  id: '/favorites',
+  path: '/favorites',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedCamerasRoute = AuthenticatedCamerasRouteImport.update({
@@ -129,6 +135,7 @@ const ApiAuthGoogleCallbackRoute = ApiAuthGoogleCallbackRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/cameras': typeof AuthenticatedCamerasRoute
+  '/favorites': typeof AuthenticatedFavoritesRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/api/test-auth': typeof ApiTestAuthRoute
   '/camera-events/$id': typeof AuthenticatedCameraEventsIdRoute
@@ -149,6 +156,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/cameras': typeof AuthenticatedCamerasRoute
+  '/favorites': typeof AuthenticatedFavoritesRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/api/test-auth': typeof ApiTestAuthRoute
   '/camera-events/$id': typeof AuthenticatedCameraEventsIdRoute
@@ -171,6 +179,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/_authenticated/cameras': typeof AuthenticatedCamerasRoute
+  '/_authenticated/favorites': typeof AuthenticatedFavoritesRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/api/test-auth': typeof ApiTestAuthRoute
   '/_authenticated/camera-events/$id': typeof AuthenticatedCameraEventsIdRoute
@@ -193,6 +202,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/cameras'
+    | '/favorites'
     | '/settings'
     | '/api/test-auth'
     | '/camera-events/$id'
@@ -213,6 +223,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/cameras'
+    | '/favorites'
     | '/settings'
     | '/api/test-auth'
     | '/camera-events/$id'
@@ -234,6 +245,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/_authenticated/cameras'
+    | '/_authenticated/favorites'
     | '/_authenticated/settings'
     | '/api/test-auth'
     | '/_authenticated/camera-events/$id'
@@ -297,6 +309,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof AuthenticatedSettingsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/favorites': {
+      id: '/_authenticated/favorites'
+      path: '/favorites'
+      fullPath: '/favorites'
+      preLoaderRoute: typeof AuthenticatedFavoritesRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/cameras': {
@@ -409,6 +428,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteChildren {
   AuthenticatedCamerasRoute: typeof AuthenticatedCamerasRoute
+  AuthenticatedFavoritesRoute: typeof AuthenticatedFavoritesRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedCameraEventsIdRoute: typeof AuthenticatedCameraEventsIdRoute
   AuthenticatedCameraEventsIndexRoute: typeof AuthenticatedCameraEventsIndexRoute
@@ -416,6 +436,7 @@ interface AuthenticatedRouteChildren {
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedCamerasRoute: AuthenticatedCamerasRoute,
+  AuthenticatedFavoritesRoute: AuthenticatedFavoritesRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedCameraEventsIdRoute: AuthenticatedCameraEventsIdRoute,
   AuthenticatedCameraEventsIndexRoute: AuthenticatedCameraEventsIndexRoute,

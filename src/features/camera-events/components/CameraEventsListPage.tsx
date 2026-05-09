@@ -54,8 +54,10 @@ export { formatRelativeTime, formatLabelName, getLabelDotColor }
 
 export function CameraEventsListPage({
   result,
+  favoritedIds = new Set<string>(),
 }: {
   result: FrigateResult<FrigateEvent[]>
+  favoritedIds?: Set<string>
 }) {
   const state = getEventsPageState(result)
   const [labelFilter, setLabelFilter] = useState<string | null>(null)
@@ -169,7 +171,12 @@ export function CameraEventsListPage({
               className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
             >
               {filtered.map((event, i) => (
-                <EventCard key={event.id} event={event} index={i} />
+                <EventCard
+                  key={event.id}
+                  event={event}
+                  index={i}
+                  initialFavorited={favoritedIds.has(event.id)}
+                />
               ))}
             </section>
           ) : (

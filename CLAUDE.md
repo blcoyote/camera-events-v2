@@ -4,7 +4,7 @@
 
 Camera Events v2 is a self-hosted PWA for browsing and monitoring [Frigate NVR](https://frigate.video/) events. It receives live motion events from Frigate over MQTT, batches them per camera, and delivers Web Push notifications to subscribed iOS/Android/desktop devices. Built with TanStack Start (SSR), React 19, Tailwind CSS v4, and deployed via Bun.
 
-**Tech stack:** TanStack Start + TanStack Router (file-based, SSR) · React 19 · Vite 8 · Tailwind CSS v4 · better-sqlite3 / bun:sqlite · MQTT (RabbitMQ) · Google OAuth via Arctic · web-push (VAPID) · Serwist service worker · Vitest + Playwright + Storybook
+**Tech stack:** TanStack Start + TanStack Router (file-based, SSR) · React 19 · Vite 8 · Tailwind CSS v4 · better-sqlite3 / bun:sqlite · MQTT (RabbitMQ) · Google OAuth via Arctic · web-push (VAPID) · Serwist service worker · Vitest + Playwright
 
 **Package manager:** Bun (enforced via `preinstall: only-allow bun`). Use `bun` for all installs and script runs.
 
@@ -20,11 +20,10 @@ bun install
 bun run dev          # Dev server on :3000 (auto-regenerates routeTree)
 bun run build        # Production build
 bun run preview      # Serve production build locally
-bun run test         # Vitest (unit + Storybook browser tests)
+bun run test         # Vitest (unit)
 bun run lint         # ESLint
 bun run format       # Prettier check
 bun run check        # Prettier write + ESLint --fix
-bun run storybook    # Component explorer on :6006
 bun run knip         # Unused-code report
 ```
 
@@ -37,7 +36,7 @@ bun run knip         # Unused-code report
 
 ## Route Generation
 
-- **NEVER run `npx tsr generate`**. The `tsr` npm package is an unrelated unused-code removal tool that will **delete** test files, story files, Storybook config, and `vite.config.ts`. Running it with `--write` is destructive and irreversible without git.
+- **NEVER run `npx tsr generate`**. The `tsr` npm package is an unrelated unused-code removal tool that will **delete** test files and `vite.config.ts`. Running it with `--write` is destructive and irreversible without git.
 - Route tree generation (`src/routeTree.gen.ts`) is handled automatically by the `tanstackStart()` Vite plugin during `bun run dev` and `bun run build`. No separate CLI step is needed.
 - If you add a new route file under `src/routes/`, start the dev server (`bun run dev`) to trigger route tree regeneration.
 
@@ -160,7 +159,7 @@ Never write production code before a failing test exists. Never skip the refacto
 ### Running Tests
 
 ```bash
-bun run test                   # Run all tests once (unit + Storybook browser)
+bun run test                   # Run all tests once (unit)
 bun run test -- --watch        # Watch mode — re-runs on file save
 bun run test -- --reporter=verbose   # Verbose per-test output
 bun run test -- src/features/cameras # Run a single feature's tests
@@ -170,7 +169,6 @@ bun run test -- validation     # Filter by filename substring
 The Vitest config in `vite.config.ts` defines two projects:
 
 - `unit` — jsdom environment, matches `src/**/*.test.ts` and `src/**/*.test.tsx`
-- `storybook` — Playwright Chromium, matches `*.stories.tsx` files via `@storybook/addon-vitest`
 
 ### Test File Placement
 
@@ -214,8 +212,6 @@ describe('isValidCameraName', () => {
 **Server-side logic (proxies, MQTT handlers, push pipeline)** — stub `globalThis.fetch` and `process.env` directly. Restore after each test with `beforeEach`/`afterEach`. See `clip-proxy.test.ts`, `mqtt.test.ts`.
 
 **Async behaviour with timers** — use `vi.useFakeTimers()` / `vi.advanceTimersByTime()`. Always call `vi.useRealTimers()` in `afterEach`. See `event-batcher.test.ts`.
-
-**Storybook stories** — `*.stories.tsx` files serve as component integration tests run in a real browser via Playwright. Write a story for every significant component state. The a11y addon checks WCAG compliance automatically on each story.
 
 ### Mocking Patterns
 
