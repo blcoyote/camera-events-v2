@@ -1,0 +1,27 @@
+diff --git a/dist/esm/stub-empty.js b/dist/esm/stub-empty.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..cccc870f26fa09d1a191c7a129ab45432462786a
+--- /dev/null
++++ b/dist/esm/stub-empty.js
+@@ -0,0 +1 @@
++export default {}; export {}
+diff --git a/package.json b/package.json
+index 5b42b80759dc660c1b7f936187a6195d332a2059..ce29fd927e4a8afd2bbe654a054cefaad7d83f93 100644
+--- a/package.json
++++ b/package.json
+@@ -49,6 +49,15 @@
+   "imports": {
+     "#tanstack-start-server-fn-resolver": {
+       "default": "./dist/esm/fake-start-server-fn-resolver.js"
++    },
++    "#tanstack-router-entry": {
++      "default": "./dist/esm/stub-empty.js"
++    },
++    "#tanstack-start-entry": {
++      "default": "./dist/esm/stub-empty.js"
++    },
++    "#tanstack-start-plugin-adapters": {
++      "default": "./dist/esm/stub-empty.js"
+     }
+   },
+   "sideEffects": false,

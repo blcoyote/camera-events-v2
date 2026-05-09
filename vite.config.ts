@@ -57,6 +57,8 @@ export default defineConfig({
           '@tanstack/react-start',
           '@tanstack/react-start-server',
           '@tanstack/start-server-core',
+          '@tanstack/start-client-core',
+          '@tanstack/start-plugin-core',
         ]
       : [],
   },
@@ -64,11 +66,16 @@ export default defineConfig({
     tailwindcss(),
     ...(isTest
       ? [tanstackStartTestStubs()]
-      : [devtools(), tanstackStart(), nitro({ preset: 'bun' })]),
+      : [devtools(), tanstackStart(), nitro({ preset: 'node-server' })]),
     viteReact(),
     ...(isTest ? [] : [swPlugin()]),
   ],
   test: {
+    deps: {
+      optimizer: {
+        web: { enabled: false },
+      },
+    },
     projects: [
       {
         extends: true,

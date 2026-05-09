@@ -1,10 +1,3 @@
-/**
- * Driver-level tests for openSqlite (Node branch via better-sqlite3).
- *
- * Bun branch coverage lives in sqlite.bun-branch.test.ts (mock-driven, runs
- * in CI) and sqlite.bun-runtime.test.ts (real bun:sqlite, run manually
- * under `bun test`).
- */
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import fs from 'node:fs'
 import os from 'node:os'
@@ -25,7 +18,7 @@ afterEach(() => {
   fs.rmSync(tmpDir, { recursive: true, force: true })
 })
 
-describe('openSqlite (Node branch)', () => {
+describe('openSqlite', () => {
   it('exec creates tables and prepare/run/all round-trips data', () => {
     db.exec(`
       CREATE TABLE items (id INTEGER PRIMARY KEY, name TEXT NOT NULL);
