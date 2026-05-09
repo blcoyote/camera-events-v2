@@ -89,9 +89,6 @@
       "better-sqlite3",
       "esbuild",
       "unrs-resolver"
-    ],
-    "patchedDependencies": {
-      "@tanstack/start-server-core": "patches/@tanstack__start-server-core.patch"
-    }
+    ]
   }
 }
