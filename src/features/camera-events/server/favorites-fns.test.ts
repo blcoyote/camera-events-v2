@@ -26,15 +26,19 @@ vi.mock('./favorites-store', async (importOriginal) => {
 
 const mockRetainEvent = vi.fn()
 const mockUnretainEvent = vi.fn()
+const mockGetEvent = vi.fn()
 vi.mock('#/features/shared/server/frigate/client', () => ({
   retainEvent: mockRetainEvent,
   unretainEvent: mockUnretainEvent,
-  getEvent: vi.fn(),
+  getEvent: mockGetEvent,
 }))
 
 // Import handlers AFTER mocks are set up
-const { toggleFavoriteHandler, getUserFavoritedEventIdsHandler } =
-  await import('./favorites-fns')
+const {
+  toggleFavoriteHandler,
+  getUserFavoritedEventIdsHandler,
+  getUserFavoritedEventsHandler,
+} = await import('./favorites-fns')
 
 // ─── Test fixtures ────────────────────────────────────────────────────────────
 
@@ -225,5 +229,94 @@ describe('getUserFavoritedEventIdsHandler', () => {
 
     const result = await getUserFavoritedEventIdsHandler()
     expect(result).toEqual([])
+  })
+})
+
+// ─── getUserFavoritedEventsHandler ───────────────────────────────────────────
+
+function makeEvent(id: string) {
+  return {
+    id,
+    label: 'person',
+    sub_label: null,
+    camera: 'front_porch',
+    start_time: 1713095000,
+    end_time: 1713095060,
+    false_positive: null,
+    zones: [],
+    thumbnail: '',
+    has_clip: true,
+    has_snapshot: true,
+    retain_indefinitely: false,
+    plus_id: null,
+    box: [0.1, 0.1, 0.3, 0.4] as [number, number, number, number],
+    top_score: 0.9,
+    data: {
+      attributes: [],
+      box: [0.1, 0.1, 0.3, 0.4] as [number, number, number, number],
+      region: [0, 0, 1, 1] as [number, number, number, number],
+      score: 0.9,
+      top_score: 0.9,
+      type: 'object',
+    },
+  }
+}
+
+describe('getUserFavoritedEventsHandler', () => {
+  it('throws Unauthorized when session is missing', async () => {
+    mockRequireSession.mockRejectedValue(new Error('Unauthorized'))
+    await expect(getUserFavoritedEventsHandler()).rejects.toThrow(
+      'Unauthorized',
+    )
+    expect(mockGetEvent).not.toHaveBeenCalled()
+  })
+
+  it('returns empty array when user has no favorites', async () => {
+    const result = await getUserFavoritedEventsHandler()
+    expect(result).toEqual([])
+    expect(mockGetEvent).not.toHaveBeenCalled()
+  })
+
+  it('returns FrigateEvent[] for each favorited ID', async () => {
+    _testStore!.addFavorite(USER, 'event-1')
+    _testStore!.addFavorite(USER, 'event-2')
+    mockGetEvent
+      .mockResolvedValueOnce({ ok: true, data: makeEvent('event-1') })
+      .mockResolvedValueOnce({ ok: true, data: makeEvent('event-2') })
+
+    const result = await getUserFavoritedEventsHandler()
+    expect(result).toHaveLength(2)
+    expect(result.map((e) => e.id)).toContain('event-1')
+    expect(result.map((e) => e.id)).toContain('event-2')
+  })
+
+  it('omits events where getEvent returns ok:false (Frigate non-ok)', async () => {
+    _testStore!.addFavorite(USER, 'event-1')
+    _testStore!.addFavorite(USER, 'event-missing')
+    _testStore!.addFavorite(USER, 'event-3')
+    mockGetEvent
+      .mockResolvedValueOnce({ ok: true, data: makeEvent('event-1') })
+      .mockResolvedValueOnce({ ok: false, error: 'HTTP 404', status: 404 })
+      .mockResolvedValueOnce({ ok: true, data: makeEvent('event-3') })
+
+    const result = await getUserFavoritedEventsHandler()
+    expect(result).toHaveLength(2)
+    expect(result.map((e) => e.id)).toContain('event-1')
+    expect(result.map((e) => e.id)).toContain('event-3')
+    expect(result.map((e) => e.id)).not.toContain('event-missing')
+  })
+
+  it('calls getEvent for all IDs in parallel', async () => {
+    _testStore!.addFavorite(USER, 'event-1')
+    _testStore!.addFavorite(USER, 'event-2')
+    _testStore!.addFavorite(USER, 'event-3')
+    mockGetEvent.mockResolvedValue({ ok: true, data: makeEvent('event-x') })
+
+    await getUserFavoritedEventsHandler()
+    const calledIds = mockGetEvent.mock.calls.map((c) => c[0])
+    expect(calledIds).toContain('event-1')
+    expect(calledIds).toContain('event-2')
+    expect(calledIds).toContain('event-3')
+    expect(mockGetEvent).toHaveBeenCalledTimes(3)
   })
 })

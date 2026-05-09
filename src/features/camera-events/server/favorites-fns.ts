@@ -4,7 +4,9 @@ import { isValidEventId } from '#/features/shared/server/frigate/validation'
 import {
   retainEvent,
   unretainEvent,
+  getEvent,
 } from '#/features/shared/server/frigate/client'
+import type { FrigateEvent } from '#/features/shared/server/frigate/types'
 import { getFavoritesStore } from './favorites-store'
 
 /**
@@ -56,6 +58,20 @@ export async function getUserFavoritedEventIdsHandler(): Promise<string[]> {
   return store.getUserFavoritedEventIds(userId)
 }
 
+/**
+ * Pure handler for fetching the calling user's favorited Frigate events.
+ * Non-ok Frigate results are silently filtered. Exported for unit testing.
+ */
+export async function getUserFavoritedEventsHandler(): Promise<FrigateEvent[]> {
+  const userId = await requireSession()
+  const store = await getFavoritesStore()
+  const ids = store.getUserFavoritedEventIds(userId)
+  const results = await Promise.all(ids.map((id) => getEvent(id)))
+  return results
+    .filter((r) => r.ok)
+    .map((r) => (r as { ok: true; data: FrigateEvent }).data)
+}
+
 export const toggleFavoriteFn = createServerFn({ method: 'POST' })
   .inputValidator((data: { eventId: string }) => data)
   .handler(({ data }) => toggleFavoriteHandler(data))
@@ -63,3 +79,7 @@ export const toggleFavoriteFn = createServerFn({ method: 'POST' })
 export const getUserFavoritedEventIdsFn = createServerFn({
   method: 'GET',
 }).handler(() => getUserFavoritedEventIdsHandler())
+
+export const getUserFavoritedEventsFn = createServerFn({
+  method: 'GET',
+}).handler(() => getUserFavoritedEventsHandler())
