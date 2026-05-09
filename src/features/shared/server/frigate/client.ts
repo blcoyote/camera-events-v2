@@ -98,6 +98,31 @@ async function frigateGet<T>(
   return result
 }
 
+async function frigateWrite(
+  method: 'POST' | 'DELETE',
+  path: string,
+  timeoutMs: number = DEFAULT_TIMEOUT_MS,
+): Promise<FrigateResult<void>> {
+  try {
+    const url = buildUrl(path)
+    const response = await fetch(url, {
+      method,
+      signal: AbortSignal.timeout(timeoutMs),
+    })
+    if (!response.ok) {
+      return {
+        ok: false,
+        error: `HTTP ${response.status}`,
+        status: response.status,
+      }
+    }
+    return { ok: true, data: undefined }
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err)
+    return { ok: false, error: message }
+  }
+}
+
 function frigateBinary(
   path: string,
   params?: QueryParams,
@@ -170,6 +195,24 @@ export async function getEventSummary(
   if (process.env.FRIGATE_MOCK === 'true')
     return (await loadMock()).getEventSummary(params, timeoutMs)
   return frigateGet('/api/events/summary', params as QueryParams, timeoutMs)
+}
+
+export async function retainEvent(
+  eventId: string,
+  timeoutMs?: number,
+): Promise<FrigateResult<void>> {
+  if (process.env.FRIGATE_MOCK === 'true')
+    return (await loadMock()).retainEvent(eventId, timeoutMs)
+  return frigateWrite('POST', `/api/events/${eventId}/retain`, timeoutMs)
+}
+
+export async function unretainEvent(
+  eventId: string,
+  timeoutMs?: number,
+): Promise<FrigateResult<void>> {
+  if (process.env.FRIGATE_MOCK === 'true')
+    return (await loadMock()).unretainEvent(eventId, timeoutMs)
+  return frigateWrite('DELETE', `/api/events/${eventId}/retain`, timeoutMs)
 }
 
 // ─── Review endpoints ───
