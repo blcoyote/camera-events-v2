@@ -59,7 +59,7 @@ describe('getHeaderAuthState', () => {
     expect(state.navLinks).toEqual([])
   })
 
-  it('returns Cameras, Camera Events, and Settings nav links when authenticated', () => {
+  it('returns Cameras, Events, Favorites, and Settings nav links when authenticated', () => {
     const user: SessionData = {
       sub: '123',
       firstName: 'Jane',
@@ -70,7 +70,21 @@ describe('getHeaderAuthState', () => {
     expect(state.navLinks).toEqual([
       { label: 'Cameras', to: '/cameras' },
       { label: 'Events', to: '/camera-events' },
+      { label: 'Favorites', to: '/favorites' },
       { label: 'Settings', to: '/settings' },
     ])
+  })
+
+  it('Favorites link is at index 2, between Events and Settings', () => {
+    const user: SessionData = {
+      sub: '123',
+      firstName: 'Jane',
+      email: 'jane@example.com',
+      avatarUrl: '',
+    }
+    const state = getHeaderAuthState(user)
+    expect(state.navLinks[2]).toEqual({ label: 'Favorites', to: '/favorites' })
+    expect(state.navLinks[1]).toEqual({ label: 'Events', to: '/camera-events' })
+    expect(state.navLinks[3]).toEqual({ label: 'Settings', to: '/settings' })
   })
 })
