@@ -24,6 +24,19 @@ export default defineConfig({
   resolve: {
     tsconfigPaths: true,
   },
+  // TanStack Start server packages use lazy #tanstack-* import() specifiers that
+  // the optimizer can't resolve without the tanstackStart() plugin (excluded in
+  // test mode). Excluding them from optimization prevents the build-time failure;
+  // the specifiers never execute in unit tests because createStartHandler is never called.
+  optimizeDeps: {
+    exclude: isTest
+      ? [
+          '@tanstack/react-start',
+          '@tanstack/react-start-server',
+          '@tanstack/start-server-core',
+        ]
+      : [],
+  },
   plugins: [
     tailwindcss(),
     ...(isTest ? [] : [devtools(), tanstackStart(), nitro({ preset: 'bun' })]),
