@@ -83,12 +83,5 @@
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx,md,json,css,yml,yaml}": "prettier --write"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "better-sqlite3",
-      "esbuild",
-      "unrs-resolver"
-    ]
   }
 }

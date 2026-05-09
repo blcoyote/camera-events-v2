@@ -3,10 +3,7 @@ import type { Plugin, PluginOption } from 'vite'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-const __dirname =
-  typeof globalThis.__dirname !== 'undefined'
-    ? globalThis.__dirname
-    : path.dirname(fileURLToPath(import.meta.url))
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 const appOnlyPrefixes = [
   'tanstack-start',

@@ -3,7 +3,6 @@ RUN corepack enable && corepack prepare pnpm@10.24.0 --activate
 
 FROM base AS deps
 WORKDIR /app
-RUN apk add --no-cache python3 make g++
 COPY package.json pnpm-lock.yaml .npmrc ./
 RUN pnpm install --frozen-lockfile
 
