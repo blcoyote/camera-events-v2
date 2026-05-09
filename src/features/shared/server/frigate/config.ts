@@ -1,3 +1,5 @@
+import type { FrigateEvent } from './types'
+
 /**
  * Result type for all Frigate API client functions.
  * Consuming code pattern-matches on `ok` to handle success/failure.
@@ -15,8 +17,6 @@ export interface FrigateRetainClient {
   retainEvent: (eventId: string) => Promise<FrigateResult<void>>
   unretainEvent: (eventId: string) => Promise<FrigateResult<void>>
 }
-
-import type { FrigateEvent } from './types'
 
 /** Minimal Frigate client interface for fetching a single event by ID. */
 export interface FrigateEventClient {
