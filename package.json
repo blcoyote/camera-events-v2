@@ -85,7 +85,11 @@
     "*.{js,jsx,ts,tsx,md,json,css,yml,yaml}": "prettier --write"
   },
   "pnpm": {
-    "onlyBuiltDependencies": ["better-sqlite3", "esbuild", "unrs-resolver"],
+    "onlyBuiltDependencies": [
+      "better-sqlite3",
+      "esbuild",
+      "unrs-resolver"
+    ],
     "patchedDependencies": {
       "@tanstack/start-server-core": "patches/@tanstack__start-server-core.patch"
     }
