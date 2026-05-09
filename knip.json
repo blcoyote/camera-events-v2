@@ -9,11 +9,12 @@
     "vite-plugin-sw.ts"
   ],
   "project": ["src/**/*.{ts,tsx}"],
-  "ignoreFiles": [".storybook/stubs/favorites.ts"],
   "ignoreDependencies": [
     "@tailwindcss/typography",
     "@tanstack/react-router-ssr-query",
     "@tanstack/router-plugin",
+    "@testing-library/dom",
+    "@testing-library/react",
     "tailwindcss"
   ],
   "ignoreBinaries": ["only-allow"]

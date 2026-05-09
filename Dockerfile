@@ -1,18 +1,18 @@
-FROM node:24-alpine AS base
-RUN corepack enable && corepack prepare pnpm@10.24.0 --activate
+FROM oven/bun:1-alpine AS base
 
 FROM base AS deps
 WORKDIR /app
-COPY package.json pnpm-lock.yaml .npmrc ./
-RUN pnpm install --frozen-lockfile
+RUN apk add --no-cache python3 make g++
+COPY package.json bun.lock* ./
+RUN bun install --frozen-lockfile
 
 FROM base AS build
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-RUN pnpm run build
+RUN bun run build
 
-FROM node:24-alpine AS runtime
+FROM base AS runtime
 RUN addgroup -g 1234 -S app && adduser -u 1234 -S app -G app
 WORKDIR /app
 RUN mkdir -p /app/data && chown 1234:1234 /app/data
@@ -22,4 +22,4 @@ USER 1234
 ENV NODE_ENV=production
 ENV PORT=3000
 EXPOSE 3000
-CMD ["node", ".output/server/index.mjs"]
+CMD ["bun", "run", ".output/server"]

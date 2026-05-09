@@ -26,7 +26,6 @@ export function getHeaderAuthState(user: SessionData | null): {
     ? [
         { label: 'Cameras', to: '/cameras' },
         { label: 'Events', to: '/camera-events' },
-        { label: 'Favorites', to: '/favorites' },
         { label: 'Settings', to: '/settings' },
       ]
     : []

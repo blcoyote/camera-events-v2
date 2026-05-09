@@ -17,7 +17,6 @@ import { usePullToRefresh } from '#/features/shared/hooks/usePullToRefresh'
 import { useRefetchOnFocus } from '#/features/shared/hooks/useRefetchOnFocus'
 import { useRefetchOnMount } from '#/features/shared/hooks/useRefetchOnMount'
 import { PullToRefreshIndicator } from '#/features/shared/components/PullToRefreshIndicator'
-import { getFavoritedEventIdsFn } from '#/features/camera-events/server/favorites'
 
 const PULL_THRESHOLD = 80
 
@@ -31,19 +30,13 @@ const loadEvents = createServerFn({ method: 'GET' }).handler(
 )
 
 export const Route = createFileRoute('/_authenticated/camera-events/')({
-  loader: async () => {
-    const [result, favoriteEventIds] = await Promise.all([
-      loadEvents(),
-      getFavoritedEventIdsFn(),
-    ])
-    return { result, favoriteEventIds }
-  },
+  loader: () => loadEvents(),
   pendingComponent: CameraEventsLoading,
   component: CameraEventsRoute,
 })
 
 function CameraEventsRoute() {
-  const { result, favoriteEventIds } = Route.useLoaderData()
+  const result = Route.useLoaderData()
   const router = useRouter()
   const onRefresh = async () => {
     await clearCacheFn()
@@ -66,10 +59,7 @@ function CameraEventsRoute() {
         isComplete={isComplete}
         threshold={PULL_THRESHOLD}
       />
-      <CameraEventsListPage
-        result={result}
-        favoriteEventIds={favoriteEventIds}
-      />
+      <CameraEventsListPage result={result} />
     </>
   )
 }
