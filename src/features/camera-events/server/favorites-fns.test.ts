@@ -14,7 +14,7 @@ vi.mock('#/features/shared/server/session', () => ({
 
 let _testStore: FavoritesStore | null = null
 vi.mock('./favorites-store', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('./favorites-store')>()
+  const actual = await importOriginal<FavoritesStore>()
   return {
     ...actual,
     getFavoritesStore: vi.fn(() => {
@@ -38,7 +38,7 @@ const {
   toggleFavoriteHandler,
   getUserFavoritedEventIdsHandler,
   getUserFavoritedEventsHandler,
-} = await import('./favorites-fns')
+} = await import('./favorites-handlers')
 
 // ─── Test fixtures ────────────────────────────────────────────────────────────
 

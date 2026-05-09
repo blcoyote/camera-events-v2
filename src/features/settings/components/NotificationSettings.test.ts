@@ -2,7 +2,6 @@ import { describe, it, expect } from 'vitest'
 
 /**
  * Tests for the notification settings state logic.
- * The actual component rendering is verified by Storybook stories.
  */
 
 describe('NotificationSettings state logic', () => {

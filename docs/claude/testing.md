@@ -13,7 +13,7 @@ Never write production code before a failing test exists. Never skip the refacto
 ## Running Tests
 
 ```bash
-bun run test                   # Run all tests once (unit + Storybook browser)
+bun run test                   # Run all tests once (unit)
 bun run test -- --watch        # Watch mode — re-runs on file save
 bun run test -- --reporter=verbose   # Verbose per-test output
 bun run test -- src/features/cameras # Run a single feature's tests
@@ -23,7 +23,6 @@ bun run test -- validation     # Filter by filename substring
 The Vitest config in `vite.config.ts` defines two projects:
 
 - `unit` — jsdom environment, matches `src/**/*.test.ts` and `src/**/*.test.tsx`
-- `storybook` — Playwright Chromium, matches `*.stories.tsx` files via `@storybook/addon-vitest`
 
 ## Test File Placement
 
@@ -67,8 +66,6 @@ describe('isValidCameraName', () => {
 **Server-side logic (proxies, MQTT handlers, push pipeline)** — stub `globalThis.fetch` and `process.env` directly. Restore after each test with `beforeEach`/`afterEach`. See `clip-proxy.test.ts`, `mqtt.test.ts`.
 
 **Async behaviour with timers** — use `vi.useFakeTimers()` / `vi.advanceTimersByTime()`. Always call `vi.useRealTimers()` in `afterEach`. See `event-batcher.test.ts`.
-
-**Storybook stories** — `*.stories.tsx` files serve as component integration tests run in a real browser via Playwright. Write a story for every significant component state. The a11y addon checks WCAG compliance automatically on each story.
 
 ## Mocking Patterns
 

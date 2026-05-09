@@ -5,7 +5,7 @@ const originalEnv = process.env.FRIGATE_URL
 
 beforeEach(() => {
   process.env.FRIGATE_URL = 'http://frigate.local:5000'
-  process.env.FRIGATE_MOCK = undefined as unknown as string
+  process.env.FRIGATE_MOCK = undefined
   delete process.env.FRIGATE_MOCK
 })
 
@@ -36,7 +36,7 @@ describe('retainEvent', () => {
     expect(mockFetch).toHaveBeenCalledOnce()
     const [url, init] = mockFetch.mock.calls[0] as [string, RequestInit]
     expect(url).toContain('/api/events/1713095000.123456-abcdef/retain')
-    expect(init?.method).toBe('POST')
+    expect(init.method).toBe('POST')
   })
 
   it('returns ok:false with error message on non-2xx', async () => {
@@ -94,7 +94,7 @@ describe('unretainEvent', () => {
     expect(mockFetch).toHaveBeenCalledOnce()
     const [url, init] = mockFetch.mock.calls[0] as [string, RequestInit]
     expect(url).toContain('/api/events/1713095000.123456-abcdef/retain')
-    expect(init?.method).toBe('DELETE')
+    expect(init.method).toBe('DELETE')
   })
 
   it('returns ok:false on non-2xx', async () => {

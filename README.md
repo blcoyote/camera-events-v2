@@ -20,7 +20,7 @@ A self-hosted PWA for browsing and monitoring [Frigate NVR](https://frigate.vide
 - **Data:** better-sqlite3 (push subscriptions + preferences), MQTT (Frigate event stream)
 - **Auth:** Google OAuth via Arctic, encrypted session cookies
 - **Push:** web-push (VAPID), Serwist service worker
-- **Testing:** Vitest, Testing Library, Playwright browser mode, Storybook
+- **Testing:** Vitest, Testing Library, Playwright browser mode
 - **Package manager:** pnpm (enforced via `only-allow`)
 
 ## Architecture
@@ -76,14 +76,12 @@ pnpm test             # Run Vitest once
 pnpm lint             # ESLint
 pnpm format           # Prettier check
 pnpm check            # Prettier write + ESLint --fix
-pnpm storybook        # Component explorer on :6006
 pnpm knip             # Unused-code report
 ```
 
 ## Testing
 
 - Unit + integration tests with Vitest live alongside the code they test (`*.test.ts`).
-- Component Storybook in `*.stories.tsx` files, with a11y and Vitest addons enabled.
 - Tests run in jsdom by default; Playwright browser mode is available via `@vitest/browser`.
 
 ## Deployment

@@ -13,9 +13,6 @@ __unconfig*
 todos.json
 public/sw.js
 
-*storybook.log
-storybook-static
-
 /data/
 
 # Beads / Dolt files (added by bd init)
