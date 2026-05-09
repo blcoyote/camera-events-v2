@@ -12,6 +12,7 @@
   },
   "scripts": {
     "preinstall": "npx only-allow pnpm",
+    "postinstall": "node scripts/build-native.mjs",
     "dev": "vite dev --port 3000",
     "build": "vite build",
     "preview": "vite preview",
