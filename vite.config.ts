@@ -1,5 +1,5 @@
 import { defineConfig } from 'vitest/config'
-import type { Plugin } from 'vitest/config'
+import type { Plugin } from 'vite'
 import { devtools } from '@tanstack/devtools-vite'
 import { tanstackStart } from '@tanstack/react-start/plugin/vite'
 import viteReact from '@vitejs/plugin-react'
