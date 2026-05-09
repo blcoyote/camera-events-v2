@@ -5,7 +5,7 @@ import type { SessionData } from '#/features/shared/server/session'
 
 type SessionLike = {
   data: Partial<SessionData>
-  update: (data: SessionData) => Promise<void>
+  update: (data: SessionData) => Promise<unknown>
 }
 
 /**

@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
+import type { Mock } from 'vitest'
 import {
   buildOAuthState,
   parseOAuthState,
@@ -13,11 +14,16 @@ import type { SessionData } from '#/features/shared/server/session'
 
 type MockSession = {
   data: Partial<SessionData>
-  update: ReturnType<typeof vi.fn>
+  update: Mock<(data: SessionData) => Promise<void>>
 }
 
 function makeSession(data: Partial<SessionData> = {}): MockSession {
-  return { data, update: vi.fn().mockResolvedValue(undefined) }
+  return {
+    data,
+    update: vi
+      .fn<(data: SessionData) => Promise<void>>()
+      .mockResolvedValue(undefined),
+  }
 }
 
 describe('OAUTH_SCOPES', () => {
