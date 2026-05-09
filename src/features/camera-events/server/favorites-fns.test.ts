@@ -24,6 +24,14 @@ vi.mock('./favorites-store', async (importOriginal) => {
   }
 })
 
+const mockRetainEvent = vi.fn()
+const mockUnretainEvent = vi.fn()
+vi.mock('#/features/shared/server/frigate/client', () => ({
+  retainEvent: mockRetainEvent,
+  unretainEvent: mockUnretainEvent,
+  getEvent: vi.fn(),
+}))
+
 // Import handlers AFTER mocks are set up
 const { toggleFavoriteHandler, getUserFavoritedEventIdsHandler } =
   await import('./favorites-fns')
@@ -39,6 +47,8 @@ beforeEach(async () => {
   tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'favorites-fns-test-'))
   _testStore = await createFavoritesStore(path.join(tmpDir, 'test.db'))
   mockRequireSession.mockResolvedValue(USER)
+  mockRetainEvent.mockResolvedValue({ ok: true, data: undefined })
+  mockUnretainEvent.mockResolvedValue({ ok: true, data: undefined })
 })
 
 afterEach(() => {
@@ -124,6 +134,61 @@ describe('toggleFavoriteHandler', () => {
       expect(_testStore!.isFavorited('userA', VALID_ID)).toBe(true)
       expect(_testStore!.isFavorited('userB', VALID_ID)).toBe(true)
     })
+  })
+})
+
+// ─── toggleFavoriteHandler — Frigate retention side effects ──────────────────
+
+describe('toggleFavoriteHandler — retention', () => {
+  it('calls retainEvent when this is the first favorite (count becomes 1)', async () => {
+    await toggleFavoriteHandler({ eventId: VALID_ID })
+    expect(mockRetainEvent).toHaveBeenCalledOnce()
+    expect(mockRetainEvent).toHaveBeenCalledWith(VALID_ID)
+  })
+
+  it('does NOT call retainEvent when a second user favorites the same event', async () => {
+    mockRequireSession.mockResolvedValue('userA')
+    await toggleFavoriteHandler({ eventId: VALID_ID })
+    mockRetainEvent.mockClear()
+
+    mockRequireSession.mockResolvedValue('userB')
+    await toggleFavoriteHandler({ eventId: VALID_ID })
+    expect(mockRetainEvent).not.toHaveBeenCalled()
+  })
+
+  it('calls unretainEvent when the last favorite is removed (count becomes 0)', async () => {
+    await toggleFavoriteHandler({ eventId: VALID_ID })
+    await toggleFavoriteHandler({ eventId: VALID_ID })
+    expect(mockUnretainEvent).toHaveBeenCalledOnce()
+    expect(mockUnretainEvent).toHaveBeenCalledWith(VALID_ID)
+  })
+
+  it('does NOT call unretainEvent when a non-last user unfavorites', async () => {
+    mockRequireSession.mockResolvedValue('userA')
+    await toggleFavoriteHandler({ eventId: VALID_ID })
+    mockRequireSession.mockResolvedValue('userB')
+    await toggleFavoriteHandler({ eventId: VALID_ID })
+
+    mockUnretainEvent.mockClear()
+
+    mockRequireSession.mockResolvedValue('userA')
+    await toggleFavoriteHandler({ eventId: VALID_ID })
+    expect(mockUnretainEvent).not.toHaveBeenCalled()
+  })
+
+  it('retainEvent throws — handler still returns { favorited: true } without rethrowing', async () => {
+    mockRetainEvent.mockRejectedValue(new Error('Frigate unavailable'))
+    const result = await toggleFavoriteHandler({ eventId: VALID_ID })
+    expect(result).toEqual({ favorited: true })
+    expect(_testStore!.isFavorited(USER, VALID_ID)).toBe(true)
+  })
+
+  it('unretainEvent returns { ok: false } — handler still returns { favorited: false }', async () => {
+    await toggleFavoriteHandler({ eventId: VALID_ID })
+    mockUnretainEvent.mockResolvedValue({ ok: false, error: 'HTTP 500' })
+    const result = await toggleFavoriteHandler({ eventId: VALID_ID })
+    expect(result).toEqual({ favorited: false })
+    expect(_testStore!.isFavorited(USER, VALID_ID)).toBe(false)
   })
 })
 

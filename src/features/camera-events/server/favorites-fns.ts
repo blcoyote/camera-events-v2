@@ -1,6 +1,10 @@
 import { createServerFn } from '@tanstack/react-start'
 import { requireSession } from '#/features/shared/server/session'
 import { isValidEventId } from '#/features/shared/server/frigate/validation'
+import {
+  retainEvent,
+  unretainEvent,
+} from '#/features/shared/server/frigate/client'
 import { getFavoritesStore } from './favorites-store'
 
 /**
@@ -20,8 +24,24 @@ export async function toggleFavoriteHandler({
   const currentlyFavorited = store.isFavorited(userId, eventId)
   if (currentlyFavorited) {
     store.removeFavorite(userId, eventId)
+    if (store.getFavoriteCount(eventId) === 0) {
+      try {
+        const r = await unretainEvent(eventId)
+        if (!r.ok) console.warn('unretain failed', r)
+      } catch (e) {
+        console.warn('unretain error', e)
+      }
+    }
   } else {
     store.addFavorite(userId, eventId)
+    if (store.getFavoriteCount(eventId) === 1) {
+      try {
+        const r = await retainEvent(eventId)
+        if (!r.ok) console.warn('retain failed', r)
+      } catch (e) {
+        console.warn('retain error', e)
+      }
+    }
   }
   return { favorited: !currentlyFavorited }
 }
