@@ -3,6 +3,30 @@ import { useSession, clearSession } from '@tanstack/react-start/server'
 import { getSessionConfig } from '#/features/shared/server/session'
 import type { SessionData } from '#/features/shared/server/session'
 
+type SessionLike = {
+  data: Partial<SessionData>
+  update: (data: SessionData) => Promise<unknown>
+}
+
+/**
+ * Reads the current session data, slides the TTL by re-issuing the cookie,
+ * and returns the user data — or null if unauthenticated.
+ * Extracted for testability (accepts any session-shaped object).
+ */
+export async function resolveUserFromSession(
+  session: SessionLike,
+): Promise<SessionData | null> {
+  if (!session.data.sub) return null
+  const data: SessionData = {
+    sub: session.data.sub,
+    firstName: session.data.firstName ?? '',
+    email: session.data.email ?? '',
+    avatarUrl: session.data.avatarUrl ?? '',
+  }
+  await session.update(data)
+  return data
+}
+
 export const OAUTH_SCOPES = ['openid', 'profile', 'email']
 
 export const OAUTH_STATE_COOKIE_NAME = 'oauth_state'
@@ -101,15 +125,7 @@ export const getCurrentUserFn = createServerFn({ method: 'GET' }).handler(
   async (): Promise<SessionData | null> => {
     try {
       const session = await useSession<SessionData>(getSessionConfig())
-      if (!session.data.sub) {
-        return null
-      }
-      return {
-        sub: session.data.sub,
-        firstName: session.data.firstName ?? '',
-        email: session.data.email ?? '',
-        avatarUrl: session.data.avatarUrl ?? '',
-      }
+      return await resolveUserFromSession(session)
     } catch {
       // Corrupted or tampered cookie — treat as unauthenticated
       try {
