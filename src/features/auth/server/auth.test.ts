@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import {
   buildOAuthState,
   parseOAuthState,
@@ -7,7 +7,18 @@ import {
   OAUTH_STATE_COOKIE_OPTIONS,
   sanitizeReturnTo,
   redirectTo,
+  resolveUserFromSession,
 } from './auth'
+import type { SessionData } from '#/features/shared/server/session'
+
+type MockSession = {
+  data: Partial<SessionData>
+  update: ReturnType<typeof vi.fn>
+}
+
+function makeSession(data: Partial<SessionData> = {}): MockSession {
+  return { data, update: vi.fn().mockResolvedValue(undefined) }
+}
 
 describe('OAUTH_SCOPES', () => {
   it('includes openid, profile, and email', () => {
@@ -159,5 +170,58 @@ describe('parseOAuthState', () => {
     expect(result).toEqual({ state: 'a', codeVerifier: 'b' })
     expect((result as Record<string, unknown>).evil).toBeUndefined()
     expect((result as Record<string, unknown>).admin).toBeUndefined()
+  })
+})
+
+describe('resolveUserFromSession', () => {
+  it('returns null and skips update when session has no sub', async () => {
+    const session = makeSession({})
+    const result = await resolveUserFromSession(session)
+    expect(result).toBeNull()
+    expect(session.update).not.toHaveBeenCalled()
+  })
+
+  it('returns SessionData and calls session.update to slide the TTL', async () => {
+    const session = makeSession({
+      sub: 'google-sub-123',
+      firstName: 'Ada',
+      email: 'ada@example.com',
+      avatarUrl: 'https://example.com/avatar.png',
+    })
+
+    const result = await resolveUserFromSession(session)
+
+    expect(result).toEqual({
+      sub: 'google-sub-123',
+      firstName: 'Ada',
+      email: 'ada@example.com',
+      avatarUrl: 'https://example.com/avatar.png',
+    })
+    expect(session.update).toHaveBeenCalledOnce()
+    expect(session.update).toHaveBeenCalledWith({
+      sub: 'google-sub-123',
+      firstName: 'Ada',
+      email: 'ada@example.com',
+      avatarUrl: 'https://example.com/avatar.png',
+    })
+  })
+
+  it('fills missing optional fields with empty strings', async () => {
+    const session = makeSession({ sub: 'sub-only' })
+
+    const result = await resolveUserFromSession(session)
+
+    expect(result).toEqual({
+      sub: 'sub-only',
+      firstName: '',
+      email: '',
+      avatarUrl: '',
+    })
+    expect(session.update).toHaveBeenCalledWith({
+      sub: 'sub-only',
+      firstName: '',
+      email: '',
+      avatarUrl: '',
+    })
   })
 })
