@@ -435,6 +435,20 @@ a {
   }
 }
 
+@keyframes slideInFromLeft {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.nav-drawer-panel {
+  will-change: transform;
+  animation: slideInFromLeft 0.25s ease-out;
+}
+
 /* ─── Dark-mode refinements ─── */
 
 :root[data-theme='dark'] body::before {
