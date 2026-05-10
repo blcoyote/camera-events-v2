@@ -1,6 +1,9 @@
+import { useState, useRef } from 'react'
 import { Link, useRouteContext } from '@tanstack/react-router'
+import { Menu } from 'lucide-react'
 import ThemeToggle from './ThemeToggle'
 import { AvatarMenu } from './AvatarMenu'
+import { NavDrawer } from './NavDrawer'
 import { useStandaloneAuth } from '#/features/auth/hooks/useStandaloneAuth'
 import type { SessionData } from '#/features/shared/server/session'
 
@@ -49,6 +52,17 @@ export default function Header() {
   const { user } = useRouteContext({ from: '__root__' })
   const state = getHeaderAuthState(user)
   const { onClick: onSignIn } = useStandaloneAuth(state.signInHref)
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false)
+  const hamburgerRef = useRef<HTMLButtonElement>(null)
+
+  function openDrawer() {
+    setIsDrawerOpen(true)
+  }
+
+  function closeDrawer() {
+    setIsDrawerOpen(false)
+    hamburgerRef.current?.focus()
+  }
 
   return (
     <header className="sticky top-0 z-50 border-b border-(--line) bg-(--header-bg) px-4 pt-[env(safe-area-inset-top)] backdrop-blur-lg">
@@ -56,7 +70,22 @@ export default function Header() {
         aria-label="Site navigation"
         className="page-wrap flex items-center gap-x-2 py-1.5 sm:gap-x-3 sm:py-2"
       >
-        <div className="flex min-w-0 items-center gap-x-2 overflow-x-auto text-xs font-semibold whitespace-nowrap sm:gap-x-4 sm:text-sm">
+        {/* Hamburger button — mobile only, left-anchored */}
+        {state.navLinks.length > 0 && (
+          <button
+            ref={hamburgerRef}
+            className="-ml-2 flex h-11 w-11 items-center justify-center rounded-full text-(--sea-ink-soft) transition-colors hover:bg-(--surface-strong) hover:text-(--sea-ink) sm:hidden"
+            aria-label="Open navigation"
+            aria-expanded={isDrawerOpen}
+            aria-controls="nav-drawer"
+            onClick={openDrawer}
+          >
+            <Menu size={22} aria-hidden="true" />
+          </button>
+        )}
+
+        {/* Desktop nav links — hidden on mobile */}
+        <div className="hidden min-w-0 items-center gap-x-2 overflow-x-auto text-xs font-semibold whitespace-nowrap sm:flex sm:gap-x-4 sm:text-sm">
           {state.navLinks.map((link) => (
             <Link
               key={link.to}
@@ -71,6 +100,22 @@ export default function Header() {
             </Link>
           ))}
         </div>
+
+        {/* Mobile-only Events link — always visible in header on mobile */}
+        {state.navLinks.length > 0 && (
+          <div className="flex min-w-0 items-center text-xs font-semibold whitespace-nowrap sm:hidden">
+            <Link
+              to="/camera-events"
+              className="nav-link"
+              activeProps={{
+                className: 'nav-link is-active',
+                'aria-current': 'page' as const,
+              }}
+            >
+              Events
+            </Link>
+          </div>
+        )}
 
         <div className="ml-auto flex items-center gap-2">
           <div className="sm:flex">
@@ -94,6 +139,14 @@ export default function Header() {
           )}
         </div>
       </nav>
+
+      {state.navLinks.length > 0 && (
+        <NavDrawer
+          isOpen={isDrawerOpen}
+          onClose={closeDrawer}
+          id="nav-drawer"
+        />
+      )}
     </header>
   )
 }
