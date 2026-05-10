@@ -3,6 +3,7 @@ import {
   CacheFirst,
   ExpirationPlugin,
   NetworkFirst,
+  NetworkOnly,
   Serwist,
   StaleWhileRevalidate,
 } from 'serwist'
@@ -86,14 +87,18 @@ const serwist = new Serwist({
       }),
     },
     {
-      // Cache CSS, JS, and web worker requests with stale-while-revalidate
+      // Cache CSS, JS, and web worker requests with stale-while-revalidate.
+      // In dev, always fetch from network so CSS changes appear on next reload.
       matcher: ({ request }) =>
         request.destination === 'style' ||
         request.destination === 'script' ||
         request.destination === 'worker',
-      handler: new StaleWhileRevalidate({
-        cacheName: 'static-resources',
-      }),
+      handler:
+        process.env.NODE_ENV === 'development'
+          ? new NetworkOnly()
+          : new StaleWhileRevalidate({
+              cacheName: 'static-resources',
+            }),
     },
     {
       // Cache images with cache-first strategy

@@ -1,7 +1,11 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 export function ServiceWorkerRegistration() {
   const [waitingWorker, setWaitingWorker] = useState<ServiceWorker | null>(null)
+  // Tracks whether the user explicitly clicked "Update now" so the
+  // controllerchange handler knows it's safe to reload even when the page
+  // was uncontrolled at load time (e.g. first install + clientsClaim).
+  const updateRequestedRef = useRef(false)
 
   useEffect(() => {
     if (!('serviceWorker' in navigator)) return
@@ -9,6 +13,10 @@ export function ServiceWorkerRegistration() {
     navigator.serviceWorker
       .register('/sw.js')
       .then((registration) => {
+        // Force a byte-comparison check against the server on every page load
+        // so SW updates are detected without requiring a full hard reload.
+        registration.update().catch(() => {})
+
         if (registration.waiting) {
           setWaitingWorker(registration.waiting)
         }
@@ -17,14 +25,18 @@ export function ServiceWorkerRegistration() {
           const installing = registration.installing
           if (!installing) return
 
-          installing.addEventListener('statechange', () => {
+          const checkInstalled = () => {
             if (
               installing.state === 'installed' &&
               navigator.serviceWorker.controller
             ) {
               setWaitingWorker(installing)
             }
-          })
+          }
+          // Guard against a race where the SW transitions before the listener
+          // is attached (can happen when sw.js is served from cache quickly).
+          installing.addEventListener('statechange', checkInstalled)
+          checkInstalled()
         })
       })
       .catch((error) => {
@@ -67,14 +79,14 @@ export function ServiceWorkerRegistration() {
     // the PWA launched at start_url instead of the notification's URL.
     claimPendingNavigation()
 
-    // Only reload when an existing controller is replaced (user accepted an
-    // update). On the very first install, the page was uncontrolled at load
-    // and clientsClaim triggers a controllerchange mid-hydration — reloading
-    // there steals the user's first click.
+    // Reload when the controller changes. Allow the reload when:
+    //   a) An old SW was already controlling the page at load (normal update), OR
+    //   b) The user explicitly clicked "Update now" (handles first-install +
+    //      clientsClaim case where hadControllerAtLoad is false).
     const hadControllerAtLoad = Boolean(navigator.serviceWorker.controller)
     let refreshing = false
     navigator.serviceWorker.addEventListener('controllerchange', () => {
-      if (!hadControllerAtLoad) return
+      if (!hadControllerAtLoad && !updateRequestedRef.current) return
       if (refreshing) return
       refreshing = true
       window.location.reload()
@@ -82,6 +94,7 @@ export function ServiceWorkerRegistration() {
   }, [])
 
   const handleUpdate = useCallback(() => {
+    updateRequestedRef.current = true
     waitingWorker?.postMessage({ type: 'SKIP_WAITING' })
     setWaitingWorker(null)
   }, [waitingWorker])
