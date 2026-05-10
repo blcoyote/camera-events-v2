@@ -61,7 +61,7 @@ const DEFAULT_EVENT_DATA: FrigateEvent['data'] = {
   type: 'object',
 }
 
-export const MOCK_FRIGATE_EVENTS: FrigateEvent[] = [
+const MOCK_FRIGATE_EVENTS: FrigateEvent[] = [
   {
     id: '1713081600.100-abc001',
     label: 'person',

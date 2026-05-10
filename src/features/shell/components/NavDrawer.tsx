@@ -16,7 +16,7 @@ interface DrawerNavLink {
   Icon: LucideIcon
 }
 
-export const DRAWER_NAV_LINKS: DrawerNavLink[] = [
+const DRAWER_NAV_LINKS: DrawerNavLink[] = [
   { label: 'Cameras', to: '/cameras', Icon: Camera },
   { label: 'Events', to: '/camera-events', Icon: Bell },
   { label: 'Favorites', to: '/favorites', Icon: Heart },
