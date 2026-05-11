@@ -8,7 +8,7 @@ import {
 } from '#/features/shared/utils/eventFormatting'
 import { EventThumbnail } from './EventThumbnail'
 import { useFavoriteToggle } from '#/features/shared/hooks/useFavoriteToggle'
-import { FavoriteButton } from './FavoriteButton'
+import { FavoriteButton } from '#/features/shared/components/FavoriteButton'
 
 export function EventCard({
   event,
