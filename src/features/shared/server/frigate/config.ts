@@ -1,3 +1,4 @@
+import '@tanstack/react-start/server-only'
 /**
  * Result type for all Frigate API client functions.
  * Consuming code pattern-matches on `ok` to handle success/failure.

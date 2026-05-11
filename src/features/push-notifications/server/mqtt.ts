@@ -1,3 +1,4 @@
+import '@tanstack/react-start/server-only'
 import mqtt from 'mqtt'
 import type { MqttClient } from 'mqtt'
 import { clearFrigateCache } from '#/features/shared/server/frigate/cache'

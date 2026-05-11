@@ -83,6 +83,7 @@ Skills are reusable knowledge modules in `.claude/skills/` that agents reference
 | Docker Image Create | `skills/docker-image-create/SKILL.md` | 800 | DevOps/SRE Engineer, Software Engineer |
 | Docker Image Audit | `skills/docker-image-audit/SKILL.md` | 750 | Orchestrator (inline review), DevOps/SRE Engineer, Security Engineer |
 | Performance Benchmark | `skills/performance-benchmark/SKILL.md` | 800 | QA Engineer, DevOps/SRE Engineer, `/benchmark` command |
+| TanStack Start Boundaries | `skills/tanstack-start-boundaries/SKILL.md` | 950 | Software Engineer, arch-review, security-review |
 
 ## Subagent Prompt Templates
 

@@ -1,3 +1,4 @@
+import '@tanstack/react-start/server-only'
 import { requireSession } from '#/features/shared/server/session'
 import { isValidEventId } from '#/features/shared/server/frigate/validation'
 import {

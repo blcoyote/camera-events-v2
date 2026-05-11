@@ -1,3 +1,4 @@
+import '@tanstack/react-start/server-only'
 import { openSqlite } from '#/features/shared/server/sqlite'
 import type { SqliteDatabase } from '#/features/shared/server/sqlite'
 import { mkdirSync, existsSync } from 'node:fs'

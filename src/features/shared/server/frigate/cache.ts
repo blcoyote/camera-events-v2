@@ -1,3 +1,4 @@
+import '@tanstack/react-start/server-only'
 /** Default cache TTL: 10 minutes. */
 export const CACHE_TTL_MS = 600_000
 
