@@ -8,7 +8,7 @@ import {
   formatLabelName,
   getLabelDotColor,
   formatCameraName,
-} from '../utils'
+} from '#/features/shared/utils/eventFormatting'
 import { SnapshotLightbox } from './SnapshotLightbox'
 import { EventSnapshot } from './EventSnapshot'
 import { InfoCard } from './InfoCard'
