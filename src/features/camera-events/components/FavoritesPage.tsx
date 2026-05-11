@@ -1,6 +1,6 @@
 import { Link } from '@tanstack/react-router'
 import type { FrigateEvent } from '#/features/shared/server/frigate/types'
-import { EventCard } from './EventCard'
+import { EventCard } from '#/features/shared/components/EventCard'
 
 export function FavoritesPage({ events }: { events: FrigateEvent[] }) {
   if (events.length === 0) {

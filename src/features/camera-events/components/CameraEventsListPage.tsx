@@ -3,7 +3,7 @@ import type { FrigateResult } from '#/features/shared/server/frigate/config'
 import type { FrigateEvent } from '#/features/shared/server/frigate/types'
 import { formatLabelName } from '#/features/shared/utils/eventFormatting'
 import { FilterPill } from './FilterPill'
-import { EventCard } from './EventCard'
+import { EventCard } from '#/features/shared/components/EventCard'
 
 // ─── Pure functions (exported for testing) ───
 
