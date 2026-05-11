@@ -6,7 +6,7 @@ import type { FrigateResult } from '#/features/shared/server/frigate/config'
 import type { FrigateEvent } from '#/features/shared/server/frigate/types'
 import { requireSession } from '#/features/shared/server/session'
 import { isValidEventId } from '#/features/shared/server/frigate/validation'
-import { getUserFavoritedEventIdsFn } from '#/features/camera-events/server/favorites-fns'
+import { getUserFavoritedEventIdsFn } from '#/features/shared/server/favorites/favorites-fns'
 
 const loadEvent = createServerFn({ method: 'GET' })
   .inputValidator((data: string) => data)

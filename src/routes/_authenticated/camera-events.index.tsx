@@ -15,7 +15,7 @@ import { usePullToRefresh } from '#/features/shared/hooks/usePullToRefresh'
 import { useRefetchOnFocus } from '#/features/shared/hooks/useRefetchOnFocus'
 import { useRefetchOnMount } from '#/features/shared/hooks/useRefetchOnMount'
 import { PullToRefreshIndicator } from '#/features/shared/components/PullToRefreshIndicator'
-import { getUserFavoritedEventIdsFn } from '#/features/camera-events/server/favorites-fns'
+import { getUserFavoritedEventIdsFn } from '#/features/shared/server/favorites/favorites-fns'
 
 const PULL_THRESHOLD = 80
 

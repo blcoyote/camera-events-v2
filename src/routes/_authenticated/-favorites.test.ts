@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 const mockGetUserFavoritedEventsFn = vi.fn()
 
-vi.mock('#/features/camera-events/server/favorites-fns', () => ({
+vi.mock('#/features/shared/server/favorites/favorites-fns', () => ({
   getUserFavoritedEventsFn: mockGetUserFavoritedEventsFn,
   toggleFavoriteFn: vi.fn(),
 }))

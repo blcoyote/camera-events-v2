@@ -8,7 +8,7 @@ const mockToggleFavoriteFn =
   vi.fn<
     (opts: { data: { eventId: string } }) => Promise<{ favorited: boolean }>
   >()
-vi.mock('../server/favorites-fns', () => ({
+vi.mock('#/features/shared/server/favorites/favorites-fns', () => ({
   toggleFavoriteFn: mockToggleFavoriteFn,
 }))
 
