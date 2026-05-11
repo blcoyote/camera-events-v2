@@ -7,7 +7,7 @@ import {
   getLabelDotColor,
 } from '#/features/shared/utils/eventFormatting'
 import { EventThumbnail } from './EventThumbnail'
-import { useFavoriteToggle } from '../hooks/useFavoriteToggle'
+import { useFavoriteToggle } from '#/features/shared/hooks/useFavoriteToggle'
 import { FavoriteButton } from './FavoriteButton'
 
 export function EventCard({

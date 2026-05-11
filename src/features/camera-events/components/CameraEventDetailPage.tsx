@@ -12,7 +12,7 @@ import {
 import { SnapshotLightbox } from './SnapshotLightbox'
 import { EventSnapshot } from './EventSnapshot'
 import { InfoCard } from './InfoCard'
-import { useFavoriteToggle } from '../hooks/useFavoriteToggle'
+import { useFavoriteToggle } from '#/features/shared/hooks/useFavoriteToggle'
 import { FavoriteButton } from './FavoriteButton'
 
 // ─── Pure functions (exported for testing) ───
