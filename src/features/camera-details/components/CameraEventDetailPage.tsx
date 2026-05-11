@@ -8,12 +8,12 @@ import {
   formatLabelName,
   getLabelDotColor,
   formatCameraName,
-} from '../utils'
+} from '#/features/shared/utils/eventFormatting'
 import { SnapshotLightbox } from './SnapshotLightbox'
 import { EventSnapshot } from './EventSnapshot'
 import { InfoCard } from './InfoCard'
-import { useFavoriteToggle } from '../hooks/useFavoriteToggle'
-import { FavoriteButton } from './FavoriteButton'
+import { useFavoriteToggle } from '#/features/shared/hooks/useFavoriteToggle'
+import { FavoriteButton } from '#/features/shared/components/FavoriteButton'
 
 // ─── Pure functions (exported for testing) ───
 

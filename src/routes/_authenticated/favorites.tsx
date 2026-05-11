@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { FavoritesPage } from '#/features/camera-events/components/FavoritesPage'
-import { FavoritesLoading } from '#/features/camera-events/components/FavoritesLoading'
-import { getUserFavoritedEventsFn } from '#/features/camera-events/server/favorites-fns'
+import { FavoritesPage } from '#/features/favorites/components/FavoritesPage'
+import { FavoritesLoading } from '#/features/favorites/components/FavoritesLoading'
+import { getUserFavoritedEventsFn } from '#/features/shared/server/favorites/favorites-fns'
 import type { FrigateEvent } from '#/features/shared/server/frigate/types'
 
 export async function favoritesLoader(): Promise<FrigateEvent[]> {

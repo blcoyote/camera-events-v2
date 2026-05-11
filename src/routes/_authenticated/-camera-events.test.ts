@@ -4,10 +4,12 @@ import {
   getUniqueLabels,
   getUniqueCameras,
   filterEvents,
+} from '#/features/camera-events/components/CameraEventsListPage'
+import {
   formatRelativeTime,
   formatLabelName,
   getLabelDotColor,
-} from '#/features/camera-events/components/CameraEventsListPage'
+} from '#/features/shared/utils/eventFormatting'
 import type { FrigateEvent } from '#/features/shared/server/frigate/types'
 
 function makeEvent(overrides: Partial<FrigateEvent> = {}): FrigateEvent {

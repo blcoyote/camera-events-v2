@@ -16,12 +16,12 @@ const mockUseFavoriteToggle = vi.fn(() => ({
   toggle: mockToggle,
 }))
 
-vi.mock('../hooks/useFavoriteToggle', () => ({
+vi.mock('#/features/shared/hooks/useFavoriteToggle', () => ({
   useFavoriteToggle: mockUseFavoriteToggle,
 }))
 
 const mockFavoriteButton = vi.fn((_props: unknown) => null)
-vi.mock('./FavoriteButton', () => ({
+vi.mock('#/features/shared/components/FavoriteButton', () => ({
   FavoriteButton: (props: unknown) => mockFavoriteButton(props),
 }))
 

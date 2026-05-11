@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react'
 import { useRouter } from '@tanstack/react-router'
-import { toggleFavoriteFn } from '../server/favorites-fns'
+import { toggleFavoriteFn } from '#/features/shared/server/favorites/favorites-fns'
 
 const TOGGLE_ERROR_MESSAGE = 'Could not save favorite. Please try again.'
 

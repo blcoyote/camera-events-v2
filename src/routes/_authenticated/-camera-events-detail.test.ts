@@ -4,8 +4,8 @@ import {
   formatTimestamp,
   formatDuration,
   getDownloadUrl,
-} from '#/features/camera-events/components/CameraEventDetailPage'
-import { formatCameraName } from '#/features/camera-events/utils'
+} from '#/features/camera-details/components/CameraEventDetailPage'
+import { formatCameraName } from '#/features/shared/utils/eventFormatting'
 import type { FrigateEvent } from '#/features/shared/server/frigate/types'
 
 function makeEvent(overrides: Partial<FrigateEvent> = {}): FrigateEvent {

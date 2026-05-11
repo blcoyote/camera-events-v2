@@ -14,7 +14,7 @@ vi.mock('#/features/shared/server/session', () => ({
   requireSession: vi.fn().mockResolvedValue('user-1'),
 }))
 
-vi.mock('#/features/camera-events/server/favorites-fns', () => ({
+vi.mock('#/features/shared/server/favorites/favorites-fns', () => ({
   getUserFavoritedEventIdsFn: mockGetUserFavoritedEventIdsFn,
 }))
 

@@ -1,5 +1,8 @@
 import { ZoomIn } from 'lucide-react'
-import { formatLabelName, formatCameraName } from '../utils'
+import {
+  formatLabelName,
+  formatCameraName,
+} from '#/features/shared/utils/eventFormatting'
 
 export function EventSnapshot({
   eventId,

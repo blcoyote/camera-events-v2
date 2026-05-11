@@ -1,10 +1,14 @@
 import { Video } from 'lucide-react'
 import { MediaCard } from '#/features/shared/components/MediaCard'
 import type { FrigateEvent } from '#/features/shared/server/frigate/types'
-import { formatRelativeTime, formatLabelName, getLabelDotColor } from '../utils'
-import { EventThumbnail } from './EventThumbnail'
-import { useFavoriteToggle } from '../hooks/useFavoriteToggle'
-import { FavoriteButton } from './FavoriteButton'
+import {
+  formatRelativeTime,
+  formatLabelName,
+  getLabelDotColor,
+} from '#/features/shared/utils/eventFormatting'
+import { EventThumbnail } from '#/features/shared/components/EventThumbnail'
+import { useFavoriteToggle } from '#/features/shared/hooks/useFavoriteToggle'
+import { FavoriteButton } from '#/features/shared/components/FavoriteButton'
 
 export function EventCard({
   event,
