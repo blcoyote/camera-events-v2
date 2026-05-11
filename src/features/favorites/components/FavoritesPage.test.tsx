@@ -10,7 +10,7 @@ vi.mock('@tanstack/react-router', () => ({
     React.createElement('a', { href: to }, children),
 }))
 
-vi.mock('./EventCard', () => ({
+vi.mock('#/features/shared/components/EventCard', () => ({
   EventCard: vi.fn(
     ({
       event,
@@ -27,15 +27,6 @@ vi.mock('./EventCard', () => ({
       />
     ),
   ),
-}))
-
-vi.mock('../hooks/useFavoriteToggle', () => ({
-  useFavoriteToggle: vi.fn(() => ({
-    favorited: true,
-    pending: false,
-    error: null,
-    toggle: vi.fn(),
-  })),
 }))
 
 afterEach(cleanup)
