@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { createServerFn } from '@tanstack/react-start'
 import { getEvent } from '#/features/shared/server/frigate/client'
-import { CameraEventDetailPage } from '#/features/camera-events/components/CameraEventDetailPage'
+import { CameraEventDetailPage } from '#/features/camera-details/components/CameraEventDetailPage'
 import type { FrigateResult } from '#/features/shared/server/frigate/config'
 import type { FrigateEvent } from '#/features/shared/server/frigate/types'
 import { requireSession } from '#/features/shared/server/session'
