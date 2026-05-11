@@ -6,7 +6,7 @@ import {
   formatLabelName,
   getLabelDotColor,
 } from '#/features/shared/utils/eventFormatting'
-import { EventThumbnail } from './EventThumbnail'
+import { EventThumbnail } from '#/features/shared/components/EventThumbnail'
 import { useFavoriteToggle } from '#/features/shared/hooks/useFavoriteToggle'
 import { FavoriteButton } from '#/features/shared/components/FavoriteButton'
 
