@@ -7,7 +7,7 @@ import type { FrigateEvent } from '#/features/shared/server/frigate/types'
 // ─── Module mocks ─────────────────────────────────────────────────────────────
 
 const mockEventCard = vi.fn((_props: unknown) => null)
-vi.mock('./EventCard', () => ({
+vi.mock('#/features/shared/components/EventCard', () => ({
   EventCard: (props: unknown) => mockEventCard(props),
 }))
 
