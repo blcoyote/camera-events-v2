@@ -2,7 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { useSession } from '@tanstack/react-start/server'
 import { getSessionConfig } from '#/features/shared/server/session'
 import type { SessionData } from '#/features/shared/server/session'
-import { handleSnapshotRequest } from '#/features/camera-events/server/snapshot-proxy'
+import { handleSnapshotRequest } from '#/features/camera-details/server/snapshot-proxy'
 
 export const Route = createFileRoute('/api/events/$id/snapshot')({
   server: {

@@ -2,7 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { useSession } from '@tanstack/react-start/server'
 import { getSessionConfig } from '#/features/shared/server/session'
 import type { SessionData } from '#/features/shared/server/session'
-import { handleClipRequest } from '#/features/camera-events/server/clip-proxy'
+import { handleClipRequest } from '#/features/camera-details/server/clip-proxy'
 
 export const Route = createFileRoute('/api/events/$id/clip')({
   server: {
