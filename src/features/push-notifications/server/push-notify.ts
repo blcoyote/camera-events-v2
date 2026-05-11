@@ -6,6 +6,7 @@
  * notifications to all of the user's registered devices.
  */
 
+import '@tanstack/react-start/server-only'
 import type { FrigateEventInfo } from './event-batcher'
 import { sendPushNotification, isPushEnabled } from './push'
 import type { PushPayload } from './push'

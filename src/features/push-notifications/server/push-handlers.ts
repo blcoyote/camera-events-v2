@@ -1,3 +1,4 @@
+import '@tanstack/react-start/server-only'
 import { isPushEnabled, getVapidPublicKey, sendPushNotification } from './push'
 import { getPushStore } from './push-store'
 import { getCameras } from '#/features/shared/server/frigate/client'

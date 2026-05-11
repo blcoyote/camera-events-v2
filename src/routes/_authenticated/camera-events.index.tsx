@@ -1,16 +1,8 @@
 import { createFileRoute, useRouter } from '@tanstack/react-router'
-import { createServerFn } from '@tanstack/react-start'
-import { getRequestHeader } from '@tanstack/react-start/server'
-import {
-  getEvents,
-  clearCacheFn,
-} from '#/features/shared/server/frigate/client'
+import { clearCacheFn } from '#/features/shared/server/frigate/cache-actions'
+import { loadEventsFn } from '#/features/camera-events/server/load-events'
 import { CameraEventsListPage } from '#/features/camera-events/components/CameraEventsListPage'
 import { CameraEventsLoading } from '#/features/camera-events/components/CameraEventsLoading'
-import type { FrigateResult } from '#/features/shared/server/frigate/config'
-import type { FrigateEvent } from '#/features/shared/server/frigate/types'
-import { requireSession } from '#/features/shared/server/session'
-import { readEventLimitFromCookies } from '#/features/shared/hooks/useEventLimit'
 import { usePullToRefresh } from '#/features/shared/hooks/usePullToRefresh'
 import { useRefetchOnFocus } from '#/features/shared/hooks/useRefetchOnFocus'
 import { useRefetchOnMount } from '#/features/shared/hooks/useRefetchOnMount'
@@ -19,18 +11,9 @@ import { getUserFavoritedEventIdsFn } from '#/features/shared/server/favorites/f
 
 const PULL_THRESHOLD = 80
 
-const loadEvents = createServerFn({ method: 'GET' }).handler(
-  async (): Promise<FrigateResult<FrigateEvent[]>> => {
-    await requireSession()
-    const cookies = getRequestHeader('cookie') ?? ''
-    const limit = readEventLimitFromCookies(cookies)
-    return getEvents({ limit, include_thumbnails: false })
-  },
-)
-
 export async function cameraEventsLoader() {
   const [result, favoritedEventIds] = await Promise.all([
-    loadEvents(),
+    loadEventsFn(),
     getUserFavoritedEventIdsFn().catch((): string[] => []),
   ])
   return { result, favoritedEventIds }

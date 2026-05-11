@@ -1,8 +1,7 @@
-import { createServerFn } from '@tanstack/react-start'
+import '@tanstack/react-start/server-only'
 import { getFrigateUrl, DEFAULT_TIMEOUT_MS } from './config'
 import type { FrigateResult } from './config'
-import { frigateCache, clearFrigateCache as clearCache } from './cache'
-import { requireSession } from '#/features/shared/server/session'
+import { frigateCache } from './cache'
 import type {
   FrigateConfig,
   FrigateEvent,
@@ -294,12 +293,3 @@ export async function getCameras(
   if (!result.ok) return result
   return { ok: true, data: Object.keys(result.data.cameras ?? {}).sort() }
 }
-
-export { clearFrigateCache } from './cache'
-
-export const clearCacheFn = createServerFn({ method: 'POST' }).handler(
-  async () => {
-    await requireSession()
-    clearCache()
-  },
-)

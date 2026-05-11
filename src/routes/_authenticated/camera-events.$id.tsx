@@ -1,27 +1,12 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { createServerFn } from '@tanstack/react-start'
-import { getEvent } from '#/features/shared/server/frigate/client'
+import { loadEventFn } from '#/features/camera-details/server/load-event'
 import { CameraEventDetailPage } from '#/features/camera-details/components/CameraEventDetailPage'
-import type { FrigateResult } from '#/features/shared/server/frigate/config'
-import type { FrigateEvent } from '#/features/shared/server/frigate/types'
-import { requireSession } from '#/features/shared/server/session'
-import { isValidEventId } from '#/features/shared/server/frigate/validation'
 import { getUserFavoritedEventIdsFn } from '#/features/shared/server/favorites/favorites-fns'
-
-const loadEvent = createServerFn({ method: 'GET' })
-  .inputValidator((data: string) => data)
-  .handler(async ({ data: eventId }): Promise<FrigateResult<FrigateEvent>> => {
-    await requireSession()
-    if (!isValidEventId(eventId)) {
-      return { ok: false, error: 'Invalid event ID' }
-    }
-    return getEvent(eventId)
-  })
 
 export const Route = createFileRoute('/_authenticated/camera-events/$id')({
   loader: async ({ params }) => {
     const [result, favoritedEventIds] = await Promise.all([
-      loadEvent({ data: params.id }),
+      loadEventFn({ data: params.id }),
       getUserFavoritedEventIdsFn().catch((): string[] => []),
     ])
     return { result, favoritedEventIds }

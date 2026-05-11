@@ -743,7 +743,8 @@ describe('frigateGet caching', () => {
 
   it('clearFrigateCache causes next call to fetch again', async () => {
     globalThis.fetch = mockFetchJson([MOCK_EVENT])
-    const { getEvents, clearFrigateCache: clear } = await import('./client')
+    const { getEvents } = await import('./client')
+    const { clearFrigateCache: clear } = await import('./cache')
 
     await getEvents()
     clear()

@@ -1,29 +1,17 @@
 import { useState, useCallback } from 'react'
 import { createFileRoute, useRouter } from '@tanstack/react-router'
-import { createServerFn } from '@tanstack/react-start'
-import {
-  getCameras,
-  clearCacheFn,
-} from '#/features/shared/server/frigate/client'
+import { clearCacheFn } from '#/features/shared/server/frigate/cache-actions'
+import { loadCamerasFn } from '#/features/cameras/server/load-cameras'
 import { CamerasPage } from '#/features/cameras/components/CamerasPage'
 import { CamerasLoading } from '#/features/cameras/components/CamerasLoading'
-import type { FrigateResult } from '#/features/shared/server/frigate/config'
-import { requireSession } from '#/features/shared/server/session'
 import { usePullToRefresh } from '#/features/shared/hooks/usePullToRefresh'
 import { useRefetchOnFocus } from '#/features/shared/hooks/useRefetchOnFocus'
 import { PullToRefreshIndicator } from '#/features/shared/components/PullToRefreshIndicator'
 
 const PULL_THRESHOLD = 80
 
-const loadCameras = createServerFn({ method: 'GET' }).handler(
-  async (): Promise<FrigateResult<string[]>> => {
-    await requireSession()
-    return getCameras()
-  },
-)
-
 export const Route = createFileRoute('/_authenticated/cameras')({
-  loader: () => loadCameras(),
+  loader: () => loadCamerasFn(),
   pendingComponent: CamerasLoading,
   component: CamerasRoute,
 })

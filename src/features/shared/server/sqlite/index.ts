@@ -1,3 +1,4 @@
+import '@tanstack/react-start/server-only'
 /**
  * Runtime-portable SQLite driver.
  *
