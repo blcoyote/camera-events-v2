@@ -54,14 +54,18 @@ export default function Header() {
   const { onClick: onSignIn } = useStandaloneAuth(state.signInHref)
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const hamburgerRef = useRef<HTMLButtonElement>(null)
+  const openedByKeyboard = useRef(false)
 
-  function openDrawer() {
+  function openDrawer(e: React.MouseEvent) {
+    openedByKeyboard.current = e.detail === 0
     setIsDrawerOpen(true)
   }
 
   function closeDrawer() {
     setIsDrawerOpen(false)
-    hamburgerRef.current?.focus()
+    if (openedByKeyboard.current) {
+      hamburgerRef.current?.focus()
+    }
   }
 
   return (
@@ -78,6 +82,7 @@ export default function Header() {
             aria-label="Open navigation"
             aria-expanded={isDrawerOpen}
             aria-controls="nav-drawer"
+            onPointerDown={(e) => e.preventDefault()}
             onClick={openDrawer}
           >
             <Menu size={22} aria-hidden="true" />
