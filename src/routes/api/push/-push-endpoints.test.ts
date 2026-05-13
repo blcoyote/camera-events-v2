@@ -305,6 +305,25 @@ describe('handleSetPreference', () => {
     expect(result.status).toBe(400)
   })
 
+  it('returns 400 for invalid camera name', async () => {
+    const result = await handleSetPreference('user1', {
+      camera: '../../../etc/passwd',
+      enabled: true,
+    })
+    expect(result.status).toBe(400)
+    expect(result.body).toMatchObject({
+      error: expect.stringContaining('camera'),
+    })
+  })
+
+  it('returns 400 for camera name with spaces', async () => {
+    const result = await handleSetPreference('user1', {
+      camera: 'front porch',
+      enabled: true,
+    })
+    expect(result.status).toBe(400)
+  })
+
   it('calls setPreference and returns ok', async () => {
     const mockSetPref = vi.fn()
     vi.mocked(getPushStore).mockReturnValue({

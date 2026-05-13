@@ -8,8 +8,8 @@
   "scripts": {
     "preinstall": "npx only-allow bun",
     "dev": "vite dev --port 3000",
-    "build": "vite build",
-    "preview": "vite preview",
+    "build": "vite build && cp -r src/features/shared/server/frigate/assets .output/server/_ssr/",
+    "preview": "bun run build && bun run .output/server",
     "test": "vitest run",
     "verify:bun-bundle": "node scripts/verify-bun-bundle.mjs",
     "lint": "eslint",
