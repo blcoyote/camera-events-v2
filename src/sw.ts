@@ -3,7 +3,6 @@ import {
   CacheFirst,
   ExpirationPlugin,
   NetworkFirst,
-  NetworkOnly,
   Serwist,
   StaleWhileRevalidate,
 } from 'serwist'
@@ -72,69 +71,77 @@ declare global {
 
 declare const self: WorkerGlobalScope
 
+// Replaced at build time by vite-plugin-sw.ts; false in production.
+const isDev = process.env.NODE_ENV === 'development'
+
 const serwist = new Serwist({
   precacheEntries: self.__SW_MANIFEST,
-  skipWaiting: false,
+  // In dev, skip waiting immediately so a rebuilt SW takes over without
+  // requiring the user to close all tabs or click "Update now". In
+  // production, wait for the user to confirm the update.
+  skipWaiting: isDev,
   clientsClaim: true,
   navigationPreload: true,
-  runtimeCaching: [
-    {
-      matcher: ({ request, url }) =>
-        request.mode === 'navigate' && !url.pathname.startsWith('/api/'),
-      handler: new NetworkFirst({
-        cacheName: 'pages',
-        networkTimeoutSeconds: 3,
-      }),
-    },
-    {
-      // Cache CSS, JS, and web worker requests with stale-while-revalidate.
-      // In dev, always fetch from network so CSS changes appear on next reload.
-      matcher: ({ request }) =>
-        request.destination === 'style' ||
-        request.destination === 'script' ||
-        request.destination === 'worker',
-      handler:
-        process.env.NODE_ENV === 'development'
-          ? new NetworkOnly()
-          : new StaleWhileRevalidate({
-              cacheName: 'static-resources',
-            }),
-    },
-    {
-      // Cache images with cache-first strategy
-      matcher: ({ request, url }) =>
-        request.destination === 'image' && !url.pathname.startsWith('/api/'),
-      handler: new CacheFirst({
-        cacheName: 'images',
-        plugins: [
-          new ExpirationPlugin({
-            maxEntries: 60,
-            maxAgeSeconds: 30 * 24 * 60 * 60, // 30 days
+  // In dev, use no runtime caching. When the SW calls fetch() internally,
+  // browsers recompute Sec-Fetch-Dest as 'empty' rather than preserving
+  // 'style'/'script'. Nitro's dev pre-check then routes the request through
+  // TanStack Start's SSR handler (no matching route → 404) instead of
+  // passing it to Vite's transform pipeline. Leaving runtimeCaching empty
+  // means the SW never intercepts these requests, so the browser sends them
+  // natively with the correct Sec-Fetch-Dest header and Vite handles them.
+  runtimeCaching: isDev
+    ? []
+    : [
+        {
+          matcher: ({ request, url }) =>
+            request.mode === 'navigate' && !url.pathname.startsWith('/api/'),
+          handler: new NetworkFirst({
+            cacheName: 'pages',
+            networkTimeoutSeconds: 3,
           }),
-        ],
-      }),
-    },
-    {
-      // Cache Google Fonts stylesheets
-      matcher: ({ url }) => url.origin === 'https://fonts.googleapis.com',
-      handler: new StaleWhileRevalidate({
-        cacheName: 'google-fonts-stylesheets',
-      }),
-    },
-    {
-      // Cache Google Fonts webfont files
-      matcher: ({ url }) => url.origin === 'https://fonts.gstatic.com',
-      handler: new CacheFirst({
-        cacheName: 'google-fonts-webfonts',
-        plugins: [
-          new ExpirationPlugin({
-            maxEntries: 30,
-            maxAgeSeconds: 365 * 24 * 60 * 60, // 1 year
+        },
+        {
+          matcher: ({ request }) =>
+            request.destination === 'style' ||
+            request.destination === 'script' ||
+            request.destination === 'worker',
+          handler: new StaleWhileRevalidate({
+            cacheName: 'static-resources',
           }),
-        ],
-      }),
-    },
-  ],
+        },
+        {
+          matcher: ({ request, url }) =>
+            request.destination === 'image' &&
+            !url.pathname.startsWith('/api/'),
+          handler: new CacheFirst({
+            cacheName: 'images',
+            plugins: [
+              new ExpirationPlugin({
+                maxEntries: 60,
+                maxAgeSeconds: 30 * 24 * 60 * 60,
+              }),
+            ],
+          }),
+        },
+        {
+          matcher: ({ url }) => url.origin === 'https://fonts.googleapis.com',
+          handler: new StaleWhileRevalidate({
+            cacheName: 'google-fonts-stylesheets',
+          }),
+        },
+        {
+          matcher: ({ url }) => url.origin === 'https://fonts.gstatic.com',
+          handler: new CacheFirst({
+            cacheName: 'google-fonts-webfonts',
+            plugins: [
+              new ExpirationPlugin({
+                maxEntries: 30,
+                maxAgeSeconds: 365 * 24 * 60 * 60,
+              }),
+            ],
+          }),
+        },
+      ],
 })
 
 serwist.addEventListeners()
