@@ -69,7 +69,7 @@ export default function Header() {
   }
 
   return (
-    <header className="sticky top-0 z-50 border-b border-(--line) bg-(--header-bg) px-4 pt-[env(safe-area-inset-top)] backdrop-blur-lg">
+    <header className="sticky top-0 z-50 border-b border-(--line) bg-(--header-bg) pt-[env(safe-area-inset-top)] backdrop-blur-lg">
       <nav
         aria-label="Site navigation"
         className="page-wrap flex items-center gap-x-2 py-1.5 sm:gap-x-3 sm:py-2"
