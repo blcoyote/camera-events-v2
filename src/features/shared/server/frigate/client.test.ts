@@ -678,6 +678,64 @@ describe('getLatestSnapshot', () => {
   })
 })
 
+describe('client input validation', () => {
+  it('getEvent rejects path-traversal eventId', async () => {
+    const { getEvent } = await import('./client')
+    const result = await getEvent('../etc/passwd')
+    expect(result.ok).toBe(false)
+    if (!result.ok) expect(result.error).toMatch(/invalid/i)
+  })
+
+  it('getEventThumbnail rejects path-traversal eventId', async () => {
+    const { getEventThumbnail } = await import('./client')
+    const result = await getEventThumbnail('../etc/passwd')
+    expect(result.ok).toBe(false)
+    if (!result.ok) expect(result.error).toMatch(/invalid/i)
+  })
+
+  it('getEventSnapshot rejects path-traversal eventId', async () => {
+    const { getEventSnapshot } = await import('./client')
+    const result = await getEventSnapshot('../etc/passwd')
+    expect(result.ok).toBe(false)
+    if (!result.ok) expect(result.error).toMatch(/invalid/i)
+  })
+
+  it('getEventClip rejects path-traversal eventId', async () => {
+    const { getEventClip } = await import('./client')
+    const result = await getEventClip('../etc/passwd')
+    expect(result.ok).toBe(false)
+    if (!result.ok) expect(result.error).toMatch(/invalid/i)
+  })
+
+  it('retainEvent rejects path-traversal eventId', async () => {
+    const { retainEvent } = await import('./client')
+    const result = await retainEvent('../etc/passwd')
+    expect(result.ok).toBe(false)
+    if (!result.ok) expect(result.error).toMatch(/invalid/i)
+  })
+
+  it('unretainEvent rejects path-traversal eventId', async () => {
+    const { unretainEvent } = await import('./client')
+    const result = await unretainEvent('../etc/passwd')
+    expect(result.ok).toBe(false)
+    if (!result.ok) expect(result.error).toMatch(/invalid/i)
+  })
+
+  it('getReviewByEvent rejects path-traversal eventId', async () => {
+    const { getReviewByEvent } = await import('./client')
+    const result = await getReviewByEvent('../etc/passwd')
+    expect(result.ok).toBe(false)
+    if (!result.ok) expect(result.error).toMatch(/invalid/i)
+  })
+
+  it('getLatestSnapshot rejects path-traversal camera name', async () => {
+    const { getLatestSnapshot } = await import('./client')
+    const result = await getLatestSnapshot('../etc/passwd')
+    expect(result.ok).toBe(false)
+    if (!result.ok) expect(result.error).toMatch(/invalid/i)
+  })
+})
+
 describe('frigateGet caching', () => {
   const originalEnv = process.env.FRIGATE_URL
   const originalFetch = globalThis.fetch
