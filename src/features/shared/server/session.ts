@@ -14,8 +14,7 @@ export type SessionData = {
  * Base session config — password is added lazily at call time
  * to avoid module-scope env access.
  */
-export const SESSION_COOKIE_NAME =
-  process.env.NODE_ENV === 'production' ? '__Host-google-sso' : 'google-sso'
+export const SESSION_COOKIE_NAME = 'google-sso'
 export const SESSION_MAX_AGE_SECONDS = 7 * 24 * 60 * 60 // 7 days
 
 export const SESSION_CONFIG_BASE = {

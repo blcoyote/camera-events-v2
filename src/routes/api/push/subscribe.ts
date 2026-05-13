@@ -1,9 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useSession } from '@tanstack/react-start/server'
-import {
-  getSessionConfig,
-  SESSION_COOKIE_NAME,
-} from '#/features/shared/server/session'
+import { getSessionConfig } from '#/features/shared/server/session'
 import type { SessionData } from '#/features/shared/server/session'
 import { handleSubscribe } from '#/features/push-notifications/server/push-handlers'
 
@@ -12,19 +9,12 @@ export const Route = createFileRoute('/api/push/subscribe')({
     handlers: {
       POST: async ({ request }) => {
         try {
-          const cookieHeader = request.headers.get('cookie') ?? ''
           let userId: string | null = null
-          if (
-            cookieHeader
-              .split(';')
-              .some((c) => c.trim().startsWith(`${SESSION_COOKIE_NAME}=`))
-          ) {
-            try {
-              const session = await useSession<SessionData>(getSessionConfig())
-              userId = session.data.sub || null
-            } catch {
-              // Corrupted session
-            }
+          try {
+            const session = await useSession<SessionData>(getSessionConfig())
+            userId = session.data.sub || null
+          } catch {
+            // Corrupted session
           }
 
           let body: any
@@ -47,13 +37,12 @@ export const Route = createFileRoute('/api/push/subscribe')({
           })
         } catch (err) {
           console.error('[push/subscribe] Unhandled error:', err)
-          return new Response(
-            JSON.stringify({ error: 'Internal server error' }),
-            {
-              status: 500,
-              headers: { 'Content-Type': 'application/json' },
-            },
-          )
+          const message =
+            err instanceof Error ? err.message : 'Internal server error'
+          return new Response(JSON.stringify({ error: message }), {
+            status: 500,
+            headers: { 'Content-Type': 'application/json' },
+          })
         }
       },
     },

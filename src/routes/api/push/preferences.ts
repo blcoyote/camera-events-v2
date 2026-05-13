@@ -1,9 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useSession } from '@tanstack/react-start/server'
-import {
-  getSessionConfig,
-  SESSION_COOKIE_NAME,
-} from '#/features/shared/server/session'
+import { getSessionConfig } from '#/features/shared/server/session'
 import type { SessionData } from '#/features/shared/server/session'
 import {
   handleGetPreferences,
@@ -13,21 +10,14 @@ import {
 export const Route = createFileRoute('/api/push/preferences')({
   server: {
     handlers: {
-      GET: async ({ request }) => {
+      GET: async () => {
         try {
-          const cookieHeader = request.headers.get('cookie') ?? ''
           let userId: string | null = null
-          if (
-            cookieHeader
-              .split(';')
-              .some((c) => c.trim().startsWith(`${SESSION_COOKIE_NAME}=`))
-          ) {
-            try {
-              const session = await useSession<SessionData>(getSessionConfig())
-              userId = session.data.sub || null
-            } catch {
-              // Corrupted session
-            }
+          try {
+            const session = await useSession<SessionData>(getSessionConfig())
+            userId = session.data.sub || null
+          } catch {
+            // Corrupted session
           }
 
           const result = await handleGetPreferences(userId)
@@ -37,31 +27,23 @@ export const Route = createFileRoute('/api/push/preferences')({
           })
         } catch (err) {
           console.error('[push/preferences GET] Unhandled error:', err)
-          return new Response(
-            JSON.stringify({ error: 'Internal server error' }),
-            {
-              status: 500,
-              headers: { 'Content-Type': 'application/json' },
-            },
-          )
+          const message =
+            err instanceof Error ? err.message : 'Internal server error'
+          return new Response(JSON.stringify({ error: message }), {
+            status: 500,
+            headers: { 'Content-Type': 'application/json' },
+          })
         }
       },
 
       PUT: async ({ request }) => {
         try {
-          const cookieHeader = request.headers.get('cookie') ?? ''
           let userId: string | null = null
-          if (
-            cookieHeader
-              .split(';')
-              .some((c) => c.trim().startsWith(`${SESSION_COOKIE_NAME}=`))
-          ) {
-            try {
-              const session = await useSession<SessionData>(getSessionConfig())
-              userId = session.data.sub || null
-            } catch {
-              // Corrupted session
-            }
+          try {
+            const session = await useSession<SessionData>(getSessionConfig())
+            userId = session.data.sub || null
+          } catch {
+            // Corrupted session
           }
 
           let body: any
@@ -84,13 +66,12 @@ export const Route = createFileRoute('/api/push/preferences')({
           })
         } catch (err) {
           console.error('[push/preferences PUT] Unhandled error:', err)
-          return new Response(
-            JSON.stringify({ error: 'Internal server error' }),
-            {
-              status: 500,
-              headers: { 'Content-Type': 'application/json' },
-            },
-          )
+          const message =
+            err instanceof Error ? err.message : 'Internal server error'
+          return new Response(JSON.stringify({ error: message }), {
+            status: 500,
+            headers: { 'Content-Type': 'application/json' },
+          })
         }
       },
     },
