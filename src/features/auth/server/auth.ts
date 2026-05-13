@@ -29,8 +29,7 @@ export async function resolveUserFromSession(
 
 export const OAUTH_SCOPES = ['openid', 'profile', 'email']
 
-export const OAUTH_STATE_COOKIE_NAME =
-  process.env.NODE_ENV === 'production' ? '__Host-oauth_state' : 'oauth_state'
+export const OAUTH_STATE_COOKIE_NAME = 'oauth_state'
 
 /**
  * Validate that a returnTo path is safe for redirect.

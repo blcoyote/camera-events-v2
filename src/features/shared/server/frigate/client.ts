@@ -1,5 +1,4 @@
 import '@tanstack/react-start/server-only'
-import { isValidEventId, isValidCameraName } from './validation'
 import { getFrigateUrl, DEFAULT_TIMEOUT_MS } from './config'
 import type { FrigateResult } from './config'
 import { frigateCache } from './cache'
@@ -146,7 +145,6 @@ export async function getEvent(
   eventId: string,
   timeoutMs?: number,
 ): Promise<FrigateResult<FrigateEvent>> {
-  if (!isValidEventId(eventId)) return { ok: false, error: 'Invalid event ID' }
   if (process.env.FRIGATE_MOCK === 'true')
     return (await loadMock()).getEvent(eventId, timeoutMs)
   return frigateGet(`/api/events/${eventId}`, undefined, timeoutMs)
@@ -157,7 +155,6 @@ export async function getEventThumbnail(
   params?: GetEventMediaParams,
   timeoutMs?: number,
 ): Promise<FrigateResult<ArrayBuffer>> {
-  if (!isValidEventId(eventId)) return { ok: false, error: 'Invalid event ID' }
   if (process.env.FRIGATE_MOCK === 'true')
     return (await loadMock()).getEventThumbnail(eventId, params, timeoutMs)
   return frigateBinary(
@@ -172,7 +169,6 @@ export async function getEventSnapshot(
   params?: GetEventMediaParams,
   timeoutMs?: number,
 ): Promise<FrigateResult<ArrayBuffer>> {
-  if (!isValidEventId(eventId)) return { ok: false, error: 'Invalid event ID' }
   if (process.env.FRIGATE_MOCK === 'true')
     return (await loadMock()).getEventSnapshot(eventId, params, timeoutMs)
   return frigateBinary(
@@ -186,7 +182,6 @@ export async function getEventClip(
   eventId: string,
   timeoutMs?: number,
 ): Promise<FrigateResult<ArrayBuffer>> {
-  if (!isValidEventId(eventId)) return { ok: false, error: 'Invalid event ID' }
   if (process.env.FRIGATE_MOCK === 'true')
     return (await loadMock()).getEventClip(eventId, timeoutMs)
   return frigateBinary(`/api/events/${eventId}/clip.mp4`, undefined, timeoutMs)
@@ -205,7 +200,6 @@ export async function retainEvent(
   eventId: string,
   timeoutMs?: number,
 ): Promise<FrigateResult<void>> {
-  if (!isValidEventId(eventId)) return { ok: false, error: 'Invalid event ID' }
   if (process.env.FRIGATE_MOCK === 'true')
     return (await loadMock()).retainEvent(eventId, timeoutMs)
   return frigateWrite('POST', `/api/events/${eventId}/retain`, timeoutMs)
@@ -215,7 +209,6 @@ export async function unretainEvent(
   eventId: string,
   timeoutMs?: number,
 ): Promise<FrigateResult<void>> {
-  if (!isValidEventId(eventId)) return { ok: false, error: 'Invalid event ID' }
   if (process.env.FRIGATE_MOCK === 'true')
     return (await loadMock()).unretainEvent(eventId, timeoutMs)
   return frigateWrite('DELETE', `/api/events/${eventId}/retain`, timeoutMs)
@@ -236,7 +229,6 @@ export async function getReviewByEvent(
   eventId: string,
   timeoutMs?: number,
 ): Promise<FrigateResult<FrigateReview>> {
-  if (!isValidEventId(eventId)) return { ok: false, error: 'Invalid event ID' }
   if (process.env.FRIGATE_MOCK === 'true')
     return (await loadMock()).getReviewByEvent(eventId, timeoutMs)
   return frigateGet(`/api/review/event/${eventId}`, undefined, timeoutMs)
@@ -284,8 +276,6 @@ export async function getLatestSnapshot(
   cameraName: string,
   timeoutMs?: number,
 ): Promise<FrigateResult<ArrayBuffer>> {
-  if (!isValidCameraName(cameraName))
-    return { ok: false, error: 'Invalid camera name' }
   if (process.env.FRIGATE_MOCK === 'true')
     return (await loadMock()).getLatestSnapshot(cameraName, timeoutMs)
   return frigateBinary(`/api/${cameraName}/latest.jpg`, undefined, timeoutMs)

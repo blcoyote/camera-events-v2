@@ -33,21 +33,8 @@ describe('OAUTH_SCOPES', () => {
 })
 
 describe('OAUTH_STATE_COOKIE_NAME', () => {
-  it('is oauth_state in non-production', () => {
+  it('is oauth_state', () => {
     expect(OAUTH_STATE_COOKIE_NAME).toBe('oauth_state')
-  })
-
-  it('is __Host-oauth_state in production', async () => {
-    vi.resetModules()
-    const original = process.env.NODE_ENV
-    process.env.NODE_ENV = 'production'
-    try {
-      const { OAUTH_STATE_COOKIE_NAME: prodName } = await import('./auth')
-      expect(prodName).toBe('__Host-oauth_state')
-    } finally {
-      process.env.NODE_ENV = original
-      vi.resetModules()
-    }
   })
 })
 
