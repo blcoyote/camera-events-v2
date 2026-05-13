@@ -96,6 +96,18 @@ src/routes/
 - When you spot a platform-specific issue or limitation (e.g. an API not supported on iOS, cookie behavior differences in standalone mode, etc.), **do not silently fix it**. Flag it to me first, explain the issue and your proposed fix, and wait for confirmation before implementing.
 - The service worker is built by `vite-plugin-sw.ts` (custom plugin) using Serwist. The SW source is `src/sw.ts`; push handler logic lives in `src/sw-push-handlers.ts`.
 
+## TanStack Start Server/Client Boundaries
+
+**Before writing or reviewing any of the following, invoke the `tanstack-start-boundaries` skill:**
+
+- `createServerFn` handlers or server-only utilities
+- Route `loader` functions
+- New files under `src/features/shared/server/`
+- React hooks or components that use browser APIs (`window`, `localStorage`, `Notification`, etc.)
+- Anything that might mix server-only imports with client-accessible code
+
+The skill covers the full layering model, import protection rules, and common mistake patterns for this project.
+
 ## Server Function Authentication
 
 - **TanStack Start `createServerFn` endpoints are directly callable via HTTP** at `/_serverFn/{hash}`. Route-level layout guards (like `_authenticated.tsx`'s `beforeLoad`) only protect client-side navigation — they do NOT protect server functions from direct HTTP access.
