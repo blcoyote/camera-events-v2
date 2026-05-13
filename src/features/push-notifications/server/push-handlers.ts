@@ -159,6 +159,12 @@ export async function handleSetPreference(
     }
   }
 
+  const { isValidCameraName } =
+    await import('#/features/shared/server/frigate/validation')
+  if (!isValidCameraName(camera)) {
+    return { status: 400, body: { error: 'Invalid camera name' } }
+  }
+
   ;(await getPushStore()).setPreference(userId, camera, enabled)
   return { status: 200, body: { ok: true } }
 }

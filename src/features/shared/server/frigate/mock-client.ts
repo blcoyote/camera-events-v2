@@ -1,6 +1,5 @@
 import '@tanstack/react-start/server-only'
 import { readFileSync } from 'node:fs'
-import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import type { FrigateResult } from './config'
 import type {
@@ -21,13 +20,11 @@ import type {
 
 // ─── Placeholder assets ───
 
-const __dirname =
-  typeof globalThis.__dirname !== 'undefined'
-    ? globalThis.__dirname
-    : join(fileURLToPath(import.meta.url), '..')
-
+// new URL(..., import.meta.url) is recognized by Rollup/Vite and causes the
+// referenced file to be emitted as a build asset with the URL rewritten to
+// match the output location — so this works correctly in both dev and prod.
 const PLACEHOLDER_IMAGE: ArrayBuffer = readFileSync(
-  join(__dirname, 'assets', 'placeholder.jpeg'),
+  fileURLToPath(new URL('./assets/placeholder.jpeg', import.meta.url)),
 ).buffer.slice(0)
 
 // Minimal valid MP4: ftyp box with isom brand
