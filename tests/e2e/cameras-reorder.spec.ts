@@ -17,7 +17,13 @@ const MOCK_CAMERAS = [
 ]
 
 async function signIn(page: Page) {
-  await page.goto('/api/test-auth?redirect=/cameras')
+  // Use the API context (shares cookies with the browser) so we can send the auth header
+  await page.context().request.get('/api/test-auth?redirect=/cameras', {
+    headers: {
+      'X-E2E-Auth-Token': process.env.E2E_AUTH_TOKEN ?? 'e2e-local-token',
+    },
+  })
+  await page.goto('/cameras')
   await page.waitForURL('/cameras')
 }
 

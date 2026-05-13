@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import {
   SESSION_CONFIG_BASE,
   SESSION_COOKIE_NAME,
@@ -6,8 +6,21 @@ import {
 } from './session'
 
 describe('SESSION_COOKIE_NAME', () => {
-  it('is google-sso', () => {
+  it('is google-sso in non-production', () => {
     expect(SESSION_COOKIE_NAME).toBe('google-sso')
+  })
+
+  it('is __Host-google-sso in production', async () => {
+    vi.resetModules()
+    const original = process.env.NODE_ENV
+    process.env.NODE_ENV = 'production'
+    try {
+      const { SESSION_COOKIE_NAME: prodName } = await import('./session')
+      expect(prodName).toBe('__Host-google-sso')
+    } finally {
+      process.env.NODE_ENV = original
+      vi.resetModules()
+    }
   })
 })
 

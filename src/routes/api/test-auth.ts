@@ -6,10 +6,14 @@ export const Route = createFileRoute('/api/test-auth')({
   server: {
     handlers: {
       GET: async ({ request }) => {
-        if (
-          process.env.E2E_TEST !== 'true' ||
-          process.env.NODE_ENV === 'production'
-        ) {
+        const nodeEnv = process.env.NODE_ENV
+        const isAllowedEnv = nodeEnv === 'development' || nodeEnv === 'test'
+
+        const e2eToken = process.env.E2E_AUTH_TOKEN
+        const providedToken = request.headers.get('X-E2E-Auth-Token')
+        const hasValidToken = !!e2eToken && providedToken === e2eToken
+
+        if (!isAllowedEnv || !hasValidToken) {
           return new Response('Forbidden', { status: 403 })
         }
         const url = new URL(request.url)
