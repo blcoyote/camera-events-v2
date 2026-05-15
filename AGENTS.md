@@ -2,6 +2,8 @@
 
 This project uses **bd** (beads) for issue tracking. Run `bd prime` for full workflow context.
 
+Before writing or modifying implementation code, use the `test-driven-development` skill and follow the Red → Green → Refactor cycle for every new code addition or bug fix.
+
 ## Quick Reference
 
 ```bash

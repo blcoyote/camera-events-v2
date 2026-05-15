@@ -162,6 +162,8 @@ The skill covers the full layering model, import protection rules, and common mi
 
 ## Test-Driven Development
 
+Before writing or modifying implementation code, use the `test-driven-development` skill and follow the Red → Green → Refactor cycle for every new code addition or bug fix.
+
 All new behaviour must be written test-first. Follow the **Red → Green → Refactor** cycle strictly:
 
 1. **RED** — Write a failing test that describes the behaviour you intend to add. Run `bun run test` and confirm it fails for the right reason (assertion failure, not a syntax error or import crash).
