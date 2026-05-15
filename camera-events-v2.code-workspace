@@ -5,17 +5,17 @@
         }
     ],
     "extensions": {
-    "recommendations": [
-        "dbaeumer.vscode-eslint",
-        "esbenp.prettier-vscode",
-        "bradlc.vscode-tailwindcss",
-        "vitest.explorer",
-        "oven.bun-vscode"
-    ],
-    "unwantedRecommendations": [
-        "biomejs.biome",
-        "denoland.vscode-deno",
-        "ms-vscode.vscode-typescript-tslint-plugin"
-    ]
-}
+        "recommendations": [
+            "dbaeumer.vscode-eslint",
+            "esbenp.prettier-vscode",
+            "bradlc.vscode-tailwindcss",
+            "vitest.explorer",
+            "oven.bun-vscode"
+        ],
+        "unwantedRecommendations": [
+            "biomejs.biome",
+            "denoland.vscode-deno",
+            "ms-vscode.vscode-typescript-tslint-plugin"
+        ]
+    }
 }
