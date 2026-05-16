@@ -1,7 +1,3 @@
-secrets:
-  session_secret:
-    file: ./secrets/session_secret
-
 services:
   app:
     image: ghcr.io/blcoyote/camera-events-v2:latest
@@ -14,14 +10,13 @@ services:
       MQTT_URL: mqtt://${RABBITMQ_USER}:${RABBITMQ_PASS}@rabbitmq:1883
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      SESSION_SECRET: ${SESSION_SECRET:-}
       APP_URL: https://${DNS_NAME:-localhost}
       FRIGATE_URL: ${FRIGATE_URL}
       FRIGATE_MOCK: ${FRIGATE_MOCK:-}
       VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:-}
       VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:-}
       VAPID_SUBJECT: ${VAPID_SUBJECT:-}
-    secrets:
-      - session_secret
     volumes:
       - ce-v2-data:/app/data
     labels:
