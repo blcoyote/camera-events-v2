@@ -23,7 +23,11 @@ export async function resolveUserFromSession(
     email: session.data.email ?? '',
     avatarUrl: session.data.avatarUrl ?? '',
   }
-  await session.update(data)
+  try {
+    await session.update(data)
+  } catch {
+    // TTL slide is non-fatal — the session data is valid even if re-issuing the cookie fails
+  }
   return data
 }
 

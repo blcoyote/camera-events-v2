@@ -212,6 +212,25 @@ describe('resolveUserFromSession', () => {
     })
   })
 
+  it('returns SessionData even when session.update rejects (TTL slide is non-fatal)', async () => {
+    const session = makeSession({
+      sub: 'google-sub-123',
+      firstName: 'Ada',
+      email: 'ada@example.com',
+      avatarUrl: 'https://example.com/avatar.png',
+    })
+    session.update.mockRejectedValue(new Error('cookie write failed'))
+
+    const result = await resolveUserFromSession(session)
+
+    expect(result).toEqual({
+      sub: 'google-sub-123',
+      firstName: 'Ada',
+      email: 'ada@example.com',
+      avatarUrl: 'https://example.com/avatar.png',
+    })
+  })
+
   it('fills missing optional fields with empty strings', async () => {
     const session = makeSession({ sub: 'sub-only' })
 
