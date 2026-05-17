@@ -222,8 +222,19 @@ describe('persistence across close/reopen', () => {
 })
 
 describe('getPushStore singleton', () => {
+  let singletonTmpDir: string
+
+  beforeEach(() => {
+    singletonTmpDir = fs.mkdtempSync(
+      path.join(os.tmpdir(), 'push-store-singleton-'),
+    )
+    process.env.PUSH_DB_PATH = path.join(singletonTmpDir, 'singleton.db')
+  })
+
   afterEach(() => {
+    delete process.env.PUSH_DB_PATH
     vi.resetModules()
+    fs.rmSync(singletonTmpDir, { recursive: true, force: true })
   })
 
   it('returns a usable store on success', async () => {
