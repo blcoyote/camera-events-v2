@@ -14,9 +14,5 @@
   },
   "files.readonlyInclude": {
     "**/routeTree.gen.ts": true
-  },
-  "chat.tools.terminal.autoApprove": {
-    "bd": true,
-    "bun": true
   }
 }
