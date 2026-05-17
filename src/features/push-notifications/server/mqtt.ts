@@ -9,7 +9,19 @@ import { notifyUsersForCamera } from './push-notify'
 /** MQTT topics to subscribe to for Frigate event updates. */
 export const SUBSCRIBED_TOPICS = ['frigate/events', 'frigate/reviews'] as const
 
-const batchWindowMs = Number(process.env.EVENT_BATCH_WINDOW_MS) || 30_000
+/**
+ * Parse the EVENT_BATCH_WINDOW_MS env variable into a millisecond count.
+ * Defaults to 30 000 ms when the value is absent, empty, or non-numeric.
+ * Unlike a plain `|| 30_000` guard, this correctly treats "0" as a valid
+ * value (immediate flush with no batching window).
+ */
+export function parseBatchWindowMs(envValue: string | undefined): number {
+  if (envValue === undefined || envValue === '') return 30_000
+  const raw = Number(envValue)
+  return Number.isFinite(raw) ? raw : 30_000
+}
+
+const batchWindowMs = parseBatchWindowMs(process.env.EVENT_BATCH_WINDOW_MS)
 
 /** Singleton event batcher — flushes per-camera batches to push notifications. */
 const eventBatcher = new EventBatcher((camera, events) => {

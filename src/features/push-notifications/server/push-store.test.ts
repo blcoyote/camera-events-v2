@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import fs from 'node:fs'
 import path from 'node:path'
 import os from 'node:os'
@@ -218,5 +218,40 @@ describe('persistence across close/reopen', () => {
 
     // Re-assign so afterEach close doesn't fail
     store = await createPushStore(path.join(tmpDir, 'dummy.db'))
+  })
+})
+
+describe('getPushStore singleton', () => {
+  afterEach(() => {
+    vi.resetModules()
+  })
+
+  it('returns a usable store on success', async () => {
+    const { getPushStore } = await import('./push-store')
+    const s = await getPushStore()
+    expect(typeof s.saveSubscription).toBe('function')
+    s.close()
+  })
+
+  it('retries after a rejected first call instead of caching the rejection', async () => {
+    const { openSqlite } = await import('#/features/shared/server/sqlite')
+    let callCount = 0
+    const originalOpen = openSqlite
+
+    vi.doMock('#/features/shared/server/sqlite', () => ({
+      openSqlite: vi.fn(async (...args: Parameters<typeof originalOpen>) => {
+        callCount++
+        if (callCount === 1) throw new Error('Simulated open failure')
+        return originalOpen(...args)
+      }),
+    }))
+
+    const { getPushStore } = await import('./push-store')
+
+    await expect(getPushStore()).rejects.toThrow('Simulated open failure')
+    // Second call must succeed (not re-throw the cached rejection)
+    const s = await getPushStore()
+    expect(typeof s.saveSubscription).toBe('function')
+    s.close()
   })
 })

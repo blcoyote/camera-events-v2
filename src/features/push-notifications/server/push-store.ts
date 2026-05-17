@@ -177,7 +177,10 @@ let _storePromise: Promise<PushStore> | null = null
 
 export function getPushStore(): Promise<PushStore> {
   if (!_storePromise) {
-    _storePromise = createPushStore()
+    _storePromise = createPushStore().catch((err) => {
+      _storePromise = null
+      throw err
+    })
   }
   return _storePromise
 }
