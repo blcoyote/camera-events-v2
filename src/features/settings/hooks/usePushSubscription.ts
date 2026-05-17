@@ -197,12 +197,14 @@ export function usePushSubscription(): UsePushSubscriptionReturn {
 
       // Subscribe via PushManager
       // Safari/iOS requires applicationServerKey as a Uint8Array.
-      // navigator.serviceWorker.ready is NOT wrapped in a timeout — it will
-      // always resolve once the SW activates and on iOS this can legitimately
-      // take longer than any fixed bound (first install, slow network, etc.).
-      // Only pushManager.subscribe() gets a timeout because it communicates
-      // with Apple APNs and can hang indefinitely without throwing.
-      const registration = await navigator.serviceWorker.ready
+      // Both awaits are wrapped with timeouts: on iOS, pushManager.subscribe()
+      // communicates with Apple APNs and can hang indefinitely without throwing
+      // when the OS-level push infrastructure is not yet ready.
+      const registration = await withTimeout(
+        navigator.serviceWorker.ready,
+        10_000,
+        'Service worker is not ready. Please reload the app and try again.',
+      )
       const subscription = await withTimeout(
         registration.pushManager.subscribe({
           userVisibleOnly: true,
