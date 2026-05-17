@@ -1,4 +1,5 @@
 import { injectManifest } from '@serwist/build'
+import fs from 'node:fs'
 import path from 'node:path'
 import { build } from 'vite'
 import type { Plugin } from 'vite'
@@ -19,9 +20,13 @@ export function swPlugin(): Plugin {
 
   async function buildServiceWorker() {
     const outDir = isProduction
-      ? path.resolve(rootDir, 'dist', 'client')
+      ? path.resolve(rootDir, '.output', 'public')
       : path.resolve(rootDir, 'public')
     const swSrc = path.resolve(rootDir, 'src', 'sw.ts')
+
+    // Ensure the output directory exists (production .output/public/ is created
+    // by the Nitro plugin's closeBundle; add this as a safety net).
+    fs.mkdirSync(outDir, { recursive: true })
 
     // Step 1: Bundle the service worker source with Vite
     await build({
