@@ -16,8 +16,10 @@ export const SUBSCRIBED_TOPICS = ['frigate/events', 'frigate/reviews'] as const
  * value (immediate flush with no batching window).
  */
 export function parseBatchWindowMs(envValue: string | undefined): number {
-  if (envValue === undefined || envValue === '') return 30_000
-  const raw = Number(envValue)
+  if (envValue === undefined) return 30_000
+  const trimmedEnvValue = envValue.trim()
+  if (trimmedEnvValue === '') return 30_000
+  const raw = Number(trimmedEnvValue)
   return Number.isFinite(raw) ? raw : 30_000
 }
 
