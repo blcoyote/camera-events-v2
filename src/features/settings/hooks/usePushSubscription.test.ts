@@ -1,5 +1,9 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import { formatSubscribeError } from './usePushSubscription'
+import {
+  formatSubscribeError,
+  withTimeout,
+  getIOSStandaloneError,
+} from './usePushSubscription'
 
 /**
  * Tests for the push subscription logic.
@@ -315,5 +319,140 @@ describe('usePushSubscription helpers', () => {
         expect.objectContaining({ method: 'POST' }),
       )
     })
+  })
+})
+
+describe('withTimeout', () => {
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('resolves with the promise value when it settles before the timeout', async () => {
+    const result = await withTimeout(Promise.resolve(42), 1000, 'timed out')
+    expect(result).toBe(42)
+  })
+
+  it('rejects with the timeout message when the promise does not settle in time', async () => {
+    vi.useFakeTimers()
+    const hanging = new Promise<never>(() => {})
+    const race = withTimeout(hanging, 500, 'timed out')
+    vi.advanceTimersByTime(600)
+    await expect(race).rejects.toThrow('timed out')
+  })
+
+  it('clears the timer when the promise resolves before the timeout', async () => {
+    vi.useFakeTimers()
+    const fast = Promise.resolve('done')
+    const result = await withTimeout(fast, 5000, 'timed out')
+    expect(result).toBe('done')
+    // No dangling timer should fire
+    vi.advanceTimersByTime(10_000)
+  })
+})
+
+describe('getIOSStandaloneError', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  function stubNavAndMedia(
+    ua: string,
+    platform: string,
+    maxTouchPoints: number,
+    standaloneFlag: boolean | undefined,
+    matchMediaStandalone: boolean,
+  ) {
+    const navProps: Record<string, unknown> = {
+      userAgent: ua,
+      platform,
+      maxTouchPoints,
+    }
+    if (standaloneFlag !== undefined) navProps.standalone = standaloneFlag
+    vi.stubGlobal('navigator', navProps)
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn().mockReturnValue({ matches: matchMediaStandalone }),
+    )
+  }
+
+  it('returns null on a non-iOS desktop browser', () => {
+    stubNavAndMedia(
+      'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36',
+      'Linux x86_64',
+      0,
+      undefined,
+      false,
+    )
+    expect(getIOSStandaloneError()).toBeNull()
+  })
+
+  it('returns null on Android Chrome', () => {
+    stubNavAndMedia(
+      'Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36',
+      'Linux armv8l',
+      5,
+      undefined,
+      false,
+    )
+    expect(getIOSStandaloneError()).toBeNull()
+  })
+
+  it('returns an error message on iPhone in Safari (not standalone)', () => {
+    stubNavAndMedia(
+      'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)',
+      'iPhone',
+      5,
+      false,
+      false,
+    )
+    const msg = getIOSStandaloneError()
+    expect(msg).not.toBeNull()
+    expect(msg).toContain('Home Screen')
+  })
+
+  it('returns null on iPhone in standalone mode via navigator.standalone', () => {
+    stubNavAndMedia(
+      'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)',
+      'iPhone',
+      5,
+      true,
+      false,
+    )
+    expect(getIOSStandaloneError()).toBeNull()
+  })
+
+  it('returns null on iPhone in standalone mode via matchMedia', () => {
+    stubNavAndMedia(
+      'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)',
+      'iPhone',
+      5,
+      undefined,
+      true,
+    )
+    expect(getIOSStandaloneError()).toBeNull()
+  })
+
+  it('detects modern iPad (MacIntel + maxTouchPoints > 1) as iOS', () => {
+    stubNavAndMedia(
+      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+      'MacIntel',
+      5,
+      false,
+      false,
+    )
+    const msg = getIOSStandaloneError()
+    expect(msg).not.toBeNull()
+    expect(msg).toContain('Home Screen')
+  })
+
+  it('does not flag MacIntel with zero touch points as iOS', () => {
+    stubNavAndMedia(
+      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+      'MacIntel',
+      0,
+      undefined,
+      false,
+    )
+    expect(getIOSStandaloneError()).toBeNull()
   })
 })

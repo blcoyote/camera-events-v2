@@ -1,5 +1,42 @@
 import { useState, useEffect, useCallback } from 'react'
 
+export function withTimeout<T>(
+  promise: Promise<T>,
+  ms: number,
+  message: string,
+): Promise<T> {
+  let timer: ReturnType<typeof setTimeout>
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error(message)), ms)
+  })
+  return Promise.race([promise, timeoutPromise]).finally(() =>
+    clearTimeout(timer),
+  )
+}
+
+export function getIOSStandaloneError(): string | null {
+  const ua = navigator.userAgent
+  const isIOS =
+    /iPad|iPhone|iPod/.test(ua) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+  if (!isIOS) return null
+
+  const nav = navigator as { standalone?: boolean }
+  // matchMedia is browser-only; reference via globalThis so this is safe in
+  // SSR and Node test environments (where window is not defined).
+  const mm = (
+    globalThis as { matchMedia?: (q: string) => { matches: boolean } }
+  ).matchMedia
+  const isStandalone =
+    nav.standalone === true ||
+    (typeof mm === 'function' && mm('(display-mode: standalone)').matches)
+
+  if (!isStandalone) {
+    return 'On iOS, push notifications require the app to be added to your Home Screen. Open Safari, tap the Share button, then select "Add to Home Screen".'
+  }
+  return null
+}
+
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
   const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/')
@@ -125,6 +162,14 @@ export function usePushSubscription(): UsePushSubscriptionReturn {
     setError(null)
 
     try {
+      // iOS requires standalone mode (added to Home Screen) for push to work.
+      // Check before requesting permission to give actionable guidance upfront.
+      const standaloneError = getIOSStandaloneError()
+      if (standaloneError) {
+        setError(standaloneError)
+        return
+      }
+
       // Request permission
       const permission = await Notification.requestPermission()
       setPermissionState(permission)
@@ -151,14 +196,25 @@ export function usePushSubscription(): UsePushSubscriptionReturn {
       }
 
       // Subscribe via PushManager
-      // Safari/iOS requires applicationServerKey as a Uint8Array
-      const registration = await navigator.serviceWorker.ready
-      const subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(
-          key!,
-        ) as Uint8Array<ArrayBuffer>,
-      })
+      // Safari/iOS requires applicationServerKey as a Uint8Array.
+      // Both awaits are wrapped with timeouts: on iOS, pushManager.subscribe()
+      // communicates with Apple APNs and can hang indefinitely without throwing
+      // when the OS-level push infrastructure is not yet ready.
+      const registration = await withTimeout(
+        navigator.serviceWorker.ready,
+        10_000,
+        'Service worker is not ready. Please reload the app and try again.',
+      )
+      const subscription = await withTimeout(
+        registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(
+            key!,
+          ) as Uint8Array<ArrayBuffer>,
+        }),
+        30_000,
+        'Push subscription timed out. On iOS, try reloading the app and enabling notifications again.',
+      )
 
       // Send to server
       const subJson = subscription.toJSON()
