@@ -227,6 +227,24 @@ describe('handleTest', () => {
     expect(result.status).toBe(200)
     expect(result.body).toEqual({ sent: 0 })
   })
+
+  it('counts only successful deliveries, not failed ones', async () => {
+    vi.mocked(isPushEnabled).mockReturnValue(true)
+    vi.mocked(sendPushNotification)
+      .mockResolvedValueOnce(undefined) // first succeeds
+      .mockRejectedValueOnce(new Error('Network error')) // second fails
+    vi.mocked(getPushStore).mockReturnValue({
+      getSubscriptionsByUserId: vi.fn(() => [
+        { endpoint: 'https://push.example.com/1', p256dh: 'k1', auth: 'a1' },
+        { endpoint: 'https://push.example.com/2', p256dh: 'k2', auth: 'a2' },
+      ]),
+    } as any)
+
+    const result = await handleTest('user1')
+
+    expect(result.status).toBe(200)
+    expect(result.body).toEqual({ sent: 1 })
+  })
 })
 
 describe('handleGetPreferences', () => {

@@ -177,7 +177,11 @@ let _storePromise: Promise<PushStore> | null = null
 
 export function getPushStore(): Promise<PushStore> {
   if (!_storePromise) {
-    _storePromise = createPushStore()
+    const dbPath = process.env.PUSH_DB_PATH ?? DEFAULT_DB_PATH
+    _storePromise = createPushStore(dbPath).catch((err) => {
+      _storePromise = null
+      throw err
+    })
   }
   return _storePromise
 }

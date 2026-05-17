@@ -102,7 +102,7 @@ export async function handleTest(
     url: '/',
   }
 
-  await Promise.allSettled(
+  const results = await Promise.allSettled(
     subscriptions.map((sub) =>
       sendPushNotification(
         {
@@ -114,7 +114,8 @@ export async function handleTest(
     ),
   )
 
-  return { status: 200, body: { sent: subscriptions.length } }
+  const sent = results.filter((r) => r.status === 'fulfilled').length
+  return { status: 200, body: { sent } }
 }
 
 export async function handleGetPreferences(

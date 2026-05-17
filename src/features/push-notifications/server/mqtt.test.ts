@@ -237,3 +237,30 @@ describe('startMqttSubscriber', () => {
     expect(messageHandler[0]).toBe('message')
   })
 })
+
+describe('parseBatchWindowMs', () => {
+  it('returns the provided positive value', async () => {
+    const { parseBatchWindowMs } = await import('./mqtt')
+    expect(parseBatchWindowMs('10000')).toBe(10_000)
+  })
+
+  it('returns the default (30000) when env is undefined', async () => {
+    const { parseBatchWindowMs } = await import('./mqtt')
+    expect(parseBatchWindowMs(undefined)).toBe(30_000)
+  })
+
+  it('returns the default when env is an empty string', async () => {
+    const { parseBatchWindowMs } = await import('./mqtt')
+    expect(parseBatchWindowMs('')).toBe(30_000)
+  })
+
+  it('returns the default when env is a non-numeric string', async () => {
+    const { parseBatchWindowMs } = await import('./mqtt')
+    expect(parseBatchWindowMs('banana')).toBe(30_000)
+  })
+
+  it('returns 0 when env is "0" (immediate flush, not treated as falsy)', async () => {
+    const { parseBatchWindowMs } = await import('./mqtt')
+    expect(parseBatchWindowMs('0')).toBe(0)
+  })
+})
