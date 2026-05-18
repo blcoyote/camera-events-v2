@@ -10,19 +10,22 @@ export function ServiceWorkerRegistration() {
   useEffect(() => {
     if (!('serviceWorker' in navigator)) return
 
+    let registration: ServiceWorkerRegistration | null = null
+
     navigator.serviceWorker
       .register('/sw.js')
-      .then((registration) => {
+      .then((reg) => {
+        registration = reg
         // Force a byte-comparison check against the server on every page load
         // so SW updates are detected without requiring a full hard reload.
-        registration.update().catch(() => {})
+        reg.update().catch(() => {})
 
-        if (registration.waiting) {
-          setWaitingWorker(registration.waiting)
+        if (reg.waiting) {
+          setWaitingWorker(reg.waiting)
         }
 
-        registration.addEventListener('updatefound', () => {
-          const installing = registration.installing
+        reg.addEventListener('updatefound', () => {
+          const installing = reg.installing
           if (!installing) return
 
           const checkInstalled = () => {
@@ -91,6 +94,17 @@ export function ServiceWorkerRegistration() {
       refreshing = true
       window.location.reload()
     })
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        registration?.update().catch(() => {})
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
   }, [])
 
   const handleUpdate = useCallback(() => {
