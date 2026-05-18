@@ -23,7 +23,7 @@ function CamerasRoute() {
   const [imgRefreshKey, setImgRefreshKey] = useState(0)
 
   const onRefresh = useCallback(async () => {
-    await clearCacheFn()
+    clearCacheFn().catch(() => {})
     setImgRefreshKey((k) => k + 1)
     await router.invalidate()
   }, [router])

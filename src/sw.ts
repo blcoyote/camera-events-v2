@@ -2,7 +2,6 @@ import type { PrecacheEntry, SerwistGlobalConfig } from 'serwist'
 import {
   CacheFirst,
   ExpirationPlugin,
-  NetworkFirst,
   Serwist,
   StaleWhileRevalidate,
 } from 'serwist'
@@ -92,14 +91,6 @@ const serwist = new Serwist({
   runtimeCaching: isDev
     ? []
     : [
-        {
-          matcher: ({ request, url }) =>
-            request.mode === 'navigate' && !url.pathname.startsWith('/api/'),
-          handler: new NetworkFirst({
-            cacheName: 'pages',
-            networkTimeoutSeconds: 3,
-          }),
-        },
         {
           matcher: ({ request }) =>
             request.destination === 'style' ||

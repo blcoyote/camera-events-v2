@@ -31,7 +31,7 @@ function CameraEventsRoute() {
   const favoritedIds = new Set<string>(favoritedEventIds)
 
   const onRefresh = async () => {
-    await clearCacheFn()
+    clearCacheFn().catch(() => {})
     await router.invalidate()
   }
 
