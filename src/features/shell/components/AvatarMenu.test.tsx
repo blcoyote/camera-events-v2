@@ -11,9 +11,7 @@ describe('AvatarMenu', () => {
   let assignMock: ReturnType<typeof vi.fn>
 
   beforeEach(() => {
-    globalThis.fetch = vi
-      .fn()
-      .mockResolvedValue({ ok: true }) as unknown as typeof fetch
+    globalThis.fetch = vi.fn().mockResolvedValue({ ok: true })
     assignMock = vi.fn()
     Object.defineProperty(window, 'location', {
       configurable: true,

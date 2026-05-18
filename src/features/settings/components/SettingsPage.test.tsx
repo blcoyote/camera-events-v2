@@ -80,18 +80,14 @@ describe('SettingsPage', () => {
 
   it('renders the event limit slider with the value from the hook', () => {
     render(<SettingsPage />)
-    const slider = screen.getByLabelText(
-      'Number of events to display',
-    ) as HTMLInputElement
+    const slider = screen.getByLabelText('Number of events to display')
     expect(slider).toBeInTheDocument()
     expect(slider).toHaveAttribute('value', '100')
   })
 
   it('calls setEventLimit with the new numeric value when the slider changes', () => {
     render(<SettingsPage />)
-    const slider = screen.getByLabelText(
-      'Number of events to display',
-    ) as HTMLInputElement
+    const slider = screen.getByLabelText('Number of events to display')
     fireEvent.change(slider, { target: { value: '200' } })
     expect(mockSetEventLimit).toHaveBeenCalledWith(200)
   })

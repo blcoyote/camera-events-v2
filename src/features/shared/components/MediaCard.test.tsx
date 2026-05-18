@@ -4,6 +4,8 @@ import { render, screen, cleanup } from '@testing-library/react'
 import '@testing-library/jest-dom/vitest'
 import React from 'react'
 
+import { MediaCard } from './MediaCard'
+
 vi.mock('@tanstack/react-router', () => ({
   Link: ({
     to,
@@ -24,8 +26,6 @@ vi.mock('@tanstack/react-router', () => ({
       children,
     ),
 }))
-
-import { MediaCard } from './MediaCard'
 
 afterEach(() => {
   cleanup()

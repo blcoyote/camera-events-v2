@@ -2,6 +2,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { renderHook, act, cleanup } from '@testing-library/react'
 import '@testing-library/jest-dom/vitest'
+import type { useTheme as UseThemeFn } from './useTheme'
 
 const localStorageMock = (() => {
   let store: Record<string, string> = {}
@@ -21,7 +22,7 @@ Object.defineProperty(window, 'localStorage', {
   value: localStorageMock,
 })
 
-let useTheme: typeof import('./useTheme').useTheme
+let useTheme: typeof UseThemeFn
 
 beforeEach(async () => {
   vi.resetModules()
