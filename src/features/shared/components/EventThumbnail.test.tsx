@@ -2,8 +2,6 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { render, screen, cleanup, fireEvent } from '@testing-library/react'
 import '@testing-library/jest-dom/vitest'
-import React from 'react'
-
 import { EventThumbnail } from './EventThumbnail'
 
 afterEach(() => {
