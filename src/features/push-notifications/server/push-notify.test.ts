@@ -165,13 +165,15 @@ describe('notifyUsersForCamera', () => {
   const sendPushNotificationMock = vi.mocked(sendPushNotification)
   const getPushStoreMock = vi.mocked(getPushStore)
 
-  function makeStore(overrides: {
-    getAllSubscribedUserIds?: () => string[]
-    isCameraEnabledForUser?: (userId: string, camera: string) => boolean
-    getSubscriptionsByUserId?: (
-      userId: string,
-    ) => Array<{ endpoint: string; p256dh: string; auth: string }>
-  } = {}) {
+  function makeStore(
+    overrides: {
+      getAllSubscribedUserIds?: () => string[]
+      isCameraEnabledForUser?: (userId: string, camera: string) => boolean
+      getSubscriptionsByUserId?: (
+        userId: string,
+      ) => Array<{ endpoint: string; p256dh: string; auth: string }>
+    } = {},
+  ) {
     return {
       getAllSubscribedUserIds: vi.fn(
         overrides.getAllSubscribedUserIds ?? (() => []),

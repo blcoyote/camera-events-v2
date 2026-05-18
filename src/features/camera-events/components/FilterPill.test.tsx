@@ -18,12 +18,7 @@ describe('FilterPill', () => {
 
   it('renders count badge when count prop is provided', () => {
     render(
-      <FilterPill
-        label="People"
-        active={false}
-        onClick={() => {}}
-        count={7}
-      />,
+      <FilterPill label="People" active={false} onClick={() => {}} count={7} />,
     )
     expect(screen.getByText('7')).toBeInTheDocument()
   })

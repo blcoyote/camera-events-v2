@@ -89,10 +89,7 @@ describe('MediaCard component', () => {
 
   it('thumbnail wrapper has class `event-thumb` when scanLines is true (default)', () => {
     render(
-      <MediaCard
-        image={<div data-testid="img">img</div>}
-        aria-label="card"
-      >
+      <MediaCard image={<div data-testid="img">img</div>} aria-label="card">
         <div>children</div>
       </MediaCard>,
     )

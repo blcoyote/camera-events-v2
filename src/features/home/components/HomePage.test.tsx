@@ -58,8 +58,6 @@ describe('HomePage', () => {
 
   it('renders the success alert text when status="logged_out" is provided', () => {
     render(<HomePage status="logged_out" />)
-    expect(
-      screen.getByText('You have been signed out.'),
-    ).toBeInTheDocument()
+    expect(screen.getByText('You have been signed out.')).toBeInTheDocument()
   })
 })

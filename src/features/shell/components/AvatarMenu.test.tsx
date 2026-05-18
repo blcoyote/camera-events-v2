@@ -1,12 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import {
-  render,
-  screen,
-  cleanup,
-  fireEvent,
-  act,
-} from '@testing-library/react'
+import { render, screen, cleanup, fireEvent, act } from '@testing-library/react'
 import '@testing-library/jest-dom/vitest'
 import React from 'react'
 import { AvatarMenu } from './AvatarMenu'
@@ -17,7 +11,9 @@ describe('AvatarMenu', () => {
   let assignMock: ReturnType<typeof vi.fn>
 
   beforeEach(() => {
-    globalThis.fetch = vi.fn().mockResolvedValue({ ok: true }) as unknown as typeof fetch
+    globalThis.fetch = vi
+      .fn()
+      .mockResolvedValue({ ok: true }) as unknown as typeof fetch
     assignMock = vi.fn()
     Object.defineProperty(window, 'location', {
       configurable: true,

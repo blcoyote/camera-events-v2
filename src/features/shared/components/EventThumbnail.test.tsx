@@ -12,9 +12,7 @@ afterEach(() => {
 
 describe('EventThumbnail', () => {
   it('renders an <img> with the correct src initially', () => {
-    const { container } = render(
-      <EventThumbnail eventId="test-event-id-123" />,
-    )
+    const { container } = render(<EventThumbnail eventId="test-event-id-123" />)
     const img = container.querySelector('img')
     expect(img).not.toBeNull()
     expect(img).toHaveAttribute(
@@ -24,17 +22,13 @@ describe('EventThumbnail', () => {
   })
 
   it('renders the <img> with loading="lazy"', () => {
-    const { container } = render(
-      <EventThumbnail eventId="test-event-id-123" />,
-    )
+    const { container } = render(<EventThumbnail eventId="test-event-id-123" />)
     const img = container.querySelector('img')
     expect(img).toHaveAttribute('loading', 'lazy')
   })
 
   it('shows fallback after an image error and removes the <img>', () => {
-    const { container } = render(
-      <EventThumbnail eventId="test-event-id-123" />,
-    )
+    const { container } = render(<EventThumbnail eventId="test-event-id-123" />)
     const img = container.querySelector('img')
     expect(img).not.toBeNull()
 
