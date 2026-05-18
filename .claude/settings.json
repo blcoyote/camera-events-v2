@@ -1,20 +1,19 @@
 {
-  "permissions": {
-    "allow": [
-      "Skill(agentic-dev-team:help)",
-      "Skill(agentic-dev-team:plan)",
-      "mcp__plugin_context7_context7__resolve-library-id",
-      "mcp__plugin_context7_context7__query-docs",
-      "WebFetch(domain:docs.frigate.video)",
-      "Bash(git add *)",
-      "Bash(git commit -m ' *)",
-      "WebFetch(domain:tanstack.com)"
-    ]
-  },
   "enabledPlugins": {
     "agentic-dev-team@bfinster": true
   },
   "hooks": {
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "command": "bd prime",
+            "type": "command"
+          }
+        ],
+        "matcher": ""
+      }
+    ],
     "SessionStart": [
       {
         "hooks": [
@@ -25,6 +24,18 @@
         ],
         "matcher": ""
       }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Skill(agentic-dev-team:help)",
+      "Skill(agentic-dev-team:plan)",
+      "mcp__plugin_context7_context7__resolve-library-id",
+      "mcp__plugin_context7_context7__query-docs",
+      "WebFetch(domain:docs.frigate.video)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "WebFetch(domain:tanstack.com)"
     ]
   }
 }

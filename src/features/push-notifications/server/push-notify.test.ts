@@ -1,12 +1,24 @@
-import { describe, it, expect } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   formatCameraName,
   formatLabel,
   formatTime,
   buildSinglePayload,
   buildBundledPayload,
+  notifyUsersForCamera,
 } from './push-notify'
 import type { FrigateEventInfo } from './event-batcher'
+import { isPushEnabled, sendPushNotification } from './push'
+import { getPushStore } from './push-store'
+
+vi.mock('./push', () => ({
+  isPushEnabled: vi.fn(),
+  sendPushNotification: vi.fn(),
+}))
+
+vi.mock('./push-store', () => ({
+  getPushStore: vi.fn(),
+}))
 
 function makeEvent(
   overrides: Partial<FrigateEventInfo> = {},
@@ -145,5 +157,187 @@ describe('buildBundledPayload', () => {
       labels: 'Person, Car',
       timestamp: 1713182500,
     })
+  })
+})
+
+describe('notifyUsersForCamera', () => {
+  const isPushEnabledMock = vi.mocked(isPushEnabled)
+  const sendPushNotificationMock = vi.mocked(sendPushNotification)
+  const getPushStoreMock = vi.mocked(getPushStore)
+
+  function makeStore(
+    overrides: {
+      getAllSubscribedUserIds?: () => string[]
+      isCameraEnabledForUser?: (userId: string, camera: string) => boolean
+      getSubscriptionsByUserId?: (
+        userId: string,
+      ) => Array<{ endpoint: string; p256dh: string; auth: string }>
+    } = {},
+  ) {
+    return {
+      getAllSubscribedUserIds: vi.fn(
+        overrides.getAllSubscribedUserIds ?? (() => []),
+      ),
+      isCameraEnabledForUser: vi.fn(
+        overrides.isCameraEnabledForUser ?? (() => true),
+      ),
+      getSubscriptionsByUserId: vi.fn(
+        overrides.getSubscriptionsByUserId ?? (() => []),
+      ),
+    }
+  }
+
+  let consoleErrorSpy: ReturnType<typeof vi.spyOn>
+
+  beforeEach(() => {
+    isPushEnabledMock.mockReset()
+    sendPushNotificationMock.mockReset()
+    getPushStoreMock.mockReset()
+    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+  })
+
+  afterEach(() => {
+    consoleErrorSpy.mockRestore()
+  })
+
+  it('returns early without calling getPushStore when isPushEnabled returns false', async () => {
+    isPushEnabledMock.mockReturnValue(false)
+    await notifyUsersForCamera('front_porch', [makeEvent()])
+    expect(getPushStoreMock).not.toHaveBeenCalled()
+    expect(sendPushNotificationMock).not.toHaveBeenCalled()
+  })
+
+  it('returns early without calling getPushStore when events array is empty', async () => {
+    isPushEnabledMock.mockReturnValue(true)
+    await notifyUsersForCamera('front_porch', [])
+    expect(getPushStoreMock).not.toHaveBeenCalled()
+    expect(sendPushNotificationMock).not.toHaveBeenCalled()
+  })
+
+  it('calls sendPushNotification once per subscription with a single event payload', async () => {
+    isPushEnabledMock.mockReturnValue(true)
+    const subs = [
+      { endpoint: 'https://push.example/a', p256dh: 'p1', auth: 'a1' },
+      { endpoint: 'https://push.example/b', p256dh: 'p2', auth: 'a2' },
+    ]
+    const store = makeStore({
+      getAllSubscribedUserIds: () => ['user-1'],
+      isCameraEnabledForUser: () => true,
+      getSubscriptionsByUserId: () => subs,
+    })
+    getPushStoreMock.mockResolvedValue(store as never)
+    sendPushNotificationMock.mockResolvedValue(undefined)
+
+    const event = makeEvent()
+    await notifyUsersForCamera('front_porch', [event])
+
+    expect(sendPushNotificationMock).toHaveBeenCalledTimes(2)
+    const expectedPayload = buildSinglePayload(event)
+    expect(sendPushNotificationMock).toHaveBeenNthCalledWith(
+      1,
+      {
+        endpoint: 'https://push.example/a',
+        keys: { p256dh: 'p1', auth: 'a1' },
+      },
+      expectedPayload,
+    )
+    expect(sendPushNotificationMock).toHaveBeenNthCalledWith(
+      2,
+      {
+        endpoint: 'https://push.example/b',
+        keys: { p256dh: 'p2', auth: 'a2' },
+      },
+      expectedPayload,
+    )
+  })
+
+  it('calls sendPushNotification with bundled payload when multiple events', async () => {
+    isPushEnabledMock.mockReturnValue(true)
+    const subs = [
+      { endpoint: 'https://push.example/a', p256dh: 'p1', auth: 'a1' },
+    ]
+    const store = makeStore({
+      getAllSubscribedUserIds: () => ['user-1'],
+      isCameraEnabledForUser: () => true,
+      getSubscriptionsByUserId: () => subs,
+    })
+    getPushStoreMock.mockResolvedValue(store as never)
+    sendPushNotificationMock.mockResolvedValue(undefined)
+
+    const events = [
+      makeEvent({ id: 'e1', label: 'person' }),
+      makeEvent({ id: 'e2', label: 'car' }),
+    ]
+    await notifyUsersForCamera('front_porch', events)
+
+    expect(sendPushNotificationMock).toHaveBeenCalledTimes(1)
+    const expectedPayload = buildBundledPayload('front_porch', events)
+    expect(sendPushNotificationMock).toHaveBeenCalledWith(
+      {
+        endpoint: 'https://push.example/a',
+        keys: { p256dh: 'p1', auth: 'a1' },
+      },
+      expectedPayload,
+    )
+  })
+
+  it('skips users where isCameraEnabledForUser returns false', async () => {
+    isPushEnabledMock.mockReturnValue(true)
+    const subsByUser: Record<
+      string,
+      Array<{ endpoint: string; p256dh: string; auth: string }>
+    > = {
+      'user-allowed': [
+        { endpoint: 'https://push.example/allowed', p256dh: 'p', auth: 'a' },
+      ],
+      'user-blocked': [
+        { endpoint: 'https://push.example/blocked', p256dh: 'p', auth: 'a' },
+      ],
+    }
+    const store = makeStore({
+      getAllSubscribedUserIds: () => ['user-allowed', 'user-blocked'],
+      isCameraEnabledForUser: (userId) => userId === 'user-allowed',
+      getSubscriptionsByUserId: (userId) => subsByUser[userId] ?? [],
+    })
+    getPushStoreMock.mockResolvedValue(store as never)
+    sendPushNotificationMock.mockResolvedValue(undefined)
+
+    await notifyUsersForCamera('front_porch', [makeEvent()])
+
+    expect(sendPushNotificationMock).toHaveBeenCalledTimes(1)
+    expect(sendPushNotificationMock).toHaveBeenCalledWith(
+      expect.objectContaining({ endpoint: 'https://push.example/allowed' }),
+      expect.anything(),
+    )
+    expect(store.getSubscriptionsByUserId).not.toHaveBeenCalledWith(
+      'user-blocked',
+    )
+  })
+
+  it('catches and logs errors from sendPushNotification without rethrowing', async () => {
+    isPushEnabledMock.mockReturnValue(true)
+    const subs = [
+      { endpoint: 'https://push.example/fail', p256dh: 'p1', auth: 'a1' },
+      { endpoint: 'https://push.example/ok', p256dh: 'p2', auth: 'a2' },
+    ]
+    const store = makeStore({
+      getAllSubscribedUserIds: () => ['user-1'],
+      isCameraEnabledForUser: () => true,
+      getSubscriptionsByUserId: () => subs,
+    })
+    getPushStoreMock.mockResolvedValue(store as never)
+    sendPushNotificationMock
+      .mockRejectedValueOnce(new Error('boom'))
+      .mockResolvedValueOnce(undefined)
+
+    await expect(
+      notifyUsersForCamera('front_porch', [makeEvent()]),
+    ).resolves.toBeUndefined()
+
+    expect(sendPushNotificationMock).toHaveBeenCalledTimes(2)
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      expect.stringContaining('https://push.example/fail'),
+      'boom',
+    )
   })
 })

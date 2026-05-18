@@ -20,6 +20,7 @@ export default [
       'prettier.config.js',
       'public/sw.js',
       '.output',
+      '.claude/worktrees/**',
     ],
   },
 ]
