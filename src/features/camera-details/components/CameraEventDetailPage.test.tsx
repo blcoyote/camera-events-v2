@@ -69,7 +69,8 @@ vi.mock('./InfoCard', () => ({
 }))
 
 // Import component AFTER mocks
-const { CameraEventDetailPage } = await import('./CameraEventDetailPage')
+const { CameraEventDetailPage, getDownloadUrl } =
+  await import('./CameraEventDetailPage')
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────
 
@@ -117,6 +118,20 @@ afterEach(() => {
 })
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
+
+describe('getDownloadUrl', () => {
+  it('appends ?download=true to the clip URL so the proxy sets Content-Disposition: attachment', () => {
+    expect(getDownloadUrl('front_door.123', 'clip')).toBe(
+      '/api/events/front_door.123/clip?download=true',
+    )
+  })
+
+  it('appends ?download=true to the snapshot URL', () => {
+    expect(getDownloadUrl('front_door.123', 'snapshot')).toBe(
+      '/api/events/front_door.123/snapshot?download=true',
+    )
+  })
+})
 
 describe('CameraEventDetailPage', () => {
   describe('with a successful result', () => {

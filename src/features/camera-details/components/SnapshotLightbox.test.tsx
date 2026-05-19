@@ -41,6 +41,20 @@ describe('SnapshotLightbox rendering', () => {
     expect(img).toHaveAttribute('src', '/api/events/abc.1/snapshot?bbox=true')
   })
 
+  it('close button has a 44px touch target (h-11 w-11)', () => {
+    render(
+      <SnapshotLightbox
+        src="/api/events/abc.1/snapshot"
+        alt="snap"
+        open
+        onClose={() => {}}
+      />,
+    )
+    const closeBtn = screen.getByRole('button', { name: /close/i })
+    expect(closeBtn.className).toContain('h-11')
+    expect(closeBtn.className).toContain('w-11')
+  })
+
   it('appends &bbox=true when src already has query params', () => {
     render(
       <SnapshotLightbox

@@ -65,10 +65,8 @@ export function getDownloadUrl(
   eventId: string,
   kind: 'clip' | 'snapshot',
 ): string {
-  if (kind === 'clip') {
-    return `/api/events/${eventId}/clip`
-  }
-  return `/api/events/${eventId}/snapshot?download=true`
+  const extension = kind === 'clip' ? 'clip' : 'snapshot'
+  return `/api/events/${eventId}/${extension}?download=true`
 }
 
 // ─── Components ───

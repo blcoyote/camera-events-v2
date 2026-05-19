@@ -679,7 +679,7 @@ describe('getEventClipStream', () => {
     expect(sentHeaders.get('Range')).toBe('bytes=0-1023')
   })
 
-  it('forwards a malformed Range header unchanged without synthesizing a status', async () => {
+  it('forwards a malformed Range header unchanged and returns the upstream status (e.g. 416) as a successful result', async () => {
     const fetchMock = mockFetchStream({
       status: 416,
       headers: { 'Content-Type': 'text/plain' },
@@ -691,10 +691,11 @@ describe('getEventClipStream', () => {
       rangeHeader: 'bytes=abc',
     })
 
-    // Upstream determines the status; we do not interpret/synthesize.
-    expect(result.ok).toBe(false)
-    if (result.ok) return
-    expect(result.status).toBe(416)
+    // Frigate responded — even with a 4xx — so this is a successful result
+    // from the client's perspective. The proxy mirrors the status (AC20).
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(result.data.status).toBe(416)
 
     const init = fetchMock.mock.calls[0][1] as RequestInit
     const sentHeaders = new Headers(init.headers)
@@ -714,14 +715,16 @@ describe('getEventClipStream', () => {
     expect(init.credentials).not.toBe('include')
   })
 
-  it('returns { ok: false } with status on upstream 5xx', async () => {
+  it('returns the upstream 5xx status as a successful result (proxy mirrors it)', async () => {
     globalThis.fetch = mockFetchStream({ status: 502, body: null })
     const { getEventClipStream } = await import('./client')
     const result = await getEventClipStream('abc123')
 
-    expect(result.ok).toBe(false)
-    if (result.ok) return
-    expect(result.status).toBe(502)
+    // Frigate returned an HTTP response — even a 502. We treat `ok: false`
+    // strictly for network failures (no response), not for any non-2xx.
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(result.data.status).toBe(502)
   })
 
   it('returns { ok: false } on network failure', async () => {

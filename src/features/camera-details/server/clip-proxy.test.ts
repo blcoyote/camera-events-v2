@@ -181,7 +181,7 @@ describe('handleClipRequest', () => {
     expect(ranged.headers.get('Content-Length')).toBe('1024')
   })
 
-  it('forwards a malformed Range header unchanged and does not synthesize 206', async () => {
+  it('forwards a malformed Range header unchanged and mirrors upstream 416 (does not synthesize 206)', async () => {
     const fetchMock = mockFetchStream({
       status: 416,
       headers: {},
@@ -192,7 +192,8 @@ describe('handleClipRequest', () => {
       rangeHeader: 'bytes=abc',
     })
 
-    expect(response.status).toBe(502) // upstream non-OK maps to 502 (see below)
+    // AC20: proxy mirrors upstream status, does not synthesize 206 or collapse to 502.
+    expect(response.status).toBe(416)
 
     const init = fetchMock.mock.calls[0][1] as RequestInit
     const sentHeaders = new Headers(init.headers)
@@ -201,15 +202,38 @@ describe('handleClipRequest', () => {
 
   // ─── Upstream failure ───
 
-  it('returns 502 when Frigate is unreachable', async () => {
+  it('returns 502 when Frigate is unreachable (network error)', async () => {
     globalThis.fetch = mockFetchNetworkError()
     const response = await handleClipRequest('front_door.123', true)
     expect(response.status).toBe(502)
   })
 
-  it('returns 502 when Frigate returns 5xx', async () => {
+  it('mirrors upstream 5xx status (does not collapse to 502)', async () => {
     globalThis.fetch = mockFetchStream({ status: 500, body: null })
     const response = await handleClipRequest('front_door.123', true)
-    expect(response.status).toBe(502)
+    expect(response.status).toBe(500)
+  })
+
+  it('mirrors an upstream 404', async () => {
+    globalThis.fetch = mockFetchStream({ status: 404, body: null })
+    const response = await handleClipRequest('front_door.123', true)
+    expect(response.status).toBe(404)
+  })
+
+  // ─── AC19: Content-Length propagation on 200 even when upstream omits Accept-Ranges ───
+
+  it('propagates Content-Length from upstream on a 200 response and synthesizes Accept-Ranges when upstream omits it', async () => {
+    globalThis.fetch = mockFetchStream({
+      status: 200,
+      headers: {
+        'Content-Type': 'video/mp4',
+        'Content-Length': '8192',
+        // No Accept-Ranges from upstream
+      },
+    })
+    const response = await handleClipRequest('front_door.123', true)
+    expect(response.status).toBe(200)
+    expect(response.headers.get('Content-Length')).toBe('8192')
+    expect(response.headers.get('Accept-Ranges')).toBe('bytes')
   })
 })

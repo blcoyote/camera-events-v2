@@ -209,13 +209,9 @@ export async function getEventClipStream(
       headers,
       signal: AbortSignal.timeout(timeoutMs),
     })
-    if (!response.ok) {
-      return {
-        ok: false,
-        error: `HTTP ${response.status}`,
-        status: response.status,
-      }
-    }
+    // Reserve `ok: false` for true network failures (caught below). When
+    // Frigate responds at all — even with 4xx/5xx — we hand the status back
+    // so the proxy can mirror it (e.g. 416 for a malformed Range, per AC20).
     return {
       ok: true,
       data: {

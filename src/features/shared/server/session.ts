@@ -55,3 +55,18 @@ export async function requireSession(): Promise<string> {
   }
   return session.data.sub
 }
+
+/**
+ * Resolve whether the incoming request has an authenticated session,
+ * coercing missing or corrupted sessions to `false`. Used by media proxy
+ * route handlers (clip, snapshot, thumbnail) that hand the boolean to a
+ * pure proxy function for authorization. Never throws.
+ */
+export async function resolveIsAuthenticated(): Promise<boolean> {
+  try {
+    const session = await useSession<SessionData>(getSessionConfig())
+    return !!session.data.sub
+  } catch {
+    return false
+  }
+}

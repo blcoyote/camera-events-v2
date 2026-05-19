@@ -27,7 +27,17 @@ export async function handleClipRequest(
     rangeHeader: options?.rangeHeader,
   })
   if (!result.ok) {
+    // ok:false means a true network failure (no response from Frigate).
+    // Per AC8, surface as Bad Gateway. Upstream HTTP statuses (4xx/5xx)
+    // arrive with ok:true so the proxy can mirror them — see below.
     return new Response(null, { status: 502 })
+  }
+
+  // Mirror upstream non-2xx statuses (AC20). Cancel the body to avoid
+  // holding an open upstream connection while serving the error.
+  if (result.data.status < 200 || result.data.status >= 300) {
+    result.data.body?.cancel().catch(() => {})
+    return new Response(null, { status: result.data.status })
   }
 
   const headers = new Headers()

@@ -351,7 +351,7 @@ export function SnapshotLightbox({
         type="button"
         onClick={resetAndClose}
         aria-label="Close snapshot viewer"
-        className="absolute right-3 top-3 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-sm transition hover:bg-white/30"
+        className="absolute right-3 top-3 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-sm transition hover:bg-white/30"
       >
         <svg
           width="20"
