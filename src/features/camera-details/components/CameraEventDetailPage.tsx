@@ -14,6 +14,7 @@ import { EventSnapshot } from './EventSnapshot'
 import { InfoCard } from './InfoCard'
 import { useFavoriteToggle } from '#/features/shared/hooks/useFavoriteToggle'
 import { FavoriteButton } from '#/features/shared/components/FavoriteButton'
+import { isNonZeroBox } from '../utils/boundingBox'
 
 // ─── Pure functions (exported for testing) ───
 
@@ -79,6 +80,7 @@ export function CameraEventDetailPage({
 }) {
   const state = getDetailPageState(result)
   const [lightboxOpen, setLightboxOpen] = useState(false)
+  const [showBoundingBox, setShowBoundingBox] = useState(false)
   // Call hook unconditionally (React rules) — use empty string as sentinel in error branch
   const eventId = state.kind === 'event' ? state.event.id : ''
   const {
@@ -115,6 +117,9 @@ export function CameraEventDetailPage({
 
   const snapshotSrc = `/api/events/${event.id}/snapshot`
   const snapshotAlt = `Snapshot of ${formatLabelName(event.label)} detected by ${formatCameraName(event.camera)}`
+  const hasDetectionBox =
+    event.has_snapshot &&
+    (isNonZeroBox(event.box) || isNonZeroBox(event.data.box))
 
   return (
     <main id="main-content" className="page-wrap px-4 pb-8 pt-6 sm:pt-14">
@@ -162,14 +167,30 @@ export function CameraEventDetailPage({
         </div>
 
         {event.has_snapshot && (
-          <div className="-mx-4 mb-6 sm:mx-0 sm:mb-8">
-            <EventSnapshot
-              eventId={event.id}
-              camera={event.camera}
-              label={event.label}
-              onZoom={() => setLightboxOpen(true)}
-            />
-          </div>
+          <>
+            {hasDetectionBox && (
+              <div className="mb-3">
+                <button
+                  type="button"
+                  aria-label="Show detection box"
+                  aria-pressed={showBoundingBox}
+                  onClick={() => setShowBoundingBox((s) => !s)}
+                  className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[rgba(50,143,151,0.3)] bg-[rgba(79,184,178,0.14)] px-4 py-2 text-sm font-semibold text-(--lagoon-deep) transition hover:bg-[rgba(79,184,178,0.24)] aria-pressed:bg-(--lagoon-deep) aria-pressed:text-(--foam)"
+                >
+                  Show detection box
+                </button>
+              </div>
+            )}
+            <div className="-mx-4 mb-6 sm:mx-0 sm:mb-8">
+              <EventSnapshot
+                eventId={event.id}
+                camera={event.camera}
+                label={event.label}
+                onZoom={() => setLightboxOpen(true)}
+                showBoundingBox={showBoundingBox}
+              />
+            </div>
+          </>
         )}
 
         <dl className="mt-4 grid grid-cols-1 gap-0 divide-y divide-(--line) sm:mt-6 sm:grid-cols-2 sm:gap-4 sm:divide-y-0 lg:grid-cols-3">
@@ -249,6 +270,7 @@ export function CameraEventDetailPage({
           alt={snapshotAlt}
           open={lightboxOpen}
           onClose={() => setLightboxOpen(false)}
+          showBoundingBox={showBoundingBox}
         />
       )}
     </main>

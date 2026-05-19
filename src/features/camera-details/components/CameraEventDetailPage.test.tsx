@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, cleanup } from '@testing-library/react'
+import { render, cleanup, fireEvent } from '@testing-library/react'
 import '@testing-library/jest-dom/vitest'
 import React from 'react'
 import type { FrigateEvent } from '#/features/shared/server/frigate/types'
@@ -30,13 +30,20 @@ vi.mock('@tanstack/react-router', () => ({
     React.createElement('a', { href: to }, children),
 }))
 
+const mockEventSnapshot = vi.fn((_props: unknown) => null)
 vi.mock('./EventSnapshot', () => ({
-  EventSnapshot: () =>
-    React.createElement('div', { 'data-testid': 'snapshot' }),
+  EventSnapshot: (props: unknown) => {
+    mockEventSnapshot(props)
+    return React.createElement('div', { 'data-testid': 'snapshot' })
+  },
 }))
 
+const mockSnapshotLightbox = vi.fn((_props: unknown) => null)
 vi.mock('./SnapshotLightbox', () => ({
-  SnapshotLightbox: () => null,
+  SnapshotLightbox: (props: unknown) => {
+    mockSnapshotLightbox(props)
+    return null
+  },
 }))
 
 vi.mock('./InfoCard', () => ({
@@ -151,6 +158,149 @@ describe('CameraEventDetailPage', () => {
         />,
       )
       expect(mockUseFavoriteToggle).toHaveBeenCalled()
+    })
+  })
+
+  describe('bounding-box toggle', () => {
+    it('renders the toggle with aria-pressed="false" when has_snapshot and event.box is non-zero', () => {
+      render(
+        <CameraEventDetailPage
+          result={successResult({
+            has_snapshot: true,
+            box: [0.1, 0.2, 0.3, 0.4],
+          })}
+        />,
+      )
+      const toggle = document.querySelector('[aria-label="Show detection box"]')
+      expect(toggle).toBeInTheDocument()
+      expect(toggle).toHaveAttribute('aria-pressed', 'false')
+    })
+
+    it('renders the toggle when event.box is null but event.data.box is non-zero', () => {
+      render(
+        <CameraEventDetailPage
+          result={successResult({
+            has_snapshot: true,
+            box: null,
+            data: {
+              top_score: 0.9,
+              score: 0.9,
+              attributes: [],
+              box: [0.5, 0.5, 0.2, 0.2],
+              region: [0, 0, 0, 0],
+              type: 'object',
+            },
+          })}
+        />,
+      )
+      expect(
+        document.querySelector('[aria-label="Show detection box"]'),
+      ).toBeInTheDocument()
+    })
+
+    it('does not render the toggle when both boxes are null/zero', () => {
+      render(
+        <CameraEventDetailPage
+          result={successResult({
+            has_snapshot: true,
+            box: null,
+          })}
+        />,
+      )
+      expect(
+        document.querySelector('[aria-label="Show detection box"]'),
+      ).toBeNull()
+    })
+
+    it('does not render the toggle when has_snapshot is false even if box is non-zero', () => {
+      render(
+        <CameraEventDetailPage
+          result={successResult({
+            has_snapshot: false,
+            box: [0.1, 0.2, 0.3, 0.4],
+          })}
+        />,
+      )
+      expect(
+        document.querySelector('[aria-label="Show detection box"]'),
+      ).toBeNull()
+    })
+
+    it('clicking the toggle flips aria-pressed and updates showBoundingBox on EventSnapshot', () => {
+      render(
+        <CameraEventDetailPage
+          result={successResult({
+            has_snapshot: true,
+            box: [0.1, 0.2, 0.3, 0.4],
+          })}
+        />,
+      )
+
+      // Initial: aria-pressed="false", snapshot gets showBoundingBox=false
+      const initialProps = mockEventSnapshot.mock.calls.at(-1)?.[0] as Record<
+        string,
+        unknown
+      >
+      expect(initialProps.showBoundingBox).toBe(false)
+
+      const toggle = document.querySelector(
+        '[aria-label="Show detection box"]',
+      ) as HTMLButtonElement
+      fireEvent.click(toggle)
+
+      expect(toggle).toHaveAttribute('aria-pressed', 'true')
+      const afterClickProps = mockEventSnapshot.mock.calls.at(
+        -1,
+      )?.[0] as Record<string, unknown>
+      expect(afterClickProps.showBoundingBox).toBe(true)
+
+      fireEvent.click(toggle)
+      expect(toggle).toHaveAttribute('aria-pressed', 'false')
+      const afterSecondClickProps = mockEventSnapshot.mock.calls.at(
+        -1,
+      )?.[0] as Record<string, unknown>
+      expect(afterSecondClickProps.showBoundingBox).toBe(false)
+    })
+
+    it('passes showBoundingBox to SnapshotLightbox so the lightbox can render the boxed image', () => {
+      render(
+        <CameraEventDetailPage
+          result={successResult({
+            has_snapshot: true,
+            box: [0.1, 0.2, 0.3, 0.4],
+          })}
+        />,
+      )
+
+      // Initial: lightbox gets showBoundingBox=false
+      const initialProps = mockSnapshotLightbox.mock.calls.at(
+        -1,
+      )?.[0] as Record<string, unknown>
+      expect(initialProps.showBoundingBox).toBe(false)
+
+      const toggle = document.querySelector(
+        '[aria-label="Show detection box"]',
+      ) as HTMLButtonElement
+      fireEvent.click(toggle)
+
+      const afterProps = mockSnapshotLightbox.mock.calls.at(-1)?.[0] as Record<
+        string,
+        unknown
+      >
+      expect(afterProps.showBoundingBox).toBe(true)
+    })
+
+    it('toggle has the min-h-11 touch-target class', () => {
+      render(
+        <CameraEventDetailPage
+          result={successResult({
+            has_snapshot: true,
+            box: [0.1, 0.2, 0.3, 0.4],
+          })}
+        />,
+      )
+      const toggle = document.querySelector('[aria-label="Show detection box"]')
+      expect(toggle?.className).toContain('min-h-11')
     })
   })
 })
