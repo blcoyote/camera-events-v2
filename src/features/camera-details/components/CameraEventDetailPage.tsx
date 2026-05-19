@@ -80,6 +80,11 @@ export function CameraEventDetailPage({
   const state = getDetailPageState(result)
   const [lightboxOpen, setLightboxOpen] = useState(false)
   const [showBoundingBox, setShowBoundingBox] = useState(false)
+  // Latches to true on first accordion open. We don't mount the
+  // EventClipPlayer until this is true, so preload='metadata' doesn't
+  // fire against the proxy on every page visit. Once opened, the player
+  // stays mounted so re-expanding the accordion is instant.
+  const [clipAccordionOpened, setClipAccordionOpened] = useState(false)
   // Call hook unconditionally (React rules) — use empty string as sentinel in error branch
   const eventId = state.kind === 'event' ? state.event.id : ''
   const {
@@ -165,22 +170,6 @@ export function CameraEventDetailPage({
           />
         </div>
 
-        {event.has_clip && (
-          <div className="-mx-4 mb-6 sm:mx-0 sm:mb-8">
-            <EventClipPlayer
-              eventId={event.id}
-              camera={event.camera}
-              label={event.label}
-              onError={() => {
-                // Defensive: snapshot block already renders independently
-                // of player state today. If a future layout hides the
-                // snapshot behind the player, this is the hook for
-                // re-revealing it.
-              }}
-            />
-          </div>
-        )}
-
         {event.has_snapshot && (
           <>
             {hasDetectionBox && (
@@ -217,6 +206,36 @@ export function CameraEventDetailPage({
               />
             </div>
           </>
+        )}
+
+        {event.has_clip && (
+          <details
+            className="-mx-4 mb-6 overflow-hidden border-y border-(--line) bg-(--surface) sm:mx-0 sm:mb-8 sm:rounded-2xl sm:border"
+            onToggle={(e) => {
+              if (e.currentTarget.open) {
+                setClipAccordionOpened(true)
+              }
+            }}
+          >
+            <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 px-4 py-3 text-sm font-semibold text-(--lagoon-deep) transition hover:bg-[rgba(79,184,178,0.08)]">
+              <Film className="h-4 w-4" aria-hidden="true" />
+              Watch clip
+            </summary>
+            {clipAccordionOpened && (
+              <div className="border-t border-(--line)">
+                <EventClipPlayer
+                  eventId={event.id}
+                  camera={event.camera}
+                  label={event.label}
+                  onError={() => {
+                    // Defensive: snapshot block renders independently of
+                    // player state. Hook is kept so a future layout that
+                    // hides the snapshot behind the player can re-reveal it.
+                  }}
+                />
+              </div>
+            )}
+          </details>
         )}
 
         <dl className="mt-4 grid grid-cols-1 gap-0 divide-y divide-(--line) sm:mt-6 sm:grid-cols-2 sm:gap-4 sm:divide-y-0 lg:grid-cols-3">

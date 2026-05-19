@@ -336,60 +336,129 @@ describe('CameraEventDetailPage', () => {
     })
   })
 
-  describe('inline clip player', () => {
-    it('renders the EventClipPlayer when has_clip=true', () => {
+  describe('clip accordion (lazy-mounted player)', () => {
+    it('renders a "Watch clip" accordion summary when has_clip=true', () => {
       render(
         <CameraEventDetailPage
           result={successResult({ has_clip: true, has_snapshot: true })}
         />,
       )
+      const summary = screen.getByText(/watch clip/i)
+      expect(summary).toBeInTheDocument()
+    })
+
+    it('does NOT mount the EventClipPlayer until the accordion is opened (no preload on page load)', () => {
+      render(
+        <CameraEventDetailPage
+          result={successResult({ has_clip: true, has_snapshot: true })}
+        />,
+      )
+      // Player must be absent from the DOM initially — no <video> means no
+      // metadata fetch against /api/events/{id}/clip on page load.
+      expect(document.querySelector('[data-testid="clip-player"]')).toBeNull()
+      expect(mockEventClipPlayer).not.toHaveBeenCalled()
+    })
+
+    it('mounts the player when the accordion is opened', () => {
+      render(
+        <CameraEventDetailPage
+          result={successResult({ has_clip: true, has_snapshot: true })}
+        />,
+      )
+      const details = document.querySelector('details') as HTMLDetailsElement
+      expect(details).not.toBeNull()
+      expect(details.open).toBe(false)
+
+      // Native <details> exposes open as a boolean property; flipping it
+      // dispatches a 'toggle' event that React's onToggle picks up.
+      details.open = !details.open
+      fireEvent(details, new Event('toggle', { bubbles: false }))
+
+      expect(mockEventClipPlayer).toHaveBeenCalled()
       expect(
         document.querySelector('[data-testid="clip-player"]'),
       ).toBeInTheDocument()
     })
 
-    it('does NOT render the player when has_clip is false', () => {
+    it('keeps the player mounted after the accordion is closed again (latched)', () => {
+      render(
+        <CameraEventDetailPage
+          result={successResult({ has_clip: true, has_snapshot: true })}
+        />,
+      )
+      const details = document.querySelector('details') as HTMLDetailsElement
+
+      details.open = !details.open
+      fireEvent(details, new Event('toggle', { bubbles: false }))
+      expect(
+        document.querySelector('[data-testid="clip-player"]'),
+      ).toBeInTheDocument()
+
+      details.open = !details.open
+      fireEvent(details, new Event('toggle', { bubbles: false }))
+      // Latched — player stays mounted so re-expanding is instant.
+      expect(
+        document.querySelector('[data-testid="clip-player"]'),
+      ).toBeInTheDocument()
+    })
+
+    it('does NOT render the accordion when has_clip is false', () => {
       render(
         <CameraEventDetailPage
           result={successResult({ has_clip: false, has_snapshot: true })}
         />,
       )
-      expect(document.querySelector('[data-testid="clip-player"]')).toBeNull()
+      expect(screen.queryByText(/watch clip/i)).toBeNull()
+      expect(document.querySelector('details')).toBeNull()
     })
 
-    it('places the player above the snapshot in DOM order', () => {
+    it('places the accordion below the snapshot in DOM order', () => {
       render(
         <CameraEventDetailPage
           result={successResult({ has_clip: true, has_snapshot: true })}
         />,
       )
-      const player = document.querySelector('[data-testid="clip-player"]')
       const snapshot = document.querySelector('[data-testid="snapshot"]')
-      expect(player).toBeInTheDocument()
+      const details = document.querySelector('details')
       expect(snapshot).toBeInTheDocument()
-      const relation = player?.compareDocumentPosition(snapshot!)
-      expect(relation).toBeDefined()
+      expect(details).toBeInTheDocument()
+      // DOCUMENT_POSITION_FOLLOWING: details follows snapshot in DOM order.
+      const relation = snapshot?.compareDocumentPosition(details!)
       expect(relation! & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     })
 
-    it('with has_clip=true and has_snapshot=false, renders the player and no snapshot', () => {
+    it('renders the accordion and the snapshot together when both clip and snapshot exist', () => {
+      render(
+        <CameraEventDetailPage
+          result={successResult({ has_clip: true, has_snapshot: true })}
+        />,
+      )
+      expect(
+        document.querySelector('[data-testid="snapshot"]'),
+      ).toBeInTheDocument()
+      expect(document.querySelector('details')).toBeInTheDocument()
+    })
+
+    it('with has_clip=true and has_snapshot=false, renders only the accordion (no snapshot block)', () => {
       render(
         <CameraEventDetailPage
           result={successResult({ has_clip: true, has_snapshot: false })}
         />,
       )
-      expect(
-        document.querySelector('[data-testid="clip-player"]'),
-      ).toBeInTheDocument()
+      expect(document.querySelector('details')).toBeInTheDocument()
       expect(document.querySelector('[data-testid="snapshot"]')).toBeNull()
     })
 
-    it('keeps the snapshot, info cards, and favorite rendered when the player errors', () => {
+    it('keeps the snapshot and favorite rendered when the opened player errors', () => {
       render(
         <CameraEventDetailPage
           result={successResult({ has_clip: true, has_snapshot: true })}
         />,
       )
+      const details = document.querySelector('details') as HTMLDetailsElement
+      details.open = !details.open
+      fireEvent(details, new Event('toggle', { bubbles: false }))
+
       const playerProps = mockEventClipPlayer.mock.calls.at(-1)?.[0]
       expect(playerProps?.onError).toBeDefined()
       playerProps?.onError?.()
