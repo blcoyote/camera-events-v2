@@ -11,10 +11,12 @@ import {
 } from '#/features/shared/utils/eventFormatting'
 import { SnapshotLightbox } from './SnapshotLightbox'
 import { EventSnapshot } from './EventSnapshot'
+import { EventClipPlayer } from './EventClipPlayer'
 import { InfoCard } from './InfoCard'
 import { useFavoriteToggle } from '#/features/shared/hooks/useFavoriteToggle'
 import { FavoriteButton } from '#/features/shared/components/FavoriteButton'
 import { isNonZeroBox } from '../utils/boundingBox'
+import { useUrlFlag } from '../hooks/useUrlFlag'
 
 // ─── Pure functions (exported for testing) ───
 
@@ -81,6 +83,7 @@ export function CameraEventDetailPage({
   const state = getDetailPageState(result)
   const [lightboxOpen, setLightboxOpen] = useState(false)
   const [showBoundingBox, setShowBoundingBox] = useState(false)
+  const showInlinePlayer = useUrlFlag('clip', 'inline')
   // Call hook unconditionally (React rules) — use empty string as sentinel in error branch
   const eventId = state.kind === 'event' ? state.event.id : ''
   const {
@@ -165,6 +168,22 @@ export function CameraEventDetailPage({
             onToggle={toggle}
           />
         </div>
+
+        {showInlinePlayer && event.has_clip && (
+          <div className="-mx-4 mb-6 sm:mx-0 sm:mb-8">
+            <EventClipPlayer
+              eventId={event.id}
+              camera={event.camera}
+              label={event.label}
+              onError={() => {
+                // Defensive: snapshot block already renders independently
+                // of player state today. If a future layout hides the
+                // snapshot behind the player, this is the hook for
+                // re-revealing it.
+              }}
+            />
+          </div>
+        )}
 
         {event.has_snapshot && (
           <>

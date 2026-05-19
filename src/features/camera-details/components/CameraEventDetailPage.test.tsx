@@ -46,6 +46,24 @@ vi.mock('./SnapshotLightbox', () => ({
   },
 }))
 
+const mockEventClipPlayer = vi.fn(
+  (_props: { onError?: () => void; eventId: string }) => null,
+)
+vi.mock('./EventClipPlayer', () => ({
+  EventClipPlayer: (props: { onError?: () => void; eventId: string }) => {
+    mockEventClipPlayer(props)
+    return React.createElement('video', {
+      'data-testid': 'clip-player',
+      src: `/api/events/${props.eventId}/clip`,
+    })
+  },
+}))
+
+const mockUseUrlFlag = vi.fn(() => false)
+vi.mock('../hooks/useUrlFlag', () => ({
+  useUrlFlag: (key: string, value: string) => mockUseUrlFlag(),
+}))
+
 vi.mock('./InfoCard', () => ({
   InfoCard: () => null,
 }))
@@ -301,6 +319,86 @@ describe('CameraEventDetailPage', () => {
       )
       const toggle = document.querySelector('[aria-label="Show detection box"]')
       expect(toggle?.className).toContain('min-h-11')
+    })
+  })
+
+  describe('inline clip player (Phase 2 opt-in)', () => {
+    it('renders the EventClipPlayer when ?clip=inline AND has_clip=true', () => {
+      mockUseUrlFlag.mockReturnValue(true)
+      render(
+        <CameraEventDetailPage
+          result={successResult({ has_clip: true, has_snapshot: true })}
+        />,
+      )
+      expect(
+        document.querySelector('[data-testid="clip-player"]'),
+      ).toBeInTheDocument()
+    })
+
+    it('does NOT render the player when ?clip=inline is absent (default off)', () => {
+      mockUseUrlFlag.mockReturnValue(false)
+      render(
+        <CameraEventDetailPage
+          result={successResult({ has_clip: true, has_snapshot: true })}
+        />,
+      )
+      expect(document.querySelector('[data-testid="clip-player"]')).toBeNull()
+    })
+
+    it('does NOT render the player when has_clip is false even with ?clip=inline', () => {
+      mockUseUrlFlag.mockReturnValue(true)
+      render(
+        <CameraEventDetailPage
+          result={successResult({ has_clip: false, has_snapshot: true })}
+        />,
+      )
+      expect(document.querySelector('[data-testid="clip-player"]')).toBeNull()
+    })
+
+    it('places the player above the snapshot in DOM order', () => {
+      mockUseUrlFlag.mockReturnValue(true)
+      render(
+        <CameraEventDetailPage
+          result={successResult({ has_clip: true, has_snapshot: true })}
+        />,
+      )
+      const player = document.querySelector('[data-testid="clip-player"]')
+      const snapshot = document.querySelector('[data-testid="snapshot"]')
+      expect(player).toBeInTheDocument()
+      expect(snapshot).toBeInTheDocument()
+      const relation = player?.compareDocumentPosition(snapshot!)
+      expect(relation).toBeDefined()
+      expect(relation! & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    })
+
+    it('with has_clip=true and has_snapshot=false, renders the player and no snapshot', () => {
+      mockUseUrlFlag.mockReturnValue(true)
+      render(
+        <CameraEventDetailPage
+          result={successResult({ has_clip: true, has_snapshot: false })}
+        />,
+      )
+      expect(
+        document.querySelector('[data-testid="clip-player"]'),
+      ).toBeInTheDocument()
+      expect(document.querySelector('[data-testid="snapshot"]')).toBeNull()
+    })
+
+    it('keeps the snapshot, info cards, and favorite rendered when the player errors', () => {
+      mockUseUrlFlag.mockReturnValue(true)
+      render(
+        <CameraEventDetailPage
+          result={successResult({ has_clip: true, has_snapshot: true })}
+        />,
+      )
+      const playerProps = mockEventClipPlayer.mock.calls.at(-1)?.[0]
+      expect(playerProps?.onError).toBeDefined()
+      playerProps?.onError?.()
+
+      expect(
+        document.querySelector('[data-testid="snapshot"]'),
+      ).toBeInTheDocument()
+      expect(mockFavoriteButton).toHaveBeenCalled()
     })
   })
 })
