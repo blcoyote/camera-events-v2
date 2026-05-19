@@ -16,7 +16,6 @@ import { InfoCard } from './InfoCard'
 import { useFavoriteToggle } from '#/features/shared/hooks/useFavoriteToggle'
 import { FavoriteButton } from '#/features/shared/components/FavoriteButton'
 import { isNonZeroBox } from '../utils/boundingBox'
-import { useUrlFlag } from '../hooks/useUrlFlag'
 
 // ─── Pure functions (exported for testing) ───
 
@@ -81,7 +80,6 @@ export function CameraEventDetailPage({
   const state = getDetailPageState(result)
   const [lightboxOpen, setLightboxOpen] = useState(false)
   const [showBoundingBox, setShowBoundingBox] = useState(false)
-  const showInlinePlayer = useUrlFlag('clip', 'inline')
   // Call hook unconditionally (React rules) — use empty string as sentinel in error branch
   const eventId = state.kind === 'event' ? state.event.id : ''
   const {
@@ -167,7 +165,7 @@ export function CameraEventDetailPage({
           />
         </div>
 
-        {showInlinePlayer && event.has_clip && (
+        {event.has_clip && (
           <div className="-mx-4 mb-6 sm:mx-0 sm:mb-8">
             <EventClipPlayer
               eventId={event.id}

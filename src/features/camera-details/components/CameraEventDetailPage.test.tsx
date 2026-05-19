@@ -59,11 +59,6 @@ vi.mock('./EventClipPlayer', () => ({
   },
 }))
 
-const mockUseUrlFlag = vi.fn(() => false)
-vi.mock('../hooks/useUrlFlag', () => ({
-  useUrlFlag: (key: string, value: string) => mockUseUrlFlag(),
-}))
-
 vi.mock('./InfoCard', () => ({
   InfoCard: () => null,
 }))
@@ -337,9 +332,8 @@ describe('CameraEventDetailPage', () => {
     })
   })
 
-  describe('inline clip player (Phase 2 opt-in)', () => {
-    it('renders the EventClipPlayer when ?clip=inline AND has_clip=true', () => {
-      mockUseUrlFlag.mockReturnValue(true)
+  describe('inline clip player', () => {
+    it('renders the EventClipPlayer when has_clip=true', () => {
       render(
         <CameraEventDetailPage
           result={successResult({ has_clip: true, has_snapshot: true })}
@@ -350,18 +344,7 @@ describe('CameraEventDetailPage', () => {
       ).toBeInTheDocument()
     })
 
-    it('does NOT render the player when ?clip=inline is absent (default off)', () => {
-      mockUseUrlFlag.mockReturnValue(false)
-      render(
-        <CameraEventDetailPage
-          result={successResult({ has_clip: true, has_snapshot: true })}
-        />,
-      )
-      expect(document.querySelector('[data-testid="clip-player"]')).toBeNull()
-    })
-
-    it('does NOT render the player when has_clip is false even with ?clip=inline', () => {
-      mockUseUrlFlag.mockReturnValue(true)
+    it('does NOT render the player when has_clip is false', () => {
       render(
         <CameraEventDetailPage
           result={successResult({ has_clip: false, has_snapshot: true })}
@@ -371,7 +354,6 @@ describe('CameraEventDetailPage', () => {
     })
 
     it('places the player above the snapshot in DOM order', () => {
-      mockUseUrlFlag.mockReturnValue(true)
       render(
         <CameraEventDetailPage
           result={successResult({ has_clip: true, has_snapshot: true })}
@@ -387,7 +369,6 @@ describe('CameraEventDetailPage', () => {
     })
 
     it('with has_clip=true and has_snapshot=false, renders the player and no snapshot', () => {
-      mockUseUrlFlag.mockReturnValue(true)
       render(
         <CameraEventDetailPage
           result={successResult({ has_clip: true, has_snapshot: false })}
@@ -400,7 +381,6 @@ describe('CameraEventDetailPage', () => {
     })
 
     it('keeps the snapshot, info cards, and favorite rendered when the player errors', () => {
-      mockUseUrlFlag.mockReturnValue(true)
       render(
         <CameraEventDetailPage
           result={successResult({ has_clip: true, has_snapshot: true })}
