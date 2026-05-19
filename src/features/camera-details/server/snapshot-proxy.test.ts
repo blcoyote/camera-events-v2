@@ -88,4 +88,60 @@ describe('handleSnapshotRequest', () => {
 
     expect(response.status).toBe(502)
   })
+
+  it('forwards bbox=true to the upstream Frigate URL when bbox is set', async () => {
+    const jpegBytes = new Uint8Array([0xff, 0xd8, 0xff, 0xe0]).buffer
+    const fetchMock = mockFetchBinary(jpegBytes)
+    globalThis.fetch = fetchMock
+    const response = await handleSnapshotRequest(
+      'front_door.123',
+      true,
+      false,
+      true,
+    )
+
+    expect(response.status).toBe(200)
+    expect(fetchMock).toHaveBeenCalledOnce()
+    const calledUrl = fetchMock.mock.calls[0]?.[0] as string
+    expect(calledUrl).toContain('bbox=true')
+  })
+
+  it('does not include bbox in the upstream URL when bbox is not set', async () => {
+    const jpegBytes = new Uint8Array([0xff, 0xd8, 0xff, 0xe0]).buffer
+    const fetchMock = mockFetchBinary(jpegBytes)
+    globalThis.fetch = fetchMock
+    await handleSnapshotRequest('front_door.123', true)
+
+    expect(fetchMock).toHaveBeenCalledOnce()
+    const calledUrl = fetchMock.mock.calls[0]?.[0] as string
+    expect(calledUrl).not.toContain('bbox')
+  })
+
+  it('returns 401 without calling fetch even when bbox is set', async () => {
+    const fetchMock = vi.fn()
+    globalThis.fetch = fetchMock
+    const response = await handleSnapshotRequest(
+      'front_door.123',
+      false,
+      false,
+      true,
+    )
+
+    expect(response.status).toBe(401)
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it('returns 400 without calling fetch when event id is invalid and bbox is set', async () => {
+    const fetchMock = vi.fn()
+    globalThis.fetch = fetchMock
+    const response = await handleSnapshotRequest(
+      '../etc/passwd',
+      true,
+      false,
+      true,
+    )
+
+    expect(response.status).toBe(400)
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
 })

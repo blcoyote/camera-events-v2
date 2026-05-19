@@ -9,6 +9,7 @@ export async function handleSnapshotRequest(
   eventId: string,
   isAuthenticated: boolean,
   download: boolean = false,
+  bbox: boolean = false,
 ): Promise<Response> {
   if (!isAuthenticated) {
     return new Response(null, { status: 401 })
@@ -18,7 +19,10 @@ export async function handleSnapshotRequest(
     return new Response(null, { status: 400 })
   }
 
-  const result = await getEventSnapshot(eventId)
+  const result = await getEventSnapshot(
+    eventId,
+    bbox ? { bbox: true } : undefined,
+  )
   if (!result.ok) {
     return new Response(null, { status: 502 })
   }

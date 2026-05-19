@@ -18,8 +18,9 @@ export const Route = createFileRoute('/api/events/$id/snapshot')({
 
         const url = new URL(request.url)
         const download = url.searchParams.get('download') === 'true'
+        const bbox = url.searchParams.get('bbox') === 'true'
 
-        return handleSnapshotRequest(params.id, isAuthenticated, download)
+        return handleSnapshotRequest(params.id, isAuthenticated, download, bbox)
       },
     },
   },
