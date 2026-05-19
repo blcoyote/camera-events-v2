@@ -178,22 +178,12 @@ export async function getEventSnapshot(
   )
 }
 
-export async function getEventClip(
-  eventId: string,
-  timeoutMs?: number,
-): Promise<FrigateResult<ArrayBuffer>> {
-  if (process.env.FRIGATE_MOCK === 'true')
-    return (await loadMock()).getEventClip(eventId, timeoutMs)
-  return frigateBinary(`/api/events/${eventId}/clip.mp4`, undefined, timeoutMs)
-}
-
 /**
- * Streaming variant of getEventClip. Returns the upstream Response stream
- * so the proxy can forward HTTP Range requests (required for iOS Safari
- * inline video playback) and propagate Content-Length / Content-Range.
- *
- * Does NOT consume the body — the caller must pipe `data.body` into its
- * own Response.
+ * Streams an event clip from Frigate without buffering. Returns the
+ * upstream Response stream so the proxy can forward HTTP Range requests
+ * (required for iOS Safari inline video playback) and propagate
+ * Content-Length / Content-Range. Callers must pipe `data.body` into
+ * their own Response — the body is not consumed here.
  */
 export interface FrigateClipStreamResponse {
   status: number

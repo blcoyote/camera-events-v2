@@ -251,13 +251,6 @@ export async function getEventSnapshot(
   return { ok: true, data: PLACEHOLDER_IMAGE }
 }
 
-export async function getEventClip(
-  _eventId: string,
-  _timeoutMs?: number,
-): Promise<FrigateResult<ArrayBuffer>> {
-  return { ok: true, data: PLACEHOLDER_MP4 }
-}
-
 function streamFromBuffer(buf: ArrayBuffer): ReadableStream<Uint8Array> {
   return new ReadableStream<Uint8Array>({
     start(controller) {

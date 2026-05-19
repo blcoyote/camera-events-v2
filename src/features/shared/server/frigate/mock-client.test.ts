@@ -4,7 +4,6 @@ import {
   getEvent,
   getEventThumbnail,
   getEventSnapshot,
-  getEventClip,
   getEventClipStream,
   getEventSummary,
   getReviews,
@@ -98,21 +97,6 @@ describe('mock-client', () => {
       if (!result.ok) return
       expect(result.data).toBeInstanceOf(ArrayBuffer)
       expect(result.data.byteLength).toBeGreaterThan(0)
-    })
-  })
-
-  describe('getEventClip', () => {
-    it('returns an ArrayBuffer with MP4 signature', async () => {
-      const result = await getEventClip('evt-1')
-      expect(result.ok).toBe(true)
-      if (!result.ok) return
-      expect(result.data).toBeInstanceOf(ArrayBuffer)
-      const bytes = new Uint8Array(result.data)
-      // ftyp box signature at offset 4
-      expect(bytes[4]).toBe(0x66) // 'f'
-      expect(bytes[5]).toBe(0x74) // 't'
-      expect(bytes[6]).toBe(0x79) // 'p'
-      expect(bytes[7]).toBe(0x70) // 'p'
     })
   })
 

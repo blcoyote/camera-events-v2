@@ -7,7 +7,7 @@ import { handleClipRequest } from '#/features/camera-details/server/clip-proxy'
 export const Route = createFileRoute('/api/events/$id/clip')({
   server: {
     handlers: {
-      GET: async ({ params }) => {
+      GET: async ({ params, request }) => {
         let isAuthenticated = false
         try {
           const session = await useSession<SessionData>(getSessionConfig())
@@ -16,7 +16,14 @@ export const Route = createFileRoute('/api/events/$id/clip')({
           // Corrupted session — treat as unauthenticated
         }
 
-        return handleClipRequest(params.id, isAuthenticated)
+        const url = new URL(request.url)
+        const download = url.searchParams.get('download') === 'true'
+        const rangeHeader = request.headers.get('Range') ?? undefined
+
+        return handleClipRequest(params.id, isAuthenticated, {
+          download,
+          rangeHeader,
+        })
       },
     },
   },
