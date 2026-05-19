@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, cleanup, fireEvent } from '@testing-library/react'
+import { render, cleanup, fireEvent, screen } from '@testing-library/react'
 import '@testing-library/jest-dom/vitest'
 import React from 'react'
 import type { FrigateEvent } from '#/features/shared/server/frigate/types'
@@ -199,8 +199,7 @@ describe('CameraEventDetailPage', () => {
           })}
         />,
       )
-      const toggle = document.querySelector('[aria-label="Show detection box"]')
-      expect(toggle).toBeInTheDocument()
+      const toggle = screen.getByRole('button', { name: /show detection box/i })
       expect(toggle).toHaveAttribute('aria-pressed', 'false')
     })
 
@@ -222,7 +221,7 @@ describe('CameraEventDetailPage', () => {
         />,
       )
       expect(
-        document.querySelector('[aria-label="Show detection box"]'),
+        screen.getByRole('button', { name: /show detection box/i }),
       ).toBeInTheDocument()
     })
 
@@ -236,7 +235,7 @@ describe('CameraEventDetailPage', () => {
         />,
       )
       expect(
-        document.querySelector('[aria-label="Show detection box"]'),
+        screen.queryByRole('button', { name: /show detection box/i }),
       ).toBeNull()
     })
 
@@ -250,11 +249,11 @@ describe('CameraEventDetailPage', () => {
         />,
       )
       expect(
-        document.querySelector('[aria-label="Show detection box"]'),
+        screen.queryByRole('button', { name: /show detection box/i }),
       ).toBeNull()
     })
 
-    it('clicking the toggle flips aria-pressed and updates showBoundingBox on EventSnapshot', () => {
+    it('clicking the toggle flips aria-pressed and updates label + showBoundingBox', () => {
       render(
         <CameraEventDetailPage
           result={successResult({
@@ -264,26 +263,33 @@ describe('CameraEventDetailPage', () => {
         />,
       )
 
-      // Initial: aria-pressed="false", snapshot gets showBoundingBox=false
+      // Initial: label "Show detection box", aria-pressed="false", snapshot gets showBoundingBox=false
       const initialProps = mockEventSnapshot.mock.calls.at(-1)?.[0] as Record<
         string,
         unknown
       >
       expect(initialProps.showBoundingBox).toBe(false)
 
-      const toggle = document.querySelector(
-        '[aria-label="Show detection box"]',
-      ) as HTMLButtonElement
+      const toggle = screen.getByRole('button', {
+        name: /show detection box/i,
+      })
       fireEvent.click(toggle)
 
-      expect(toggle).toHaveAttribute('aria-pressed', 'true')
+      // After click: label becomes "Hide detection box" (queryable as such)
+      expect(
+        screen.getByRole('button', { name: /hide detection box/i }),
+      ).toHaveAttribute('aria-pressed', 'true')
       const afterClickProps = mockEventSnapshot.mock.calls.at(
         -1,
       )?.[0] as Record<string, unknown>
       expect(afterClickProps.showBoundingBox).toBe(true)
 
-      fireEvent.click(toggle)
-      expect(toggle).toHaveAttribute('aria-pressed', 'false')
+      fireEvent.click(
+        screen.getByRole('button', { name: /hide detection box/i }),
+      )
+      expect(
+        screen.getByRole('button', { name: /show detection box/i }),
+      ).toHaveAttribute('aria-pressed', 'false')
       const afterSecondClickProps = mockEventSnapshot.mock.calls.at(
         -1,
       )?.[0] as Record<string, unknown>
@@ -300,16 +306,14 @@ describe('CameraEventDetailPage', () => {
         />,
       )
 
-      // Initial: lightbox gets showBoundingBox=false
       const initialProps = mockSnapshotLightbox.mock.calls.at(
         -1,
       )?.[0] as Record<string, unknown>
       expect(initialProps.showBoundingBox).toBe(false)
 
-      const toggle = document.querySelector(
-        '[aria-label="Show detection box"]',
-      ) as HTMLButtonElement
-      fireEvent.click(toggle)
+      fireEvent.click(
+        screen.getByRole('button', { name: /show detection box/i }),
+      )
 
       const afterProps = mockSnapshotLightbox.mock.calls.at(-1)?.[0] as Record<
         string,
@@ -327,8 +331,8 @@ describe('CameraEventDetailPage', () => {
           })}
         />,
       )
-      const toggle = document.querySelector('[aria-label="Show detection box"]')
-      expect(toggle?.className).toContain('min-h-11')
+      const toggle = screen.getByRole('button', { name: /show detection box/i })
+      expect(toggle.className).toContain('min-h-11')
     })
   })
 

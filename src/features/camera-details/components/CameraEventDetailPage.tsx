@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from '@tanstack/react-router'
-import { Camera, Clock, MapPin, Film, Image } from 'lucide-react'
+import { Camera, Clock, MapPin, Film, Image, Eye, EyeOff } from 'lucide-react'
 import type { FrigateResult } from '#/features/shared/server/frigate/config'
 import type { FrigateEvent } from '#/features/shared/server/frigate/types'
 import {
@@ -187,12 +187,23 @@ export function CameraEventDetailPage({
               <div className="mb-3">
                 <button
                   type="button"
-                  aria-label="Show detection box"
+                  aria-label={
+                    showBoundingBox
+                      ? 'Hide detection box'
+                      : 'Show detection box'
+                  }
                   aria-pressed={showBoundingBox}
                   onClick={() => setShowBoundingBox((s) => !s)}
                   className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[rgba(50,143,151,0.3)] bg-[rgba(79,184,178,0.14)] px-4 py-2 text-sm font-semibold text-(--lagoon-deep) transition hover:bg-[rgba(79,184,178,0.24)] aria-pressed:bg-(--lagoon-deep) aria-pressed:text-(--foam)"
                 >
-                  Show detection box
+                  {showBoundingBox ? (
+                    <EyeOff className="h-4 w-4" aria-hidden="true" />
+                  ) : (
+                    <Eye className="h-4 w-4" aria-hidden="true" />
+                  )}
+                  {showBoundingBox
+                    ? 'Hide detection box'
+                    : 'Show detection box'}
                 </button>
               </div>
             )}

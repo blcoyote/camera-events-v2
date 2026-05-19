@@ -61,6 +61,7 @@ export function SnapshotLightbox({
   const imgRef = useRef<HTMLImageElement>(null)
   const dialogRef = useRef<HTMLDivElement>(null)
   const closeRef = useRef<HTMLButtonElement>(null)
+  const triggerRef = useRef<HTMLElement | null>(null)
 
   const pinchRef = useRef({ lastDist: 0, lastMid: { x: 0, y: 0 } })
   const panRef = useRef({ startX: 0, startY: 0, startTx: 0, startTy: 0 })
@@ -87,12 +88,21 @@ export function SnapshotLightbox({
     transformRef.current = IDENTITY
     dismissRef.current = 0
 
+    // Remember whatever was focused before the dialog opened, so we can
+    // restore focus on close (WCAG 2.4.3 / focus management for modals).
+    triggerRef.current =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null
+
     const prev = document.body.style.overflow
     document.body.style.overflow = 'hidden'
     closeRef.current?.focus()
 
     return () => {
       document.body.style.overflow = prev
+      triggerRef.current?.focus()
+      triggerRef.current = null
     }
   }, [open])
 

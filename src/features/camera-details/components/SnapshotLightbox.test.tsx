@@ -41,6 +41,36 @@ describe('SnapshotLightbox rendering', () => {
     expect(img).toHaveAttribute('src', '/api/events/abc.1/snapshot?bbox=true')
   })
 
+  it('restores focus to the previously-focused element when the lightbox closes', () => {
+    document.body.innerHTML = '<button id="trigger">open</button>'
+    const trigger = document.getElementById('trigger') as HTMLButtonElement
+    trigger.focus()
+    expect(document.activeElement).toBe(trigger)
+
+    const { rerender } = render(
+      <SnapshotLightbox
+        src="/api/events/abc.1/snapshot"
+        alt="snap"
+        open
+        onClose={() => {}}
+      />,
+    )
+    // While open, the close button takes focus
+    const closeBtn = screen.getByRole('button', { name: /close/i })
+    expect(document.activeElement).toBe(closeBtn)
+
+    // Close — focus should return to the trigger
+    rerender(
+      <SnapshotLightbox
+        src="/api/events/abc.1/snapshot"
+        alt="snap"
+        open={false}
+        onClose={() => {}}
+      />,
+    )
+    expect(document.activeElement).toBe(trigger)
+  })
+
   it('close button has a 44px touch target (h-11 w-11)', () => {
     render(
       <SnapshotLightbox

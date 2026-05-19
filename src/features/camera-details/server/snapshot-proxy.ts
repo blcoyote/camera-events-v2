@@ -9,7 +9,7 @@ export async function handleSnapshotRequest(
   eventId: string,
   isAuthenticated: boolean,
   download: boolean = false,
-  bbox: boolean = false,
+  showBoundingBox: boolean = false,
 ): Promise<Response> {
   if (!isAuthenticated) {
     return new Response(null, { status: 401 })
@@ -19,9 +19,11 @@ export async function handleSnapshotRequest(
     return new Response(null, { status: 400 })
   }
 
+  // Frigate's own query param is `bbox=true` — that name stays at the URL
+  // boundary; internally we use the descriptive UI-facing name.
   const result = await getEventSnapshot(
     eventId,
-    bbox ? { bbox: true } : undefined,
+    showBoundingBox ? { bbox: true } : undefined,
   )
   if (!result.ok) {
     return new Response(null, { status: 502 })

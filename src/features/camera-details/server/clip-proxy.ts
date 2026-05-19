@@ -41,14 +41,14 @@ export async function handleClipRequest(
   }
 
   const headers = new Headers()
-  const ct = result.data.headers.get('Content-Type')
-  headers.set('Content-Type', ct ?? 'video/mp4')
-  const cl = result.data.headers.get('Content-Length')
-  if (cl) headers.set('Content-Length', cl)
-  const cr = result.data.headers.get('Content-Range')
-  if (cr) headers.set('Content-Range', cr)
-  const ar = result.data.headers.get('Accept-Ranges')
-  if (ar) headers.set('Accept-Ranges', ar)
+  const upstream = result.data.headers
+  headers.set('Content-Type', upstream.get('Content-Type') ?? 'video/mp4')
+  const contentLength = upstream.get('Content-Length')
+  if (contentLength) headers.set('Content-Length', contentLength)
+  const contentRange = upstream.get('Content-Range')
+  if (contentRange) headers.set('Content-Range', contentRange)
+  const acceptRanges = upstream.get('Accept-Ranges')
+  if (acceptRanges) headers.set('Accept-Ranges', acceptRanges)
   else if (result.data.status === 200) headers.set('Accept-Ranges', 'bytes')
   headers.set('Cache-Control', 'public, max-age=3600')
   if (options?.download === true) {

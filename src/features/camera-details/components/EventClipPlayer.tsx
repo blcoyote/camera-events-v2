@@ -15,7 +15,10 @@ export function EventClipPlayer({
   label: string
   onError?: () => void
 }) {
-  const [status, setStatus] = useState<'playing' | 'errored'>('playing')
+  // 'idle' covers the initial pre-error state — the video may or may not
+  // be actively playing; we only track whether the browser has surfaced
+  // an error event yet.
+  const [status, setStatus] = useState<'idle' | 'errored'>('idle')
 
   const ariaLabel = `Clip of ${formatLabelName(label)} from ${formatCameraName(
     camera,
@@ -23,7 +26,7 @@ export function EventClipPlayer({
 
   return (
     <div className="relative aspect-video w-full overflow-hidden bg-black sm:rounded-2xl">
-      {status === 'playing' ? (
+      {status === 'idle' ? (
         <video
           src={`/api/events/${eventId}/clip`}
           controls
