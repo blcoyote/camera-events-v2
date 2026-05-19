@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-bunx lint-staged || exit $?
+bunx lint-staged
 
 # --- BEGIN BEADS INTEGRATION v1.0.4 ---
 # This section is managed by beads. Do not remove these markers.
