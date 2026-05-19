@@ -5,6 +5,7 @@ import {
   getEventThumbnail,
   getEventSnapshot,
   getEventClip,
+  getEventClipStream,
   getEventSummary,
   getReviews,
   getReviewByEvent,
@@ -110,8 +111,32 @@ describe('mock-client', () => {
       // ftyp box signature at offset 4
       expect(bytes[4]).toBe(0x66) // 'f'
       expect(bytes[5]).toBe(0x74) // 't'
-      expect(bytes[6]).toBe(0x79) // 'y'
+      expect(bytes[6]).toBe(0x79) // 'p'
       expect(bytes[7]).toBe(0x70) // 'p'
+    })
+  })
+
+  describe('getEventClipStream', () => {
+    it('returns a 200 result with a ReadableStream body and Accept-Ranges', async () => {
+      const result = await getEventClipStream('evt-1')
+      expect(result.ok).toBe(true)
+      if (!result.ok) return
+      expect(result.data.status).toBe(200)
+      expect(result.data.body).toBeInstanceOf(ReadableStream)
+      expect(result.data.headers.get('Content-Type')).toBe('video/mp4')
+      expect(result.data.headers.get('Accept-Ranges')).toBe('bytes')
+      expect(result.data.headers.get('Content-Length')).not.toBeNull()
+    })
+
+    it('returns a 206 result with Content-Range when a Range header is given', async () => {
+      const result = await getEventClipStream('evt-1', {
+        rangeHeader: 'bytes=0-3',
+      })
+      expect(result.ok).toBe(true)
+      if (!result.ok) return
+      expect(result.data.status).toBe(206)
+      expect(result.data.headers.get('Content-Range')).toMatch(/^bytes 0-3\//)
+      expect(result.data.headers.get('Content-Length')).toBe('4')
     })
   })
 

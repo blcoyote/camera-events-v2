@@ -187,6 +187,59 @@ export async function getEventClip(
   return frigateBinary(`/api/events/${eventId}/clip.mp4`, undefined, timeoutMs)
 }
 
+/**
+ * Streaming variant of getEventClip. Returns the upstream Response stream
+ * so the proxy can forward HTTP Range requests (required for iOS Safari
+ * inline video playback) and propagate Content-Length / Content-Range.
+ *
+ * Does NOT consume the body — the caller must pipe `data.body` into its
+ * own Response.
+ */
+export interface FrigateClipStreamResponse {
+  status: number
+  body: ReadableStream<Uint8Array> | null
+  headers: Headers
+}
+
+export async function getEventClipStream(
+  eventId: string,
+  options?: { rangeHeader?: string },
+  timeoutMs: number = DEFAULT_TIMEOUT_MS,
+): Promise<FrigateResult<FrigateClipStreamResponse>> {
+  if (process.env.FRIGATE_MOCK === 'true')
+    return (await loadMock()).getEventClipStream(eventId, options, timeoutMs)
+
+  try {
+    const url = buildUrl(`/api/events/${eventId}/clip.mp4`)
+    const headers = new Headers()
+    if (options?.rangeHeader !== undefined) {
+      headers.set('Range', options.rangeHeader)
+    }
+    const response = await fetch(url, {
+      headers,
+      signal: AbortSignal.timeout(timeoutMs),
+    })
+    if (!response.ok) {
+      return {
+        ok: false,
+        error: `HTTP ${response.status}`,
+        status: response.status,
+      }
+    }
+    return {
+      ok: true,
+      data: {
+        status: response.status,
+        body: response.body,
+        headers: response.headers,
+      },
+    }
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err)
+    return { ok: false, error: message }
+  }
+}
+
 export async function getEventSummary(
   params?: GetEventSummaryParams,
   timeoutMs?: number,

@@ -625,6 +625,170 @@ describe('getEventClip', () => {
   })
 })
 
+// ─── getEventClipStream ───
+//
+// Streaming variant that returns the upstream Response stream so the proxy
+// can forward Range headers and preserve Content-Length / Content-Range for
+// iOS Safari's HTTP Range requests.
+
+function makeFakeStream(): ReadableStream<Uint8Array> {
+  return new ReadableStream<Uint8Array>({
+    start(controller) {
+      controller.enqueue(new Uint8Array([1, 2, 3, 4]))
+      controller.close()
+    },
+  })
+}
+
+function mockFetchStream({
+  status = 200,
+  headers = {},
+  body = makeFakeStream(),
+}: {
+  status?: number
+  headers?: Record<string, string>
+  body?: ReadableStream<Uint8Array> | null
+} = {}) {
+  return vi.fn().mockResolvedValue({
+    ok: status >= 200 && status < 300,
+    status,
+    headers: new Headers(headers),
+    body,
+  })
+}
+
+describe('getEventClipStream', () => {
+  const originalEnv = process.env.FRIGATE_URL
+  const originalFetch = globalThis.fetch
+
+  beforeEach(() => {
+    clearFrigateCache()
+    process.env.FRIGATE_URL = FRIGATE_URL
+  })
+
+  afterEach(() => {
+    globalThis.fetch = originalFetch
+    clearFrigateCache()
+    if (originalEnv === undefined) {
+      delete process.env.FRIGATE_URL
+    } else {
+      process.env.FRIGATE_URL = originalEnv
+    }
+  })
+
+  it('requests the clip URL without a Range header when no rangeHeader is given', async () => {
+    const fetchMock = mockFetchStream({
+      status: 200,
+      headers: {
+        'Content-Type': 'video/mp4',
+        'Content-Length': '4096',
+        'Accept-Ranges': 'bytes',
+      },
+    })
+    globalThis.fetch = fetchMock
+    const { getEventClipStream } = await import('./client')
+    const result = await getEventClipStream('abc123')
+
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(result.data.status).toBe(200)
+    expect(result.data.headers.get('Content-Type')).toBe('video/mp4')
+    expect(result.data.headers.get('Content-Length')).toBe('4096')
+    expect(result.data.headers.get('Accept-Ranges')).toBe('bytes')
+    expect(result.data.body).not.toBeNull()
+
+    expect(fetchMock).toHaveBeenCalledOnce()
+    const [calledUrl, init] = fetchMock.mock.calls[0] as [
+      string,
+      RequestInit | undefined,
+    ]
+    expect(calledUrl).toBe(`${FRIGATE_URL}/api/events/abc123/clip.mp4`)
+    const sentHeaders = new Headers(init?.headers)
+    expect(sentHeaders.has('Range')).toBe(false)
+  })
+
+  it('forwards a Range header to upstream and returns 206 + Content-Range', async () => {
+    const fetchMock = mockFetchStream({
+      status: 206,
+      headers: {
+        'Content-Type': 'video/mp4',
+        'Content-Range': 'bytes 0-1023/4096',
+        'Content-Length': '1024',
+      },
+    })
+    globalThis.fetch = fetchMock
+    const { getEventClipStream } = await import('./client')
+    const result = await getEventClipStream('abc123', {
+      rangeHeader: 'bytes=0-1023',
+    })
+
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(result.data.status).toBe(206)
+    expect(result.data.headers.get('Content-Range')).toBe('bytes 0-1023/4096')
+    expect(result.data.headers.get('Content-Length')).toBe('1024')
+
+    const init = fetchMock.mock.calls[0][1] as RequestInit
+    const sentHeaders = new Headers(init.headers)
+    expect(sentHeaders.get('Range')).toBe('bytes=0-1023')
+  })
+
+  it('forwards a malformed Range header unchanged without synthesizing a status', async () => {
+    const fetchMock = mockFetchStream({
+      status: 416,
+      headers: { 'Content-Type': 'text/plain' },
+      body: null,
+    })
+    globalThis.fetch = fetchMock
+    const { getEventClipStream } = await import('./client')
+    const result = await getEventClipStream('abc123', {
+      rangeHeader: 'bytes=abc',
+    })
+
+    // Upstream determines the status; we do not interpret/synthesize.
+    expect(result.ok).toBe(false)
+    if (result.ok) return
+    expect(result.status).toBe(416)
+
+    const init = fetchMock.mock.calls[0][1] as RequestInit
+    const sentHeaders = new Headers(init.headers)
+    expect(sentHeaders.get('Range')).toBe('bytes=abc')
+  })
+
+  it('does not forward Authorization or Cookie headers to Frigate', async () => {
+    const fetchMock = mockFetchStream()
+    globalThis.fetch = fetchMock
+    const { getEventClipStream } = await import('./client')
+    await getEventClipStream('abc123', { rangeHeader: 'bytes=0-99' })
+
+    const init = fetchMock.mock.calls[0][1] as RequestInit
+    const sentHeaders = new Headers(init.headers)
+    expect(sentHeaders.has('Authorization')).toBe(false)
+    expect(sentHeaders.has('Cookie')).toBe(false)
+    expect(init.credentials).not.toBe('include')
+  })
+
+  it('returns { ok: false } with status on upstream 5xx', async () => {
+    globalThis.fetch = mockFetchStream({ status: 502, body: null })
+    const { getEventClipStream } = await import('./client')
+    const result = await getEventClipStream('abc123')
+
+    expect(result.ok).toBe(false)
+    if (result.ok) return
+    expect(result.status).toBe(502)
+  })
+
+  it('returns { ok: false } on network failure', async () => {
+    globalThis.fetch = mockFetchNetworkError()
+    const { getEventClipStream } = await import('./client')
+    const result = await getEventClipStream('abc123')
+
+    expect(result.ok).toBe(false)
+    if (result.ok) return
+    expect(result.error).toContain('fetch failed')
+  })
+})
+
 describe('getLatestSnapshot', () => {
   const originalEnv = process.env.FRIGATE_URL
   const originalFetch = globalThis.fetch
