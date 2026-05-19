@@ -1,5 +1,63 @@
-import { describe, expect, it } from 'vitest'
-import { clampTranslation, distance, midpoint } from './SnapshotLightbox'
+// @vitest-environment jsdom
+import { describe, expect, it, afterEach } from 'vitest'
+import { render, cleanup, screen } from '@testing-library/react'
+import '@testing-library/jest-dom/vitest'
+import {
+  clampTranslation,
+  distance,
+  midpoint,
+  SnapshotLightbox,
+} from './SnapshotLightbox'
+
+afterEach(() => {
+  cleanup()
+})
+
+describe('SnapshotLightbox rendering', () => {
+  it('uses the bare src when showBoundingBox is omitted', () => {
+    render(
+      <SnapshotLightbox
+        src="/api/events/abc.1/snapshot"
+        alt="snap"
+        open
+        onClose={() => {}}
+      />,
+    )
+    const img = screen.getByRole('img', { name: 'snap' })
+    expect(img).toHaveAttribute('src', '/api/events/abc.1/snapshot')
+  })
+
+  it('appends ?bbox=true to a paramless src when showBoundingBox is true', () => {
+    render(
+      <SnapshotLightbox
+        src="/api/events/abc.1/snapshot"
+        alt="snap"
+        open
+        showBoundingBox
+        onClose={() => {}}
+      />,
+    )
+    const img = screen.getByRole('img', { name: 'snap' })
+    expect(img).toHaveAttribute('src', '/api/events/abc.1/snapshot?bbox=true')
+  })
+
+  it('appends &bbox=true when src already has query params', () => {
+    render(
+      <SnapshotLightbox
+        src="/api/events/abc.1/snapshot?download=true"
+        alt="snap"
+        open
+        showBoundingBox
+        onClose={() => {}}
+      />,
+    )
+    const img = screen.getByRole('img', { name: 'snap' })
+    expect(img).toHaveAttribute(
+      'src',
+      '/api/events/abc.1/snapshot?download=true&bbox=true',
+    )
+  })
+})
 
 describe('SnapshotLightbox utilities', () => {
   describe('clampTranslation', () => {

@@ -5,6 +5,7 @@ interface SnapshotLightboxProps {
   alt: string
   open: boolean
   onClose: () => void
+  showBoundingBox?: boolean
 }
 
 const MIN_SCALE = 1
@@ -49,7 +50,11 @@ export function SnapshotLightbox({
   alt,
   open,
   onClose,
+  showBoundingBox = false,
 }: SnapshotLightboxProps) {
+  const finalSrc = showBoundingBox
+    ? `${src}${src.includes('?') ? '&' : '?'}bbox=true`
+    : src
   const [transform, setTransform] = useState<Transform>(IDENTITY)
   const [dismissY, setDismissY] = useState(0)
 
@@ -364,7 +369,7 @@ export function SnapshotLightbox({
       </button>
       <img
         ref={imgRef}
-        src={src}
+        src={finalSrc}
         alt={alt}
         draggable={false}
         className="max-h-full max-w-full select-none"
