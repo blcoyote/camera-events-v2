@@ -9,13 +9,16 @@ export function EventSnapshot({
   camera,
   label,
   onZoom,
+  showBoundingBox = false,
 }: {
   eventId: string
   camera: string
   label: string
   onZoom: () => void
+  showBoundingBox?: boolean
 }) {
   const altText = `Snapshot of ${formatLabelName(label)} detected by ${formatCameraName(camera)}`
+  const src = `/api/events/${eventId}/snapshot${showBoundingBox ? '?bbox=true' : ''}`
   return (
     <button
       type="button"
@@ -24,7 +27,7 @@ export function EventSnapshot({
       className="group relative block w-full cursor-zoom-in overflow-hidden border border-(--line) bg-(--surface) sm:rounded-2xl"
     >
       <img
-        src={`/api/events/${eventId}/snapshot`}
+        src={src}
         alt={altText}
         className="h-auto w-full object-contain"
         loading="eager"

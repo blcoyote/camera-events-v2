@@ -1,5 +1,107 @@
-import { describe, expect, it } from 'vitest'
-import { clampTranslation, distance, midpoint } from './SnapshotLightbox'
+// @vitest-environment jsdom
+import { describe, expect, it, afterEach } from 'vitest'
+import { render, cleanup, screen } from '@testing-library/react'
+import '@testing-library/jest-dom/vitest'
+import {
+  clampTranslation,
+  distance,
+  midpoint,
+  SnapshotLightbox,
+} from './SnapshotLightbox'
+
+afterEach(() => {
+  cleanup()
+})
+
+describe('SnapshotLightbox rendering', () => {
+  it('uses the bare src when showBoundingBox is omitted', () => {
+    render(
+      <SnapshotLightbox
+        src="/api/events/abc.1/snapshot"
+        alt="snap"
+        open
+        onClose={() => {}}
+      />,
+    )
+    const img = screen.getByRole('img', { name: 'snap' })
+    expect(img).toHaveAttribute('src', '/api/events/abc.1/snapshot')
+  })
+
+  it('appends ?bbox=true to a paramless src when showBoundingBox is true', () => {
+    render(
+      <SnapshotLightbox
+        src="/api/events/abc.1/snapshot"
+        alt="snap"
+        open
+        showBoundingBox
+        onClose={() => {}}
+      />,
+    )
+    const img = screen.getByRole('img', { name: 'snap' })
+    expect(img).toHaveAttribute('src', '/api/events/abc.1/snapshot?bbox=true')
+  })
+
+  it('restores focus to the previously-focused element when the lightbox closes', () => {
+    document.body.innerHTML = '<button id="trigger">open</button>'
+    const trigger = document.getElementById('trigger') as HTMLButtonElement
+    trigger.focus()
+    expect(document.activeElement).toBe(trigger)
+
+    const { rerender } = render(
+      <SnapshotLightbox
+        src="/api/events/abc.1/snapshot"
+        alt="snap"
+        open
+        onClose={() => {}}
+      />,
+    )
+    // While open, the close button takes focus
+    const closeBtn = screen.getByRole('button', { name: /close/i })
+    expect(document.activeElement).toBe(closeBtn)
+
+    // Close — focus should return to the trigger
+    rerender(
+      <SnapshotLightbox
+        src="/api/events/abc.1/snapshot"
+        alt="snap"
+        open={false}
+        onClose={() => {}}
+      />,
+    )
+    expect(document.activeElement).toBe(trigger)
+  })
+
+  it('close button has a 44px touch target (h-11 w-11)', () => {
+    render(
+      <SnapshotLightbox
+        src="/api/events/abc.1/snapshot"
+        alt="snap"
+        open
+        onClose={() => {}}
+      />,
+    )
+    const closeBtn = screen.getByRole('button', { name: /close/i })
+    expect(closeBtn.className).toContain('h-11')
+    expect(closeBtn.className).toContain('w-11')
+  })
+
+  it('appends &bbox=true when src already has query params', () => {
+    render(
+      <SnapshotLightbox
+        src="/api/events/abc.1/snapshot?download=true"
+        alt="snap"
+        open
+        showBoundingBox
+        onClose={() => {}}
+      />,
+    )
+    const img = screen.getByRole('img', { name: 'snap' })
+    expect(img).toHaveAttribute(
+      'src',
+      '/api/events/abc.1/snapshot?download=true&bbox=true',
+    )
+  })
+})
 
 describe('SnapshotLightbox utilities', () => {
   describe('clampTranslation', () => {

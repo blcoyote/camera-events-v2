@@ -5,6 +5,7 @@ interface SnapshotLightboxProps {
   alt: string
   open: boolean
   onClose: () => void
+  showBoundingBox?: boolean
 }
 
 const MIN_SCALE = 1
@@ -49,13 +50,18 @@ export function SnapshotLightbox({
   alt,
   open,
   onClose,
+  showBoundingBox = false,
 }: SnapshotLightboxProps) {
+  const finalSrc = showBoundingBox
+    ? `${src}${src.includes('?') ? '&' : '?'}bbox=true`
+    : src
   const [transform, setTransform] = useState<Transform>(IDENTITY)
   const [dismissY, setDismissY] = useState(0)
 
   const imgRef = useRef<HTMLImageElement>(null)
   const dialogRef = useRef<HTMLDivElement>(null)
   const closeRef = useRef<HTMLButtonElement>(null)
+  const triggerRef = useRef<HTMLElement | null>(null)
 
   const pinchRef = useRef({ lastDist: 0, lastMid: { x: 0, y: 0 } })
   const panRef = useRef({ startX: 0, startY: 0, startTx: 0, startTy: 0 })
@@ -82,12 +88,21 @@ export function SnapshotLightbox({
     transformRef.current = IDENTITY
     dismissRef.current = 0
 
+    // Remember whatever was focused before the dialog opened, so we can
+    // restore focus on close (WCAG 2.4.3 / focus management for modals).
+    triggerRef.current =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null
+
     const prev = document.body.style.overflow
     document.body.style.overflow = 'hidden'
     closeRef.current?.focus()
 
     return () => {
       document.body.style.overflow = prev
+      triggerRef.current?.focus()
+      triggerRef.current = null
     }
   }, [open])
 
@@ -346,7 +361,7 @@ export function SnapshotLightbox({
         type="button"
         onClick={resetAndClose}
         aria-label="Close snapshot viewer"
-        className="absolute right-3 top-3 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-sm transition hover:bg-white/30"
+        className="absolute right-3 top-3 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-sm transition hover:bg-white/30"
       >
         <svg
           width="20"
@@ -364,7 +379,7 @@ export function SnapshotLightbox({
       </button>
       <img
         ref={imgRef}
-        src={src}
+        src={finalSrc}
         alt={alt}
         draggable={false}
         className="max-h-full max-w-full select-none"

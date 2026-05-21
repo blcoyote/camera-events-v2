@@ -1,13 +1,19 @@
 import { isValidEventId } from '#/features/shared/server/frigate/validation'
-import { getEventClip } from '#/features/shared/server/frigate/client'
+import { getEventClipStream } from '#/features/shared/server/frigate/client'
 
 /**
  * Pure handler logic for the event clip proxy route.
- * Extracted for testability — the actual route file delegates to this.
+ *
+ * Serves the clip inline by default with `Accept-Ranges: bytes` so
+ * browsers (notably iOS Safari standalone PWA) can issue HTTP Range
+ * requests for mid-clip seek. Adds `Content-Disposition: attachment`
+ * only when the caller passes `download: true`. Forwards an optional
+ * Range header to upstream Frigate unchanged.
  */
 export async function handleClipRequest(
   eventId: string,
   isAuthenticated: boolean,
+  options?: { download?: boolean; rangeHeader?: string },
 ): Promise<Response> {
   if (!isAuthenticated) {
     return new Response(null, { status: 401 })
@@ -17,17 +23,43 @@ export async function handleClipRequest(
     return new Response(null, { status: 400 })
   }
 
-  const result = await getEventClip(eventId)
+  const result = await getEventClipStream(eventId, {
+    rangeHeader: options?.rangeHeader,
+  })
   if (!result.ok) {
+    // ok:false means a true network failure (no response from Frigate).
+    // Per AC8, surface as Bad Gateway. Upstream HTTP statuses (4xx/5xx)
+    // arrive with ok:true so the proxy can mirror them — see below.
     return new Response(null, { status: 502 })
   }
 
-  return new Response(result.data, {
-    status: 200,
-    headers: {
-      'Content-Type': 'video/mp4',
-      'Content-Disposition': `attachment; filename="event-${eventId}.mp4"`,
-      'Cache-Control': 'public, max-age=3600',
-    },
+  // Mirror upstream non-2xx statuses (AC20). Cancel the body to avoid
+  // holding an open upstream connection while serving the error.
+  if (result.data.status < 200 || result.data.status >= 300) {
+    result.data.body?.cancel().catch(() => {})
+    return new Response(null, { status: result.data.status })
+  }
+
+  const headers = new Headers()
+  const upstream = result.data.headers
+  headers.set('Content-Type', upstream.get('Content-Type') ?? 'video/mp4')
+  const contentLength = upstream.get('Content-Length')
+  if (contentLength) headers.set('Content-Length', contentLength)
+  const contentRange = upstream.get('Content-Range')
+  if (contentRange) headers.set('Content-Range', contentRange)
+  const acceptRanges = upstream.get('Accept-Ranges')
+  if (acceptRanges) headers.set('Accept-Ranges', acceptRanges)
+  else if (result.data.status === 200) headers.set('Accept-Ranges', 'bytes')
+  headers.set('Cache-Control', 'public, max-age=3600')
+  if (options?.download === true) {
+    headers.set(
+      'Content-Disposition',
+      `attachment; filename="event-${eventId}.mp4"`,
+    )
+  }
+
+  return new Response(result.data.body, {
+    status: result.data.status,
+    headers,
   })
 }

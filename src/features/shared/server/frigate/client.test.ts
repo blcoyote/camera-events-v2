@@ -571,7 +571,39 @@ describe('getCameras', () => {
   })
 })
 
-describe('getEventClip', () => {
+// ─── getEventClipStream ───
+//
+// Streaming variant that returns the upstream Response stream so the proxy
+// can forward Range headers and preserve Content-Length / Content-Range for
+// iOS Safari's HTTP Range requests.
+
+function makeFakeStream(): ReadableStream<Uint8Array> {
+  return new ReadableStream<Uint8Array>({
+    start(controller) {
+      controller.enqueue(new Uint8Array([1, 2, 3, 4]))
+      controller.close()
+    },
+  })
+}
+
+function mockFetchStream({
+  status = 200,
+  headers = {},
+  body = makeFakeStream(),
+}: {
+  status?: number
+  headers?: Record<string, string>
+  body?: ReadableStream<Uint8Array> | null
+} = {}) {
+  return vi.fn().mockResolvedValue({
+    ok: status >= 200 && status < 300,
+    status,
+    headers: new Headers(headers),
+    body,
+  })
+}
+
+describe('getEventClipStream', () => {
   const originalEnv = process.env.FRIGATE_URL
   const originalFetch = globalThis.fetch
 
@@ -590,38 +622,119 @@ describe('getEventClip', () => {
     }
   })
 
-  it('makes GET request to correct clip URL', async () => {
-    const buffer = new ArrayBuffer(32)
-    globalThis.fetch = mockFetchBinary(buffer)
-    const { getEventClip } = await import('./client')
-    const result = await getEventClip('abc123')
+  it('requests the clip URL without a Range header when no rangeHeader is given', async () => {
+    const fetchMock = mockFetchStream({
+      status: 200,
+      headers: {
+        'Content-Type': 'video/mp4',
+        'Content-Length': '4096',
+        'Accept-Ranges': 'bytes',
+      },
+    })
+    globalThis.fetch = fetchMock
+    const { getEventClipStream } = await import('./client')
+    const result = await getEventClipStream('abc123')
 
-    expect(result).toEqual({ ok: true, data: buffer })
-    const calledUrl = (globalThis.fetch as ReturnType<typeof vi.fn>).mock
-      .calls[0][0] as string
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(result.data.status).toBe(200)
+    expect(result.data.headers.get('Content-Type')).toBe('video/mp4')
+    expect(result.data.headers.get('Content-Length')).toBe('4096')
+    expect(result.data.headers.get('Accept-Ranges')).toBe('bytes')
+    expect(result.data.body).not.toBeNull()
+
+    expect(fetchMock).toHaveBeenCalledOnce()
+    const [calledUrl, init] = fetchMock.mock.calls[0] as [
+      string,
+      RequestInit | undefined,
+    ]
     expect(calledUrl).toBe(`${FRIGATE_URL}/api/events/abc123/clip.mp4`)
+    const sentHeaders = new Headers(init?.headers)
+    expect(sentHeaders.has('Range')).toBe(false)
   })
 
-  it('returns { ok: false } on HTTP error', async () => {
-    globalThis.fetch = mockFetchBinary(new ArrayBuffer(0), 404)
-    const { getEventClip } = await import('./client')
-    const result = await getEventClip('missing')
+  it('forwards a Range header to upstream and returns 206 + Content-Range', async () => {
+    const fetchMock = mockFetchStream({
+      status: 206,
+      headers: {
+        'Content-Type': 'video/mp4',
+        'Content-Range': 'bytes 0-1023/4096',
+        'Content-Length': '1024',
+      },
+    })
+    globalThis.fetch = fetchMock
+    const { getEventClipStream } = await import('./client')
+    const result = await getEventClipStream('abc123', {
+      rangeHeader: 'bytes=0-1023',
+    })
 
-    expect(result.ok).toBe(false)
-    if (!result.ok) {
-      expect(result.status).toBe(404)
-    }
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(result.data.status).toBe(206)
+    expect(result.data.headers.get('Content-Range')).toBe('bytes 0-1023/4096')
+    expect(result.data.headers.get('Content-Length')).toBe('1024')
+
+    const init = fetchMock.mock.calls[0][1] as RequestInit
+    const sentHeaders = new Headers(init.headers)
+    expect(sentHeaders.get('Range')).toBe('bytes=0-1023')
+  })
+
+  it('forwards a malformed Range header unchanged and returns the upstream status (e.g. 416) as a successful result', async () => {
+    const fetchMock = mockFetchStream({
+      status: 416,
+      headers: { 'Content-Type': 'text/plain' },
+      body: null,
+    })
+    globalThis.fetch = fetchMock
+    const { getEventClipStream } = await import('./client')
+    const result = await getEventClipStream('abc123', {
+      rangeHeader: 'bytes=abc',
+    })
+
+    // Frigate responded — even with a 4xx — so this is a successful result
+    // from the client's perspective. The proxy mirrors the status (AC20).
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(result.data.status).toBe(416)
+
+    const init = fetchMock.mock.calls[0][1] as RequestInit
+    const sentHeaders = new Headers(init.headers)
+    expect(sentHeaders.get('Range')).toBe('bytes=abc')
+  })
+
+  it('does not forward Authorization or Cookie headers to Frigate', async () => {
+    const fetchMock = mockFetchStream()
+    globalThis.fetch = fetchMock
+    const { getEventClipStream } = await import('./client')
+    await getEventClipStream('abc123', { rangeHeader: 'bytes=0-99' })
+
+    const init = fetchMock.mock.calls[0][1] as RequestInit
+    const sentHeaders = new Headers(init.headers)
+    expect(sentHeaders.has('Authorization')).toBe(false)
+    expect(sentHeaders.has('Cookie')).toBe(false)
+    expect(init.credentials).not.toBe('include')
+  })
+
+  it('returns the upstream 5xx status as a successful result (proxy mirrors it)', async () => {
+    globalThis.fetch = mockFetchStream({ status: 502, body: null })
+    const { getEventClipStream } = await import('./client')
+    const result = await getEventClipStream('abc123')
+
+    // Frigate returned an HTTP response — even a 502. We treat `ok: false`
+    // strictly for network failures (no response), not for any non-2xx.
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(result.data.status).toBe(502)
   })
 
   it('returns { ok: false } on network failure', async () => {
     globalThis.fetch = mockFetchNetworkError()
-    const { getEventClip } = await import('./client')
-    const result = await getEventClip('abc123')
+    const { getEventClipStream } = await import('./client')
+    const result = await getEventClipStream('abc123')
 
     expect(result.ok).toBe(false)
-    if (!result.ok) {
-      expect(result.error).toContain('fetch failed')
-    }
+    if (result.ok) return
+    expect(result.error).toContain('fetch failed')
   })
 })
 

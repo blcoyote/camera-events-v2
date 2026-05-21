@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from '@tanstack/react-router'
-import { Camera, Clock, MapPin, Film, Image } from 'lucide-react'
+import { Camera, Clock, MapPin, Film, Image, Eye, EyeOff } from 'lucide-react'
 import type { FrigateResult } from '#/features/shared/server/frigate/config'
 import type { FrigateEvent } from '#/features/shared/server/frigate/types'
 import {
@@ -11,9 +11,11 @@ import {
 } from '#/features/shared/utils/eventFormatting'
 import { SnapshotLightbox } from './SnapshotLightbox'
 import { EventSnapshot } from './EventSnapshot'
+import { EventClipPlayer } from './EventClipPlayer'
 import { InfoCard } from './InfoCard'
 import { useFavoriteToggle } from '#/features/shared/hooks/useFavoriteToggle'
 import { FavoriteButton } from '#/features/shared/components/FavoriteButton'
+import { isNonZeroBox } from '../utils/boundingBox'
 
 // ─── Pure functions (exported for testing) ───
 
@@ -62,10 +64,8 @@ export function getDownloadUrl(
   eventId: string,
   kind: 'clip' | 'snapshot',
 ): string {
-  if (kind === 'clip') {
-    return `/api/events/${eventId}/clip`
-  }
-  return `/api/events/${eventId}/snapshot?download=true`
+  const extension = kind === 'clip' ? 'clip' : 'snapshot'
+  return `/api/events/${eventId}/${extension}?download=true`
 }
 
 // ─── Components ───
@@ -79,6 +79,12 @@ export function CameraEventDetailPage({
 }) {
   const state = getDetailPageState(result)
   const [lightboxOpen, setLightboxOpen] = useState(false)
+  const [showBoundingBox, setShowBoundingBox] = useState(false)
+  // Latches to true on first accordion open. We don't mount the
+  // EventClipPlayer until this is true, so preload='metadata' doesn't
+  // fire against the proxy on every page visit. Once opened, the player
+  // stays mounted so re-expanding the accordion is instant.
+  const [clipAccordionOpened, setClipAccordionOpened] = useState(false)
   // Call hook unconditionally (React rules) — use empty string as sentinel in error branch
   const eventId = state.kind === 'event' ? state.event.id : ''
   const {
@@ -115,6 +121,9 @@ export function CameraEventDetailPage({
 
   const snapshotSrc = `/api/events/${event.id}/snapshot`
   const snapshotAlt = `Snapshot of ${formatLabelName(event.label)} detected by ${formatCameraName(event.camera)}`
+  const hasDetectionBox =
+    event.has_snapshot &&
+    (isNonZeroBox(event.box) || isNonZeroBox(event.data.box))
 
   return (
     <main id="main-content" className="page-wrap px-4 pb-8 pt-6 sm:pt-14">
@@ -162,14 +171,71 @@ export function CameraEventDetailPage({
         </div>
 
         {event.has_snapshot && (
-          <div className="-mx-4 mb-6 sm:mx-0 sm:mb-8">
-            <EventSnapshot
-              eventId={event.id}
-              camera={event.camera}
-              label={event.label}
-              onZoom={() => setLightboxOpen(true)}
-            />
-          </div>
+          <>
+            {hasDetectionBox && (
+              <div className="mb-3">
+                <button
+                  type="button"
+                  aria-label={
+                    showBoundingBox
+                      ? 'Hide detection box'
+                      : 'Show detection box'
+                  }
+                  aria-pressed={showBoundingBox}
+                  onClick={() => setShowBoundingBox((s) => !s)}
+                  className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[rgba(50,143,151,0.3)] bg-[rgba(79,184,178,0.14)] px-4 py-2 text-sm font-semibold text-(--lagoon-deep) transition hover:bg-[rgba(79,184,178,0.24)] aria-pressed:bg-(--lagoon-deep) aria-pressed:text-(--foam)"
+                >
+                  {showBoundingBox ? (
+                    <EyeOff className="h-4 w-4" aria-hidden="true" />
+                  ) : (
+                    <Eye className="h-4 w-4" aria-hidden="true" />
+                  )}
+                  {showBoundingBox
+                    ? 'Hide detection box'
+                    : 'Show detection box'}
+                </button>
+              </div>
+            )}
+            <div className="-mx-4 mb-6 sm:mx-0 sm:mb-8">
+              <EventSnapshot
+                eventId={event.id}
+                camera={event.camera}
+                label={event.label}
+                onZoom={() => setLightboxOpen(true)}
+                showBoundingBox={showBoundingBox}
+              />
+            </div>
+          </>
+        )}
+
+        {event.has_clip && (
+          <details
+            className="-mx-4 mb-6 overflow-hidden border-y border-(--line) bg-(--surface) sm:mx-0 sm:mb-8 sm:rounded-2xl sm:border"
+            onToggle={(e) => {
+              if (e.currentTarget.open) {
+                setClipAccordionOpened(true)
+              }
+            }}
+          >
+            <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 px-4 py-3 text-sm font-semibold text-(--lagoon-deep) transition hover:bg-[rgba(79,184,178,0.08)]">
+              <Film className="h-4 w-4" aria-hidden="true" />
+              Watch clip
+            </summary>
+            {clipAccordionOpened && (
+              <div className="border-t border-(--line)">
+                <EventClipPlayer
+                  eventId={event.id}
+                  camera={event.camera}
+                  label={event.label}
+                  onError={() => {
+                    // Defensive: snapshot block renders independently of
+                    // player state. Hook is kept so a future layout that
+                    // hides the snapshot behind the player can re-reveal it.
+                  }}
+                />
+              </div>
+            )}
+          </details>
         )}
 
         <dl className="mt-4 grid grid-cols-1 gap-0 divide-y divide-(--line) sm:mt-6 sm:grid-cols-2 sm:gap-4 sm:divide-y-0 lg:grid-cols-3">
@@ -249,6 +315,7 @@ export function CameraEventDetailPage({
           alt={snapshotAlt}
           open={lightboxOpen}
           onClose={() => setLightboxOpen(false)}
+          showBoundingBox={showBoundingBox}
         />
       )}
     </main>

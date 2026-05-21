@@ -178,13 +178,52 @@ export async function getEventSnapshot(
   )
 }
 
-export async function getEventClip(
+/**
+ * Streams an event clip from Frigate without buffering. Returns the
+ * upstream Response stream so the proxy can forward HTTP Range requests
+ * (required for iOS Safari inline video playback) and propagate
+ * Content-Length / Content-Range. Callers must pipe `data.body` into
+ * their own Response — the body is not consumed here.
+ */
+export interface FrigateClipStreamResponse {
+  status: number
+  body: ReadableStream<Uint8Array> | null
+  headers: Headers
+}
+
+export async function getEventClipStream(
   eventId: string,
-  timeoutMs?: number,
-): Promise<FrigateResult<ArrayBuffer>> {
+  options?: { rangeHeader?: string },
+  timeoutMs: number = DEFAULT_TIMEOUT_MS,
+): Promise<FrigateResult<FrigateClipStreamResponse>> {
   if (process.env.FRIGATE_MOCK === 'true')
-    return (await loadMock()).getEventClip(eventId, timeoutMs)
-  return frigateBinary(`/api/events/${eventId}/clip.mp4`, undefined, timeoutMs)
+    return (await loadMock()).getEventClipStream(eventId, options, timeoutMs)
+
+  try {
+    const url = buildUrl(`/api/events/${eventId}/clip.mp4`)
+    const headers = new Headers()
+    if (options?.rangeHeader !== undefined) {
+      headers.set('Range', options.rangeHeader)
+    }
+    const response = await fetch(url, {
+      headers,
+      signal: AbortSignal.timeout(timeoutMs),
+    })
+    // Reserve `ok: false` for true network failures (caught below). When
+    // Frigate responds at all — even with 4xx/5xx — we hand the status back
+    // so the proxy can mirror it (e.g. 416 for a malformed Range, per AC20).
+    return {
+      ok: true,
+      data: {
+        status: response.status,
+        body: response.body,
+        headers: response.headers,
+      },
+    }
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err)
+    return { ok: false, error: message }
+  }
 }
 
 export async function getEventSummary(

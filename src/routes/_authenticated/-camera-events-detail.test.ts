@@ -103,8 +103,10 @@ describe('formatDuration', () => {
 })
 
 describe('getDownloadUrl', () => {
-  it('returns clip API path for clip kind', () => {
-    expect(getDownloadUrl('abc.123', 'clip')).toBe('/api/events/abc.123/clip')
+  it('returns clip API path with download param for clip kind', () => {
+    expect(getDownloadUrl('abc.123', 'clip')).toBe(
+      '/api/events/abc.123/clip?download=true',
+    )
   })
 
   it('returns snapshot API path with download param for snapshot kind', () => {

@@ -6,7 +6,7 @@ type JsonValue = JsonPrimitive | JsonValue[] | { [key: string]: JsonValue }
 // ─── Event types ───
 
 /** Bounding box as [x, y, width, height] in normalized coordinates (0–1). */
-type BoundingBox = [number, number, number, number]
+export type BoundingBox = [number, number, number, number]
 
 interface FrigateEventData {
   attributes: string[]

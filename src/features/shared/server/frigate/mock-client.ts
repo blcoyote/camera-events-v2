@@ -251,11 +251,73 @@ export async function getEventSnapshot(
   return { ok: true, data: PLACEHOLDER_IMAGE }
 }
 
-export async function getEventClip(
+function streamFromBuffer(buf: ArrayBuffer): ReadableStream<Uint8Array> {
+  return new ReadableStream<Uint8Array>({
+    start(controller) {
+      controller.enqueue(new Uint8Array(buf))
+      controller.close()
+    },
+  })
+}
+
+function parseSimpleRange(
+  rangeHeader: string,
+  total: number,
+): { start: number; end: number } | null {
+  const match = /^bytes=(\d+)-(\d*)$/.exec(rangeHeader)
+  if (!match) return null
+  const start = Number(match[1])
+  const end = match[2] === '' ? total - 1 : Number(match[2])
+  if (!Number.isFinite(start) || !Number.isFinite(end)) return null
+  if (start < 0 || end < start || end >= total) return null
+  return { start, end }
+}
+
+export async function getEventClipStream(
   _eventId: string,
+  options?: { rangeHeader?: string },
   _timeoutMs?: number,
-): Promise<FrigateResult<ArrayBuffer>> {
-  return { ok: true, data: PLACEHOLDER_MP4 }
+): Promise<
+  FrigateResult<{
+    status: number
+    body: ReadableStream<Uint8Array> | null
+    headers: Headers
+  }>
+> {
+  const total = PLACEHOLDER_MP4.byteLength
+
+  if (options?.rangeHeader === undefined) {
+    return {
+      ok: true,
+      data: {
+        status: 200,
+        body: streamFromBuffer(PLACEHOLDER_MP4),
+        headers: new Headers({
+          'Content-Type': 'video/mp4',
+          'Content-Length': String(total),
+          'Accept-Ranges': 'bytes',
+        }),
+      },
+    }
+  }
+
+  const range = parseSimpleRange(options.rangeHeader, total)
+  if (!range) {
+    return { ok: false, error: 'HTTP 416', status: 416 }
+  }
+  const slice = PLACEHOLDER_MP4.slice(range.start, range.end + 1)
+  return {
+    ok: true,
+    data: {
+      status: 206,
+      body: streamFromBuffer(slice),
+      headers: new Headers({
+        'Content-Type': 'video/mp4',
+        'Content-Length': String(slice.byteLength),
+        'Content-Range': `bytes ${range.start}-${range.end}/${total}`,
+      }),
+    },
+  }
 }
 
 export async function getEventSummary(
