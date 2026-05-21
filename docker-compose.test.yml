@@ -18,7 +18,7 @@ services:
       VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:-}
       VAPID_SUBJECT: ${VAPID_SUBJECT:-}
     volumes:
-      - ce-v2-data:/app/data
+      - ce-v2-test-data:/app/data
     labels:
       - traefik.http.routers.ce2-test.rule=Host(`$DNS_NAME`)
       - traefik.http.routers.ce2-test.tls=true
@@ -36,10 +36,10 @@ services:
       - traefik.http.middlewares.ce2-test-sec.headers.customResponseHeaders.Cross-Origin-Resource-Policy=same-origin
       - "traefik.http.middlewares.ce2-test-sec.headers.customResponseHeaders.Content-Security-Policy=default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://*.googleusercontent.com; connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com https://*.googleusercontent.com; worker-src 'self' blob:; manifest-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests"
     depends_on:
-      rabbitmq:
+      rabbitmq-test:
         condition: service_healthy
 
-  rabbitmq:
+  rabbitmq-test:
     build: ./rabbitmq
     hostname: rabbitmq
     ports:
@@ -49,7 +49,7 @@ services:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS}
     volumes:
-      - rabbitmq-data:/var/lib/rabbitmq
+      - rabbitmq-test-data:/var/lib/rabbitmq
     healthcheck:
       test: ['CMD', 'rabbitmq-diagnostics', '-q', 'ping']
       interval: 10s
@@ -57,5 +57,5 @@ services:
       retries: 5
 
 volumes:
-  ce-v2-data:
-  rabbitmq-data:
+  ce-v2-test-data:
+  rabbitmq-test-data:
