@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from '@tanstack/react-router'
-import { Camera, Clock, MapPin, Film, Image, Eye, EyeOff } from 'lucide-react'
+import { Camera, Clock, MapPin, Film, Image } from 'lucide-react'
 import type { FrigateResult } from '#/features/shared/server/frigate/config'
 import type { FrigateEvent } from '#/features/shared/server/frigate/types'
 import {
@@ -15,7 +15,6 @@ import { EventClipPlayer } from './EventClipPlayer'
 import { InfoCard } from './InfoCard'
 import { useFavoriteToggle } from '#/features/shared/hooks/useFavoriteToggle'
 import { FavoriteButton } from '#/features/shared/components/FavoriteButton'
-import { isNonZeroBox } from '../utils/boundingBox'
 
 // ─── Pure functions (exported for testing) ───
 
@@ -120,9 +119,6 @@ export function CameraEventDetailPage({
 
   const snapshotSrc = `/api/events/${event.id}/snapshot`
   const snapshotAlt = `Snapshot of ${formatLabelName(event.label)} detected by ${formatCameraName(event.camera)}`
-  const hasDetectionBox =
-    event.has_snapshot &&
-    (isNonZeroBox(event.box) || isNonZeroBox(event.data.box))
 
   return (
     <main id="main-content" className="page-wrap px-4 pb-8 pt-6 sm:pt-14">
