@@ -9,7 +9,6 @@ export function EventSnapshot({
   camera,
   label,
   onZoom,
-  showBoundingBox = false,
 }: {
   eventId: string
   camera: string
@@ -18,7 +17,7 @@ export function EventSnapshot({
   showBoundingBox?: boolean
 }) {
   const altText = `Snapshot of ${formatLabelName(label)} detected by ${formatCameraName(camera)}`
-  const src = `/api/events/${eventId}/snapshot${showBoundingBox ? '?bbox=true' : ''}`
+  const src = `/api/events/${eventId}/snapshot`
   return (
     <button
       type="button"
