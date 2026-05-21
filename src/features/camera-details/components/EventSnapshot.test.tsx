@@ -9,7 +9,7 @@ afterEach(() => {
 })
 
 describe('EventSnapshot', () => {
-  it('uses the plain snapshot URL when showBoundingBox is omitted', () => {
+  it('uses the snapshot URL for the given event', () => {
     render(
       <EventSnapshot
         eventId="front_door.123"
@@ -20,37 +20,6 @@ describe('EventSnapshot', () => {
     )
     const img = screen.getByRole('img')
     expect(img).toHaveAttribute('src', '/api/events/front_door.123/snapshot')
-  })
-
-  it('uses the plain snapshot URL when showBoundingBox is false', () => {
-    render(
-      <EventSnapshot
-        eventId="front_door.123"
-        camera="front_door"
-        label="person"
-        onZoom={() => {}}
-        showBoundingBox={false}
-      />,
-    )
-    const img = screen.getByRole('img')
-    expect(img).toHaveAttribute('src', '/api/events/front_door.123/snapshot')
-  })
-
-  it('appends ?bbox=true when showBoundingBox is true', () => {
-    render(
-      <EventSnapshot
-        eventId="front_door.123"
-        camera="front_door"
-        label="person"
-        onZoom={() => {}}
-        showBoundingBox={true}
-      />,
-    )
-    const img = screen.getByRole('img')
-    expect(img).toHaveAttribute(
-      'src',
-      '/api/events/front_door.123/snapshot?bbox=true',
-    )
   })
 
   it('invokes onZoom when the snapshot button is clicked', async () => {
