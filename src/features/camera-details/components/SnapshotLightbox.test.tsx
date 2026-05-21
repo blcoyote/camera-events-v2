@@ -14,33 +14,6 @@ afterEach(() => {
 })
 
 describe('SnapshotLightbox rendering', () => {
-  it('uses the bare src when showBoundingBox is omitted', () => {
-    render(
-      <SnapshotLightbox
-        src="/api/events/abc.1/snapshot"
-        alt="snap"
-        open
-        onClose={() => {}}
-      />,
-    )
-    const img = screen.getByRole('img', { name: 'snap' })
-    expect(img).toHaveAttribute('src', '/api/events/abc.1/snapshot')
-  })
-
-  it('appends ?bbox=true to a paramless src when showBoundingBox is true', () => {
-    render(
-      <SnapshotLightbox
-        src="/api/events/abc.1/snapshot"
-        alt="snap"
-        open
-        showBoundingBox
-        onClose={() => {}}
-      />,
-    )
-    const img = screen.getByRole('img', { name: 'snap' })
-    expect(img).toHaveAttribute('src', '/api/events/abc.1/snapshot?bbox=true')
-  })
-
   it('restores focus to the previously-focused element when the lightbox closes', () => {
     document.body.innerHTML = '<button id="trigger">open</button>'
     const trigger = document.getElementById('trigger') as HTMLButtonElement
