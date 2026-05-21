@@ -3,8 +3,8 @@ services:
     image: ghcr.io/blcoyote/camera-events-v2:latest
     pull_policy: always
     restart: unless-stopped
-    ports:
-      - '3000:3000'
+    expose:
+      - '3000'
     environment:
       NODE_ENV: production
       MQTT_URL: mqtt://${RABBITMQ_USER}:${RABBITMQ_PASS}@rabbitmq:1883
@@ -42,9 +42,6 @@ services:
   rabbitmq-test:
     build: ./rabbitmq
     hostname: rabbitmq
-    ports:
-      - '1883:1883'
-      - '15672:15672'
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS}
