@@ -5,7 +5,6 @@ interface SnapshotLightboxProps {
   alt: string
   open: boolean
   onClose: () => void
-  showBoundingBox?: boolean
 }
 
 const MIN_SCALE = 1

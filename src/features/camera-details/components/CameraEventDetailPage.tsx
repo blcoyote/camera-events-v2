@@ -190,7 +190,12 @@ export function CameraEventDetailPage({
                 setClipAccordionOpened(true)
                 const target = e.currentTarget
                 requestAnimationFrame(() => {
-                  target.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                  if (typeof target.scrollIntoView === 'function') {
+                    target.scrollIntoView({
+                      behavior: 'smooth',
+                      block: 'start',
+                    })
+                  }
                 })
               }
             }}

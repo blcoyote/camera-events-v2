@@ -57,23 +57,6 @@ describe('SnapshotLightbox rendering', () => {
     expect(closeBtn.className).toContain('h-11')
     expect(closeBtn.className).toContain('w-11')
   })
-
-  it('appends &bbox=true when src already has query params', () => {
-    render(
-      <SnapshotLightbox
-        src="/api/events/abc.1/snapshot?download=true"
-        alt="snap"
-        open
-        showBoundingBox
-        onClose={() => {}}
-      />,
-    )
-    const img = screen.getByRole('img', { name: 'snap' })
-    expect(img).toHaveAttribute(
-      'src',
-      '/api/events/abc.1/snapshot?download=true&bbox=true',
-    )
-  })
 })
 
 describe('SnapshotLightbox utilities', () => {
