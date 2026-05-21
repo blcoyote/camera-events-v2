@@ -1,6 +1,6 @@
 services:
   app:
-    image: ghcr.io/blcoyote/camera-events-v2:latest
+    image: ghcr.io/blcoyote/camera-events-v2:release
     pull_policy: always
     restart: unless-stopped
     ports:
