@@ -33,10 +33,10 @@ jobs:
       - name: Resolve source SHA
         id: resolve
         run: |
-          if [ -n "${{ inputs.sha }}" ]; then
-            SHA="${{ inputs.sha }}"
-          else
-            SHA="${{ github.event.workflow_run.head_sha }}"
+          SHA="${{ inputs.sha || github.event.workflow_run.head_sha || github.sha }}"
+          if [ -z "$SHA" ]; then
+            echo "Could not resolve a source SHA" >&2
+            exit 1
           fi
           SHORT=$(echo "$SHA" | cut -c1-7)
           echo "sha=$SHA" >> "$GITHUB_OUTPUT"
