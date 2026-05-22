@@ -145,19 +145,19 @@ async function sleep(ms: number): Promise<void> {
   return new Promise((r) => setTimeout(r, ms))
 }
 
-async function runWithConcurrency<T, R>(
+async function runWithConcurrency<T, TResult>(
   items: T[],
   limit: number,
-  worker: (item: T, index: number) => Promise<R>,
+  worker: (item: T, index: number) => Promise<TResult>,
   onProgress?: (done: number, total: number) => void,
-): Promise<R[]> {
-  const results = new Array<R>(items.length)
+): Promise<TResult[]> {
+  const results = new Array<TResult>(items.length)
   let cursor = 0
   let done = 0
   const total = items.length
 
   async function pump(): Promise<void> {
-    while (true) {
+    for (;;) {
       const i = cursor++
       if (i >= total) return
       results[i] = await worker(items[i], i)
