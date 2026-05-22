@@ -22,6 +22,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Read package version
+        id: pkg
+        run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+
       - uses: docker/setup-buildx-action@v3
 
       - name: Log in to GitHub Container Registry
@@ -39,6 +43,7 @@ jobs:
           tags: |
             type=sha
             type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=${{ steps.pkg.outputs.version }}
 
       - name: Build and push
         uses: docker/build-push-action@v6
@@ -48,6 +53,10 @@ jobs:
           platforms: linux/amd64,linux/arm64
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            BUILD_VERSION=${{ steps.pkg.outputs.version }}
+            BUILD_REVISION=${{ github.sha }}
+            BUILD_DATE=${{ steps.meta.outputs.created }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
