@@ -53,6 +53,7 @@ services:
   rabbitmq-test:
     build: ./rabbitmq
     hostname: rabbitmq
+    restart: unless-stopped
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS}
@@ -66,7 +67,7 @@ services:
     networks:
       - ce-v2-test
     labels:
-      - "traefik.enable=false"
+      - 'traefik.enable=false'
 
 volumes:
   ce-v2-test-data:
@@ -76,4 +77,3 @@ networks:
   ce-v2-test:
   proxy:
     external: true
-

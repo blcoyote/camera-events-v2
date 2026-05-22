@@ -53,6 +53,7 @@ services:
   rabbitmq:
     build: ./rabbitmq
     hostname: rabbitmq
+    restart: unless-stopped
     ports:
       - '1883:1883'
       - '15672:15672'
@@ -69,7 +70,7 @@ services:
     networks:
       - ce-v2-network
     labels:
-      - "traefik.enable=false"
+      - 'traefik.enable=false'
 
 volumes:
   ce-v2-data:
