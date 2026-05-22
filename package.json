@@ -1,5 +1,6 @@
 {
   "name": "camera-events-v2",
+  "version": "1.0.50",
   "private": true,
   "type": "module",
   "imports": {

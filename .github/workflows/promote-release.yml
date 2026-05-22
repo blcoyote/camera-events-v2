@@ -43,6 +43,14 @@ jobs:
           echo "short=$SHORT" >> "$GITHUB_OUTPUT"
           echo "Promoting sha-$SHORT to :release"
 
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.resolve.outputs.sha }}
+
+      - name: Read package version
+        id: pkg
+        run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+
       - uses: docker/setup-buildx-action@v3
 
       - name: Log in to GitHub Container Registry
@@ -55,8 +63,9 @@ jobs:
       - name: Tag image as release
         run: |
           SRC="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:sha-${{ steps.resolve.outputs.short }}"
-          DST="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:release"
-          docker buildx imagetools create --tag "$DST" "$SRC"
+          DST_RELEASE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:release"
+          DST_VERSION="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.pkg.outputs.version }}"
+          docker buildx imagetools create --tag "$DST_RELEASE" --tag "$DST_VERSION" "$SRC"
 
       - name: Summary
         run: |
