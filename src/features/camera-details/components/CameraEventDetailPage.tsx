@@ -196,7 +196,7 @@ export function CameraEventDetailPage({
               }
             }}
           >
-            <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 px-4 py-3 text-sm font-semibold text-(--lagoon-deep) transition hover:bg-[rgba(79,184,178,0.08)]">
+            <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 px-7 py-3 text-sm font-semibold text-(--lagoon-deep) transition hover:bg-[rgba(79,184,178,0.08)] sm:px-4">
               <Film className="h-4 w-4" aria-hidden="true" />
               Watch clip
             </summary>
