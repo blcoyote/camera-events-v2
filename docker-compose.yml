@@ -40,6 +40,12 @@ services:
     networks:
       - ce-v2-network
       - proxy
+    healthcheck:
+      test: ['CMD', 'wget', '-qO-', 'http://localhost:3000/']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -62,6 +68,8 @@ services:
       retries: 5
     networks:
       - ce-v2-network
+    labels:
+      - "traefik.enable=false"
 
 volumes:
   ce-v2-data:
