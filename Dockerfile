@@ -1,12 +1,12 @@
 FROM oven/bun:1-alpine AS base
 
-FROM base AS deps
+FROM --platform=$BUILDPLATFORM oven/bun:1-alpine AS deps
 WORKDIR /app
 RUN apk add --no-cache python3 make g++
 COPY package.json bun.lock* ./
 RUN bun install --frozen-lockfile
 
-FROM base AS build
+FROM --platform=$BUILDPLATFORM oven/bun:1-alpine AS build
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
