@@ -6,7 +6,7 @@ import {
 } from '#/features/shared/hooks/useEventLimit'
 import { useTheme } from '#/features/shared/hooks/useTheme'
 import type { ThemeMode } from '#/features/shared/hooks/useTheme'
-import { NotificationSettings } from './NotificationSettings'
+import { NotificationSettings } from '../components/NotificationSettings'
 
 export function getSettingsContent(): { heading: string; description: string } {
   return {

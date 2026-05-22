@@ -12,6 +12,7 @@
     "preview": "bun run build && bun run .output/server",
     "test": "vitest run",
     "verify:bun-bundle": "node scripts/verify-bun-bundle.mjs",
+    "audit:advisories": "bun scripts/audit-advisories.ts",
     "lint": "eslint",
     "format": "prettier --check .",
     "check": "prettier --write . && eslint --fix",

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { getSettingsContent } from '#/features/settings/components/SettingsPage'
+import { getSettingsContent } from '#/features/settings/pages/SettingsPage'
 
 describe('getSettingsContent', () => {
   it('returns heading and description', () => {
