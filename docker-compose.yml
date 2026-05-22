@@ -24,7 +24,7 @@ services:
       - traefik.http.routers.ce2.rule=Host(`$DNS_NAME`)
       - traefik.http.routers.ce2.entrypoints=websecure
       - traefik.http.routers.ce2.tls=true
-      - traefik.http.routers.ce2.tls.certresolver=lets-encrypt
+      - traefik.http.routers.ce2.tls.certresolver=letsencrypt
       - traefik.http.services.ce2.loadbalancer.server.port=3000
       - traefik.http.routers.ce2.middlewares=ce2-sec@docker
       - traefik.http.middlewares.ce2-sec.headers.stsSeconds=31536000
