@@ -203,10 +203,6 @@ pre code {
   backdrop-filter: blur(4px);
 }
 
-.island-shell-sm {
-  /* island-shell applied only at sm+ breakpoint */
-}
-
 @media (min-width: 640px) {
   .island-shell-sm {
     border: 1px solid var(--line);
@@ -217,23 +213,6 @@ pre code {
       0 6px 18px rgba(23, 58, 64, 0.08);
     backdrop-filter: blur(4px);
   }
-}
-
-.feature-card {
-  background: linear-gradient(
-    165deg,
-    color-mix(in oklab, var(--surface-strong) 93%, white 7%),
-    var(--surface)
-  );
-  box-shadow:
-    0 1px 0 var(--inset-glint) inset,
-    0 18px 34px rgba(30, 90, 72, 0.1),
-    0 4px 14px rgba(23, 58, 64, 0.06);
-}
-
-.feature-card:hover {
-  transform: translateY(-2px);
-  border-color: color-mix(in oklab, var(--lagoon-deep) 35%, var(--line));
 }
 
 button,
@@ -286,11 +265,6 @@ a {
 .nav-link:hover::after,
 .nav-link.is-active::after {
   transform: scaleX(1);
-}
-
-.site-footer {
-  border-top: 1px solid var(--line);
-  background: color-mix(in oklab, var(--header-bg) 84%, transparent 16%);
 }
 
 .rise-in {
@@ -473,14 +447,6 @@ a {
   }
 }
 
-:root[data-theme='dark'] .feature-card {
-  box-shadow:
-    0 1px 0 var(--inset-glint) inset,
-    0 0 30px rgba(79, 184, 178, 0.05),
-    0 18px 34px rgba(0, 0, 0, 0.3),
-    0 4px 14px rgba(0, 0, 0, 0.15);
-}
-
 :root[data-theme='dark'] .event-card {
   box-shadow:
     0 1px 0 var(--inset-glint) inset,
@@ -529,14 +495,6 @@ a {
         0 22px 44px rgba(0, 0, 0, 0.35),
         0 6px 18px rgba(0, 0, 0, 0.2);
     }
-  }
-
-  :root:not([data-theme='light']) .feature-card {
-    box-shadow:
-      0 1px 0 var(--inset-glint) inset,
-      0 0 30px rgba(79, 184, 178, 0.05),
-      0 18px 34px rgba(0, 0, 0, 0.3),
-      0 4px 14px rgba(0, 0, 0, 0.15);
   }
 
   :root:not([data-theme='light']) .event-card {
