@@ -37,6 +37,9 @@ services:
       - traefik.http.middlewares.ce2-sec.headers.customResponseHeaders.Cross-Origin-Opener-Policy=same-origin
       - traefik.http.middlewares.ce2-sec.headers.customResponseHeaders.Cross-Origin-Resource-Policy=same-origin
       - "traefik.http.middlewares.ce2-sec.headers.customResponseHeaders.Content-Security-Policy=default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://*.googleusercontent.com; connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com https://*.googleusercontent.com; worker-src 'self' blob:; manifest-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests"
+    networks:
+      - ce-v2-network
+      - proxy
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -57,7 +60,14 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - ce-v2-network
 
 volumes:
   ce-v2-data:
   rabbitmq-data:
+
+networks:
+  ce-v2-network:
+  proxy:
+    external: true
