@@ -31,7 +31,7 @@ vi.mock('@tanstack/react-router', () => ({
 }))
 
 const mockEventSnapshot = vi.fn((_props: unknown) => null)
-vi.mock('./EventSnapshot', () => ({
+vi.mock('../components/EventSnapshot', () => ({
   EventSnapshot: (props: unknown) => {
     mockEventSnapshot(props)
     return React.createElement('div', { 'data-testid': 'snapshot' })
@@ -39,7 +39,7 @@ vi.mock('./EventSnapshot', () => ({
 }))
 
 const mockSnapshotLightbox = vi.fn((_props: unknown) => null)
-vi.mock('./SnapshotLightbox', () => ({
+vi.mock('../components/SnapshotLightbox', () => ({
   SnapshotLightbox: (props: unknown) => {
     mockSnapshotLightbox(props)
     return null
@@ -49,7 +49,7 @@ vi.mock('./SnapshotLightbox', () => ({
 const mockEventClipPlayer = vi.fn(
   (_props: { onError?: () => void; eventId: string }) => null,
 )
-vi.mock('./EventClipPlayer', () => ({
+vi.mock('../components/EventClipPlayer', () => ({
   EventClipPlayer: (props: { onError?: () => void; eventId: string }) => {
     mockEventClipPlayer(props)
     return React.createElement('video', {
@@ -59,7 +59,7 @@ vi.mock('./EventClipPlayer', () => ({
   },
 }))
 
-vi.mock('./InfoCard', () => ({
+vi.mock('../components/InfoCard', () => ({
   InfoCard: () => null,
 }))
 

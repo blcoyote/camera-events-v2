@@ -1,5 +1,5 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
-import { HomePage } from '#/features/home/components/HomePage'
+import { HomePage } from '#/features/home/pages/HomePage'
 import type { SessionData } from '#/features/shared/server/session'
 
 export function getHomeRedirect(user: SessionData | null): string | null {

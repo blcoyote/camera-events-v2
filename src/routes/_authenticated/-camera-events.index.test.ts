@@ -69,7 +69,7 @@ vi.mock('#/features/shared/components/PullToRefreshIndicator', () => ({
   PullToRefreshIndicator: () => null,
 }))
 
-vi.mock('#/features/camera-events/components/CameraEventsListPage', () => ({
+vi.mock('#/features/camera-events/pages/CameraEventsListPage', () => ({
   CameraEventsListPage: () => null,
 }))
 

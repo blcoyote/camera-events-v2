@@ -9,10 +9,10 @@ import {
   getLabelDotColor,
   formatCameraName,
 } from '#/features/shared/utils/eventFormatting'
-import { SnapshotLightbox } from './SnapshotLightbox'
-import { EventSnapshot } from './EventSnapshot'
-import { EventClipPlayer } from './EventClipPlayer'
-import { InfoCard } from './InfoCard'
+import { SnapshotLightbox } from '../components/SnapshotLightbox'
+import { EventSnapshot } from '../components/EventSnapshot'
+import { EventClipPlayer } from '../components/EventClipPlayer'
+import { InfoCard } from '../components/InfoCard'
 import { useFavoriteToggle } from '#/features/shared/hooks/useFavoriteToggle'
 import { FavoriteButton } from '#/features/shared/components/FavoriteButton'
 

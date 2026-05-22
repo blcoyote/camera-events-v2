@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { FavoritesPage } from '#/features/favorites/components/FavoritesPage'
+import { FavoritesPage } from '#/features/favorites/pages/FavoritesPage'
 import { FavoritesLoading } from '#/features/favorites/components/FavoritesLoading'
 import { getUserFavoritedEventsFn } from '#/features/shared/server/favorites/favorites-fns'
 import type { FrigateEvent } from '#/features/shared/server/frigate/types'
