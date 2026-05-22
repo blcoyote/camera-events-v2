@@ -20,6 +20,7 @@ LABEL org.opencontainers.image.title="camera-events-v2" \
     org.opencontainers.image.version="${BUILD_VERSION}" \
     org.opencontainers.image.revision="${BUILD_REVISION}" \
     org.opencontainers.image.created="${BUILD_DATE}"
+
 RUN apk add --no-cache openssl
 RUN addgroup -g 1234 -S app && adduser -u 1234 -S app -G app
 WORKDIR /app

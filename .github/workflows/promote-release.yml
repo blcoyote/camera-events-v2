@@ -10,6 +10,9 @@ on:
       sha:
         description: 'Commit SHA to promote (defaults to latest main build)'
         required: false
+      run_number:
+        description: 'Build workflow run number (for version tag, e.g. 42)'
+        required: false
 
 permissions:
   contents: read
@@ -39,17 +42,11 @@ jobs:
             exit 1
           fi
           SHORT=$(echo "$SHA" | cut -c1-7)
+          RUN_NUM="${{ inputs.run_number || github.event.workflow_run.run_number }}"
           echo "sha=$SHA" >> "$GITHUB_OUTPUT"
           echo "short=$SHORT" >> "$GITHUB_OUTPUT"
-          echo "Promoting sha-$SHORT to :release"
-
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ steps.resolve.outputs.sha }}
-
-      - name: Read package version
-        id: pkg
-        run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+          echo "version=0.0.${RUN_NUM}" >> "$GITHUB_OUTPUT"
+          echo "Promoting sha-$SHORT to :release (version 0.0.${RUN_NUM})"
 
       - uses: docker/setup-buildx-action@v3
 
@@ -64,7 +61,7 @@ jobs:
         run: |
           SRC="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:sha-${{ steps.resolve.outputs.short }}"
           DST_RELEASE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:release"
-          DST_VERSION="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.pkg.outputs.version }}"
+          DST_VERSION="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.resolve.outputs.version }}"
           docker buildx imagetools create --tag "$DST_RELEASE" --tag "$DST_VERSION" "$SRC"
 
       - name: Summary
