@@ -22,7 +22,7 @@ services:
     labels:
       - traefik.http.routers.ce2-test.rule=Host(`$DNS_NAME`)
       - traefik.http.routers.ce2-test.tls=true
-      - traefik.http.routers.ce2-test.tls.certresolver=lets-encrypt
+      - traefik.http.routers.ce2-test.tls.certresolver=letsencrypt
       - traefik.http.services.ce2-test.loadbalancer.server.port=3000
       - traefik.http.routers.ce2-test.middlewares=ce2-test-sec@docker
       - traefik.http.middlewares.ce2-test-sec.headers.stsSeconds=31536000
