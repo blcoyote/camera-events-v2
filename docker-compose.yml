@@ -20,7 +20,9 @@ services:
     volumes:
       - ce-v2-data:/app/data
     labels:
+      - traefik.enable=true
       - traefik.http.routers.ce2.rule=Host(`$DNS_NAME`)
+      - traefik.http.routers.ce2.entrypoints=websecure
       - traefik.http.routers.ce2.tls=true
       - traefik.http.routers.ce2.tls.certresolver=lets-encrypt
       - traefik.http.services.ce2.loadbalancer.server.port=3000
