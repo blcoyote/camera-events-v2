@@ -4,7 +4,7 @@ import {
   formatTimestamp,
   formatDuration,
   getDownloadUrl,
-} from '#/features/camera-details/components/CameraEventDetailPage'
+} from '#/features/camera-details/pages/CameraEventDetailPage'
 import { formatCameraName } from '#/features/shared/utils/eventFormatting'
 import type { FrigateEvent } from '#/features/shared/server/frigate/types'
 

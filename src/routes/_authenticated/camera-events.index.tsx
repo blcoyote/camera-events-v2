@@ -1,7 +1,7 @@
 import { createFileRoute, useRouter } from '@tanstack/react-router'
 import { clearCacheFn } from '#/features/shared/server/frigate/cache-actions'
 import { loadEventsFn } from '#/features/camera-events/server/load-events'
-import { CameraEventsListPage } from '#/features/camera-events/components/CameraEventsListPage'
+import { CameraEventsListPage } from '#/features/camera-events/pages/CameraEventsListPage'
 import { CameraEventsLoading } from '#/features/camera-events/components/CameraEventsLoading'
 import { usePullToRefresh } from '#/features/shared/hooks/usePullToRefresh'
 import { useRefetchOnFocus } from '#/features/shared/hooks/useRefetchOnFocus'

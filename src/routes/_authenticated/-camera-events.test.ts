@@ -4,7 +4,7 @@ import {
   getUniqueLabels,
   getUniqueCameras,
   filterEvents,
-} from '#/features/camera-events/components/CameraEventsListPage'
+} from '#/features/camera-events/pages/CameraEventsListPage'
 import {
   formatRelativeTime,
   formatLabelName,
