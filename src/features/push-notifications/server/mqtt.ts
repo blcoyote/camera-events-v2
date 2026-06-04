@@ -9,6 +9,21 @@ import { notifyUsersForCamera } from './push-notify'
 /** MQTT topics to subscribe to for Frigate event updates. */
 export const SUBSCRIBED_TOPICS = ['frigate/events', 'frigate/reviews'] as const
 
+export type MqttConnectionState =
+  | 'not_configured'
+  | 'connected'
+  | 'disconnected'
+
+let mqttConnectionState: MqttConnectionState = 'not_configured'
+
+export function getMqttConnectionState(): MqttConnectionState {
+  return mqttConnectionState
+}
+
+export function _resetMqttConnectionState(): void {
+  mqttConnectionState = 'not_configured'
+}
+
 /**
  * Parse the EVENT_BATCH_WINDOW_MS env variable into a millisecond count.
  * Defaults to 30 000 ms when the value is absent, empty, or non-numeric.
@@ -105,9 +120,11 @@ export function startMqttSubscriber(): MqttClient | null {
     return null
   }
 
+  mqttConnectionState = 'disconnected'
   const client = mqtt.connect(url, { clean: true })
 
   client.on('connect', () => {
+    mqttConnectionState = 'connected'
     console.log(`[mqtt] Connected to ${url}`)
     client.subscribe(SUBSCRIBED_TOPICS as unknown as string[], (err) => {
       if (err) {
@@ -122,6 +139,10 @@ export function startMqttSubscriber(): MqttClient | null {
 
   client.on('reconnect', () => {
     console.log('[mqtt] Reconnecting...')
+  })
+
+  client.on('close', () => {
+    mqttConnectionState = 'disconnected'
   })
 
   client.on('error', (err) => {
