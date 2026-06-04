@@ -1,4 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import {
+  handleLiveness,
+  handleReadiness,
+  _clearDbCheckCache,
+} from './health-handlers'
+import { openSqlite } from '#/features/shared/server/sqlite'
+import { existsSync } from 'node:fs'
 
 vi.mock('#/features/shared/server/sqlite', () => ({
   openSqlite: vi.fn(),
@@ -7,14 +14,6 @@ vi.mock('#/features/shared/server/sqlite', () => ({
 vi.mock('node:fs', () => ({
   existsSync: vi.fn(),
 }))
-
-import {
-  handleLiveness,
-  handleReadiness,
-  _clearDbCheckCache,
-} from './health-handlers'
-import { openSqlite } from '#/features/shared/server/sqlite'
-import { existsSync } from 'node:fs'
 
 beforeEach(() => {
   vi.resetAllMocks()
