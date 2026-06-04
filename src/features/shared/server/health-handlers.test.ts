@@ -8,12 +8,17 @@ vi.mock('node:fs', () => ({
   existsSync: vi.fn(),
 }))
 
-import { handleLiveness, handleReadiness } from './health-handlers'
+import {
+  handleLiveness,
+  handleReadiness,
+  _clearDbCheckCache,
+} from './health-handlers'
 import { openSqlite } from '#/features/shared/server/sqlite'
 import { existsSync } from 'node:fs'
 
 beforeEach(() => {
   vi.resetAllMocks()
+  _clearDbCheckCache()
 })
 
 describe('handleLiveness', () => {
@@ -145,5 +150,44 @@ describe('handleReadiness', () => {
     const ts = new Date(result.body.timestamp).getTime()
     expect(ts).toBeGreaterThanOrEqual(before)
     expect(ts).toBeLessThanOrEqual(after)
+  })
+})
+
+describe('handleReadiness — DB check caching', () => {
+  afterEach(() => {
+    vi.useRealTimers()
+    _clearDbCheckCache()
+  })
+
+  it('queries the DB only once within the cache TTL window', async () => {
+    vi.useFakeTimers()
+    vi.mocked(existsSync).mockReturnValue(true)
+    const mockDb = {
+      prepare: vi.fn().mockReturnValue({ get: vi.fn() }),
+      close: vi.fn(),
+    }
+    vi.mocked(openSqlite).mockResolvedValue(mockDb as never)
+
+    await handleReadiness('/tmp/db.db')
+    await handleReadiness('/tmp/db.db')
+    await handleReadiness('/tmp/db.db')
+
+    expect(openSqlite).toHaveBeenCalledTimes(1)
+  })
+
+  it('re-queries the DB after the cache TTL expires', async () => {
+    vi.useFakeTimers()
+    vi.mocked(existsSync).mockReturnValue(true)
+    const mockDb = {
+      prepare: vi.fn().mockReturnValue({ get: vi.fn() }),
+      close: vi.fn(),
+    }
+    vi.mocked(openSqlite).mockResolvedValue(mockDb as never)
+
+    await handleReadiness('/tmp/db.db')
+    vi.advanceTimersByTime(6_000)
+    await handleReadiness('/tmp/db.db')
+
+    expect(openSqlite).toHaveBeenCalledTimes(2)
   })
 })
