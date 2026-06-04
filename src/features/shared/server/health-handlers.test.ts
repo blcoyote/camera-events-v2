@@ -1,0 +1,149 @@
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+
+vi.mock('#/features/shared/server/sqlite', () => ({
+  openSqlite: vi.fn(),
+}))
+
+vi.mock('node:fs', () => ({
+  existsSync: vi.fn(),
+}))
+
+import { handleLiveness, handleReadiness } from './health-handlers'
+import { openSqlite } from '#/features/shared/server/sqlite'
+import { existsSync } from 'node:fs'
+
+beforeEach(() => {
+  vi.resetAllMocks()
+})
+
+describe('handleLiveness', () => {
+  it('returns 200 with status ok', () => {
+    const result = handleLiveness()
+    expect(result.status).toBe(200)
+    expect(result.body.status).toBe('ok')
+  })
+
+  it('includes an ISO timestamp', () => {
+    const before = Date.now()
+    const result = handleLiveness()
+    const after = Date.now()
+    const ts = new Date(result.body.timestamp).getTime()
+    expect(ts).toBeGreaterThanOrEqual(before)
+    expect(ts).toBeLessThanOrEqual(after)
+  })
+})
+
+describe('handleReadiness', () => {
+  const originalMqttUrl = process.env.MQTT_URL
+  const originalFrigateMock = process.env.FRIGATE_MOCK
+
+  afterEach(() => {
+    if (originalMqttUrl === undefined) delete process.env.MQTT_URL
+    else process.env.MQTT_URL = originalMqttUrl
+
+    if (originalFrigateMock === undefined) delete process.env.FRIGATE_MOCK
+    else process.env.FRIGATE_MOCK = originalFrigateMock
+  })
+
+  it('returns 200 when DB file does not exist yet', async () => {
+    vi.mocked(existsSync).mockReturnValue(false)
+    delete process.env.MQTT_URL
+
+    const result = await handleReadiness('/tmp/nonexistent.db')
+
+    expect(result.status).toBe(200)
+    expect(result.body.status).toBe('ok')
+    expect(result.body.checks.database.status).toBe('ok')
+  })
+
+  it('returns 200 when DB is accessible', async () => {
+    vi.mocked(existsSync).mockReturnValue(true)
+    const mockDb = {
+      prepare: vi.fn().mockReturnValue({ get: vi.fn() }),
+      close: vi.fn(),
+    }
+    vi.mocked(openSqlite).mockResolvedValue(mockDb as never)
+    delete process.env.MQTT_URL
+
+    const result = await handleReadiness('/tmp/existing.db')
+
+    expect(result.status).toBe(200)
+    expect(result.body.status).toBe('ok')
+    expect(result.body.checks.database.status).toBe('ok')
+    expect(mockDb.close).toHaveBeenCalled()
+  })
+
+  it('returns 503 when DB open fails', async () => {
+    vi.mocked(existsSync).mockReturnValue(true)
+    vi.mocked(openSqlite).mockRejectedValue(new Error('SQLITE_CANTOPEN'))
+    delete process.env.MQTT_URL
+
+    const result = await handleReadiness('/tmp/bad.db')
+
+    expect(result.status).toBe(503)
+    expect(result.body.status).toBe('degraded')
+    expect(result.body.checks.database.status).toBe('error')
+    expect(result.body.checks.database.message).toContain('SQLITE_CANTOPEN')
+  })
+
+  it('closes the DB even when query throws', async () => {
+    vi.mocked(existsSync).mockReturnValue(true)
+    const mockDb = {
+      prepare: vi.fn().mockReturnValue({
+        get: vi.fn().mockImplementation(() => {
+          throw new Error('disk I/O error')
+        }),
+      }),
+      close: vi.fn(),
+    }
+    vi.mocked(openSqlite).mockResolvedValue(mockDb as never)
+    delete process.env.MQTT_URL
+
+    const result = await handleReadiness('/tmp/bad.db')
+
+    expect(result.body.checks.database.status).toBe('error')
+    expect(mockDb.close).toHaveBeenCalled()
+  })
+
+  it('reports mqtt as configured when MQTT_URL is set', async () => {
+    vi.mocked(existsSync).mockReturnValue(false)
+    process.env.MQTT_URL = 'mqtt://broker:1883'
+    delete process.env.FRIGATE_MOCK
+
+    const result = await handleReadiness('/tmp/nonexistent.db')
+
+    expect(result.body.checks.mqtt.status).toBe('configured')
+  })
+
+  it('reports mqtt as not_configured when MQTT_URL is absent', async () => {
+    vi.mocked(existsSync).mockReturnValue(false)
+    delete process.env.MQTT_URL
+
+    const result = await handleReadiness('/tmp/nonexistent.db')
+
+    expect(result.body.checks.mqtt.status).toBe('not_configured')
+  })
+
+  it('reports mqtt as not_configured when FRIGATE_MOCK is true', async () => {
+    vi.mocked(existsSync).mockReturnValue(false)
+    process.env.MQTT_URL = 'mqtt://broker:1883'
+    process.env.FRIGATE_MOCK = 'true'
+
+    const result = await handleReadiness('/tmp/nonexistent.db')
+
+    expect(result.body.checks.mqtt.status).toBe('not_configured')
+  })
+
+  it('includes an ISO timestamp', async () => {
+    vi.mocked(existsSync).mockReturnValue(false)
+    delete process.env.MQTT_URL
+
+    const before = Date.now()
+    const result = await handleReadiness('/tmp/nonexistent.db')
+    const after = Date.now()
+
+    const ts = new Date(result.body.timestamp).getTime()
+    expect(ts).toBeGreaterThanOrEqual(before)
+    expect(ts).toBeLessThanOrEqual(after)
+  })
+})

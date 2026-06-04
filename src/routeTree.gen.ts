@@ -15,12 +15,14 @@ import { Route as ApiTestAuthRouteImport } from './routes/api/test-auth'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedFavoritesRouteImport } from './routes/_authenticated/favorites'
 import { Route as AuthenticatedCamerasRouteImport } from './routes/_authenticated/cameras'
+import { Route as ApiHealthIndexRouteImport } from './routes/api/health/index'
 import { Route as AuthenticatedCameraEventsIndexRouteImport } from './routes/_authenticated/camera-events.index'
 import { Route as ApiPushVapidPublicKeyRouteImport } from './routes/api/push/vapid-public-key'
 import { Route as ApiPushUnsubscribeRouteImport } from './routes/api/push/unsubscribe'
 import { Route as ApiPushTestRouteImport } from './routes/api/push/test'
 import { Route as ApiPushSubscribeRouteImport } from './routes/api/push/subscribe'
 import { Route as ApiPushPreferencesRouteImport } from './routes/api/push/preferences'
+import { Route as ApiHealthReadyRouteImport } from './routes/api/health/ready'
 import { Route as ApiAuthLogoutRouteImport } from './routes/api/auth/logout'
 import { Route as ApiAuthGoogleRouteImport } from './routes/api/auth/google'
 import { Route as AuthenticatedCameraEventsIdRouteImport } from './routes/_authenticated/camera-events.$id'
@@ -59,6 +61,11 @@ const AuthenticatedCamerasRoute = AuthenticatedCamerasRouteImport.update({
   path: '/cameras',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const ApiHealthIndexRoute = ApiHealthIndexRouteImport.update({
+  id: '/api/health/',
+  path: '/api/health/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedCameraEventsIndexRoute =
   AuthenticatedCameraEventsIndexRouteImport.update({
     id: '/camera-events/',
@@ -88,6 +95,11 @@ const ApiPushSubscribeRoute = ApiPushSubscribeRouteImport.update({
 const ApiPushPreferencesRoute = ApiPushPreferencesRouteImport.update({
   id: '/api/push/preferences',
   path: '/api/push/preferences',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiHealthReadyRoute = ApiHealthReadyRouteImport.update({
+  id: '/api/health/ready',
+  path: '/api/health/ready',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiAuthLogoutRoute = ApiAuthLogoutRouteImport.update({
@@ -141,12 +153,14 @@ export interface FileRoutesByFullPath {
   '/camera-events/$id': typeof AuthenticatedCameraEventsIdRoute
   '/api/auth/google': typeof ApiAuthGoogleRouteWithChildren
   '/api/auth/logout': typeof ApiAuthLogoutRoute
+  '/api/health/ready': typeof ApiHealthReadyRoute
   '/api/push/preferences': typeof ApiPushPreferencesRoute
   '/api/push/subscribe': typeof ApiPushSubscribeRoute
   '/api/push/test': typeof ApiPushTestRoute
   '/api/push/unsubscribe': typeof ApiPushUnsubscribeRoute
   '/api/push/vapid-public-key': typeof ApiPushVapidPublicKeyRoute
   '/camera-events/': typeof AuthenticatedCameraEventsIndexRoute
+  '/api/health/': typeof ApiHealthIndexRoute
   '/api/auth/google/callback': typeof ApiAuthGoogleCallbackRoute
   '/api/cameras/$name/latest': typeof ApiCamerasNameLatestRoute
   '/api/events/$id/clip': typeof ApiEventsIdClipRoute
@@ -162,12 +176,14 @@ export interface FileRoutesByTo {
   '/camera-events/$id': typeof AuthenticatedCameraEventsIdRoute
   '/api/auth/google': typeof ApiAuthGoogleRouteWithChildren
   '/api/auth/logout': typeof ApiAuthLogoutRoute
+  '/api/health/ready': typeof ApiHealthReadyRoute
   '/api/push/preferences': typeof ApiPushPreferencesRoute
   '/api/push/subscribe': typeof ApiPushSubscribeRoute
   '/api/push/test': typeof ApiPushTestRoute
   '/api/push/unsubscribe': typeof ApiPushUnsubscribeRoute
   '/api/push/vapid-public-key': typeof ApiPushVapidPublicKeyRoute
   '/camera-events': typeof AuthenticatedCameraEventsIndexRoute
+  '/api/health': typeof ApiHealthIndexRoute
   '/api/auth/google/callback': typeof ApiAuthGoogleCallbackRoute
   '/api/cameras/$name/latest': typeof ApiCamerasNameLatestRoute
   '/api/events/$id/clip': typeof ApiEventsIdClipRoute
@@ -185,12 +201,14 @@ export interface FileRoutesById {
   '/_authenticated/camera-events/$id': typeof AuthenticatedCameraEventsIdRoute
   '/api/auth/google': typeof ApiAuthGoogleRouteWithChildren
   '/api/auth/logout': typeof ApiAuthLogoutRoute
+  '/api/health/ready': typeof ApiHealthReadyRoute
   '/api/push/preferences': typeof ApiPushPreferencesRoute
   '/api/push/subscribe': typeof ApiPushSubscribeRoute
   '/api/push/test': typeof ApiPushTestRoute
   '/api/push/unsubscribe': typeof ApiPushUnsubscribeRoute
   '/api/push/vapid-public-key': typeof ApiPushVapidPublicKeyRoute
   '/_authenticated/camera-events/': typeof AuthenticatedCameraEventsIndexRoute
+  '/api/health/': typeof ApiHealthIndexRoute
   '/api/auth/google/callback': typeof ApiAuthGoogleCallbackRoute
   '/api/cameras/$name/latest': typeof ApiCamerasNameLatestRoute
   '/api/events/$id/clip': typeof ApiEventsIdClipRoute
@@ -208,12 +226,14 @@ export interface FileRouteTypes {
     | '/camera-events/$id'
     | '/api/auth/google'
     | '/api/auth/logout'
+    | '/api/health/ready'
     | '/api/push/preferences'
     | '/api/push/subscribe'
     | '/api/push/test'
     | '/api/push/unsubscribe'
     | '/api/push/vapid-public-key'
     | '/camera-events/'
+    | '/api/health/'
     | '/api/auth/google/callback'
     | '/api/cameras/$name/latest'
     | '/api/events/$id/clip'
@@ -229,12 +249,14 @@ export interface FileRouteTypes {
     | '/camera-events/$id'
     | '/api/auth/google'
     | '/api/auth/logout'
+    | '/api/health/ready'
     | '/api/push/preferences'
     | '/api/push/subscribe'
     | '/api/push/test'
     | '/api/push/unsubscribe'
     | '/api/push/vapid-public-key'
     | '/camera-events'
+    | '/api/health'
     | '/api/auth/google/callback'
     | '/api/cameras/$name/latest'
     | '/api/events/$id/clip'
@@ -251,12 +273,14 @@ export interface FileRouteTypes {
     | '/_authenticated/camera-events/$id'
     | '/api/auth/google'
     | '/api/auth/logout'
+    | '/api/health/ready'
     | '/api/push/preferences'
     | '/api/push/subscribe'
     | '/api/push/test'
     | '/api/push/unsubscribe'
     | '/api/push/vapid-public-key'
     | '/_authenticated/camera-events/'
+    | '/api/health/'
     | '/api/auth/google/callback'
     | '/api/cameras/$name/latest'
     | '/api/events/$id/clip'
@@ -270,11 +294,13 @@ export interface RootRouteChildren {
   ApiTestAuthRoute: typeof ApiTestAuthRoute
   ApiAuthGoogleRoute: typeof ApiAuthGoogleRouteWithChildren
   ApiAuthLogoutRoute: typeof ApiAuthLogoutRoute
+  ApiHealthReadyRoute: typeof ApiHealthReadyRoute
   ApiPushPreferencesRoute: typeof ApiPushPreferencesRoute
   ApiPushSubscribeRoute: typeof ApiPushSubscribeRoute
   ApiPushTestRoute: typeof ApiPushTestRoute
   ApiPushUnsubscribeRoute: typeof ApiPushUnsubscribeRoute
   ApiPushVapidPublicKeyRoute: typeof ApiPushVapidPublicKeyRoute
+  ApiHealthIndexRoute: typeof ApiHealthIndexRoute
   ApiCamerasNameLatestRoute: typeof ApiCamerasNameLatestRoute
   ApiEventsIdClipRoute: typeof ApiEventsIdClipRoute
   ApiEventsIdSnapshotRoute: typeof ApiEventsIdSnapshotRoute
@@ -325,6 +351,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCamerasRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/api/health/': {
+      id: '/api/health/'
+      path: '/api/health'
+      fullPath: '/api/health/'
+      preLoaderRoute: typeof ApiHealthIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/camera-events/': {
       id: '/_authenticated/camera-events/'
       path: '/camera-events'
@@ -365,6 +398,13 @@ declare module '@tanstack/react-router' {
       path: '/api/push/preferences'
       fullPath: '/api/push/preferences'
       preLoaderRoute: typeof ApiPushPreferencesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/health/ready': {
+      id: '/api/health/ready'
+      path: '/api/health/ready'
+      fullPath: '/api/health/ready'
+      preLoaderRoute: typeof ApiHealthReadyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/auth/logout': {
@@ -464,11 +504,13 @@ const rootRouteChildren: RootRouteChildren = {
   ApiTestAuthRoute: ApiTestAuthRoute,
   ApiAuthGoogleRoute: ApiAuthGoogleRouteWithChildren,
   ApiAuthLogoutRoute: ApiAuthLogoutRoute,
+  ApiHealthReadyRoute: ApiHealthReadyRoute,
   ApiPushPreferencesRoute: ApiPushPreferencesRoute,
   ApiPushSubscribeRoute: ApiPushSubscribeRoute,
   ApiPushTestRoute: ApiPushTestRoute,
   ApiPushUnsubscribeRoute: ApiPushUnsubscribeRoute,
   ApiPushVapidPublicKeyRoute: ApiPushVapidPublicKeyRoute,
+  ApiHealthIndexRoute: ApiHealthIndexRoute,
   ApiCamerasNameLatestRoute: ApiCamerasNameLatestRoute,
   ApiEventsIdClipRoute: ApiEventsIdClipRoute,
   ApiEventsIdSnapshotRoute: ApiEventsIdSnapshotRoute,
