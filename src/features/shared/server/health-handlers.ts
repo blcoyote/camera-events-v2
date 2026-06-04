@@ -5,13 +5,17 @@ import { existsSync } from 'node:fs'
 const DEFAULT_DB_PATH = 'data/camera-events.db'
 const DB_CHECK_CACHE_TTL_MS = 5_000
 
+type DbCheckResult = { status: 'ok' | 'error'; message?: string }
+
 interface DbCheckCache {
-  result: { status: 'ok' | 'error'; message?: string }
+  result: DbCheckResult
   path: string
   expiresAt: number
 }
 
 let dbCheckCache: DbCheckCache | null = null
+let dbCheckInFlight: { path: string; promise: Promise<DbCheckResult> } | null =
+  null
 
 export function _clearDbCheckCache(): void {
   dbCheckCache = null
@@ -40,29 +44,30 @@ export function handleLiveness(): { status: number; body: LivenessResult } {
   }
 }
 
-async function checkDatabase(
-  dbPath: string,
-): Promise<{ status: 'ok' | 'error'; message?: string }> {
-  if (!existsSync(dbPath)) {
-    return { status: 'ok' }
-  }
-  const db = await openSqlite(dbPath)
+async function checkDatabase(dbPath: string): Promise<DbCheckResult> {
+  if (!existsSync(dbPath)) return { status: 'ok' }
   try {
-    db.prepare('SELECT 1').get()
-    return { status: 'ok' }
+    const db = await openSqlite(dbPath)
+    try {
+      db.prepare('SELECT 1').get()
+      return { status: 'ok' }
+    } catch (err) {
+      return {
+        status: 'error',
+        message: err instanceof Error ? err.message : 'Unknown database error',
+      }
+    } finally {
+      db.close()
+    }
   } catch (err) {
     return {
       status: 'error',
       message: err instanceof Error ? err.message : 'Unknown database error',
     }
-  } finally {
-    db.close()
   }
 }
 
-async function checkDatabaseCached(
-  dbPath: string,
-): Promise<{ status: 'ok' | 'error'; message?: string }> {
+async function checkDatabaseCached(dbPath: string): Promise<DbCheckResult> {
   const now = Date.now()
   if (
     dbCheckCache &&
@@ -71,28 +76,30 @@ async function checkDatabaseCached(
   ) {
     return dbCheckCache.result
   }
-  const result = await checkDatabase(dbPath)
-  dbCheckCache = {
-    result,
-    path: dbPath,
-    expiresAt: now + DB_CHECK_CACHE_TTL_MS,
+  if (dbCheckInFlight && dbCheckInFlight.path === dbPath) {
+    return dbCheckInFlight.promise
   }
-  return result
+  const promise = checkDatabase(dbPath)
+    .then((result) => {
+      dbCheckCache = {
+        result,
+        path: dbPath,
+        expiresAt: Date.now() + DB_CHECK_CACHE_TTL_MS,
+      }
+      return result
+    })
+    .finally(() => {
+      if (dbCheckInFlight?.path === dbPath) dbCheckInFlight = null
+    })
+  dbCheckInFlight = { path: dbPath, promise }
+  return promise
 }
 
 export async function handleReadiness(
   dbPath = DEFAULT_DB_PATH,
   getMqttState: () => MqttStatus = () => 'not_configured',
 ): Promise<{ status: number; body: ReadinessResult }> {
-  let database: { status: 'ok' | 'error'; message?: string }
-  try {
-    database = await checkDatabaseCached(dbPath)
-  } catch (err) {
-    database = {
-      status: 'error',
-      message: err instanceof Error ? err.message : 'Unknown database error',
-    }
-  }
+  const database = await checkDatabaseCached(dbPath)
   const mqtt = { status: getMqttState() }
   const healthy = database.status === 'ok'
 

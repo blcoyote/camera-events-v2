@@ -164,6 +164,23 @@ describe('handleReadiness — DB check caching', () => {
     _clearDbCheckCache()
   })
 
+  it('coalesces concurrent requests into a single DB call', async () => {
+    vi.mocked(existsSync).mockReturnValue(true)
+    const mockDb = {
+      prepare: vi.fn().mockReturnValue({ get: vi.fn() }),
+      close: vi.fn(),
+    }
+    vi.mocked(openSqlite).mockResolvedValue(mockDb as never)
+
+    await Promise.all([
+      handleReadiness('/tmp/db.db'),
+      handleReadiness('/tmp/db.db'),
+      handleReadiness('/tmp/db.db'),
+    ])
+
+    expect(openSqlite).toHaveBeenCalledTimes(1)
+  })
+
   it('queries the DB only once within the cache TTL window', async () => {
     vi.useFakeTimers()
     vi.mocked(existsSync).mockReturnValue(true)
