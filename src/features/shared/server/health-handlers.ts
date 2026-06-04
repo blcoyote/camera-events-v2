@@ -22,12 +22,14 @@ export interface LivenessResult {
   timestamp: string
 }
 
+export type MqttStatus = 'connected' | 'disconnected' | 'not_configured'
+
 export interface ReadinessResult {
   status: 'ok' | 'degraded'
   timestamp: string
   checks: {
     database: { status: 'ok' | 'error'; message?: string }
-    mqtt: { status: 'configured' | 'not_configured' }
+    mqtt: { status: MqttStatus }
   }
 }
 
@@ -58,12 +60,6 @@ async function checkDatabase(
   }
 }
 
-function checkMqtt(): { status: 'configured' | 'not_configured' } {
-  const configured =
-    process.env.MQTT_URL !== undefined && process.env.FRIGATE_MOCK !== 'true'
-  return { status: configured ? 'configured' : 'not_configured' }
-}
-
 async function checkDatabaseCached(
   dbPath: string,
 ): Promise<{ status: 'ok' | 'error'; message?: string }> {
@@ -86,6 +82,7 @@ async function checkDatabaseCached(
 
 export async function handleReadiness(
   dbPath = DEFAULT_DB_PATH,
+  getMqttState: () => MqttStatus = () => 'not_configured',
 ): Promise<{ status: number; body: ReadinessResult }> {
   let database: { status: 'ok' | 'error'; message?: string }
   try {
@@ -96,7 +93,7 @@ export async function handleReadiness(
       message: err instanceof Error ? err.message : 'Unknown database error',
     }
   }
-  const mqtt = checkMqtt()
+  const mqtt = { status: getMqttState() }
   const healthy = database.status === 'ok'
 
   return {

@@ -110,29 +110,34 @@ describe('handleReadiness', () => {
     expect(mockDb.close).toHaveBeenCalled()
   })
 
-  it('reports mqtt as configured when MQTT_URL is set', async () => {
+  it('reports the injected mqtt state', async () => {
     vi.mocked(existsSync).mockReturnValue(false)
-    process.env.MQTT_URL = 'mqtt://broker:1883'
-    delete process.env.FRIGATE_MOCK
 
-    const result = await handleReadiness('/tmp/nonexistent.db')
+    const connected = await handleReadiness(
+      '/tmp/nonexistent.db',
+      () => 'connected',
+    )
+    expect(connected.body.checks.mqtt.status).toBe('connected')
 
-    expect(result.body.checks.mqtt.status).toBe('configured')
+    _clearDbCheckCache()
+
+    const disconnected = await handleReadiness(
+      '/tmp/nonexistent.db',
+      () => 'disconnected',
+    )
+    expect(disconnected.body.checks.mqtt.status).toBe('disconnected')
+
+    _clearDbCheckCache()
+
+    const notConfigured = await handleReadiness(
+      '/tmp/nonexistent.db',
+      () => 'not_configured',
+    )
+    expect(notConfigured.body.checks.mqtt.status).toBe('not_configured')
   })
 
-  it('reports mqtt as not_configured when MQTT_URL is absent', async () => {
+  it('defaults mqtt to not_configured when no getter is provided', async () => {
     vi.mocked(existsSync).mockReturnValue(false)
-    delete process.env.MQTT_URL
-
-    const result = await handleReadiness('/tmp/nonexistent.db')
-
-    expect(result.body.checks.mqtt.status).toBe('not_configured')
-  })
-
-  it('reports mqtt as not_configured when FRIGATE_MOCK is true', async () => {
-    vi.mocked(existsSync).mockReturnValue(false)
-    process.env.MQTT_URL = 'mqtt://broker:1883'
-    process.env.FRIGATE_MOCK = 'true'
 
     const result = await handleReadiness('/tmp/nonexistent.db')
 

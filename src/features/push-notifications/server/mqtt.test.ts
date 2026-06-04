@@ -166,7 +166,7 @@ describe('startMqttSubscriber', () => {
   const originalMqttUrl = process.env.MQTT_URL
   const originalFrigateMock = process.env.FRIGATE_MOCK
 
-  afterEach(() => {
+  afterEach(async () => {
     if (originalMqttUrl === undefined) {
       delete process.env.MQTT_URL
     } else {
@@ -177,6 +177,8 @@ describe('startMqttSubscriber', () => {
     } else {
       process.env.FRIGATE_MOCK = originalFrigateMock
     }
+    const { _resetMqttConnectionState } = await import('./mqtt')
+    _resetMqttConnectionState()
   })
 
   it('returns null when FRIGATE_MOCK is enabled', async () => {
@@ -235,6 +237,89 @@ describe('startMqttSubscriber', () => {
     )
     expect(messageHandler).toBeDefined()
     expect(messageHandler[0]).toBe('message')
+  })
+})
+
+describe('getMqttConnectionState', () => {
+  const originalMqttUrl = process.env.MQTT_URL
+  const originalFrigateMock = process.env.FRIGATE_MOCK
+
+  afterEach(async () => {
+    if (originalMqttUrl === undefined) delete process.env.MQTT_URL
+    else process.env.MQTT_URL = originalMqttUrl
+    if (originalFrigateMock === undefined) delete process.env.FRIGATE_MOCK
+    else process.env.FRIGATE_MOCK = originalFrigateMock
+    const { _resetMqttConnectionState } = await import('./mqtt')
+    _resetMqttConnectionState()
+  })
+
+  it('returns not_configured before startMqttSubscriber is called', async () => {
+    const { getMqttConnectionState } = await import('./mqtt')
+    expect(getMqttConnectionState()).toBe('not_configured')
+  })
+
+  it('returns not_configured when MQTT_URL is absent', async () => {
+    delete process.env.MQTT_URL
+    delete process.env.FRIGATE_MOCK
+    const { startMqttSubscriber, getMqttConnectionState } =
+      await import('./mqtt')
+    startMqttSubscriber()
+    expect(getMqttConnectionState()).toBe('not_configured')
+  })
+
+  it('returns not_configured when FRIGATE_MOCK is enabled', async () => {
+    process.env.MQTT_URL = 'mqtt://localhost:1883'
+    process.env.FRIGATE_MOCK = 'true'
+    const { startMqttSubscriber, getMqttConnectionState } =
+      await import('./mqtt')
+    startMqttSubscriber()
+    expect(getMqttConnectionState()).toBe('not_configured')
+  })
+
+  it('returns disconnected after startMqttSubscriber connects but before broker acks', async () => {
+    process.env.MQTT_URL = 'mqtt://localhost:1883'
+    delete process.env.FRIGATE_MOCK
+    const { startMqttSubscriber, getMqttConnectionState } =
+      await import('./mqtt')
+    startMqttSubscriber()
+    expect(getMqttConnectionState()).toBe('disconnected')
+  })
+
+  it('returns connected after the connect event fires', async () => {
+    process.env.MQTT_URL = 'mqtt://localhost:1883'
+    delete process.env.FRIGATE_MOCK
+    const { startMqttSubscriber, getMqttConnectionState } =
+      await import('./mqtt')
+    startMqttSubscriber()
+
+    const mockClient = await getMockClient()
+    const connectHandler = mockClient.on.mock.calls.find(
+      (call: [string, (...args: unknown[]) => void]) => call[0] === 'connect',
+    )?.[1]
+    connectHandler()
+
+    expect(getMqttConnectionState()).toBe('connected')
+  })
+
+  it('returns disconnected after the close event fires', async () => {
+    process.env.MQTT_URL = 'mqtt://localhost:1883'
+    delete process.env.FRIGATE_MOCK
+    const { startMqttSubscriber, getMqttConnectionState } =
+      await import('./mqtt')
+    startMqttSubscriber()
+
+    const mockClient = await getMockClient()
+    const connectHandler = mockClient.on.mock.calls.find(
+      (call: [string, (...args: unknown[]) => void]) => call[0] === 'connect',
+    )?.[1]
+    connectHandler()
+    expect(getMqttConnectionState()).toBe('connected')
+
+    const closeHandler = mockClient.on.mock.calls.find(
+      (call: [string, (...args: unknown[]) => void]) => call[0] === 'close',
+    )?.[1]
+    closeHandler()
+    expect(getMqttConnectionState()).toBe('disconnected')
   })
 })
 
