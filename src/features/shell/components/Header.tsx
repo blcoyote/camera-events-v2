@@ -5,6 +5,7 @@ import ThemeToggle from './ThemeToggle'
 import { AvatarMenu } from './AvatarMenu'
 import { NavDrawer } from './NavDrawer'
 import { useStandaloneAuth } from '#/features/auth/hooks/useStandaloneAuth'
+import { useSessionRefresh } from '#/features/auth/hooks/useSessionRefresh'
 import type { SessionData } from '#/features/shared/server/session'
 
 interface NavLink {
@@ -52,6 +53,7 @@ export default function Header() {
   const { user } = useRouteContext({ from: '__root__' })
   const state = getHeaderAuthState(user)
   const { onClick: onSignIn } = useStandaloneAuth(state.signInHref)
+  useSessionRefresh(!!user)
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const hamburgerRef = useRef<HTMLButtonElement>(null)
   const openedByKeyboard = useRef(false)
