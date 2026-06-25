@@ -28,6 +28,15 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
+  deploy-test:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    environment: test
+    steps:
+      - name: Trigger test deploy webhook
+        run: |
+          curl -fsS -X POST "${{ vars.TEST_DEPLOY_WEBHOOK_URL }}"
+
   promote:
     if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
