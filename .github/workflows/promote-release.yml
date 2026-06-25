@@ -28,7 +28,7 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  deploy-test:
+  promote-to-test:
     if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     environment: test
@@ -37,10 +37,11 @@ jobs:
         run: |
           curl -fsS -X POST "${{ vars.TEST_DEPLOY_WEBHOOK_URL }}"
 
-  promote:
+  promote-to-prod:
     if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     environment: release
+    needs: promote-to-test
     steps:
       - name: Resolve source SHA
         id: resolve
