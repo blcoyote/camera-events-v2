@@ -365,9 +365,29 @@ bd close <id>         # Complete work
 
 - Use `bd` for ALL task tracking — do NOT use TodoWrite, TaskCreate, or markdown TODO lists
 - Run `bd prime` for detailed command reference and session close protocol
-- Use `bd remember` for persistent knowledge — do NOT use MEMORY.md files
+- Use `bd` for issues/tasks ONLY. Do NOT use `bd remember` for persistent knowledge — all durable memory goes to the Obsidian vault at `docs/memory/` (see "Long-Term Memory Vault" below). Do NOT use MEMORY.md files.
 
 **Architecture in one line:** issues live in a local Dolt DB; sync uses `refs/dolt/data` on your git remote; `.beads/issues.jsonl` is a passive export. See https://github.com/gastownhall/beads/blob/main/docs/SYNC_CONCEPTS.md for details and anti-patterns.
+
+## Long-Term Memory Vault
+
+This project keeps an **Obsidian vault** at `docs/memory/` for durable, explanatory
+knowledge — architectural rationale, the _why_ behind non-obvious code, platform
+gotchas, decision records, and the project glossary.
+
+- **`bd` vs the vault:** use `bd` for issues (actionable, short-lived task tracking)
+  and the vault for durable knowledge (explanatory, long-lived). A bd issue says
+  _"fix the iOS push race"_; a vault note explains _why iOS standalone PWAs drop the
+  session cookie and how we work around it_. This does not contradict the bd rule
+  above — the vault is not a `MEMORY.md` and is not for task tracking.
+- **When you learn something durable** about this project that isn't already in the
+  code, git history, or this file, add an atomic note to the vault rather than
+  letting it evaporate at session end. Start from `docs/memory/Home.md` (the map of
+  content) to find or create the right place; follow the conventions in
+  `docs/memory/README.md` (one idea per note, link with `[[wikilinks]]`, frontmatter
+  via `docs/memory/templates/memory-note.md`).
+- **Git:** notes are committed (shared); the per-user `docs/memory/.obsidian/` config
+  is gitignored.
 
 ## Session Completion
 
