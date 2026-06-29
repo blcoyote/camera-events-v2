@@ -13,7 +13,10 @@ import { NotFound } from './-not-found'
 
 import appCss from '../styles.css?url'
 
-const THEME_INIT_SCRIPT = `(function(){try{var stored=window.localStorage.getItem('theme');var mode=(stored==='light'||stored==='dark'||stored==='auto')?stored:'auto';var prefersDark=window.matchMedia('(prefers-color-scheme: dark)').matches;var resolved=mode==='auto'?(prefersDark?'dark':'light'):mode;var root=document.documentElement;root.classList.remove('light','dark');root.classList.add(resolved);if(mode==='auto'){root.removeAttribute('data-theme')}else{root.setAttribute('data-theme',mode)}root.style.colorScheme=resolved;var tc=document.querySelector('meta[name="theme-color"]');if(tc){tc.setAttribute('content',resolved==='dark'?'#0d1f23':'#173a40')}}catch(e){}})();`
+// Blocking inline script: applies theme (mode) + palette before first paint to
+// prevent FOUC. The palette->theme-color map is kept in sync with THEME_COLOR_MAP
+// in src/features/shared/hooks/themeColor.ts.
+const THEME_INIT_SCRIPT = `(function(){try{var stored=window.localStorage.getItem('theme');var mode=(stored==='light'||stored==='dark'||stored==='auto')?stored:'auto';var sp=window.localStorage.getItem('palette');var palette=(sp==='ocean'||sp==='sunset'||sp==='slate')?sp:'ocean';var prefersDark=window.matchMedia('(prefers-color-scheme: dark)').matches;var resolved=mode==='auto'?(prefersDark?'dark':'light'):mode;var root=document.documentElement;root.classList.remove('light','dark');root.classList.add(resolved);if(mode==='auto'){root.removeAttribute('data-theme')}else{root.setAttribute('data-theme',mode)}if(palette==='ocean'){root.removeAttribute('data-palette')}else{root.setAttribute('data-palette',palette)}root.style.colorScheme=resolved;var colors={ocean:{light:'#173a40',dark:'#0d1f23'},sunset:{light:'#43281a',dark:'#0f0c0a'},slate:{light:'#1f2933',dark:'#0d0f12'}};var tc=document.querySelector('meta[name="theme-color"]');if(tc){tc.setAttribute('content',(colors[palette]||colors.ocean)[resolved])}}catch(e){}})();`
 
 interface RouterContext {
   user: SessionData | null
@@ -94,7 +97,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <HeadContent />
       </head>
-      <body className="font-sans antialiased wrap-anywhere selection:bg-[rgba(79,184,178,0.24)]">
+      <body className="font-sans antialiased wrap-anywhere selection:bg-(--selection-bg)">
         <a
           href="#main-content"
           className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-100 focus:rounded-lg focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-gray-900 focus:shadow-lg"

@@ -6,6 +6,8 @@ import {
 } from '#/features/shared/hooks/useEventLimit'
 import { useTheme } from '#/features/shared/hooks/useTheme'
 import type { ThemeMode } from '#/features/shared/hooks/useTheme'
+import { usePalette } from '#/features/shared/hooks/usePalette'
+import type { Palette } from '#/features/shared/hooks/usePalette'
 import { NotificationSettings } from '../components/NotificationSettings'
 
 export function getSettingsContent(): { heading: string; description: string } {
@@ -21,16 +23,30 @@ const themeOptions: { value: ThemeMode; label: string }[] = [
   { value: 'auto', label: 'System' },
 ]
 
+const paletteOptions: { value: Palette; label: string }[] = [
+  { value: 'ocean', label: 'Ocean' },
+  { value: 'sunset', label: 'Sunset' },
+  { value: 'slate', label: 'Slate' },
+]
+
+const pillClass = (active: boolean) =>
+  `inline-flex min-h-11 items-center rounded-full border px-4 py-2 text-sm font-semibold transition hover:-translate-y-0.5 ${
+    active
+      ? 'border-(--accent-soft-border) bg-(--accent-soft-bg) text-(--lagoon-deep)'
+      : 'border-(--chip-line) bg-(--chip-bg) text-(--sea-ink-soft) hover:text-(--sea-ink)'
+  }`
+
 export function SettingsPage() {
   const content = getSettingsContent()
   const [eventLimit, setEventLimit] = useEventLimit()
   const { mode, setTheme } = useTheme()
+  const { palette, setPalette } = usePalette()
 
   return (
     <main id="main-content" className="page-wrap px-4 pb-8 pt-6 sm:pt-14">
       <section className="island-shell rise-in relative overflow-hidden rounded-4xl px-5 py-6 sm:px-8 sm:py-8">
-        <div className="pointer-events-none absolute -left-20 -top-24 h-56 w-56 rounded-full bg-[radial-gradient(circle,rgba(79,184,178,0.32),transparent_66%)]" />
-        <div className="pointer-events-none absolute -bottom-20 -right-20 h-56 w-56 rounded-full bg-[radial-gradient(circle,rgba(47,106,74,0.18),transparent_66%)]" />
+        <div className="pointer-events-none absolute -left-20 -top-24 h-56 w-56 rounded-full bg-[radial-gradient(circle,var(--hero-a),transparent_66%)]" />
+        <div className="pointer-events-none absolute -bottom-20 -right-20 h-56 w-56 rounded-full bg-[radial-gradient(circle,var(--hero-b),transparent_66%)]" />
         <p className="island-kicker mb-1">Account</p>
         <h1 className="display-title mb-0 max-w-3xl text-2xl leading-tight font-bold tracking-tight text-(--sea-ink) sm:text-4xl">
           {content.heading}
@@ -52,11 +68,26 @@ export function SettingsPage() {
                 type="button"
                 onClick={() => setTheme(opt.value)}
                 aria-pressed={mode === opt.value}
-                className={`inline-flex min-h-11 items-center rounded-full border px-4 py-2 text-sm font-semibold transition hover:-translate-y-0.5 ${
-                  mode === opt.value
-                    ? 'border-[rgba(50,143,151,0.4)] bg-[rgba(79,184,178,0.18)] text-(--lagoon-deep)'
-                    : 'border-(--chip-line) bg-(--chip-bg) text-(--sea-ink-soft) hover:text-(--sea-ink)'
-                }`}
+                className={pillClass(mode === opt.value)}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </fieldset>
+
+        <fieldset className="mt-6">
+          <legend className="text-sm font-medium text-(--sea-ink)">
+            Color palette
+          </legend>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {paletteOptions.map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => setPalette(opt.value)}
+                aria-pressed={palette === opt.value}
+                className={pillClass(palette === opt.value)}
               >
                 {opt.label}
               </button>
