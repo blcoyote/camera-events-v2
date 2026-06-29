@@ -21,6 +21,7 @@ this vault is meant to be used.
 
 - [[architecture/system-overview]]
 - [[architecture/push-pipeline]]
+- [[architecture/theming]] — token-driven; how to add swappable color themes
 
 ## 🧠 Decisions
 
