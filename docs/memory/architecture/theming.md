@@ -37,9 +37,10 @@ The app has **two independent axes**:
    from `THEME_COLOR_MAP` — DOM is the shared source of truth, so the two stores
    never race on the tag.
 4. **FOUC prevention.** The blocking inline `THEME_INIT_SCRIPT` in `__root.tsx`
-   reads both localStorage keys and sets the class + `data-palette` + colorScheme
-   - meta theme-color **before first paint**. Its palette→chrome-color map must
-     stay in sync with `THEME_COLOR_MAP`. See [[gotchas/ssr-hydration-browser-globals]].
+   reads both localStorage keys and sets the resolved class, `data-palette`,
+   `colorScheme`, and `<meta theme-color>` **before first paint**. Its
+   palette→chrome-color map must stay in sync with `THEME_COLOR_MAP`. See
+   [[gotchas/ssr-hydration-browser-globals]].
 5. **UI entry points:** `ThemeToggle.tsx` (header, mode only) and two pickers on
    `SettingsPage.tsx` (Theme + Color palette).
 
