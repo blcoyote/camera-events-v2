@@ -21,3 +21,8 @@ public/sw.js
 .dolt/
 *.db
 .beads-credential-key
+
+# Obsidian memory vault: keep notes, ignore per-user UI/config state
+docs/memory/.obsidian/
+docs/memory/.trash/
+docs/memory/.obsidian-*
