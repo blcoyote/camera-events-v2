@@ -49,9 +49,8 @@ describe('NavDrawer', () => {
     expect(dialog.getAttribute('aria-label')).toBe('Navigation')
   })
 
-  it('renders all nav links when open', () => {
+  it('renders all four nav links when open', () => {
     render(<NavDrawer isOpen={true} onClose={vi.fn()} />)
-    expect(screen.getByText('Dashboard')).toBeTruthy()
     expect(screen.getByText('Cameras')).toBeTruthy()
     expect(screen.getByText('Events')).toBeTruthy()
     expect(screen.getByText('Favorites')).toBeTruthy()
@@ -60,9 +59,6 @@ describe('NavDrawer', () => {
 
   it('nav links point to the correct routes', () => {
     render(<NavDrawer isOpen={true} onClose={vi.fn()} />)
-    expect(
-      screen.getByText('Dashboard').closest('a')?.getAttribute('href'),
-    ).toBe('/dashboard')
     expect(screen.getByText('Cameras').closest('a')?.getAttribute('href')).toBe(
       '/cameras',
     )
