@@ -25,6 +25,7 @@ export function getHeaderAuthState(user: SessionData | null): {
 } {
   const navLinks: NavLink[] = user
     ? [
+        { label: 'Dashboard', to: '/dashboard' },
         { label: 'Cameras', to: '/cameras' },
         { label: 'Events', to: '/camera-events' },
         { label: 'Favorites', to: '/favorites' },

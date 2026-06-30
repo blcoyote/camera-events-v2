@@ -25,16 +25,17 @@ describe('getHeaderAuthState', () => {
     expect(state.avatarUrl).toBeNull()
   })
 
-  it('returns showSignIn=false and 4 nav links when user is present', () => {
+  it('returns showSignIn=false and 5 nav links when user is present', () => {
     const state = getHeaderAuthState(makeUser())
     expect(state.showSignIn).toBe(false)
-    expect(state.navLinks).toHaveLength(4)
+    expect(state.navLinks).toHaveLength(5)
   })
 
-  it('navLinks contains entries for /cameras, /camera-events, /favorites, /settings', () => {
+  it('navLinks contains entries for /dashboard, /cameras, /camera-events, /favorites, /settings', () => {
     const state = getHeaderAuthState(makeUser())
     const targets = state.navLinks.map((link) => link.to)
     expect(targets).toEqual([
+      '/dashboard',
       '/cameras',
       '/camera-events',
       '/favorites',
