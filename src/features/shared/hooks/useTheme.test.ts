@@ -39,7 +39,6 @@ beforeEach(async () => {
   })
 
   document.documentElement.className = ''
-  document.documentElement.removeAttribute('data-theme')
   document.documentElement.style.colorScheme = ''
 
   const mod = await import('./useTheme')

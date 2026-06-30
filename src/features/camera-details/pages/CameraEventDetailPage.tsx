@@ -105,7 +105,7 @@ export function CameraEventDetailPage({
           </p>
           <Link
             to="/camera-events"
-            className="inline-flex min-h-11 items-center rounded-full border border-(--accent-strong-border) bg-(--accent-strong-bg) px-5 py-2.5 text-sm font-semibold text-(--lagoon-deep) no-underline transition hover:-translate-y-0.5 hover:bg-(--accent-strong-hover-bg)"
+            className="inline-flex min-h-11 items-center rounded-full border border-(--accent-muted-border) bg-(--accent-muted-bg) px-5 py-2.5 text-sm font-semibold text-(--lagoon-deep) no-underline transition hover:-translate-y-0.5 hover:bg-(--accent-muted-hover-bg)"
           >
             Back to Camera Events
           </Link>

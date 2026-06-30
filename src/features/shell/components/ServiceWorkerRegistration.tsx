@@ -131,7 +131,7 @@ export function ServiceWorkerRegistration() {
         <button
           type="button"
           onClick={handleUpdate}
-          className="inline-flex min-h-11 items-center rounded-full border border-(--accent-soft-border) bg-(--accent-soft-bg) px-4 py-2 text-sm font-semibold text-(--lagoon-deep) transition hover:-translate-y-0.5 hover:bg-(--accent-soft-hover-bg)"
+          className="inline-flex min-h-11 items-center rounded-full border border-(--accent-emphasis-border) bg-(--accent-emphasis-bg) px-4 py-2 text-sm font-semibold text-(--lagoon-deep) transition hover:-translate-y-0.5 hover:bg-(--accent-emphasis-hover-bg)"
         >
           Update now
         </button>

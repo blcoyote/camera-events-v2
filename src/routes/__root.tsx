@@ -9,14 +9,17 @@ import Header from '#/features/shell/components/Header'
 import { ServiceWorkerRegistration } from '#/features/shell/components/ServiceWorkerRegistration'
 import { getCurrentUserFn } from '#/features/auth/server/auth'
 import type { SessionData } from '#/features/shared/server/session'
+import { THEME_COLOR_MAP, PALETTES } from '#/features/shared/hooks/themeColor'
 import { NotFound } from './-not-found'
 
 import appCss from '../styles.css?url'
 
 // Blocking inline script: applies theme (mode) + palette before first paint to
-// prevent FOUC. The palette->theme-color map is kept in sync with THEME_COLOR_MAP
-// in src/features/shared/hooks/themeColor.ts.
-const THEME_INIT_SCRIPT = `(function(){try{var stored=window.localStorage.getItem('theme');var mode=(stored==='light'||stored==='dark'||stored==='auto')?stored:'auto';var sp=window.localStorage.getItem('palette');var palette=(sp==='ocean'||sp==='sunset'||sp==='slate')?sp:'ocean';var prefersDark=window.matchMedia('(prefers-color-scheme: dark)').matches;var resolved=mode==='auto'?(prefersDark?'dark':'light'):mode;var root=document.documentElement;root.classList.remove('light','dark');root.classList.add(resolved);if(mode==='auto'){root.removeAttribute('data-theme')}else{root.setAttribute('data-theme',mode)}if(palette==='ocean'){root.removeAttribute('data-palette')}else{root.setAttribute('data-palette',palette)}root.style.colorScheme=resolved;var colors={ocean:{light:'#173a40',dark:'#0d1f23'},sunset:{light:'#43281a',dark:'#0f0c0a'},slate:{light:'#1f2933',dark:'#0d0f12'}};var tc=document.querySelector('meta[name="theme-color"]');if(tc){tc.setAttribute('content',(colors[palette]||colors.ocean)[resolved])}}catch(e){}})();`
+// prevent FOUC. The palette list and theme-color map are interpolated from
+// PALETTES / THEME_COLOR_MAP so there is a single source of truth (no hand-kept
+// duplicate). Mode is applied via the `.dark`/`.light` class; the resolved class
+// is what styles.css keys off (no `data-theme` attribute is needed).
+const THEME_INIT_SCRIPT = `(function(){try{var stored=window.localStorage.getItem('theme');var mode=(stored==='light'||stored==='dark'||stored==='auto')?stored:'auto';var sp=window.localStorage.getItem('palette');var palettes=${JSON.stringify(PALETTES)};var palette=palettes.indexOf(sp)>=0?sp:'ocean';var prefersDark=window.matchMedia('(prefers-color-scheme: dark)').matches;var resolved=mode==='auto'?(prefersDark?'dark':'light'):mode;var root=document.documentElement;root.classList.remove('light','dark');root.classList.add(resolved);if(palette==='ocean'){root.removeAttribute('data-palette')}else{root.setAttribute('data-palette',palette)}root.style.colorScheme=resolved;var colors=${JSON.stringify(THEME_COLOR_MAP)};var tc=document.querySelector('meta[name="theme-color"]');if(tc){tc.setAttribute('content',(colors[palette]||colors.ocean)[resolved])}}catch(e){}})();`
 
 interface RouterContext {
   user: SessionData | null

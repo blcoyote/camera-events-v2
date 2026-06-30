@@ -18,12 +18,14 @@ The app has **two independent axes**:
 
 1. **Tokens are the single source of truth.** `src/styles.css` defines ~20 base
    brand/surface CSS custom properties (`--sea-ink`, `--lagoon`, `--surface`,
-   `--bg-base`, …) plus a **derived layer** (`--accent-soft-bg`,
-   `--accent-strong-bg`, `--hero-a/b/c`, `--shadow-island/card/…`, `--selection-bg`,
+   `--bg-base`, …) plus a **derived layer** (`--accent-emphasis-bg`,
+   `--accent-muted-bg`, `--hero-a/b/c`, `--shadow-island/card/…`, `--selection-bg`,
    `--link-underline`, …) built with `color-mix()` off the base tokens. Because
    custom-property substitution is lazy, the derived layer **auto-follows** any
    base-token override — so it's defined once and works for every palette × mode.
-   Components consume tokens via Tailwind's `bg-(--accent-soft-bg)` syntax.
+   Components consume tokens via Tailwind's `bg-(--accent-emphasis-bg)` syntax.
+   (Accent fills are named by visual weight: `emphasis` = the heavier fill for
+   selected/active chips; `muted` = the lighter fill for secondary buttons.)
 2. **Mode is a class, palette is an attribute** on `<html>`:
    - `:root` → ocean light (default). `:root.dark` → dark overrides (defined once).
    - `:root[data-palette='sunset']` + `:root[data-palette='sunset'].dark` → palette
@@ -34,12 +36,14 @@ The app has **two independent axes**:
    `useSyncExternalStore` stores (persist `localStorage['theme']` /
    `['palette']`). Both call `syncThemeColorMeta()` in `themeColor.ts`, which
    reads the current `<html>` class + `data-palette` and sets `<meta theme-color>`
-   from `THEME_COLOR_MAP` — DOM is the shared source of truth, so the two stores
-   never race on the tag.
+   from `THEME_COLOR_MAP`. Deriving from the DOM (not store-local values) keeps
+   the write idempotent, so the two stores produce the same value whichever
+   writes last.
 4. **FOUC prevention.** The blocking inline `THEME_INIT_SCRIPT` in `__root.tsx`
-   reads both localStorage keys and sets the resolved class, `data-palette`,
-   `colorScheme`, and `<meta theme-color>` **before first paint**. Its
-   palette→chrome-color map must stay in sync with `THEME_COLOR_MAP`. See
+   reads both localStorage keys and sets the resolved `.dark`/`.light` class,
+   `data-palette`, `colorScheme`, and `<meta theme-color>` **before first paint**.
+   Its palette list and chrome-color map are **interpolated from `PALETTES` /
+   `THEME_COLOR_MAP`** (single source of truth — no hand-kept duplicate). See
    [[gotchas/ssr-hydration-browser-globals]].
 5. **UI entry points:** `ThemeToggle.tsx` (header, mode only) and two pickers on
    `SettingsPage.tsx` (Theme + Color palette).
@@ -67,11 +71,11 @@ JS-required PWA (the FOUC script always runs).
    and `:root[data-palette='NAME'].dark` (dark), each overriding the ~19 base
    tokens. The derived layer follows automatically — don't touch it.
 2. Add `'NAME'` to the `Palette` union + `PALETTES` array and a `THEME_COLOR_MAP`
-   entry in `themeColor.ts`.
-3. Add the same entry to the inline map in `THEME_INIT_SCRIPT` (`__root.tsx`).
-4. Add `{ value: 'NAME', label: '…' }` to `paletteOptions` in `SettingsPage.tsx`.
-5. Tests (TDD): the `usePalette.test.ts` / `SettingsPage.test.tsx` patterns cover
-   the wiring; new palettes are pure data.
+   entry in `themeColor.ts`. The FOUC script picks both up automatically (it's
+   generated from `PALETTES` / `THEME_COLOR_MAP`), so `__root.tsx` needs no edit.
+3. Add `{ value: 'NAME', label: '…' }` to `paletteOptions` in `SettingsPage.tsx`.
+4. Tests (TDD): the `usePalette.test.ts` / `SettingsPage.test.tsx` / `themeColor.test.ts`
+   patterns cover the wiring; new palettes are pure data.
 
 ## Debt status (resolved 2026-06)
 

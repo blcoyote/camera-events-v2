@@ -44,25 +44,36 @@
 
   /* ─ Derived semantic tokens — defined once; follow palette + mode because they
      reference the base tokens above (custom-property substitution is lazy). ─ */
-  --accent-soft-bg: color-mix(in srgb, var(--lagoon) 18%, transparent);
-  --accent-soft-border: color-mix(in srgb, var(--lagoon-deep) 40%, transparent);
-  --accent-strong-bg: color-mix(in srgb, var(--lagoon) 14%, transparent);
-  --accent-strong-border: color-mix(
+  --accent-emphasis-bg: color-mix(in srgb, var(--lagoon) 18%, transparent);
+  --accent-emphasis-border: color-mix(
+    in srgb,
+    var(--lagoon-deep) 40%,
+    transparent
+  );
+  --accent-muted-bg: color-mix(in srgb, var(--lagoon) 14%, transparent);
+  --accent-muted-border: color-mix(
     in srgb,
     var(--lagoon-deep) 30%,
     transparent
   );
   --accent-hover-bg: color-mix(in srgb, var(--lagoon) 8%, transparent);
   /* Hover fills for already-accented buttons (deeper than their resting fill). */
-  --accent-strong-hover-bg: color-mix(in srgb, var(--lagoon) 24%, transparent);
-  --accent-soft-hover-bg: color-mix(in srgb, var(--lagoon) 28%, transparent);
+  --accent-muted-hover-bg: color-mix(in srgb, var(--lagoon) 24%, transparent);
+  --accent-emphasis-hover-bg: color-mix(
+    in srgb,
+    var(--lagoon) 28%,
+    transparent
+  );
   --selection-bg: color-mix(in srgb, var(--lagoon) 24%, transparent);
   --link-underline: color-mix(in srgb, var(--lagoon-deep) 40%, transparent);
   --nav-underline-tip: color-mix(in srgb, var(--lagoon) 30%, white);
 
-  /* Mode-varying derived tokens. Defined once here (light) and once under
-     :root.dark below; shared across all palettes since they reference the base
-     tokens. In ocean light they resolve to the original literals exactly. */
+  /* Hero radial glows for page backgrounds + the page corner-glow divs.
+     --hero-a/--hero-b vary by mode (lighter alpha in dark, overridden under
+     :root.dark); --hero-c does not (it only tracks --lagoon, so no dark
+     override is needed). In ocean these equal the original body-background
+     literals; the corner-glow divs — formerly slightly lighter at 0.32/0.18 —
+     are intentionally unified onto --hero-a/--hero-b. */
   --hero-a: color-mix(in srgb, var(--lagoon) 36%, transparent);
   --hero-b: color-mix(in srgb, var(--palm) 20%, transparent);
   --hero-c: color-mix(in srgb, var(--lagoon) 10%, transparent);
@@ -112,7 +123,8 @@
 
   --hero-a: color-mix(in srgb, var(--lagoon) 10%, transparent);
   --hero-b: color-mix(in srgb, var(--palm) 6%, transparent);
-  --hero-c: color-mix(in srgb, var(--lagoon) 10%, transparent);
+  /* --hero-c is not overridden: it already tracks --lagoon and its alpha (10%)
+     is the same in both modes. */
 
   --bg-glint: rgba(255, 255, 255, 0.4);
   --bg-glow-lagoon: color-mix(in srgb, var(--lagoon) 10%, transparent);
