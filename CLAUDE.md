@@ -12,6 +12,7 @@ Camera Events v2 is a self-hosted PWA for browsing and monitoring [Frigate NVR](
 
 These rules govern which model does what. They exist so that the expensive reasoning model is reserved for thinking, and the cheaper/faster model does the mechanical work — without quality loss.
 
+- **These are defaults; the user can override them at any time.** If the user directs model usage for a task — e.g. "plan this with Sonnet", "implement this with Opus", "don't delegate", "do it all yourself" — that instruction takes precedence over the Opus-plans/Sonnet-implements split below for that work. Honor the override without re-arguing the default.
 - **Opus plans. Sonnet implements.** Opus is the planning model: use it for understanding the codebase, designing the approach, decomposing work, reviewing diffs, and making architectural or security trade-off decisions. Delegate the actual implementation of each work chunk to a Sonnet subagent (via the `Agent` tool with `model: "sonnet"`, or a Workflow with `model: 'sonnet'` agents).
 - **Decompose plans into Sonnet-sized chunks.** A plan is not done until it is broken into work chunks each small and self-contained enough that a Sonnet subagent can complete it adequately on its own. If a chunk still requires non-trivial design judgement, ambiguous decisions, or holding more context than fits comfortably, it is too big — split it further or resolve the open questions in the plan first.
 - **What makes a chunk Sonnet-ready:**
