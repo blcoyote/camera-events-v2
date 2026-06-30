@@ -11,7 +11,7 @@ vi.mock('#/features/shared/components/EventCard', () => ({
   EventCard: (props: unknown) => mockEventCard(props),
 }))
 
-vi.mock('./FilterPill', () => ({
+vi.mock('#/features/shared/components/FilterPill', () => ({
   FilterPill: () => null,
 }))
 

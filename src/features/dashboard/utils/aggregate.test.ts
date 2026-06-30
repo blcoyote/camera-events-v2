@@ -4,6 +4,7 @@ import {
   aggregateByLabel,
   aggregateByDay,
   totalEventCount,
+  filterSummaryByLabel,
 } from './aggregate'
 import type { FrigateEventSummary } from '#/features/shared/server/frigate/types'
 
@@ -28,6 +29,29 @@ describe('totalEventCount', () => {
 
   it('sums all counts', () => {
     expect(totalEventCount([item({ count: 3 }), item({ count: 4 })])).toBe(7)
+  })
+})
+
+describe('filterSummaryByLabel', () => {
+  it('returns the summary unchanged when label is null', () => {
+    const summary = [item({ label: 'person' }), item({ label: 'car' })]
+    expect(filterSummaryByLabel(summary, null)).toBe(summary)
+  })
+
+  it('keeps only rows matching the label', () => {
+    const summary = [
+      item({ label: 'person', count: 3 }),
+      item({ label: 'car', count: 5 }),
+      item({ label: 'person', count: 1 }),
+    ]
+    expect(filterSummaryByLabel(summary, 'person')).toEqual([
+      item({ label: 'person', count: 3 }),
+      item({ label: 'person', count: 1 }),
+    ])
+  })
+
+  it('returns [] when no rows match', () => {
+    expect(filterSummaryByLabel([item({ label: 'car' })], 'person')).toEqual([])
   })
 })
 
