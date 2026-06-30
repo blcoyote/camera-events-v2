@@ -29,23 +29,27 @@ URL is `FRIGATE_URL`; docs at https://docs.frigate.video/integrations/api/.
 | `retainEvent`/`unretainEvent`   | `POST`/`DELETE …/retain`           | ✅ favorites only  |
 | `getLatestSnapshot`             | `GET /api/{camera}/latest.jpg`     | ✅ cameras grid    |
 | `getConfig` / `getCameras`      | `GET /api/config`                  | ✅ camera list     |
-| `getEventSummary`               | `GET /api/events/summary`          | ✅ **dashboard**   |
-| `getStats`                      | `GET /api/stats`                   | ✅ **dashboard**   |
-| `getReviewSummary`              | `GET /api/review/summary`          | ✅ **dashboard**   |
+| `getEventSummary`               | `GET /api/events/summary`          | ❌ wrapped, unused |
+| `getStats`                      | `GET /api/stats`                   | ❌ wrapped, unused |
+| `getReviewSummary`              | `GET /api/review/summary`          | ❌ wrapped, unused |
 | `getReviews`/`getReviewByEvent` | `GET /api/review[/event/{id}]`     | ❌ wrapped, unused |
 | `getTimeline`                   | `GET /api/timeline`                | ❌ wrapped, unused |
 
-The summary/stats/review-summary trio was wrapped-but-unused until the activity
-[[architecture/dashboard]] feature lit them up. `getReviews`/`getTimeline`
-remain wrapped but unused — cheap starting points for new features.
+The summary/stats/review-summary/review/timeline functions are wrapped but no UI
+consumes them — cheap starting points for new features. (An activity dashboard
+built on the first three was tried and reverted; notably
+`/api/events/summary` is **all-time + all-label**, and `/api/review/summary`
+returned nothing on our instance — see "gotchas" below.)
 
 ## Untapped Frigate capabilities (not wrapped at all)
 
 Notable endpoints the client doesn't touch yet, by value to this app:
 
 - **Review system as a feed** — `GET /api/review` distinguishes `alert` vs
-  `detection` [[glossary|severity]] and supports `set_reviewed`. A far better
-  signal-to-noise feed than raw events for a monitoring app.
+  `detection` severity and supports `set_reviewed`. A far better signal-to-noise
+  feed than raw events for a monitoring app. (Caveat: `/api/review/summary`
+  returned empty on our test instance — confirm the review/alert pipeline is
+  actually producing data before building on it.)
 - **Semantic / AI search** — `GET /api/events/search` (text or image embeddings;
   requires Semantic Search enabled in Frigate config / Jina models). Detect
   availability and degrade gracefully — it's config-gated.
@@ -64,14 +68,18 @@ Notable endpoints the client doesn't touch yet, by value to this app:
   already exists — check `client.ts` before assuming an endpoint needs wrapping.
 - `mock-client.ts` must stay in parity with `client.ts`, so any new endpoint
   works under `FRIGATE_MOCK=true` with no live Frigate. It already returns data
-  for stats/summary/review-summary.
-- Storage values in `GET /api/stats` `service.storage` are in **MB**, not bytes
-  (see `formatStorageMb`). `service.latest_version` can be `"unknown"` when
-  Frigate's version check is disabled — don't treat that as "update available".
+  for stats/summary/review-summary — but **mock parity hid that
+  `/api/review/summary` is empty on the real instance**, which is why a dashboard
+  built against it looked fine in mock and showed no 24h data in production.
+- `GET /api/events/summary` is **all-time and all-label** (its only params are
+  `timezone`/`has_clip`/`has_snapshot`) — any "recent" or per-label scoping must
+  be done in our own code.
+- Storage values in `GET /api/stats` `service.storage` are in **MB**, not bytes.
+  `service.latest_version` can be `"unknown"` when Frigate's version check is
+  disabled — don't treat that as "update available".
 
 ## Related
 
-- [[architecture/dashboard]]
 - [[architecture/system-overview]]
 - [[glossary]]
 - [[Home]]

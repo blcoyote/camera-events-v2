@@ -23,7 +23,6 @@ this vault is meant to be used.
 - [[architecture/push-pipeline]]
 - [[architecture/theming]] — token-driven; how to add swappable color themes
 - [[architecture/frigate-http-api]] — full API surface; what we use vs. untapped
-- [[architecture/dashboard]] — activity + system-health page
 
 ## 🧠 Decisions
 
