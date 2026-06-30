@@ -35,27 +35,7 @@ config, no charting dependency.
   (uptime/storage-MB/pct/day-label), `getDashboardPageState.ts`
   (ready|empty|error, mirrors `getCamerasPageState`). Components stay thin.
 - Reuses shared `eventFormatting` (`formatCameraName`, `formatLabelName`,
-  `getLabelDotColor`) and the shared `FilterPill` (moved out of `camera-events`
-  when the dashboard became its second consumer — features can't import each
-  other) so labels/colors/pills match the events list.
-
-## Scoping — why the counts aren't "all events"
-
-`GET /api/events/summary` is **all-time and all-label** (its only params are
-`timezone`/`has_clip`/`has_snapshot`), so the raw numbers are huge and dominated
-by cars/motion. We scope in our own code, two ways:
-
-- **Time:** windowed to `DASHBOARD_WINDOW_DAYS` (30) **server-side in the
-  handler** via `dateWindow.ts` (`recentDayCutoff` + `filterSummaryToRecentDays`,
-  UTC, lexicographic `YYYY-MM-DD` compare). Done server-side so it's computed
-  once and dehydrated — no `new Date()` during render (SSR-safe).
-- **Label:** the page has type filter pills **defaulting to `person`** (the app's
-  primary signal). Headline + by-camera + by-day follow the selection
-  (`filterSummaryByLabel`); the "Events by type" chart always shows the full
-  split so the distribution stays visible. Client-side + interactive.
-
-The "Alerts/Detections 24h" tiles are separate — they come from the review
-summary and are already 24h + severity-scoped, so they're left as-is.
+  `getLabelDotColor`) so labels/colors match the events list.
 
 ## Why it matters
 

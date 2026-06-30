@@ -1,15 +1,12 @@
-import { useState } from 'react'
 import { Activity, Bell, Camera, Gauge } from 'lucide-react'
 import type { FrigateResult } from '#/features/shared/server/frigate/config'
 import type { DashboardData } from '#/features/dashboard/types'
-import { DASHBOARD_WINDOW_DAYS } from '#/features/dashboard/types'
 import { getDashboardPageState } from '#/features/dashboard/utils/getDashboardPageState'
 import {
   aggregateByCamera,
   aggregateByLabel,
   aggregateByDay,
   totalEventCount,
-  filterSummaryByLabel,
 } from '#/features/dashboard/utils/aggregate'
 import { summarizeSystemHealth } from '#/features/dashboard/utils/systemHealth'
 import { formatDayLabel } from '#/features/dashboard/utils/format'
@@ -17,14 +14,11 @@ import { StatTile } from '#/features/dashboard/components/StatTile'
 import { BarList } from '#/features/dashboard/components/BarList'
 import type { BarListItem } from '#/features/dashboard/components/BarList'
 import { SystemHealthCard } from '#/features/dashboard/components/SystemHealthCard'
-import { FilterPill } from '#/features/shared/components/FilterPill'
 import {
   formatCameraName,
   formatLabelName,
   getLabelDotColor,
 } from '#/features/shared/utils/eventFormatting'
-
-const WINDOW_LABEL = `last ${DASHBOARD_WINDOW_DAYS} days`
 
 function Panel({
   title,
@@ -83,78 +77,30 @@ function DashboardContent({ data }: { data: DashboardData }) {
   const { summary, stats, review } = data
   const health = stats ? summarizeSystemHealth(stats) : null
 
-  // Full (windowed) per-label breakdown drives the type chart + the filter
-  // pills, and stays visible regardless of the selected type.
-  const labelBreakdown = aggregateByLabel(summary)
-  const availableLabels = labelBreakdown.map((e) => e.key)
-
-  // Default the view to person detections when present (the app's primary
-  // signal); otherwise show all types.
-  const [labelFilter, setLabelFilter] = useState<string | null>(() =>
-    availableLabels.includes('person') ? 'person' : null,
-  )
-
-  // Headline + by-camera + by-day follow the selected type.
-  const scoped = filterSummaryByLabel(summary, labelFilter)
-  const cameraItems: BarListItem[] = aggregateByCamera(scoped).map((e) => ({
+  const cameraItems: BarListItem[] = aggregateByCamera(summary).map((e) => ({
     key: e.key,
     label: formatCameraName(e.key),
     count: e.count,
   }))
-  const dayItems: BarListItem[] = aggregateByDay(scoped).map((e) => ({
-    key: e.key,
-    label: formatDayLabel(e.key),
-    count: e.count,
-  }))
-  const labelItems: BarListItem[] = labelBreakdown.map((e) => ({
+  const labelItems: BarListItem[] = aggregateByLabel(summary).map((e) => ({
     key: e.key,
     label: formatLabelName(e.key),
     count: e.count,
     color: getLabelDotColor(e.key),
   }))
-
-  const scopeLabel = labelFilter ? formatLabelName(labelFilter) : 'All types'
+  const dayItems: BarListItem[] = aggregateByDay(summary).map((e) => ({
+    key: e.key,
+    label: formatDayLabel(e.key),
+    count: e.count,
+  }))
 
   return (
     <div className="mt-6 flex flex-col gap-6">
-      {availableLabels.length > 1 && (
-        <div
-          role="group"
-          aria-label="Filter by detection type"
-          className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0"
-        >
-          <FilterPill
-            label="All types"
-            active={labelFilter === null}
-            onClick={() => setLabelFilter(null)}
-            count={totalEventCount(summary)}
-          />
-          {labelBreakdown.map((l) => (
-            <FilterPill
-              key={l.key}
-              label={formatLabelName(l.key)}
-              active={labelFilter === l.key}
-              onClick={() =>
-                setLabelFilter(labelFilter === l.key ? null : l.key)
-              }
-              count={l.count}
-            />
-          ))}
-        </div>
-      )}
-
-      <p
-        className="text-xs font-medium text-(--sea-ink-soft)"
-        aria-live="polite"
-      >
-        {scopeLabel} · {WINDOW_LABEL}
-      </p>
-
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <StatTile
           label="Events"
-          value={totalEventCount(scoped)}
-          hint={WINDOW_LABEL}
+          value={totalEventCount(summary)}
+          hint="recent total"
           icon={<Activity size={16} aria-hidden />}
         />
         <StatTile

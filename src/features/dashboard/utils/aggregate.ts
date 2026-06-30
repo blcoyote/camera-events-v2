@@ -28,15 +28,6 @@ export function totalEventCount(summary: FrigateEventSummary): number {
   return summary.reduce((sum, item) => sum + item.count, 0)
 }
 
-/** Keep only rows matching `label`; `null` returns the summary unchanged. */
-export function filterSummaryByLabel(
-  summary: FrigateEventSummary,
-  label: string | null,
-): FrigateEventSummary {
-  if (label === null) return summary
-  return summary.filter((item) => item.label === label)
-}
-
 /** Event counts grouped by camera, busiest first. */
 export function aggregateByCamera(summary: FrigateEventSummary): CountEntry[] {
   const counts = groupSum(summary, (item) => item.camera)

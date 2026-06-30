@@ -6,12 +6,7 @@ import {
   getReviewSummary,
 } from '#/features/shared/server/frigate/client'
 import type { FrigateResult } from '#/features/shared/server/frigate/config'
-import { DASHBOARD_WINDOW_DAYS } from '#/features/dashboard/types'
 import type { DashboardData } from '#/features/dashboard/types'
-import {
-  recentDayCutoff,
-  filterSummaryToRecentDays,
-} from '#/features/dashboard/utils/dateWindow'
 
 /**
  * Pure handler for the activity dashboard. Exported for unit testing.
@@ -32,17 +27,11 @@ export async function loadDashboardHandler(): Promise<
   if (!statsRes.ok && !summaryRes.ok && !reviewRes.ok) {
     return { ok: false, error: summaryRes.error }
   }
-  // /api/events/summary is all-time + all-label; scope it to a recent window
-  // here so the result is computed once and dehydrated (SSR-safe). Label
-  // scoping happens client-side via the dashboard's type filter.
-  const cutoff = recentDayCutoff(new Date(), DASHBOARD_WINDOW_DAYS)
   return {
     ok: true,
     data: {
       stats: statsRes.ok ? statsRes.data : null,
-      summary: summaryRes.ok
-        ? filterSummaryToRecentDays(summaryRes.data, cutoff)
-        : [],
+      summary: summaryRes.ok ? summaryRes.data : [],
       review: reviewRes.ok ? reviewRes.data : null,
     },
   }
