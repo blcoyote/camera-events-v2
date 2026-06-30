@@ -13,10 +13,6 @@ interface NavLink {
   to: string
 }
 
-/**
- * Pure function that returns the auth section state for testing
- * without React rendering context.
- */
 export function getHeaderAuthState(user: SessionData | null): {
   showSignIn: boolean
   userName: string | null
@@ -25,6 +21,7 @@ export function getHeaderAuthState(user: SessionData | null): {
   signInHref: string
   signOutAction: string
   navLinks: NavLink[]
+  mobileTopLinks: NavLink[]
 } {
   const navLinks: NavLink[] = user
     ? [
@@ -32,6 +29,12 @@ export function getHeaderAuthState(user: SessionData | null): {
         { label: 'Events', to: '/camera-events' },
         { label: 'Favorites', to: '/favorites' },
         { label: 'Settings', to: '/settings' },
+      ]
+    : []
+  const mobileTopLinks: NavLink[] = user
+    ? [
+        { label: 'Cameras', to: '/cameras' },
+        { label: 'Events', to: '/camera-events' },
       ]
     : []
   return {
@@ -46,6 +49,7 @@ export function getHeaderAuthState(user: SessionData | null): {
     signInHref: '/api/auth/google',
     signOutAction: '/api/auth/logout',
     navLinks,
+    mobileTopLinks,
   }
 }
 
@@ -108,19 +112,22 @@ export default function Header() {
           ))}
         </div>
 
-        {/* Mobile-only Events link — always visible in header on mobile */}
-        {state.navLinks.length > 0 && (
-          <div className="flex min-w-0 items-center text-xs font-semibold whitespace-nowrap sm:hidden">
-            <Link
-              to="/camera-events"
-              className="nav-link"
-              activeProps={{
-                className: 'nav-link is-active',
-                'aria-current': 'page' as const,
-              }}
-            >
-              Events
-            </Link>
+        {/* Mobile-only top-bar links — always visible in header on mobile */}
+        {state.mobileTopLinks.length > 0 && (
+          <div className="flex min-w-0 items-center gap-x-2 text-xs font-semibold whitespace-nowrap sm:hidden">
+            {state.mobileTopLinks.map((link) => (
+              <Link
+                key={link.to}
+                to={link.to}
+                className="nav-link"
+                activeProps={{
+                  className: 'nav-link is-active',
+                  'aria-current': 'page' as const,
+                }}
+              >
+                {link.label}
+              </Link>
+            ))}
           </div>
         )}
 
