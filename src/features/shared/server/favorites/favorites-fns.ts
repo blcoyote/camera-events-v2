@@ -1,7 +1,7 @@
 import { createServerFn } from '@tanstack/react-start'
 
 export const toggleFavoriteFn = createServerFn({ method: 'POST' })
-  .inputValidator((data: { eventId: string }) => data)
+  .validator((data: { eventId: string }) => data)
   .handler(async ({ data }) => {
     const { toggleFavoriteHandler } = await import('./favorites-handlers')
     return toggleFavoriteHandler(data)
