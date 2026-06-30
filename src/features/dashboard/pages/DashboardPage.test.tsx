@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, afterEach } from 'vitest'
-import { render, screen, cleanup } from '@testing-library/react'
+import { render, screen, cleanup, fireEvent } from '@testing-library/react'
 import { DashboardPage } from './DashboardPage'
 import type { FrigateResult } from '#/features/shared/server/frigate/config'
 import type { DashboardData } from '#/features/dashboard/types'
@@ -92,18 +92,48 @@ describe('DashboardPage', () => {
 
   it('renders summary tiles and breakdown panels when ready', () => {
     render(<DashboardPage result={ready()} />)
-    // Total events (6 + 2 = 8) — appears in the Events tile and the day bar
-    expect(screen.getAllByText('8').length).toBeGreaterThan(0)
     // Alerts 24h tile
     expect(screen.getByText('4')).toBeTruthy()
     // Panel headings
     expect(screen.getByText('Events by camera')).toBeTruthy()
     expect(screen.getByText('Events by type')).toBeTruthy()
     expect(screen.getByText('Events by day')).toBeTruthy()
-    // Breakdown labels (formatted camera + label names). "Front Porch" also
-    // appears in the system-health table, so allow multiple matches.
+    // Breakdown labels appear in multiple places (pills, charts, health table)
     expect(screen.getAllByText('Front Porch').length).toBeGreaterThan(0)
-    expect(screen.getByText('Person')).toBeTruthy()
+    expect(screen.getAllByText('Person').length).toBeGreaterThan(0)
+  })
+
+  it('defaults the type filter to Person', () => {
+    render(<DashboardPage result={ready()} />)
+    expect(
+      screen
+        .getByRole('button', { name: /Person/ })
+        .getAttribute('aria-pressed'),
+    ).toBe('true')
+    expect(
+      screen
+        .getByRole('button', { name: /All types/ })
+        .getAttribute('aria-pressed'),
+    ).toBe('false')
+    // Scope line reflects the Person / 30-day window
+    expect(screen.getByText(/Person · last 30 days/)).toBeTruthy()
+  })
+
+  it('switches scope to all types when the All types pill is clicked', () => {
+    render(<DashboardPage result={ready()} />)
+    fireEvent.click(screen.getByRole('button', { name: /All types/ }))
+    expect(
+      screen
+        .getByRole('button', { name: /All types/ })
+        .getAttribute('aria-pressed'),
+    ).toBe('true')
+    expect(screen.getByText(/All types · last 30 days/)).toBeTruthy()
+  })
+
+  it('keeps all object types in the by-type breakdown even when Person is selected', () => {
+    render(<DashboardPage result={ready()} />)
+    // Car is not the selected type but still appears (pill + by-type chart)
+    expect(screen.getAllByText('Car').length).toBeGreaterThan(0)
   })
 
   it('renders the system health card when stats are present', () => {

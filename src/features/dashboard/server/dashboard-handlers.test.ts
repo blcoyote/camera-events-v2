@@ -58,6 +58,10 @@ function okReview(): FrigateResult<FrigateReviewSummary> {
 }
 
 beforeEach(() => {
+  // Fixed "now" so the 30-day window is deterministic. SUMMARY is dated
+  // 2026-06-30, within the window.
+  vi.useFakeTimers()
+  vi.setSystemTime(new Date('2026-06-30T12:00:00Z'))
   mockRequireSession.mockResolvedValue('user-123')
   mockGetStats.mockResolvedValue(okStats())
   mockGetEventSummary.mockResolvedValue(okSummary())
@@ -65,6 +69,7 @@ beforeEach(() => {
 })
 
 afterEach(() => {
+  vi.useRealTimers()
   vi.clearAllMocks()
 })
 
@@ -91,6 +96,34 @@ describe('loadDashboardHandler', () => {
         ok: true,
         data: { stats: STATS, summary: SUMMARY, review: REVIEW },
       })
+    })
+
+    it('drops summary rows older than the 30-day window', async () => {
+      mockGetEventSummary.mockResolvedValue({
+        ok: true,
+        data: [
+          {
+            camera: 'a',
+            count: 2,
+            day: '2026-06-30',
+            label: 'person',
+            sub_label: null,
+            zones: [],
+          },
+          {
+            camera: 'a',
+            count: 9,
+            day: '2026-04-01',
+            label: 'person',
+            sub_label: null,
+            zones: [],
+          },
+        ],
+      })
+      const result = await loadDashboardHandler()
+      expect(result.ok && result.data.summary.map((r) => r.day)).toEqual([
+        '2026-06-30',
+      ])
     })
 
     it('fetches the three endpoints in parallel', async () => {
