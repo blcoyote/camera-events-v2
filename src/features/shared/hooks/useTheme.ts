@@ -1,28 +1,22 @@
 import { useCallback, useEffect, useSyncExternalStore } from 'react'
+import { syncThemeColorMeta } from './themeColor'
 
 export type ThemeMode = 'light' | 'dark' | 'auto'
-
-const THEME_COLORS = { light: '#173a40', dark: '#0d1f23' } as const
 
 function applyThemeMode(mode: ThemeMode) {
   const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
   const resolved = mode === 'auto' ? (prefersDark ? 'dark' : 'light') : mode
 
+  // Mode is applied via the resolved `.dark`/`.light` class (what styles.css
+  // keys off) plus colorScheme; no `data-theme` attribute is used.
   document.documentElement.classList.remove('light', 'dark')
   document.documentElement.classList.add(resolved)
 
-  if (mode === 'auto') {
-    document.documentElement.removeAttribute('data-theme')
-  } else {
-    document.documentElement.setAttribute('data-theme', mode)
-  }
-
   document.documentElement.style.colorScheme = resolved
 
-  const meta = document.querySelector('meta[name="theme-color"]')
-  if (meta) {
-    meta.setAttribute('content', THEME_COLORS[resolved])
-  }
+  // theme-color depends on both mode and palette; derive it from the DOM so the
+  // theme and palette stores share one source of truth (see themeColor.ts).
+  syncThemeColorMeta()
 }
 
 let currentMode: ThemeMode = 'auto'

@@ -172,7 +172,7 @@ export function NotificationSettings() {
                 type="button"
                 onClick={handleSendTest}
                 disabled={isLoading}
-                className="min-h-11 rounded-full border border-[rgba(50,143,151,0.3)] bg-[rgba(79,184,178,0.14)] px-4 py-2 text-sm font-semibold text-(--lagoon-deep) transition hover:bg-[rgba(79,184,178,0.24)] disabled:opacity-50"
+                className="min-h-11 rounded-full border border-(--accent-muted-border) bg-(--accent-muted-bg) px-4 py-2 text-sm font-semibold text-(--lagoon-deep) transition hover:bg-(--accent-muted-hover-bg) disabled:opacity-50"
               >
                 {isLoading ? 'Sending...' : 'Send Test Notification'}
               </button>
@@ -194,7 +194,7 @@ export function NotificationSettings() {
               type="button"
               onClick={handleSubscribe}
               disabled={isLoading}
-              className="min-h-11 w-fit rounded-full border border-[rgba(50,143,151,0.3)] bg-[rgba(79,184,178,0.14)] px-5 py-2.5 text-sm font-semibold text-(--lagoon-deep) transition hover:bg-[rgba(79,184,178,0.24)] disabled:opacity-50"
+              className="min-h-11 w-fit rounded-full border border-(--accent-muted-border) bg-(--accent-muted-bg) px-5 py-2.5 text-sm font-semibold text-(--lagoon-deep) transition hover:bg-(--accent-muted-hover-bg) disabled:opacity-50"
             >
               {isLoading ? 'Working...' : 'Enable Notifications'}
             </button>

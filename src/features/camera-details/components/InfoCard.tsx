@@ -36,7 +36,7 @@ export function InfoCard({
 
   if (downloadUrl) {
     return (
-      <div className="sm:rounded-xl sm:border sm:border-(--line) sm:bg-(--surface) sm:transition sm:hover:border-(--lagoon-deep) sm:hover:bg-[rgba(79,184,178,0.06)]">
+      <div className="sm:rounded-xl sm:border sm:border-(--line) sm:bg-(--surface) sm:transition sm:hover:border-(--lagoon-deep) sm:hover:bg-(--accent-hover-bg)">
         <button
           type="button"
           onClick={() => download(downloadUrl)}

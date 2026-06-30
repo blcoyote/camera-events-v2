@@ -6,7 +6,22 @@
   --font-sans: 'Manrope', ui-sans-serif, system-ui, sans-serif;
 }
 
+/*
+ * Theming model — two orthogonal axes:
+ *   • Mode: `.light` / `.dark` class on <html> (always the *resolved* value, set
+ *     by the FOUC script + useTheme, even in auto mode). Dark tokens are defined
+ *     once under `:root.dark` — no duplication, and explicit toggling works
+ *     because it keys off the class, not `prefers-color-scheme`.
+ *     (NB: `light-dark()` is avoided on purpose — Tailwind v4's Lightning CSS
+ *     polyfills it to a `prefers-color-scheme`-only form that ignores the
+ *     `color-scheme` property our toggle sets, which would break explicit modes.)
+ *   • Palette: `[data-palette]` attribute. Each palette overrides only the base
+ *     brand/surface tokens; the derived + elevation layer below is shared.
+ */
 :root {
+  color-scheme: light;
+
+  /* ─ Ocean palette (default) — base brand + surface tokens (light) ─ */
   --sea-ink: #173a40;
   --sea-ink-soft: #416166;
   --lagoon: #4fb8b2;
@@ -20,17 +35,72 @@
   --inset-glint: rgba(255, 255, 255, 0.82);
   --kicker: rgba(47, 106, 74, 0.9);
   --bg-base: #e7f3ec;
+  --bg-mix: white;
   --header-bg: rgba(251, 255, 248, 0.84);
   --chip-bg: rgba(255, 255, 255, 0.8);
   --chip-line: rgba(47, 106, 74, 0.18);
   --link-bg-hover: rgba(255, 255, 255, 0.9);
-  --hero-a: rgba(79, 184, 178, 0.36);
-  --hero-b: rgba(47, 106, 74, 0.2);
-  --bg-mix: white;
   --link-hover: #246f76;
+
+  /* ─ Derived semantic tokens — defined once; follow palette + mode because they
+     reference the base tokens above (custom-property substitution is lazy). ─ */
+  --accent-emphasis-bg: color-mix(in srgb, var(--lagoon) 18%, transparent);
+  --accent-emphasis-border: color-mix(
+    in srgb,
+    var(--lagoon-deep) 40%,
+    transparent
+  );
+  --accent-muted-bg: color-mix(in srgb, var(--lagoon) 14%, transparent);
+  --accent-muted-border: color-mix(
+    in srgb,
+    var(--lagoon-deep) 30%,
+    transparent
+  );
+  --accent-hover-bg: color-mix(in srgb, var(--lagoon) 8%, transparent);
+  /* Hover fills for already-accented buttons (deeper than their resting fill). */
+  --accent-muted-hover-bg: color-mix(in srgb, var(--lagoon) 24%, transparent);
+  --accent-emphasis-hover-bg: color-mix(
+    in srgb,
+    var(--lagoon) 28%,
+    transparent
+  );
+  --selection-bg: color-mix(in srgb, var(--lagoon) 24%, transparent);
+  --link-underline: color-mix(in srgb, var(--lagoon-deep) 40%, transparent);
+  --nav-underline-tip: color-mix(in srgb, var(--lagoon) 30%, white);
+
+  /* Hero radial glows for page backgrounds + the page corner-glow divs.
+     --hero-a/--hero-b vary by mode (lighter alpha in dark, overridden under
+     :root.dark); --hero-c does not (it only tracks --lagoon, so no dark
+     override is needed). In ocean these equal the original body-background
+     literals; the corner-glow divs — formerly slightly lighter at 0.32/0.18 —
+     are intentionally unified onto --hero-a/--hero-b. */
+  --hero-a: color-mix(in srgb, var(--lagoon) 36%, transparent);
+  --hero-b: color-mix(in srgb, var(--palm) 20%, transparent);
+  --hero-c: color-mix(in srgb, var(--lagoon) 10%, transparent);
+
+  /* body::before texture glows. The overall ::before opacity stays constant; the
+     dark-mode dimming is folded into these alphas (half of the light alpha). */
+  --bg-glint: rgba(255, 255, 255, 0.8);
+  --bg-glow-lagoon: color-mix(in srgb, var(--lagoon) 20%, transparent);
+  --bg-glow-palm: color-mix(in srgb, var(--palm) 14%, transparent);
+
+  /* Elevation. Normalised to 4 layers so the dark-only ambient glow layer is just
+     transparent in light — keeps the light/dark shadows structurally identical. */
+  --shadow-island:
+    0 1px 0 var(--inset-glint) inset, 0 0 40px transparent,
+    0 22px 44px rgba(30, 90, 72, 0.1), 0 6px 18px rgba(23, 58, 64, 0.08);
+  --shadow-card:
+    0 1px 0 var(--inset-glint) inset, 0 0 24px transparent,
+    0 12px 28px rgba(30, 90, 72, 0.08), 0 3px 10px rgba(23, 58, 64, 0.05);
+  --shadow-card-hover:
+    0 1px 0 var(--inset-glint) inset, 0 0 32px transparent,
+    0 22px 44px rgba(30, 90, 72, 0.14), 0 6px 16px rgba(23, 58, 64, 0.08);
 }
 
-:root[data-theme='dark'] {
+/* ─ Dark mode — base + mode-varying token overrides (one definition each) ─ */
+:root.dark {
+  color-scheme: dark;
+
   --sea-ink: #e8e6e3;
   --sea-ink-soft: #908d88;
   --lagoon: #60d7cf;
@@ -50,34 +120,118 @@
   --chip-line: rgba(255, 255, 255, 0.1);
   --link-bg-hover: rgba(255, 255, 255, 0.06);
   --link-hover: #8de5db;
-  --hero-a: rgba(96, 215, 207, 0.1);
-  --hero-b: rgba(110, 200, 154, 0.06);
+
+  --hero-a: color-mix(in srgb, var(--lagoon) 10%, transparent);
+  --hero-b: color-mix(in srgb, var(--palm) 6%, transparent);
+  /* --hero-c is not overridden: it already tracks --lagoon and its alpha (10%)
+     is the same in both modes. */
+
+  --bg-glint: rgba(255, 255, 255, 0.4);
+  --bg-glow-lagoon: color-mix(in srgb, var(--lagoon) 10%, transparent);
+  --bg-glow-palm: color-mix(in srgb, var(--palm) 7%, transparent);
+
+  --shadow-island:
+    0 1px 0 var(--inset-glint) inset,
+    0 0 40px color-mix(in srgb, var(--lagoon) 6%, transparent),
+    0 22px 44px rgba(0, 0, 0, 0.35), 0 6px 18px rgba(0, 0, 0, 0.2);
+  --shadow-card:
+    0 1px 0 var(--inset-glint) inset,
+    0 0 24px color-mix(in srgb, var(--lagoon) 5%, transparent),
+    0 12px 28px rgba(0, 0, 0, 0.3), 0 3px 10px rgba(0, 0, 0, 0.18);
+  --shadow-card-hover:
+    0 1px 0 var(--inset-glint) inset,
+    0 0 32px color-mix(in srgb, var(--lagoon) 10%, transparent),
+    0 22px 44px rgba(0, 0, 0, 0.4), 0 6px 16px rgba(0, 0, 0, 0.2);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']) {
-    --sea-ink: #e8e6e3;
-    --sea-ink-soft: #908d88;
-    --lagoon: #60d7cf;
-    --lagoon-deep: #8de5db;
-    --palm: #6ec89a;
-    --sand: #171615;
-    --foam: #131212;
-    --surface: rgba(26, 24, 23, 0.72);
-    --surface-strong: rgba(28, 26, 25, 0.88);
-    --line: rgba(255, 255, 255, 0.08);
-    --inset-glint: rgba(255, 255, 255, 0.05);
-    --kicker: #b8efe5;
-    --bg-base: #0e0e0e;
-    --bg-mix: var(--bg-base);
-    --header-bg: rgba(14, 14, 14, 0.82);
-    --chip-bg: rgba(30, 28, 27, 0.85);
-    --chip-line: rgba(255, 255, 255, 0.1);
-    --link-bg-hover: rgba(255, 255, 255, 0.06);
-    --link-hover: #8de5db;
-    --hero-a: rgba(96, 215, 207, 0.1);
-    --hero-b: rgba(110, 200, 154, 0.06);
-  }
+/* ─ Sunset palette — warm ambers & coral ─ */
+:root[data-palette='sunset'] {
+  --sea-ink: #43281a;
+  --sea-ink-soft: #7a5a48;
+  --lagoon: #e0833f;
+  --lagoon-deep: #c25e2a;
+  --palm: #c2553f;
+  --sand: #f5e9dd;
+  --foam: #fdf6ef;
+  --surface: rgba(255, 255, 255, 0.74);
+  --surface-strong: rgba(255, 255, 255, 0.9);
+  --line: rgba(67, 40, 26, 0.14);
+  --inset-glint: rgba(255, 255, 255, 0.82);
+  --kicker: rgba(194, 94, 42, 0.9);
+  --bg-base: #f7ece1;
+  --bg-mix: white;
+  --header-bg: rgba(255, 250, 245, 0.84);
+  --chip-bg: rgba(255, 255, 255, 0.8);
+  --chip-line: rgba(194, 94, 42, 0.18);
+  --link-bg-hover: rgba(255, 255, 255, 0.9);
+  --link-hover: #b04e1f;
+}
+
+:root[data-palette='sunset'].dark {
+  --sea-ink: #efe7e0;
+  --sea-ink-soft: #a8978c;
+  --lagoon: #f0a868;
+  --lagoon-deep: #f6c89a;
+  --palm: #e89a82;
+  --sand: #1a1512;
+  --foam: #141008;
+  --surface: rgba(28, 22, 18, 0.72);
+  --surface-strong: rgba(30, 24, 20, 0.88);
+  --line: rgba(255, 255, 255, 0.08);
+  --inset-glint: rgba(255, 255, 255, 0.05);
+  --kicker: #f6c89a;
+  --bg-base: #0f0c0a;
+  --bg-mix: var(--bg-base);
+  --header-bg: rgba(16, 12, 10, 0.82);
+  --chip-bg: rgba(34, 26, 22, 0.85);
+  --chip-line: rgba(255, 255, 255, 0.1);
+  --link-bg-hover: rgba(255, 255, 255, 0.06);
+  --link-hover: #f6c89a;
+}
+
+/* ─ Slate palette — cool blue-greys ─ */
+:root[data-palette='slate'] {
+  --sea-ink: #1f2933;
+  --sea-ink-soft: #51606e;
+  --lagoon: #5b7a99;
+  --lagoon-deep: #3f5b75;
+  --palm: #4f7a8a;
+  --sand: #e8edf2;
+  --foam: #f4f7fa;
+  --surface: rgba(255, 255, 255, 0.74);
+  --surface-strong: rgba(255, 255, 255, 0.9);
+  --line: rgba(31, 41, 51, 0.14);
+  --inset-glint: rgba(255, 255, 255, 0.82);
+  --kicker: rgba(63, 91, 117, 0.9);
+  --bg-base: #e9eef3;
+  --bg-mix: white;
+  --header-bg: rgba(248, 250, 252, 0.84);
+  --chip-bg: rgba(255, 255, 255, 0.8);
+  --chip-line: rgba(63, 91, 117, 0.18);
+  --link-bg-hover: rgba(255, 255, 255, 0.9);
+  --link-hover: #34536b;
+}
+
+:root[data-palette='slate'].dark {
+  --sea-ink: #e6e9ed;
+  --sea-ink-soft: #97a3b0;
+  --lagoon: #8fb0d0;
+  --lagoon-deep: #b3cce4;
+  --palm: #9ec6d4;
+  --sand: #15181c;
+  --foam: #101316;
+  --surface: rgba(22, 26, 30, 0.72);
+  --surface-strong: rgba(24, 28, 33, 0.88);
+  --line: rgba(255, 255, 255, 0.08);
+  --inset-glint: rgba(255, 255, 255, 0.05);
+  --kicker: #b3cce4;
+  --bg-base: #0d0f12;
+  --bg-mix: var(--bg-base);
+  --header-bg: rgba(13, 15, 18, 0.82);
+  --chip-bg: rgba(26, 30, 35, 0.85);
+  --chip-line: rgba(255, 255, 255, 0.1);
+  --link-bg-hover: rgba(255, 255, 255, 0.06);
+  --link-hover: #b3cce4;
 }
 
 *:focus-visible {
@@ -105,11 +259,7 @@ body {
   background:
     radial-gradient(1100px 620px at -8% -10%, var(--hero-a), transparent 58%),
     radial-gradient(1050px 620px at 112% -12%, var(--hero-b), transparent 62%),
-    radial-gradient(
-      720px 380px at 50% 115%,
-      rgba(79, 184, 178, 0.1),
-      transparent 68%
-    ),
+    radial-gradient(720px 380px at 50% 115%, var(--hero-c), transparent 68%),
     linear-gradient(
       180deg,
       color-mix(in oklab, var(--sand) 68%, var(--bg-mix)) 0%,
@@ -129,17 +279,9 @@ body::before {
   z-index: -1;
   opacity: 0.28;
   background:
-    radial-gradient(
-      circle at 20% 15%,
-      rgba(255, 255, 255, 0.8),
-      transparent 34%
-    ),
-    radial-gradient(
-      circle at 78% 26%,
-      rgba(79, 184, 178, 0.2),
-      transparent 42%
-    ),
-    radial-gradient(circle at 42% 82%, rgba(47, 106, 74, 0.14), transparent 36%);
+    radial-gradient(circle at 20% 15%, var(--bg-glint), transparent 34%),
+    radial-gradient(circle at 78% 26%, var(--bg-glow-lagoon), transparent 42%),
+    radial-gradient(circle at 42% 82%, var(--bg-glow-palm), transparent 36%);
 }
 
 body::after {
@@ -158,7 +300,7 @@ body::after {
 
 a {
   color: var(--lagoon-deep);
-  text-decoration-color: rgba(50, 143, 151, 0.4);
+  text-decoration-color: var(--link-underline);
   text-decoration-thickness: 1px;
   text-underline-offset: 2px;
 }
@@ -196,10 +338,7 @@ pre code {
 .island-shell {
   border: 1px solid var(--line);
   background: linear-gradient(165deg, var(--surface-strong), var(--surface));
-  box-shadow:
-    0 1px 0 var(--inset-glint) inset,
-    0 22px 44px rgba(30, 90, 72, 0.1),
-    0 6px 18px rgba(23, 58, 64, 0.08);
+  box-shadow: var(--shadow-island);
   backdrop-filter: blur(4px);
 }
 
@@ -207,10 +346,7 @@ pre code {
   .island-shell-sm {
     border: 1px solid var(--line);
     background: linear-gradient(165deg, var(--surface-strong), var(--surface));
-    box-shadow:
-      0 1px 0 var(--inset-glint) inset,
-      0 22px 44px rgba(30, 90, 72, 0.1),
-      0 6px 18px rgba(23, 58, 64, 0.08);
+    box-shadow: var(--shadow-island);
     backdrop-filter: blur(4px);
   }
 }
@@ -253,7 +389,7 @@ a {
   height: 2px;
   transform: scaleX(0);
   transform-origin: left;
-  background: linear-gradient(90deg, var(--lagoon), #7ed3bf);
+  background: linear-gradient(90deg, var(--lagoon), var(--nav-underline-tip));
   transition: transform 170ms ease;
 }
 
@@ -290,10 +426,7 @@ a {
   border-radius: 1rem;
   border: 1px solid var(--line);
   background: linear-gradient(165deg, var(--surface-strong), var(--surface));
-  box-shadow:
-    0 1px 0 var(--inset-glint) inset,
-    0 12px 28px rgba(30, 90, 72, 0.08),
-    0 3px 10px rgba(23, 58, 64, 0.05);
+  box-shadow: var(--shadow-card);
   transition:
     transform 220ms ease,
     box-shadow 220ms ease,
@@ -303,10 +436,7 @@ a {
 .event-card:hover {
   transform: translateY(-3px);
   border-color: color-mix(in oklab, var(--lagoon-deep) 40%, var(--line));
-  box-shadow:
-    0 1px 0 var(--inset-glint) inset,
-    0 22px 44px rgba(30, 90, 72, 0.14),
-    0 6px 16px rgba(23, 58, 64, 0.08);
+  box-shadow: var(--shadow-card-hover);
 }
 
 .event-card:focus-visible {
@@ -423,46 +553,6 @@ a {
   animation: slideInFromLeft 0.25s ease-out;
 }
 
-/* ─── Dark-mode refinements ─── */
-
-:root[data-theme='dark'] body::before {
-  opacity: 0.14;
-}
-
-:root[data-theme='dark'] .island-shell {
-  box-shadow:
-    0 1px 0 var(--inset-glint) inset,
-    0 0 40px rgba(79, 184, 178, 0.06),
-    0 22px 44px rgba(0, 0, 0, 0.35),
-    0 6px 18px rgba(0, 0, 0, 0.2);
-}
-
-@media (min-width: 640px) {
-  :root[data-theme='dark'] .island-shell-sm {
-    box-shadow:
-      0 1px 0 var(--inset-glint) inset,
-      0 0 40px rgba(79, 184, 178, 0.06),
-      0 22px 44px rgba(0, 0, 0, 0.35),
-      0 6px 18px rgba(0, 0, 0, 0.2);
-  }
-}
-
-:root[data-theme='dark'] .event-card {
-  box-shadow:
-    0 1px 0 var(--inset-glint) inset,
-    0 0 24px rgba(79, 184, 178, 0.05),
-    0 12px 28px rgba(0, 0, 0, 0.3),
-    0 3px 10px rgba(0, 0, 0, 0.18);
-}
-
-:root[data-theme='dark'] .event-card:hover {
-  box-shadow:
-    0 1px 0 var(--inset-glint) inset,
-    0 0 32px rgba(79, 184, 178, 0.1),
-    0 22px 44px rgba(0, 0, 0, 0.4),
-    0 6px 16px rgba(0, 0, 0, 0.2);
-}
-
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -471,45 +561,5 @@ a {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
-  }
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']) body::before {
-    opacity: 0.14;
-  }
-
-  :root:not([data-theme='light']) .island-shell {
-    box-shadow:
-      0 1px 0 var(--inset-glint) inset,
-      0 0 40px rgba(79, 184, 178, 0.06),
-      0 22px 44px rgba(0, 0, 0, 0.35),
-      0 6px 18px rgba(0, 0, 0, 0.2);
-  }
-
-  @media (min-width: 640px) {
-    :root:not([data-theme='light']) .island-shell-sm {
-      box-shadow:
-        0 1px 0 var(--inset-glint) inset,
-        0 0 40px rgba(79, 184, 178, 0.06),
-        0 22px 44px rgba(0, 0, 0, 0.35),
-        0 6px 18px rgba(0, 0, 0, 0.2);
-    }
-  }
-
-  :root:not([data-theme='light']) .event-card {
-    box-shadow:
-      0 1px 0 var(--inset-glint) inset,
-      0 0 24px rgba(79, 184, 178, 0.05),
-      0 12px 28px rgba(0, 0, 0, 0.3),
-      0 3px 10px rgba(0, 0, 0, 0.18);
-  }
-
-  :root:not([data-theme='light']) .event-card:hover {
-    box-shadow:
-      0 1px 0 var(--inset-glint) inset,
-      0 0 32px rgba(79, 184, 178, 0.1),
-      0 22px 44px rgba(0, 0, 0, 0.4),
-      0 6px 16px rgba(0, 0, 0, 0.2);
   }
 }

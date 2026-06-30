@@ -5,77 +5,86 @@ created: 2026-06-29
 
 # Theming System & How to Add Color Themes
 
-> Color is fully token-driven and applied via one `<html>` attribute. Adding
-> swappable color themes is additive and low-risk — the hard indirection layer
-> already exists.
+> Color is fully token-driven across **two orthogonal axes** — mode (light/dark)
+> and palette (ocean/sunset/slate). Mode keys off a class; palette off an
+> attribute. Adding a new palette is ~20 lines of token values.
 
 ## How theming works today
 
-The app currently has **one axis: light / dark / auto mode**. There is a single
-color palette (ocean/lagoon — teals & greens).
+The app has **two independent axes**:
 
-1. **Tokens are the single source of truth.** `src/styles.css` defines ~25 CSS
-   custom properties in `:root` (`--sea-ink`, `--lagoon`, `--surface`,
-   `--bg-base`, …). Components consume them via Tailwind's `text-(--sea-ink)`
-   syntax — almost no component hardcodes a color.
-2. **One attribute applies the theme.** Everything keys off `data-theme` on
-   `<html>`:
-   - `:root` → light (default)
-   - `:root[data-theme='dark']` → dark
-   - `@media (prefers-color-scheme: dark) :root:not([data-theme='light'])` →
-     the "auto" path (follows the OS)
-3. **One hook owns the state.** `src/features/shared/hooks/useTheme.ts` is a
-   `useSyncExternalStore` store: sets the attribute + class, persists
-   `localStorage['theme']`, updates `<meta theme-color>`. Mode is
-   `'light' | 'dark' | 'auto'`.
-4. **FOUC prevention.** A blocking inline script in `src/routes/__root.tsx`
-   (`THEME_INIT_SCRIPT`) reads localStorage and sets `data-theme` **before first
-   paint**. This is required for SSR — without it the page flashes the wrong
-   theme on hydration. See [[gotchas/ssr-hydration-browser-globals]].
-5. **UI entry points:** `ThemeToggle.tsx` (cycles light→dark→auto) and the
-   buttons on `SettingsPage.tsx`.
+- **Mode:** `'light' | 'dark' | 'auto'` (`useTheme`).
+- **Palette:** `'ocean' | 'sunset' | 'slate'` (`usePalette`), ocean = default.
 
-## Recommended way to add color themes
+1. **Tokens are the single source of truth.** `src/styles.css` defines ~20 base
+   brand/surface CSS custom properties (`--sea-ink`, `--lagoon`, `--surface`,
+   `--bg-base`, …) plus a **derived layer** (`--accent-emphasis-bg`,
+   `--accent-muted-bg`, `--hero-a/b/c`, `--shadow-island/card/…`, `--selection-bg`,
+   `--link-underline`, …) built with `color-mix()` off the base tokens. Because
+   custom-property substitution is lazy, the derived layer **auto-follows** any
+   base-token override — so it's defined once and works for every palette × mode.
+   Components consume tokens via Tailwind's `bg-(--accent-emphasis-bg)` syntax.
+   (Accent fills are named by visual weight: `emphasis` = the heavier fill for
+   selected/active chips; `muted` = the lighter fill for secondary buttons.)
+2. **Mode is a class, palette is an attribute** on `<html>`:
+   - `:root` → ocean light (default). `:root.dark` → dark overrides (defined once).
+   - `:root[data-palette='sunset']` + `:root[data-palette='sunset'].dark` → palette
+     overrides of the ~19 base tokens only (derived layer is shared).
+   - The `.dark`/`.light` class is always the **resolved** value (even in auto
+     mode), so explicit toggling and OS-auto both work off the same selector.
+3. **Two hooks, one meta tag.** `useTheme.ts` and `usePalette.ts` are parallel
+   `useSyncExternalStore` stores (persist `localStorage['theme']` /
+   `['palette']`). Both call `syncThemeColorMeta()` in `themeColor.ts`, which
+   reads the current `<html>` class + `data-palette` and sets `<meta theme-color>`
+   from `THEME_COLOR_MAP`. Deriving from the DOM (not store-local values) keeps
+   the write idempotent, so the two stores produce the same value whichever
+   writes last.
+4. **FOUC prevention.** The blocking inline `THEME_INIT_SCRIPT` in `__root.tsx`
+   reads both localStorage keys and sets the resolved `.dark`/`.light` class,
+   `data-palette`, `colorScheme`, and `<meta theme-color>` **before first paint**.
+   Its palette list and chrome-color map are **interpolated from `PALETTES` /
+   `THEME_COLOR_MAP`** (single source of truth — no hand-kept duplicate). See
+   [[gotchas/ssr-hydration-browser-globals]].
+5. **UI entry points:** `ThemeToggle.tsx` (header, mode only) and two pickers on
+   `SettingsPage.tsx` (Theme + Color palette).
 
-Treat the color **palette** as a _second axis orthogonal to mode_. Keep
-light/dark/auto exactly as-is; add a parallel `data-palette` attribute so each
-palette works in both light and dark.
+## ⚠️ Why mode is a `.dark` class, NOT `light-dark()`
 
-- **CSS:** define a token block per palette, e.g. `:root[data-palette='sunset']`
-  plus its `:root[data-palette='sunset'][data-theme='dark']` variant. This is the
-  bulk of the work — but it's _design_ (choosing/tuning ~25 token values per
-  palette × mode), not engineering.
-- **Hook:** add a `palette` store mirroring the existing `mode` store
-  (`setAttribute('data-palette', …)`, persist `localStorage['palette']`). ~30
-  lines, copy of the existing pattern.
-- **FOUC script:** extend it to also read + apply `data-palette` (~2 lines).
-  **Don't forget this** — a palette applied only in React will flash on load.
-- **UI:** add a palette picker mirroring `themeOptions` in `SettingsPage.tsx`.
-- **Tests (TDD, per CLAUDE.md):** mirror `useTheme.test.ts`.
+The obvious modern approach is one definition per token via
+`light-dark(lightVal, darkVal)` driven by `color-scheme`. **It does not work
+here.** Tailwind v4's bundled Lightning CSS **polyfills** `light-dark()` into
+`--lightningcss-light/dark` toggle vars keyed to `@media (prefers-color-scheme)`
+**only** — it ignores the `color-scheme` _property_ that an explicit Light/Dark
+toggle sets. Result: the toggle buttons would stop changing colors and the app
+would just follow the OS. Tailwind v4 also **ignores `browserslist`**, so you
+can't raise the target to emit native `light-dark()`. Verified empirically
+(2026-06): both `light-dark()` and a modern browserslist still produced the
+media-query-only polyfill. The `.dark`-class approach is plain CSS no toolchain
+can rewrite; the only thing lost is no-JS OS-following, which is moot for a
+JS-required PWA (the FOUC script always runs).
 
-Estimated ~half-day; most of it is picking palettes, not wiring.
+## How to add a new palette
 
-## Gotchas / cleanup before scaling palettes
+~20 lines, no engineering:
 
-- **Dark-token duplication.** Dark values are written _twice_ in
-  `src/styles.css` — once under `[data-theme='dark']` and again inside the
-  `@media (prefers-color-scheme: dark)` block for the "auto" path. With N
-  palettes this duplication multiplies. Refactor to define each palette's dark
-  tokens once (shared selector list) **before** adding palettes, or the
-  stylesheet gets unwieldy.
-- **~15 files hardcode color literals** that bypass tokens (hex / `rgba()`). Most
-  are mode-independent decoration (thumbnail overlays, shadows) and are fine. But
-  a few hardcode _brand hues_ — e.g. the active pill in `SettingsPage.tsx` uses
-  `rgba(79,184,178,0.18)`, which is `--lagoon` inlined — and those will stay
-  green when the palette changes. Tokenize them or palettes won't fully take.
+1. Add two token blocks to `src/styles.css`: `:root[data-palette='NAME']` (light)
+   and `:root[data-palette='NAME'].dark` (dark), each overriding the ~19 base
+   tokens. The derived layer follows automatically — don't touch it.
+2. Add `'NAME'` to the `Palette` union + `PALETTES` array and a `THEME_COLOR_MAP`
+   entry in `themeColor.ts`. The FOUC script picks both up automatically (it's
+   generated from `PALETTES` / `THEME_COLOR_MAP`), so `__root.tsx` needs no edit.
+3. Add `{ value: 'NAME', label: '…' }` to `paletteOptions` in `SettingsPage.tsx`.
+4. Tests (TDD): the `usePalette.test.ts` / `SettingsPage.test.tsx` / `themeColor.test.ts`
+   patterns cover the wiring; new palettes are pure data.
 
-## Why it matters
+## Debt status (resolved 2026-06)
 
-Theming is usually painful because color is scattered. Here it isn't — the
-token + single-attribute design is exactly the foundation a multi-theme system
-needs, so the feature is additive rather than a rewrite. The only structural debt
-is the dark-token duplication, which is cheap to fix while there's still one
-palette.
+- **Dark-token duplication — fixed.** Dark values were written twice (`[data-theme]`
+  block + `@media` block). Now defined once under `:root.dark`.
+- **Inlined brand hues — tokenized.** ~30 `rgba(79,184,178,…)` / lagoon-deep / palm
+  literals across ~12 files now use the derived `--accent-*` / `--hero-*` tokens,
+  so palette swaps fully take. (Intentionally left: `getLabelDotColor` in
+  `eventFormatting.ts` — those are fixed object-category colors, not theme surfaces.)
 
 ## Related
 

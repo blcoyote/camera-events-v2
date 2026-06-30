@@ -105,7 +105,7 @@ export function CameraEventDetailPage({
           </p>
           <Link
             to="/camera-events"
-            className="inline-flex min-h-11 items-center rounded-full border border-[rgba(50,143,151,0.3)] bg-[rgba(79,184,178,0.14)] px-5 py-2.5 text-sm font-semibold text-(--lagoon-deep) no-underline transition hover:-translate-y-0.5 hover:bg-[rgba(79,184,178,0.24)]"
+            className="inline-flex min-h-11 items-center rounded-full border border-(--accent-muted-border) bg-(--accent-muted-bg) px-5 py-2.5 text-sm font-semibold text-(--lagoon-deep) no-underline transition hover:-translate-y-0.5 hover:bg-(--accent-muted-hover-bg)"
           >
             Back to Camera Events
           </Link>
@@ -132,8 +132,8 @@ export function CameraEventDetailPage({
       </div>
 
       <section className="rise-in relative overflow-hidden island-shell-sm sm:rounded-4xl sm:px-8 sm:py-8">
-        <div className="pointer-events-none absolute -left-20 -top-24 hidden h-56 w-56 rounded-full bg-[radial-gradient(circle,rgba(79,184,178,0.32),transparent_66%)] sm:block" />
-        <div className="pointer-events-none absolute -bottom-20 -right-20 hidden h-56 w-56 rounded-full bg-[radial-gradient(circle,rgba(47,106,74,0.18),transparent_66%)] sm:block" />
+        <div className="pointer-events-none absolute -left-20 -top-24 hidden h-56 w-56 rounded-full bg-[radial-gradient(circle,var(--hero-a),transparent_66%)] sm:block" />
+        <div className="pointer-events-none absolute -bottom-20 -right-20 hidden h-56 w-56 rounded-full bg-[radial-gradient(circle,var(--hero-b),transparent_66%)] sm:block" />
 
         <p className="island-kicker mb-1">{formatCameraName(event.camera)}</p>
 
@@ -196,7 +196,7 @@ export function CameraEventDetailPage({
               }
             }}
           >
-            <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 px-7 py-3 text-sm font-semibold text-(--lagoon-deep) transition hover:bg-[rgba(79,184,178,0.08)] sm:px-4">
+            <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 px-7 py-3 text-sm font-semibold text-(--lagoon-deep) transition hover:bg-(--accent-hover-bg) sm:px-4">
               <Film className="h-4 w-4" aria-hidden="true" />
               Watch clip
             </summary>
