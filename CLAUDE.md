@@ -431,5 +431,5 @@ gotchas, decision records, and the project glossary.
 - NEVER stop before pushing - that leaves work stranded locally
 - NEVER say "ready to push when you are" - YOU must push
 - If push fails, resolve and retry until it succeeds
-- **Never add yourself as a co-author or contributor in commit messages.** Do not include `Co-Authored-By:` trailers.
+- **No AI attestations or co-authoring anywhere.** Do not include `Co-Authored-By:` trailers, `Generated with Claude` footers, `Claude-Session:` links, or any other AI attribution in commit messages, PR titles, PR bodies, code comments, or any other artifact pushed to the repository. This applies to all AI tools and models — Claude, Copilot, GPT, etc.
 <!-- END BEADS INTEGRATION -->
