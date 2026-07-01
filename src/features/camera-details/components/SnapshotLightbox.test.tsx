@@ -57,6 +57,22 @@ describe('SnapshotLightbox rendering', () => {
     expect(closeBtn.className).toContain('h-11')
     expect(closeBtn.className).toContain('w-11')
   })
+
+  it('close button offsets below the safe-area top inset (avoids iOS status bar overlap)', () => {
+    render(
+      <SnapshotLightbox
+        src="/api/events/abc.1/snapshot"
+        alt="snap"
+        open
+        onClose={() => {}}
+      />,
+    )
+    const closeBtn = screen.getByRole('button', { name: /close/i })
+    expect(closeBtn.className).toContain(
+      'top-[calc(0.75rem+env(safe-area-inset-top))]',
+    )
+    expect(closeBtn.className).not.toContain('top-3')
+  })
 })
 
 describe('SnapshotLightbox utilities', () => {
