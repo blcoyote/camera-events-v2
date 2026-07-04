@@ -4,7 +4,10 @@ services:
     pull_policy: always
     restart: unless-stopped
     ports:
-      - '3000:3000'
+      # Bound to loopback: Traefik reaches the app over the `proxy` network,
+      # not the host port. This keeps the app off 0.0.0.0 (no plain-HTTP bypass
+      # of Traefik's TLS + security headers).
+      - '127.0.0.1:3000:3000'
     environment:
       NODE_ENV: production
       MQTT_URL: mqtt://${RABBITMQ_USER}:${RABBITMQ_PASS}@rabbitmq:1883
@@ -55,8 +58,12 @@ services:
     hostname: rabbitmq
     restart: unless-stopped
     ports:
-      - '1883:1883'
-      - '15672:15672'
+      # MQTT broker. If Frigate runs on a DIFFERENT host it must reach this
+      # port — in that case bind to the specific trusted interface instead of
+      # loopback (e.g. '10.0.0.5:1883:1883'). Loopback is the secure default.
+      - '127.0.0.1:1883:1883'
+      # Management UI — admin only, never expose publicly. Reach via SSH tunnel.
+      - '127.0.0.1:15672:15672'
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS}
