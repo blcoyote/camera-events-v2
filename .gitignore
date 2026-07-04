@@ -15,6 +15,9 @@ todos.json
 public/sw.js
 /coverage/
 
+# Claude Code agent worktrees (transient)
+.claude/worktrees/
+
 /data/
 
 # Beads / Dolt files (added by bd init)
