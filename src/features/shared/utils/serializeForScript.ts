@@ -5,7 +5,14 @@
  * separators U+2028 / U+2029 which are valid in JSON but illegal in JS source.
  */
 export function serializeForScript(value: unknown): string {
-  return JSON.stringify(value)
+  const json = JSON.stringify(value)
+  if (typeof json !== 'string') {
+    throw new TypeError(
+      'serializeForScript: value is not JSON-serializable to a string',
+    )
+  }
+
+  return json
     .replace(/</g, '\\u003c')
     .replace(/>/g, '\\u003e')
     .replace(/&/g, '\\u0026')

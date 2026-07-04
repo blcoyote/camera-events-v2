@@ -36,17 +36,17 @@ describe('serializeForScript', () => {
   })
 
   it('escapes U+2028 (line separator) to \\u2028', () => {
-    const output = serializeForScript('a b')
+    const output = serializeForScript('a\u2028b')
 
     expect(output).toContain('\\u2028')
-    expect(output).not.toContain(' ')
+    expect(output).not.toContain('\u2028')
   })
 
   it('escapes U+2029 (paragraph separator) to \\u2029', () => {
-    const output = serializeForScript('a b')
+    const output = serializeForScript('a\u2029b')
 
     expect(output).toContain('\\u2029')
-    expect(output).not.toContain(' ')
+    expect(output).not.toContain('\u2029')
   })
 
   it('produces byte-identical output to JSON.stringify when no special characters are present', () => {
@@ -57,5 +57,15 @@ describe('serializeForScript', () => {
     }
 
     expect(serializeForScript(value)).toBe(JSON.stringify(value))
+  })
+
+  it('throws a TypeError when JSON.stringify returns undefined for a top-level undefined value', () => {
+    expect(() => serializeForScript(undefined)).toThrow(TypeError)
+    expect(() => serializeForScript(undefined)).toThrow(/not JSON-serializable/)
+  })
+
+  it('throws a TypeError when JSON.stringify returns undefined for a top-level function value', () => {
+    expect(() => serializeForScript(() => {})).toThrow(TypeError)
+    expect(() => serializeForScript(() => {})).toThrow(/not JSON-serializable/)
   })
 })
