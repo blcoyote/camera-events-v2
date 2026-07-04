@@ -81,13 +81,20 @@ describe('handleReadiness', () => {
     vi.mocked(existsSync).mockReturnValue(true)
     vi.mocked(openSqlite).mockRejectedValue(new Error('SQLITE_CANTOPEN'))
     delete process.env.MQTT_URL
+    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 
     const result = await handleReadiness('/tmp/bad.db')
 
     expect(result.status).toBe(503)
     expect(result.body.status).toBe('degraded')
     expect(result.body.checks.database.status).toBe('error')
-    expect(result.body.checks.database.message).toContain('SQLITE_CANTOPEN')
+    expect(result.body.checks.database.message).not.toContain('SQLITE_CANTOPEN')
+    expect(result.body.checks.database.message).toBe('Database check failed')
+    expect(errSpy).toHaveBeenCalledWith(
+      expect.stringContaining('SQLITE_CANTOPEN'),
+    )
+
+    errSpy.mockRestore()
   })
 
   it('closes the DB even when query throws', async () => {
@@ -102,11 +109,19 @@ describe('handleReadiness', () => {
     }
     vi.mocked(openSqlite).mockResolvedValue(mockDb as never)
     delete process.env.MQTT_URL
+    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 
     const result = await handleReadiness('/tmp/bad.db')
 
     expect(result.body.checks.database.status).toBe('error')
+    expect(result.body.checks.database.message).not.toContain('disk I/O error')
+    expect(result.body.checks.database.message).toBe('Database check failed')
     expect(mockDb.close).toHaveBeenCalled()
+    expect(errSpy).toHaveBeenCalledWith(
+      expect.stringContaining('disk I/O error'),
+    )
+
+    errSpy.mockRestore()
   })
 
   it('reports the injected mqtt state', async () => {
