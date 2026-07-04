@@ -44,6 +44,14 @@ export function handleLiveness(): { status: number; body: LivenessResult } {
   }
 }
 
+const GENERIC_DB_ERROR_MESSAGE = 'Database check failed'
+
+function dbError(err: unknown): DbCheckResult {
+  const detail = err instanceof Error ? err.message : String(err)
+  console.error(`Readiness DB check failed: ${detail}`)
+  return { status: 'error', message: GENERIC_DB_ERROR_MESSAGE }
+}
+
 async function checkDatabase(dbPath: string): Promise<DbCheckResult> {
   if (!existsSync(dbPath)) return { status: 'ok' }
   try {
@@ -52,18 +60,12 @@ async function checkDatabase(dbPath: string): Promise<DbCheckResult> {
       db.prepare('SELECT 1').get()
       return { status: 'ok' }
     } catch (err) {
-      return {
-        status: 'error',
-        message: err instanceof Error ? err.message : 'Unknown database error',
-      }
+      return dbError(err)
     } finally {
       db.close()
     }
   } catch (err) {
-    return {
-      status: 'error',
-      message: err instanceof Error ? err.message : 'Unknown database error',
-    }
+    return dbError(err)
   }
 }
 
