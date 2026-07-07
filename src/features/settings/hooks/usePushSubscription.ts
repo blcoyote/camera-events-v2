@@ -40,35 +40,6 @@ export function formatSubscribeError(
   return `Could not enable notifications${detail}. Please try again.`
 }
 
-/**
- * Best-effort re-registration of the browser's current push subscription with
- * the server. Web Push subscriptions can be silently invalidated server-side
- * (the DB row is deleted on a 410/404 send failure) or rotated by the push
- * service; re-POSTing on app open keeps the server DB in sync — an idempotent
- * upsert on (user_id, endpoint). Failures are swallowed on purpose: this is
- * background maintenance and must never surface an error to the user or change
- * the visible subscription state.
- *
- * @returns true if the server accepted the re-sync, false otherwise.
- */
-export async function resyncSubscription(
-  subscription: Pick<PushSubscription, 'toJSON'>,
-  fetchFn: typeof fetch = fetch,
-): Promise<boolean> {
-  try {
-    const subJson = subscription.toJSON()
-    const res = await fetchFn('/api/push/subscribe', {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ endpoint: subJson.endpoint, keys: subJson.keys }),
-    })
-    return res.ok
-  } catch {
-    return false
-  }
-}
-
 export interface UsePushSubscriptionReturn {
   /** Browser supports Push API */
   isSupported: boolean
@@ -137,9 +108,6 @@ export function usePushSubscription(): UsePushSubscriptionReturn {
         if (!cancelled && existingSub) {
           setCurrentSubscription(existingSub)
           setIsSubscribed(true)
-          // Re-register with the server so a DB row cleaned up by a 410/404
-          // send failure (or a rotated endpoint) is restored on app open.
-          void resyncSubscription(existingSub)
         }
       } catch {
         // Silently fail — push just won't be available

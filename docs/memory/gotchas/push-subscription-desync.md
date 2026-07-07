@@ -24,17 +24,22 @@ side finding out:
 - **Endpoint rotation.** Push services (FCM/Apple/Mozilla) rotate endpoints. The
   browser then holds a subscription the server has no row for.
 
-The client hook `usePushSubscription` reads `pushManager.getSubscription()` on
-mount and, if a subscription object exists, shows `isSubscribed = true` — so the
-UI looks healthy even when the server has no matching row. Result: no pushes,
-and the UI misrepresents reality.
+The client hook `usePushSubscription` (Settings page only) reads
+`pushManager.getSubscription()` on mount and, if a subscription object exists,
+shows `isSubscribed = true` — so the UI looks healthy even when the server has
+no matching row. Result: no pushes, and the UI misrepresents reality.
 
-**Fix:** on app open, `usePushSubscription` re-POSTs the browser's current
-subscription to `/api/push/subscribe`. `saveSubscription` is an idempotent
+**Fix:** the always-mounted `ServiceWorkerRegistration` component (`src/features/shell/components/ServiceWorkerRegistration.tsx`)
+re-POSTs the browser's current subscription to `/api/push/subscribe` on app
+open and again on return-to-foreground (`visibilitychange` → `visible`), via
+`resyncExistingPushSubscription()` in
+`src/features/shared/utils/pushResync.ts`. `saveSubscription` is an idempotent
 upsert on `(user_id, endpoint)`, so this restores a cleaned-up row and updates
-rotated keys. The re-sync (`resyncSubscription`) is best-effort and
-fire-and-forget: failures (e.g. an expired session → 401) are swallowed and
-never change the visible subscription state.
+rotated keys. The re-sync is best-effort and fire-and-forget: failures (e.g. an
+expired session → 401, or no existing browser subscription) are swallowed and
+never change the visible subscription state. Because it lives in the
+always-mounted component rather than the Settings-only hook, it runs on every
+app open, not just when the user visits Settings.
 
 ## Why it matters
 

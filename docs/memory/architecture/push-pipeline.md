@@ -35,7 +35,8 @@ collapses a burst into one notification.
   `docs/specs/cross-platform-pwa-fixes.md`.
 - Browser subscriptions silently drift out of sync with the server DB (410/404
   cleanup, endpoint rotation), which stops pushes while the UI still looks
-  subscribed. The client re-syncs on app open — see
+  subscribed. The always-mounted `ServiceWorkerRegistration` component
+  re-syncs on app open and return-to-foreground — see
   [[gotchas/push-subscription-desync]].
 
 ## Related
