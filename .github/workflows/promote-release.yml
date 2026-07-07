@@ -35,7 +35,8 @@ jobs:
     steps:
       - name: Trigger test deploy webhook
         run: |
-          curl -fsS -X POST "${{ vars.TEST_DEPLOY_WEBHOOK_URL }}"
+          echo "::add-mask::${{ secrets.TEST_WEBHOOK_URL }}"
+          curl -fsS -X POST "${{ secrets.TEST_WEBHOOK_URL }}"
 
   promote-to-prod:
     if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
@@ -80,4 +81,5 @@ jobs:
 
       - name: Trigger deploy webhook
         run: |
-          curl -fsS -X POST "${{ vars.DEPLOY_WEBHOOK_URL }}"
+          echo "::add-mask::${{ secrets.RELEASE_WEBHOOK_URL }}"
+          curl -fsS -X POST "${{ secrets.RELEASE_WEBHOOK_URL }}"
