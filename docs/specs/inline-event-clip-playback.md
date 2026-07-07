@@ -14,8 +14,8 @@ The feature must work on iOS Safari standalone PWA, Android Chrome, and desktop 
 
 The work ships in two PRs:
 
-- **Phase 1 — Bounding-box toggle.** Low-risk, platform-neutral. Touches `isNonZeroBox`, snapshot proxy `?bbox=true` param, `showBoundingBox` prop on `EventSnapshot` and `SnapshotLightbox`, and a toggle in `CameraEventDetailPage`. No new server boundaries. Plan: `plans/inline-event-clip-playback-1-bbox-toggle.md`.
-- **Phase 2 — Inline clip player.** Higher-risk: streaming Frigate client, Range pass-through proxy, new `EventClipPlayer` with error fallback, URL opt-in flag. Gated behind `?clip=inline` until verified on iOS Safari PWA. Plan: `plans/inline-event-clip-playback-2-clip-player.md`.
+- **Phase 1 — Bounding-box toggle.** Low-risk, platform-neutral. Touches `isNonZeroBox`, snapshot proxy `?bbox=true` param, `showBoundingBox` prop on `EventSnapshot` and `SnapshotLightbox`, and a toggle in `CameraEventDetailPage`. No new server boundaries.
+- **Phase 2 — Inline clip player.** Higher-risk: streaming Frigate client, Range pass-through proxy, new `EventClipPlayer` with error fallback, URL opt-in flag. Gated behind `?clip=inline` until verified on iOS Safari PWA.
 
 The opt-in flag (`?clip=inline`) is removed and the player becomes default once AC1 and AC4 are observed on a real iOS device. **Status as of 2026-05-19**: flag removed (ce-gsv). Inline player is the default for any event with `has_clip = true`.
 

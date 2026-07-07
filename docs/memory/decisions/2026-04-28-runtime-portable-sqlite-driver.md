@@ -50,7 +50,8 @@ Test coverage mirrors the two branches plus the seam between them:
 
 ## Deviation from the plan
 
-`plans/bun-sqlite-push-store.md` scoped this as a **Bun-only** swap: "use
+The original `bun-sqlite-push-store` plan (removed; see git history) scoped
+this as a **Bun-only** swap: "use
 Bun's built-in `bun:sqlite` when running on Bun (production) and continues to
 use `better-sqlite3` everywhere else." That's already dual-runtime in intent,
 but the plan's title and framing ("bun-sqlite-push-store") read as if

@@ -65,7 +65,8 @@ the browser holding nothing but an opaque cookie.
 
 ## Deviation from the plan
 
-- **PKCE was explicitly out of scope** in `plans/google-sso-login.md` ("not
+- **PKCE was explicitly out of scope** in the original google-sso-login plan
+  (removed; see git history) ("not
   required for server-side confidential clients"). The shipped code uses PKCE
   anyway (`generateCodeVerifier`, `codeVerifier` threaded through
   `createAuthorizationURL` and `validateAuthorizationCode`) because arctic
