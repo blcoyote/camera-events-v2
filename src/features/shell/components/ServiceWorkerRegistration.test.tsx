@@ -2,6 +2,13 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, cleanup, act } from '@testing-library/react'
 import { ServiceWorkerRegistration } from './ServiceWorkerRegistration'
+import { resyncExistingPushSubscription } from '#/features/shared/utils/pushResync'
+
+vi.mock('#/features/shared/utils/pushResync', () => ({
+  resyncExistingPushSubscription: vi.fn().mockResolvedValue(false),
+}))
+
+const resyncMock = vi.mocked(resyncExistingPushSubscription)
 
 describe('ServiceWorkerRegistration', () => {
   let mockUpdate: ReturnType<typeof vi.fn>
@@ -13,6 +20,7 @@ describe('ServiceWorkerRegistration', () => {
   }
 
   beforeEach(() => {
+    resyncMock.mockClear()
     mockUpdate = vi.fn().mockResolvedValue(undefined)
     mockRegistration = {
       update: mockUpdate,
@@ -90,6 +98,35 @@ describe('ServiceWorkerRegistration', () => {
         'visibilitychange',
         expect.any(Function),
       )
+    })
+  })
+
+  describe('push subscription re-sync', () => {
+    it('calls resyncExistingPushSubscription on mount', async () => {
+      await act(async () => {
+        render(<ServiceWorkerRegistration />)
+      })
+
+      await vi.waitFor(() => expect(resyncMock).toHaveBeenCalled())
+    })
+
+    it('calls resyncExistingPushSubscription again on visibilitychange to visible', async () => {
+      await act(async () => {
+        render(<ServiceWorkerRegistration />)
+      })
+
+      await vi.waitFor(() => expect(resyncMock).toHaveBeenCalled())
+      resyncMock.mockClear()
+
+      Object.defineProperty(document, 'visibilityState', {
+        value: 'visible',
+        configurable: true,
+      })
+      act(() => {
+        document.dispatchEvent(new Event('visibilitychange'))
+      })
+
+      expect(resyncMock).toHaveBeenCalled()
     })
   })
 })

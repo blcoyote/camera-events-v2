@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { resyncExistingPushSubscription } from '#/features/shared/utils/pushResync'
 
 export function ServiceWorkerRegistration() {
   const [waitingWorker, setWaitingWorker] = useState<ServiceWorker | null>(null)
@@ -82,6 +83,9 @@ export function ServiceWorkerRegistration() {
     // the PWA launched at start_url instead of the notification's URL.
     claimPendingNavigation()
 
+    // Repair any server/client push-subscription drift on app open.
+    void resyncExistingPushSubscription()
+
     // Reload when the controller changes. Allow the reload when:
     //   a) An old SW was already controlling the page at load (normal update), OR
     //   b) The user explicitly clicked "Update now" (handles first-install +
@@ -98,6 +102,7 @@ export function ServiceWorkerRegistration() {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
         registration?.update().catch(() => {})
+        void resyncExistingPushSubscription()
       }
     }
     document.addEventListener('visibilitychange', handleVisibilityChange)

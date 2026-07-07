@@ -33,6 +33,11 @@ collapses a burst into one notification.
 - Push delivery must work on **both** iOS (Safari standalone) and Android
   (Chrome). iOS standalone has its own cookie/SW quirks — see
   `docs/specs/cross-platform-pwa-fixes.md`.
+- Browser subscriptions silently drift out of sync with the server DB (410/404
+  cleanup, endpoint rotation), which stops pushes while the UI still looks
+  subscribed. The always-mounted `ServiceWorkerRegistration` component
+  re-syncs on app open and return-to-foreground — see
+  [[gotchas/push-subscription-desync]].
 
 ## Related
 

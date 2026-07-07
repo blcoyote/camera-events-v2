@@ -1,0 +1,12 @@
+# Pre-push gate: mirror the `code_quality` job in .github/workflows/pr.yml so
+# that job can never fail on something reproducible locally. Blocks the push if
+# type-checking, linting, or formatting fails.
+set -e
+
+echo "▶ pre-push: running code_quality checks (tsc --noEmit · eslint · prettier --check)…"
+
+bun x tsc --noEmit
+bun run lint
+bun x prettier --check .
+
+echo "✓ pre-push: code_quality checks passed"
