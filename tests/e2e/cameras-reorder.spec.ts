@@ -30,6 +30,10 @@ test.use({ viewport: VIEWPORT })
 test('pointer drag reorders cameras and persists across reload', async ({
   page,
 }) => {
+  // SSR hydration, the drag interaction, and re-applying the persisted order
+  // after reload each add latency; give the whole flow a realistic budget.
+  test.setTimeout(60_000)
+
   await signIn(page)
 
   // Wait for camera grid to render
@@ -39,9 +43,19 @@ test('pointer drag reorders cameras and persists across reload', async ({
   const initialOrder = await cameraHeadings(page)
   expect(initialOrder).toEqual(MOCK_CAMERAS)
 
-  // Enter Edit mode
-  await page.getByRole('button', { name: 'Edit' }).click()
-  await page.waitForSelector('button[aria-label="Reorder backyard"]')
+  // Enter Edit mode. Under dev SSR the toggle's click handler only fires once
+  // React has hydrated, so retry the click until the drag handles appear.
+  await expect(async () => {
+    const alreadyEditing = await page
+      .getByRole('button', { name: 'Done reordering cameras' })
+      .count()
+    if (alreadyEditing === 0) {
+      await page.getByRole('button', { name: 'Reorder cameras' }).click()
+    }
+    await expect(
+      page.getByRole('button', { name: 'Reorder backyard' }),
+    ).toBeVisible({ timeout: 1000 })
+  }).toPass({ timeout: 10_000 })
 
   // --- Drag tile[1] (driveway) above tile[0] (backyard) ---
   const handle1 = page.getByRole('button', { name: 'Reorder driveway' })
@@ -77,11 +91,17 @@ test('pointer drag reorders cameras and persists across reload', async ({
   expect(afterDragOrder.slice(2)).toEqual(MOCK_CAMERAS.slice(2))
 
   // Exit Edit mode
-  await page.getByRole('button', { name: 'Done' }).click()
+  await page.getByRole('button', { name: 'Done reordering cameras' }).click()
 
   // --- Reload and verify persistence ---
   await page.reload()
   await page.waitForSelector('[aria-label="Camera list"]')
+
+  // SSR renders the default (alphabetical) order; the persisted order is
+  // re-applied from localStorage only after hydration, so wait for it.
+  await expect(
+    page.locator('[aria-label="Camera list"] h2').first(),
+  ).toHaveText('driveway', { timeout: 10_000 })
 
   const afterReloadOrder = await cameraHeadings(page)
   expect(afterReloadOrder[0]).toBe('driveway')
