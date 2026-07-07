@@ -14,14 +14,14 @@ A self-hosted PWA for browsing and monitoring [Frigate NVR](https://frigate.vide
 
 ## Tech Stack
 
-- **Runtime:** Node.js 22, TanStack Start (SSR), React 19, Vite 8
+- **Runtime:** Bun, TanStack Start (SSR), React 19, Vite 8
 - **Routing:** TanStack Router (file-based)
 - **Styling:** Tailwind CSS v4
 - **Data:** better-sqlite3 (push subscriptions + preferences), MQTT (Frigate event stream)
 - **Auth:** Google OAuth via Arctic, encrypted session cookies
 - **Push:** web-push (VAPID), Serwist service worker
 - **Testing:** Vitest, Testing Library, Playwright browser mode
-- **Package manager:** pnpm (enforced via `only-allow`)
+- **Package manager:** Bun (enforced via the `preinstall: npx only-allow bun` script)
 
 ## Architecture
 
@@ -34,9 +34,8 @@ A self-hosted PWA for browsing and monitoring [Frigate NVR](https://frigate.vide
 
 ### Prerequisites
 
-- Node.js 22+
-- pnpm 9+ (corepack works: `corepack enable`)
-- A Frigate instance reachable from the server (or use `FRIGATE_MOCK=1` for development)
+- Bun (see [bun.sh](https://bun.sh) — `npm`/`pnpm` are blocked via `only-allow bun`)
+- A Frigate instance reachable from the server (or use `FRIGATE_MOCK=true` for development)
 - RabbitMQ with MQTT plugin (see [rabbitmq/](rabbitmq/))
 - Google OAuth client (for login)
 - VAPID keys (for push notifications — `npx web-push generate-vapid-keys`)
@@ -44,39 +43,39 @@ A self-hosted PWA for browsing and monitoring [Frigate NVR](https://frigate.vide
 ### Local Development
 
 ```bash
-pnpm install
+bun install
 cp .env.example .env   # then fill in the values below
-pnpm dev
+bun run dev
 ```
 
 The dev server runs on http://localhost:3000. Route tree (`src/routeTree.gen.ts`) is regenerated automatically by the `tanstackStart()` Vite plugin — never run `npx tsr generate`, that's an unrelated destructive tool.
 
 ### Environment Variables
 
-| Variable                                    | Purpose                                                              |
-| ------------------------------------------- | -------------------------------------------------------------------- |
-| `APP_URL`                                   | Public URL of the app, used for OAuth redirect and cookie scope.     |
-| `SESSION_SECRET`                            | Secret for encrypting the session cookie (32+ chars).                |
-| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google OAuth credentials for `/api/auth/google/callback`.            |
-| `FRIGATE_URL`                               | Base URL of the Frigate backend (e.g. `http://frigate:5000`).        |
-| `FRIGATE_MOCK`                              | Set to `1` to use the in-memory mock Frigate client for development. |
-| `MQTT_URL`                                  | MQTT broker URL (e.g. `mqtt://user:pass@rabbitmq:1883`).             |
-| `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY`    | Web Push VAPID key pair.                                             |
-| `VAPID_SUBJECT`                             | Contact URL or `mailto:` for push provider (e.g. `mailto:you@x.dk`). |
+| Variable                                    | Purpose                                                                 |
+| ------------------------------------------- | ----------------------------------------------------------------------- |
+| `APP_URL`                                   | Public URL of the app, used for OAuth redirect and cookie scope.        |
+| `SESSION_SECRET`                            | Secret for encrypting the session cookie (32+ chars).                   |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google OAuth credentials for `/api/auth/google/callback`.               |
+| `FRIGATE_URL`                               | Base URL of the Frigate backend (e.g. `http://frigate:5000`).           |
+| `FRIGATE_MOCK`                              | Set to `true` to use the in-memory mock Frigate client for development. |
+| `MQTT_URL`                                  | MQTT broker URL (e.g. `mqtt://user:pass@rabbitmq:1883`).                |
+| `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY`    | Web Push VAPID key pair.                                                |
+| `VAPID_SUBJECT`                             | Contact URL or `mailto:` for push provider (e.g. `mailto:you@x.dk`).    |
 
 Push notifications are silently disabled at startup if any VAPID variable is missing — a warning is logged.
 
 ## Scripts
 
 ```bash
-pnpm dev              # Start dev server on :3000
-pnpm build            # Production build (also generates routeTree + service worker)
-pnpm preview          # Serve the production build locally
-pnpm test             # Run Vitest once
-pnpm lint             # ESLint
-pnpm format           # Prettier check
-pnpm check            # Prettier write + ESLint --fix
-pnpm knip             # Unused-code report
+bun run dev           # Start dev server on :3000
+bun run build         # Production build (also generates routeTree + service worker)
+bun run preview       # Serve the production build locally
+bun run test          # Run Vitest once
+bun run lint          # ESLint
+bun run format        # Prettier check
+bun run check         # Prettier write + ESLint --fix
+bun run knip          # Unused-code report
 ```
 
 ## Testing
