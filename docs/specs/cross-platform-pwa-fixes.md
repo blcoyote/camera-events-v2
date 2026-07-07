@@ -194,7 +194,7 @@ No new npm packages required. All fixes use existing browser APIs and patterns a
 | AC-4 | Sign-out on iOS standalone       | Sign-out successfully clears session in iOS standalone mode; user is redirected to home                                                              |
 | AC-5 | Event limit on initial load      | After setting event limit to non-default value, a hard refresh loads the correct number of events                                                    |
 | AC-6 | Dynamic theme-color              | Switching to dark mode updates the browser chrome color; switching back updates it again; initial load matches the resolved theme                    |
-| AC-7 | No SSR regressions               | `pnpm build` succeeds; no hydration mismatch warnings in console; server and client render identical initial HTML                                    |
+| AC-7 | No SSR regressions               | `bun run build` succeeds; no hydration mismatch warnings in console; server and client render identical initial HTML                                 |
 
 ## Consistency Gate
 

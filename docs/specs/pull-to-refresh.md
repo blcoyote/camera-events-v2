@@ -247,7 +247,7 @@ No new npm packages. The implementation uses:
 | AC-10 | No double-refresh                 | Cannot trigger a second refresh while one is in progress                                                             |
 | AC-11 | Reduced motion                    | Animations suppressed when `prefers-reduced-motion` is active; refresh still works                                   |
 | AC-12 | Desktop no-op                     | No gesture handling or indicator on mouse-only desktop devices                                                       |
-| AC-13 | SSR safe                          | `pnpm build` succeeds; no hydration mismatch warnings; server and client render identical initial HTML               |
+| AC-13 | SSR safe                          | `bun run build` succeeds; no hydration mismatch warnings; server and client render identical initial HTML            |
 | AC-14 | No horizontal scroll interference | Horizontal scrolling of filter pills on events page is not affected                                                  |
 
 ## Consistency Gate

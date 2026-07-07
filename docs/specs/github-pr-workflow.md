@@ -2,7 +2,7 @@
 
 ## Intent Description
 
-Add a GitHub Actions workflow that runs on every pull request targeting `main`. The workflow validates code quality and correctness by running type checking, linting, and the full test suite. This provides an automated quality gate so that broken code, style violations, and test failures are caught before merge. The workflow uses the same Node 22 + pnpm setup that the project already uses for local development and the Dockerfile. Formatting is enforced at commit time via a Husky pre-commit hook running lint-staged with Prettier, rather than in CI.
+Add a GitHub Actions workflow that runs on every pull request targeting `main`. The workflow validates code quality and correctness by running type checking, linting, and the full test suite. This provides an automated quality gate so that broken code, style violations, and test failures are caught before merge. The workflow uses the same Bun setup that the project already uses for local development and the Dockerfile. Formatting is enforced at commit time via a Husky pre-commit hook running lint-staged with Prettier, rather than in CI.
 
 ## User-Facing Behavior
 
@@ -51,12 +51,11 @@ Feature: GitHub pull request checks
 
   # --- Dependency caching ---
 
-  Scenario: Dependencies are cached between runs
-    Given a previous workflow run cached node_modules via pnpm store
+  Scenario: Dependencies install quickly on each run
+    Given the workflow uses `oven-sh/setup-bun` to install Bun
     When a new PR triggers the workflow
-    And pnpm-lock.yaml has not changed
-    Then dependencies are restored from cache
-    And pnpm install completes quickly
+    Then `bun install --frozen-lockfile` completes without modifying `bun.lock`
+    And no separate dependency cache step is needed
 
   # --- Trigger scope ---
 
@@ -84,12 +83,11 @@ Feature: GitHub pull request checks
         ├── runs-on: ubuntu-latest
         ├── steps:
         │   ├── Checkout code
-        │   ├── Install pnpm (via pnpm/action-setup)
-        │   ├── Setup Node.js 22 (via actions/setup-node, with pnpm cache)
-        │   ├── Install dependencies (pnpm install --frozen-lockfile)
-        │   ├── Type Check (pnpm exec tsc --noEmit)
-        │   ├── Lint (pnpm lint)
-        │   └── Test (pnpm test)
+        │   ├── Setup Bun (via oven-sh/setup-bun)
+        │   ├── Install dependencies (bun install --frozen-lockfile)
+        │   ├── Type Check (bun x tsc --noEmit)
+        │   ├── Lint (bun run lint)
+        │   └── Test (bun run test)
 ```
 
 ### Components
@@ -106,12 +104,12 @@ Feature: GitHub pull request checks
 | ---------------------- | -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Formatting enforcement | Pre-commit hook (Husky + lint-staged) instead of CI step | Formatting is a local concern — fix it before it reaches the remote. Avoids CI failures for cosmetic issues and auto-formats on commit so developers don't need to remember. |
 | Single job vs. matrix  | Single job with sequential steps                         | Project is small; parallelizing 4 fast checks across jobs adds overhead without meaningful time savings. A single job avoids redundant checkout/install steps.               |
-| Node version           | 22 (matches Dockerfile `node:22-alpine`)                 | Consistency between CI and production runtime                                                                                                                                |
-| pnpm install flag      | `--frozen-lockfile`                                      | Prevents accidental lockfile changes in CI; matches Dockerfile behavior                                                                                                      |
-| pnpm setup             | `pnpm/action-setup`                                      | Official action; reads pnpm version from `packageManager` field or falls back to latest                                                                                      |
-| Cache strategy         | Built-in `actions/setup-node` cache for pnpm             | Simplest approach; caches pnpm store automatically by lockfile hash                                                                                                          |
-| Type check command     | `pnpm exec tsc --noEmit`                                 | Runs TypeScript compiler without emitting files; catches type errors                                                                                                         |
-| Test command           | `pnpm test` (runs `vitest run`)                          | Uses existing npm script; `run` flag ensures non-interactive single pass                                                                                                     |
+| Runtime                | Bun (matches Dockerfile `oven/bun` image)                | Consistency between CI and production runtime                                                                                                                                |
+| Bun install flag       | `--frozen-lockfile`                                      | Prevents accidental lockfile changes in CI; matches Dockerfile behavior                                                                                                      |
+| Bun setup              | `oven-sh/setup-bun`                                      | Official action; installs the Bun runtime directly, no separate Node.js setup needed                                                                                         |
+| Cache strategy         | None — relies on `bun install`'s speed                   | Bun installs are fast enough that an explicit CI dependency cache step isn't worth the added complexity                                                                      |
+| Type check command     | `bun x tsc --noEmit`                                     | Runs TypeScript compiler without emitting files; catches type errors                                                                                                         |
+| Test command           | `bun run test` (runs `vitest run`)                       | Uses existing package.json script; `run` flag ensures non-interactive single pass                                                                                            |
 | Trigger events         | `pull_request` only (not `push`)                         | PRs are the merge gate; push-to-main checks can be added later if needed                                                                                                     |
 
 ### Constraints
@@ -123,18 +121,18 @@ Feature: GitHub pull request checks
 
 ## Acceptance Criteria
 
-| #     | Criterion               | Pass condition                                                 |
-| ----- | ----------------------- | -------------------------------------------------------------- |
-| AC-1  | Workflow file exists    | `.github/workflows/pr.yml` is a valid GitHub Actions workflow  |
-| AC-2  | Triggers on PRs to main | `on: pull_request` with `branches: [main]`                     |
-| AC-3  | Type check runs         | Step executes `tsc --noEmit` and fails the job on type errors  |
-| AC-4  | Lint runs               | Step executes `pnpm lint` and fails the job on lint violations |
-| AC-5  | Tests run               | Step executes `pnpm test` and fails the job on test failures   |
-| AC-6  | Dependencies cached     | pnpm store is cached via `actions/setup-node` cache            |
-| AC-7  | Node 22 used            | `node-version: 22` matches Dockerfile base image               |
-| AC-8  | Frozen lockfile         | `pnpm install --frozen-lockfile` prevents lockfile drift       |
-| AC-9  | Pre-commit hook         | Husky pre-commit hook runs lint-staged                         |
-| AC-10 | Staged files formatted  | lint-staged runs `prettier --write` on staged files            |
+| #     | Criterion                 | Pass condition                                                          |
+| ----- | ------------------------- | ----------------------------------------------------------------------- |
+| AC-1  | Workflow file exists      | `.github/workflows/pr.yml` is a valid GitHub Actions workflow           |
+| AC-2  | Triggers on PRs to main   | `on: pull_request` with `branches: [main]`                              |
+| AC-3  | Type check runs           | Step executes `tsc --noEmit` and fails the job on type errors           |
+| AC-4  | Lint runs                 | Step executes `bun run lint` and fails the job on lint violations       |
+| AC-5  | Tests run                 | Step executes `bun run test` and fails the job on test failures         |
+| AC-6  | Dependencies install fast | `bun install --frozen-lockfile` completes without a separate cache step |
+| AC-7  | Bun runtime used          | `oven-sh/setup-bun` matches the Dockerfile's `oven/bun` base image      |
+| AC-8  | Frozen lockfile           | `bun install --frozen-lockfile` prevents lockfile drift                 |
+| AC-9  | Pre-commit hook           | Husky pre-commit hook runs lint-staged                                  |
+| AC-10 | Staged files formatted    | lint-staged runs `prettier --write` on staged files                     |
 
 ## Consistency Gate
 

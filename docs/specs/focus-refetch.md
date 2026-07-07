@@ -222,7 +222,7 @@ The implementation uses only:
 | AC-8  | iOS Safari standalone                 | Focus-refetch works when returning to the PWA from a notification on iOS                                     |
 | AC-9  | Android Chrome                        | Focus-refetch works when returning to the PWA from a notification on Android                                 |
 | AC-10 | Pull-to-refresh not interrupted       | A visibilitychange during an active pull-to-refresh gesture does not cause a conflicting refetch             |
-| AC-11 | SSR safe                              | `pnpm build` succeeds; no hydration mismatch warnings; no `document` access during render                    |
+| AC-11 | SSR safe                              | `bun run build` succeeds; no hydration mismatch warnings; no `document` access during render                 |
 | AC-12 | No new dependencies                   | No new entries in package.json                                                                               |
 
 ## Consistency Gate

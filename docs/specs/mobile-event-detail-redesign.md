@@ -227,7 +227,7 @@ No new npm packages. The implementation uses:
 | AC-13 | Focus trap                | Tab key cycles within lightbox; focus doesn't escape to page behind                                 |
 | AC-14 | Screen reader support     | Lightbox has role="dialog", aria-modal, accessible close button label, and image alt text           |
 | AC-15 | Body scroll locked        | Page behind lightbox does not scroll while lightbox is open                                         |
-| AC-16 | SSR safe                  | `pnpm build` succeeds; no hydration mismatches                                                      |
+| AC-16 | SSR safe                  | `bun run build` succeeds; no hydration mismatches                                                   |
 | AC-17 | No new dependencies       | No new entries in package.json                                                                      |
 | AC-18 | Storybook stories updated | CameraEventDetailPage stories render correctly with the new layout                                  |
 

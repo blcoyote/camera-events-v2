@@ -29,7 +29,7 @@ Feature: Feature-sliced architecture refactor
     Given the codebase has been restructured into src/features/
 
   Scenario: No functional regressions after refactor
-    When the application is built with pnpm build
+    When the application is built with bun run build
     Then the build completes without errors
     And all existing pages render identically
     And all API routes return the same responses
@@ -383,8 +383,8 @@ import { MediaCard } from '#/features/shared/components/MediaCard' // shared
 
 | Risk                                | Mitigation                                                                |
 | ----------------------------------- | ------------------------------------------------------------------------- |
-| Import paths break during migration | Migrate one feature at a time; run `pnpm tsc --noEmit` after each move    |
+| Import paths break during migration | Migrate one feature at a time; run `bun x tsc --noEmit` after each move   |
 | Route tree breaks                   | Never move files under `src/routes/`; only update imports within them     |
-| Storybook paths break               | Update Storybook story imports; run `pnpm storybook` to verify            |
+| Storybook paths break               | Update Storybook story imports; run `bun run storybook` to verify         |
 | Circular dependency introduced      | Shared never imports from features; features never import from each other |
 | Test file discovery changes         | Vitest globbing (`**/*.test.ts`) works regardless of directory structure  |

@@ -10,7 +10,7 @@
  * better-sqlite3 import on the server hot path, this fails CI before it
  * reaches a Bun runtime.
  *
- * Run after `pnpm build`. Exits 0 if clean, 1 with the offending file.
+ * Run after `bun run build`. Exits 0 if clean, 1 with the offending file.
  */
 import { readdirSync, readFileSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
@@ -19,7 +19,7 @@ const BUNDLE_ROOT = '.output/server'
 
 if (!existsSync(BUNDLE_ROOT)) {
   console.error(
-    `verify-bun-bundle: ${BUNDLE_ROOT} not found — run \`pnpm build\` first`,
+    `verify-bun-bundle: ${BUNDLE_ROOT} not found — run \`bun run build\` first`,
   )
   process.exit(2)
 }
