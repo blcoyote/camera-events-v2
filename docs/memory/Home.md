@@ -26,6 +26,14 @@ this vault is meant to be used.
 
 ## 🧠 Decisions
 
+- [[decisions/2026-04-14-frigate-api-client]] — one client + TTL cache + mock + validation gate
+- [[decisions/2026-04-14-google-oauth-via-arctic]] — Arctic OAuth, encrypted session + state cookies
+- [[decisions/2026-04-14-server-client-code-segmentation]] — server code under `*/server/`; no browser globals in render
+- [[decisions/2026-04-14-server-function-authentication]] — every server fn calls `requireSession()` itself
+- [[decisions/2026-04-15-feature-sliced-architecture]] — vertical slices, no cross-feature imports
+- [[decisions/2026-04-15-mqtt-web-push-pipeline]] — per-camera batcher, silent VAPID gate
+- [[decisions/2026-04-17-cross-platform-pwa-first]] — iOS/Android/desktop is a hard constraint
+- [[decisions/2026-04-28-runtime-portable-sqlite-driver]] — dual Node/Bun driver behind one interface
 - [[decisions/2026-06-29-obsidian-memory-vault]]
 - [[decisions/2026-07-07-login-allowlist-in-google-cloud]] — allow-list lives in Google Cloud, not app code
 
