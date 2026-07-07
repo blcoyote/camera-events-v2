@@ -68,6 +68,19 @@ describe('resyncSubscription', () => {
 
     expect(result).toBe(false)
   })
+
+  it('defaults to globalThis.fetch when no fetchFn is provided', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const result = await resyncSubscription(makeSubscription())
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/push/subscribe',
+      expect.objectContaining({ method: 'POST' }),
+    )
+    expect(result).toBe(true)
+  })
 })
 
 describe('resyncExistingPushSubscription', () => {

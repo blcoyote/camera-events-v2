@@ -14,7 +14,7 @@
  */
 export async function resyncSubscription(
   subscription: Pick<PushSubscription, 'toJSON'>,
-  fetchFn: typeof fetch = fetch,
+  fetchFn: typeof fetch = globalThis.fetch,
 ): Promise<boolean> {
   try {
     const subJson = subscription.toJSON()
@@ -39,7 +39,7 @@ export async function resyncSubscription(
  * @returns true if a subscription existed and the server accepted the re-sync.
  */
 export async function resyncExistingPushSubscription(
-  fetchFn: typeof fetch = fetch,
+  fetchFn: typeof fetch = globalThis.fetch,
 ): Promise<boolean> {
   if (
     typeof navigator === 'undefined' ||
