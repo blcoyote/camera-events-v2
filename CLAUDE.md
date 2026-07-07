@@ -403,6 +403,16 @@ gotchas, decision records, and the project glossary.
   content) to find or create the right place; follow the conventions in
   `docs/memory/README.md` (one idea per note, link with `[[wikilinks]]`, frontmatter
   via `docs/memory/templates/memory-note.md`).
+- **Record every larger architectural decision as an ADR.** Whenever we make a
+  non-trivial architectural or design choice — a new subsystem, a cross-cutting
+  pattern, a framework/library/runtime choice, a security posture, or a deliberate
+  deviation from a prior plan — write a dated decision record in
+  `docs/memory/decisions/` (`YYYY-MM-DD-slug.md`, ADR-style: Context → Decision →
+  Alternatives → Why it matters). This is a second memory: it must reflect the
+  **current implementation as the chosen state**, even where the code has since
+  deviated from the spec/plan that preceded it — when it deviates, record the current
+  reality and note the deviation. Add the new ADR to the "Decisions" list in
+  `docs/memory/Home.md`.
 - **Git:** notes are committed (shared); the per-user `docs/memory/.obsidian/` config
   is gitignored.
 
