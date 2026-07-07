@@ -27,6 +27,7 @@ this vault is meant to be used.
 ## 🧠 Decisions
 
 - [[decisions/2026-06-29-obsidian-memory-vault]]
+- [[decisions/2026-07-07-login-allowlist-in-google-cloud]] — allow-list lives in Google Cloud, not app code
 
 ## ⚠️ Gotchas
 
