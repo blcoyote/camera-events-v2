@@ -12,7 +12,7 @@ A self-hosted Progressive Web App (PWA) for browsing [Frigate NVR](https://friga
 
 ## CRITICAL: use Bun, not pnpm/npm
 
-**The package manager is Bun (validated: v1.3.11). `package.json` enforces this via `preinstall: only-allow bun` — `npm`/`pnpm`/`yarn` installs will abort.** The README and `playwright.config.ts` mention `pnpm`; that is stale — ignore it. CI, the Dockerfile, and all scripts use Bun. Node.js v22 is present but Bun is the runtime for CI and production.
+**The package manager is Bun (validated: v1.3.11). `package.json` enforces this via `preinstall: only-allow bun` — `npm`/`pnpm`/`yarn` installs will abort.** Note that `playwright.config.ts`'s `webServer.command` still says `pnpm dev`; that is stale — the e2e suite is not part of PR CI. CI, the Dockerfile, and all scripts use Bun. Node.js v22 is present but Bun is the runtime for CI and production.
 
 ## Build, test, and validate
 

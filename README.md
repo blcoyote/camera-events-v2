@@ -14,14 +14,14 @@ A self-hosted PWA for browsing and monitoring [Frigate NVR](https://frigate.vide
 
 ## Tech Stack
 
-- **Runtime:** Node.js 22, TanStack Start (SSR), React 19, Vite 8
+- **Runtime:** Bun, TanStack Start (SSR), React 19, Vite 8
 - **Routing:** TanStack Router (file-based)
 - **Styling:** Tailwind CSS v4
 - **Data:** better-sqlite3 (push subscriptions + preferences), MQTT (Frigate event stream)
 - **Auth:** Google OAuth via Arctic, encrypted session cookies
 - **Push:** web-push (VAPID), Serwist service worker
 - **Testing:** Vitest, Testing Library, Playwright browser mode
-- **Package manager:** pnpm (enforced via `only-allow`)
+- **Package manager:** Bun (enforced via `only-allow`)
 
 ## Architecture
 
@@ -34,8 +34,7 @@ A self-hosted PWA for browsing and monitoring [Frigate NVR](https://frigate.vide
 
 ### Prerequisites
 
-- Node.js 22+
-- pnpm 9+ (corepack works: `corepack enable`)
+- Bun (see [bun.sh](https://bun.sh) — `npm`/`pnpm` are blocked via `only-allow bun`)
 - A Frigate instance reachable from the server (or use `FRIGATE_MOCK=1` for development)
 - RabbitMQ with MQTT plugin (see [rabbitmq/](rabbitmq/))
 - Google OAuth client (for login)
@@ -44,9 +43,9 @@ A self-hosted PWA for browsing and monitoring [Frigate NVR](https://frigate.vide
 ### Local Development
 
 ```bash
-pnpm install
+bun install
 cp .env.example .env   # then fill in the values below
-pnpm dev
+bun run dev
 ```
 
 The dev server runs on http://localhost:3000. Route tree (`src/routeTree.gen.ts`) is regenerated automatically by the `tanstackStart()` Vite plugin — never run `npx tsr generate`, that's an unrelated destructive tool.
@@ -69,14 +68,14 @@ Push notifications are silently disabled at startup if any VAPID variable is mis
 ## Scripts
 
 ```bash
-pnpm dev              # Start dev server on :3000
-pnpm build            # Production build (also generates routeTree + service worker)
-pnpm preview          # Serve the production build locally
-pnpm test             # Run Vitest once
-pnpm lint             # ESLint
-pnpm format           # Prettier check
-pnpm check            # Prettier write + ESLint --fix
-pnpm knip             # Unused-code report
+bun run dev           # Start dev server on :3000
+bun run build         # Production build (also generates routeTree + service worker)
+bun run preview       # Serve the production build locally
+bun run test          # Run Vitest once
+bun run lint          # ESLint
+bun run format        # Prettier check
+bun run check         # Prettier write + ESLint --fix
+bun run knip          # Unused-code report
 ```
 
 ## Testing
