@@ -289,10 +289,12 @@ describe('notifyUsersForCamera', () => {
 
     await notifyUsersForCamera('front_porch', [makeEvent()])
 
-    const loggedMessages = consoleLogSpy.mock.calls.map((call) => call[0])
+    const loggedMessages = consoleLogSpy.mock.calls.map(
+      (call: unknown[]) => call[0],
+    )
     expect(
       loggedMessages.some(
-        (msg) =>
+        (msg: unknown) =>
           typeof msg === 'string' &&
           msg.includes('user-1') &&
           msg.includes('2'),
@@ -300,7 +302,8 @@ describe('notifyUsersForCamera', () => {
     ).toBe(true)
     expect(
       loggedMessages.some(
-        (msg) => typeof msg === 'string' && msg.includes('push.example'),
+        (msg: unknown) =>
+          typeof msg === 'string' && msg.includes('push.example'),
       ),
     ).toBe(true)
   })
@@ -391,10 +394,12 @@ describe('notifyUsersForCamera', () => {
 
     await notifyUsersForCamera('front_porch', [makeEvent()])
 
-    const loggedMessages = consoleLogSpy.mock.calls.map((call) => call[0])
+    const loggedMessages = consoleLogSpy.mock.calls.map(
+      (call: unknown[]) => call[0],
+    )
     expect(
       loggedMessages.some(
-        (msg) =>
+        (msg: unknown) =>
           typeof msg === 'string' &&
           msg.includes('user-blocked') &&
           /disabled|skip/i.test(msg),
