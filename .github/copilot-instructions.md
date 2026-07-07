@@ -12,7 +12,7 @@ A self-hosted Progressive Web App (PWA) for browsing [Frigate NVR](https://friga
 
 ## CRITICAL: use Bun, not pnpm/npm
 
-**The package manager is Bun (validated: v1.3.11). `package.json` enforces this via `preinstall: only-allow bun` — `npm`/`pnpm`/`yarn` installs will abort.** Note that `playwright.config.ts`'s `webServer.command` still says `pnpm dev`; that is stale — the e2e suite is not part of PR CI. CI, the Dockerfile, and all scripts use Bun. Node.js v22 is present but Bun is the runtime for CI and production.
+**The package manager is Bun. `package.json` enforces this via `preinstall: npx only-allow bun` — `npm`/`pnpm`/`yarn` installs will abort.** CI (`oven-sh/setup-bun`, `bun-version: latest`), the Dockerfile (`oven/bun`), and all scripts use Bun; commands here were validated on Bun v1.3.11, but no exact patch version is pinned. Node.js v22 is present but Bun is the runtime for CI and production.
 
 ## Build, test, and validate
 
@@ -52,10 +52,10 @@ A **husky `pre-push` hook** mirrors code_quality (`tsc --noEmit` · `lint` · `p
 
 ```
 src/
+  routeTree.gen.ts           # GENERATED (lives at src/ root) — never edit or run tsr on it
   routes/                    # File-based routes (TanStack Router). API routes under routes/api/.
     __root.tsx               # Root layout; getCurrentUserFn populates context.user
     _authenticated.tsx       # Auth-guard layout (client nav only — see auth note)
-    routeTree.gen.ts         # GENERATED — never edit or run tsr on it
   features/                  # Feature-sliced architecture (see rule below)
     shared/                  # ONLY place for cross-feature code
       server/                # Server-only: session.ts, frigate/, sqlite/, favorites/, health
