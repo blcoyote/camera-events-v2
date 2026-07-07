@@ -62,10 +62,7 @@ services:
     hostname: rabbitmq
     restart: unless-stopped
     ports:
-      # MQTT broker. If Frigate runs on a DIFFERENT host it must reach this
-      # port — in that case bind to the specific trusted interface instead of
-      # loopback (e.g. '10.0.0.5:1883:1883'). Loopback is the secure default.
-      - '127.0.0.1:1883:1883'
+      - '0.0.0.0:1883:1883'
       # Management UI — admin only, never expose publicly. Reach via SSH tunnel.
       - '127.0.0.1:15672:15672'
     environment:

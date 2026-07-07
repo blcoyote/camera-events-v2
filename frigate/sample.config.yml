@@ -1,0 +1,267 @@
+mqtt:
+  enabled: true
+  host: 192.168.0.x # IP of the machine running Docker Compose
+  port: 1883
+  topic_prefix: frigate
+  client_id: frigate
+  user: csce_app
+  password: '{MQTT_PASSWORD}'
+
+detectors:
+  coral:
+    type: edgetpu
+    device: usb
+#    model:
+#      path: /edgetpu_model.tflite
+
+objects:
+  track:
+    - person
+  filters:
+    person:
+      #      min_area: 5000
+      #      max_area: 100000
+      min_score: 0.75
+#      threshold: 0.85
+
+snapshots:
+  enabled: true
+  bounding_box: true
+  quality: 90
+  retain:
+    default: 7
+    mode: active_objects
+    objects:
+      person: 30
+
+record:
+  enabled: true
+  events:
+    retain:
+      default: 1
+      mode: active_objects
+      objects:
+        person: 7
+
+birdseye:
+  enabled: true
+  mode: continuous
+
+ffmpeg:
+  global_args:
+    - -hide_banner
+    - -loglevel
+    - info
+  input_args:
+    - -r
+    - '5'
+    - -err_detect
+    - aggressive
+    - -fflags
+    - discardcorrupt
+  hwaccel_args:
+    - -c:v:1
+    - h264_v4l2m2m
+
+go2rtc:
+  streams:
+    garage:
+      - rtsp://admin:{FRIGATE_RTSP_PASSWORD}@192.168.0.x:8554/Streaming/Channels/101
+    gavl_oest:
+      - rtsp://admin:{FRIGATE_RTSP_PASSWORD}@192.168.0.x:8554/Streaming/Channels/101
+    gavl_vest:
+      - rtsp://admin:{FRIGATE_RTSP_PASSWORD}@192.168.0.x:8554/Streaming/Channels/101
+    have:
+      - rtsp://admin:{FRIGATE_RTSP_PASSWORD}@192.168.0.x:8554/Streaming/Channels/101
+    koekken:
+      - rtsp://admin:{FRIGATE_RTSP_PASSWORD}@192.168.0.x:8554/Streaming/Channels/101
+    stuen:
+      - rtsp://admin:{FRIGATE_RTSP_PASSWORD}@192.168.0.x:8554/Streaming/Channels/101
+    vaerksted:
+      - rtsp://admin:{FRIGATE_RTSP_PASSWORD}@192.168.0.x:8554/Streaming/Channels/101
+
+cameras:
+  gavl_vest:
+    ui:
+      order: 1
+      dashboard: true
+    ffmpeg:
+      hwaccel_args: preset-rpi-64-h264
+      input_args: preset-rtsp-udp
+      inputs:
+        - path: rtsp://admin:{FRIGATE_RTSP_PASSWORD}@192.168.0.x:8554/Streaming/Channels/101
+          roles:
+            - record
+            - rtmp
+        - path: rtsp://admin:{FRIGATE_RTSP_PASSWORD}@192.168.0.x:8554/Streaming/Channels/102
+          roles:
+            - detect
+    detect:
+      enabled: true
+      width: 640
+      height: 360
+      fps: 5
+    snapshots:
+      enabled: true
+    motion:
+      mask:
+        - 347,85,346,23,227,21,227,82
+
+  koekken:
+    ui:
+      order: 7
+      dashboard: true
+    ffmpeg:
+      hwaccel_args: preset-rpi-64-h264
+      input_args: preset-rtsp-udp
+      inputs:
+        - path: rtsp://admin:{FRIGATE_RTSP_PASSWORD}@192.168.0.x:8554/Streaming/Channels/101
+          roles:
+            - record
+            - rtmp
+        - path: rtsp://admin:{FRIGATE_RTSP_PASSWORD}@192.168.0.x:8554/Streaming/Channels/102
+          roles:
+            - detect
+    detect:
+      enabled: true
+      width: 640
+      height: 360
+      fps: 5
+    snapshots:
+      enabled: true
+    motion:
+      mask:
+        - 0,360,153,360,173,0,0,0
+    objects:
+      filters:
+        person:
+          mask:
+            - 0,360,153,360,173,0,0,0
+
+  stuen:
+    ui:
+      order: 6
+      dashboard: true
+    ffmpeg:
+      hwaccel_args: preset-rpi-64-h264
+      input_args: preset-rtsp-udp
+      inputs:
+        - path: rtsp://admin:{FRIGATE_RTSP_PASSWORD}@192.168.0.x:8554/Streaming/Channels/101
+          roles:
+            - rtmp
+            - record
+        - path: rtsp://admin:{FRIGATE_RTSP_PASSWORD}@192.168.0.x:8554/Streaming/Channels/102
+          roles:
+            - detect
+    detect:
+      enabled: true
+      width: 640
+      height: 360
+      fps: 5
+    snapshots:
+      enabled: true
+
+  vaerksted:
+    ui:
+      order: 5
+      dashboard: true
+    ffmpeg:
+      hwaccel_args: preset-rpi-64-h264
+      input_args: preset-rtsp-udp
+      inputs:
+        - path: rtsp://admin:{FRIGATE_RTSP_PASSWORD}@192.168.0.x:8554/Streaming/Channels/101
+          roles:
+            - rtmp
+            - record
+        - path: rtsp://admin:{FRIGATE_RTSP_PASSWORD}@192.168.0.x:8554/Streaming/Channels/102
+          roles:
+            - detect
+    detect:
+      enabled: True
+      width: 640
+      height: 360
+      fps: 5
+    snapshots:
+      enabled: True
+
+  garage:
+    ui:
+      order: 2
+      dashboard: true
+    ffmpeg:
+      input_args: preset-rtsp-udp
+      inputs:
+        - path: rtsp://admin:{FRIGATE_RTSP_PASSWORD}@192.168.0.x:8554/Streaming/Channels/101
+          roles:
+            - record
+            - rtmp
+        - path: rtsp://admin:{FRIGATE_RTSP_PASSWORD}@192.168.0.x:8554/Streaming/Channels/102
+          roles:
+            - detect
+    detect:
+      enabled: true
+      width: 640
+      height: 360
+      fps: 5
+    snapshots:
+      enabled: true
+
+    motion:
+      mask:
+        - 174,0,177,39,0,40,0,0
+  have:
+    ui:
+      order: 3
+      dashboard: true
+    ffmpeg:
+      input_args: preset-rtsp-udp
+      inputs:
+        - path: rtsp://admin:{FRIGATE_RTSP_PASSWORD}@192.168.0.x:8554/Streaming/Channels/101
+          roles:
+            - record
+            - rtmp
+        - path: rtsp://admin:{FRIGATE_RTSP_PASSWORD}@192.168.0.x:8554/Streaming/Channels/102
+          roles:
+            - detect
+    detect:
+      enabled: true
+      width: 640
+      height: 360
+      fps: 5
+    snapshots:
+      enabled: true
+    objects:
+      filters:
+        person:
+          mask:
+            - 28,66,63,64,69,128,35,125
+            - 640,360,400,360,494,0,640,0
+    motion:
+      mask:
+        - 0,0,0,40,183,42,180,0
+        - 640,360,388,360,462,0,640,0
+        - 78,124,77,41,0,41,0,125
+  gavl_oest:
+    ui:
+      order: 4
+      dashboard: true
+    ffmpeg:
+      input_args: preset-rtsp-udp
+      inputs:
+        - path: rtsp://admin:{FRIGATE_RTSP_PASSWORD}@192.168.0.x:8554/Streaming/Channels/101
+          roles:
+            - rtmp
+            - record
+        - path: rtsp://admin:{FRIGATE_RTSP_PASSWORD}@192.168.0.x:8554/Streaming/Channels/102
+          roles:
+            - detect
+    detect:
+      enabled: true
+      width: 640
+      height: 360
+      fps: 5
+    snapshots:
+      enabled: true
+    motion:
+      mask:
+        - 177,0,0,0,0,46,176,42
