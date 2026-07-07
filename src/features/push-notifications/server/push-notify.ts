@@ -12,6 +12,15 @@ import { sendPushNotification, isPushEnabled } from './push'
 import type { PushPayload } from './push'
 import { getPushStore } from './push-store'
 
+/** Extract the host of a push endpoint for logging, or 'unknown' if unparseable. */
+export function endpointHost(endpoint: string): string {
+  try {
+    return new URL(endpoint).host
+  } catch {
+    return 'unknown'
+  }
+}
+
 /** Format a camera name for display: replace underscores, title-case words. */
 export function formatCameraName(name: string): string {
   return name.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
@@ -82,8 +91,17 @@ export async function notifyUsersForCamera(
   const store = await getPushStore()
   const userIds = store.getAllSubscribedUserIds()
 
+  console.log(
+    `[push-notify] Camera "${camera}": ${events.length} event(s) to dispatch across ${userIds.length} subscribed user(s)`,
+  )
+
   for (const userId of userIds) {
-    if (!store.isCameraEnabledForUser(userId, camera)) continue
+    if (!store.isCameraEnabledForUser(userId, camera)) {
+      console.log(
+        `[push-notify] User ${userId} has camera "${camera}" disabled — skipping`,
+      )
+      continue
+    }
 
     const payload =
       events.length === 1
@@ -91,6 +109,10 @@ export async function notifyUsersForCamera(
         : buildBundledPayload(camera, events)
 
     const subscriptions = store.getSubscriptionsByUserId(userId)
+    const hosts = subscriptions.map((sub) => endpointHost(sub.endpoint))
+    console.log(
+      `[push-notify] Pushing to user ${userId} on ${subscriptions.length} device(s): ${hosts.join(', ')}`,
+    )
     for (const sub of subscriptions) {
       try {
         await sendPushNotification(

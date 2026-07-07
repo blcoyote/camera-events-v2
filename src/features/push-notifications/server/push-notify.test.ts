@@ -6,6 +6,7 @@ import {
   buildSinglePayload,
   buildBundledPayload,
   notifyUsersForCamera,
+  endpointHost,
 } from './push-notify'
 import type { FrigateEventInfo } from './event-batcher'
 import { isPushEnabled, sendPushNotification } from './push'
@@ -160,6 +161,24 @@ describe('buildBundledPayload', () => {
   })
 })
 
+describe('endpointHost', () => {
+  it('extracts the host from an FCM endpoint', () => {
+    expect(endpointHost('https://fcm.googleapis.com/fcm/send/abc123')).toBe(
+      'fcm.googleapis.com',
+    )
+  })
+
+  it('extracts the host from a Mozilla push endpoint', () => {
+    expect(
+      endpointHost('https://updates.push.services.mozilla.com/wpush/v2/xyz'),
+    ).toBe('updates.push.services.mozilla.com')
+  })
+
+  it('returns "unknown" for an unparseable endpoint', () => {
+    expect(endpointHost('not a url')).toBe('unknown')
+  })
+})
+
 describe('notifyUsersForCamera', () => {
   const isPushEnabledMock = vi.mocked(isPushEnabled)
   const sendPushNotificationMock = vi.mocked(sendPushNotification)
@@ -188,16 +207,19 @@ describe('notifyUsersForCamera', () => {
   }
 
   let consoleErrorSpy: ReturnType<typeof vi.spyOn>
+  let consoleLogSpy: ReturnType<typeof vi.spyOn>
 
   beforeEach(() => {
     isPushEnabledMock.mockReset()
     sendPushNotificationMock.mockReset()
     getPushStoreMock.mockReset()
     consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
   })
 
   afterEach(() => {
     consoleErrorSpy.mockRestore()
+    consoleLogSpy.mockRestore()
   })
 
   it('returns early without calling getPushStore when isPushEnabled returns false', async () => {
@@ -249,6 +271,38 @@ describe('notifyUsersForCamera', () => {
       },
       expectedPayload,
     )
+  })
+
+  it('logs the user, device count, and host when dispatching to a subscribed user', async () => {
+    isPushEnabledMock.mockReturnValue(true)
+    const subs = [
+      { endpoint: 'https://push.example/a', p256dh: 'p1', auth: 'a1' },
+      { endpoint: 'https://push.example/b', p256dh: 'p2', auth: 'a2' },
+    ]
+    const store = makeStore({
+      getAllSubscribedUserIds: () => ['user-1'],
+      isCameraEnabledForUser: () => true,
+      getSubscriptionsByUserId: () => subs,
+    })
+    getPushStoreMock.mockResolvedValue(store as never)
+    sendPushNotificationMock.mockResolvedValue(undefined)
+
+    await notifyUsersForCamera('front_porch', [makeEvent()])
+
+    const loggedMessages = consoleLogSpy.mock.calls.map((call) => call[0])
+    expect(
+      loggedMessages.some(
+        (msg) =>
+          typeof msg === 'string' &&
+          msg.includes('user-1') &&
+          msg.includes('2'),
+      ),
+    ).toBe(true)
+    expect(
+      loggedMessages.some(
+        (msg) => typeof msg === 'string' && msg.includes('push.example'),
+      ),
+    ).toBe(true)
   })
 
   it('calls sendPushNotification with bundled payload when multiple events', async () => {
@@ -312,6 +366,40 @@ describe('notifyUsersForCamera', () => {
     expect(store.getSubscriptionsByUserId).not.toHaveBeenCalledWith(
       'user-blocked',
     )
+  })
+
+  it('logs a skip message when a user has the camera disabled', async () => {
+    isPushEnabledMock.mockReturnValue(true)
+    const subsByUser: Record<
+      string,
+      Array<{ endpoint: string; p256dh: string; auth: string }>
+    > = {
+      'user-allowed': [
+        { endpoint: 'https://push.example/allowed', p256dh: 'p', auth: 'a' },
+      ],
+      'user-blocked': [
+        { endpoint: 'https://push.example/blocked', p256dh: 'p', auth: 'a' },
+      ],
+    }
+    const store = makeStore({
+      getAllSubscribedUserIds: () => ['user-allowed', 'user-blocked'],
+      isCameraEnabledForUser: (userId) => userId === 'user-allowed',
+      getSubscriptionsByUserId: (userId) => subsByUser[userId] ?? [],
+    })
+    getPushStoreMock.mockResolvedValue(store as never)
+    sendPushNotificationMock.mockResolvedValue(undefined)
+
+    await notifyUsersForCamera('front_porch', [makeEvent()])
+
+    const loggedMessages = consoleLogSpy.mock.calls.map((call) => call[0])
+    expect(
+      loggedMessages.some(
+        (msg) =>
+          typeof msg === 'string' &&
+          msg.includes('user-blocked') &&
+          /disabled|skip/i.test(msg),
+      ),
+    ).toBe(true)
   })
 
   it('catches and logs errors from sendPushNotification without rethrowing', async () => {

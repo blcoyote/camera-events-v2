@@ -40,12 +40,24 @@ export function parseBatchWindowMs(envValue: string | undefined): number {
 
 const batchWindowMs = parseBatchWindowMs(process.env.EVENT_BATCH_WINDOW_MS)
 
-/** Singleton event batcher — flushes per-camera batches to push notifications. */
-const eventBatcher = new EventBatcher((camera, events) => {
+/**
+ * Flush callback for the EventBatcher: log the batch and dispatch push
+ * notifications for a camera's accumulated events. Exported for testing.
+ */
+export function dispatchBatch(
+  camera: string,
+  events: FrigateEventInfo[],
+): void {
+  console.log(
+    `[mqtt] Flushing batch for camera "${camera}" — ${events.length} event(s), dispatching push notifications`,
+  )
   notifyUsersForCamera(camera, events).catch((err) => {
     console.error('[mqtt] Push notification dispatch failed:', err)
   })
-}, batchWindowMs)
+}
+
+/** Singleton event batcher — flushes per-camera batches to push notifications. */
+const eventBatcher = new EventBatcher(dispatchBatch, batchWindowMs)
 
 /**
  * Parse a Frigate MQTT event payload into a FrigateEventInfo, or null
@@ -96,6 +108,10 @@ export function onFrigateMessage(topic: string, payload: Buffer): void {
         `[mqtt] New event: ${event.label} on ${event.camera} (${event.id})`,
       )
       eventBatcher.add(event)
+    } else {
+      console.log(
+        '[mqtt] Ignored frigate/events message (not a "new" event or malformed payload)',
+      )
     }
   }
 }

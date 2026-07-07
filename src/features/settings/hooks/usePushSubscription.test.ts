@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import { formatSubscribeError } from './usePushSubscription'
+import { formatSubscribeError, resyncSubscription } from './usePushSubscription'
 
 /**
  * Tests for the push subscription logic.
@@ -53,6 +53,72 @@ describe('formatSubscribeError', () => {
   it('treats non-string body.error as missing detail', () => {
     const msg = formatSubscribeError(400, { error: 42 })
     expect(msg).toBe('Could not enable notifications. Please try again.')
+  })
+})
+
+describe('resyncSubscription', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  function makeSubscription(
+    overrides: { endpoint?: string; keys?: Record<string, string> } = {},
+  ) {
+    const endpoint = overrides.endpoint ?? 'https://push.example.com/sub1'
+    const keys = overrides.keys ?? { p256dh: 'p-key', auth: 'a-key' }
+    return {
+      endpoint,
+      toJSON: () => ({ endpoint, keys }),
+    }
+  }
+
+  it('POSTs the subscription endpoint and keys to /api/push/subscribe', async () => {
+    const subscription = makeSubscription()
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true })
+
+    await resyncSubscription(subscription, fetchMock)
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/push/subscribe',
+      expect.objectContaining({
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: expect.stringContaining('https://push.example.com/sub1'),
+      }),
+    )
+    const body = JSON.parse(fetchMock.mock.calls[0][1].body)
+    expect(body).toEqual({
+      endpoint: 'https://push.example.com/sub1',
+      keys: { p256dh: 'p-key', auth: 'a-key' },
+    })
+  })
+
+  it('returns true when the response is ok', async () => {
+    const subscription = makeSubscription()
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true })
+
+    const result = await resyncSubscription(subscription, fetchMock)
+
+    expect(result).toBe(true)
+  })
+
+  it('returns false without throwing when the response is not ok', async () => {
+    const subscription = makeSubscription()
+    const fetchMock = vi.fn().mockResolvedValue({ ok: false, status: 401 })
+
+    const result = await resyncSubscription(subscription, fetchMock)
+
+    expect(result).toBe(false)
+  })
+
+  it('returns false without throwing when fetch rejects', async () => {
+    const subscription = makeSubscription()
+    const fetchMock = vi.fn().mockRejectedValue(new Error('network error'))
+
+    const result = await resyncSubscription(subscription, fetchMock)
+
+    expect(result).toBe(false)
   })
 })
 

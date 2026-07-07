@@ -1,5 +1,7 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
 import { clearFrigateCache } from '#/features/shared/server/frigate/cache'
+import { notifyUsersForCamera } from './push-notify'
+import type { FrigateEventInfo } from './event-batcher'
 
 vi.mock('mqtt', () => {
   const mockClient = {
@@ -14,6 +16,10 @@ vi.mock('mqtt', () => {
     __mockClient: mockClient,
   }
 })
+
+vi.mock('./push-notify', () => ({
+  notifyUsersForCamera: vi.fn().mockResolvedValue(undefined),
+}))
 
 async function getMockClient() {
   const mod = await import('mqtt')
@@ -57,6 +63,89 @@ describe('onFrigateMessage', () => {
 
     onFrigateMessage('frigate/reviews', Buffer.from('{}'))
     expect(frigateCache.size).toBe(0)
+  })
+
+  it('logs "New event" when a valid new event is received', async () => {
+    const { onFrigateMessage } = await import('./mqtt')
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+
+    onFrigateMessage(
+      'frigate/events',
+      Buffer.from(
+        JSON.stringify({
+          type: 'new',
+          after: {
+            id: 'x',
+            camera: 'front_porch',
+            label: 'person',
+            start_time: 1713182400,
+          },
+        }),
+      ),
+    )
+
+    expect(
+      logSpy.mock.calls.some((call) => String(call[0]).includes('New event')),
+    ).toBe(true)
+
+    logSpy.mockRestore()
+  })
+
+  it('logs "Ignored" when the message is not a "new" event', async () => {
+    const { onFrigateMessage } = await import('./mqtt')
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+
+    onFrigateMessage(
+      'frigate/events',
+      Buffer.from(
+        JSON.stringify({
+          type: 'update',
+          after: {
+            id: 'x',
+            camera: 'front_porch',
+            label: 'person',
+            start_time: 1713182400,
+          },
+        }),
+      ),
+    )
+
+    expect(
+      logSpy.mock.calls.some((call) => String(call[0]).includes('Ignored')),
+    ).toBe(true)
+
+    logSpy.mockRestore()
+  })
+})
+
+describe('dispatchBatch', () => {
+  const notifyMock = vi.mocked(notifyUsersForCamera)
+
+  beforeEach(() => {
+    notifyMock.mockClear()
+  })
+
+  it('logs the flush and dispatches push notifications', async () => {
+    const { dispatchBatch } = await import('./mqtt')
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+
+    const events: FrigateEventInfo[] = [
+      { id: '1', camera: 'front_porch', label: 'person', startTime: 1 },
+      { id: '2', camera: 'front_porch', label: 'car', startTime: 2 },
+    ]
+
+    dispatchBatch('front_porch', events)
+
+    expect(
+      logSpy.mock.calls.some(
+        (call) =>
+          String(call[0]).includes('front_porch') &&
+          String(call[0]).includes('2'),
+      ),
+    ).toBe(true)
+    expect(notifyMock).toHaveBeenCalledWith('front_porch', events)
+
+    logSpy.mockRestore()
   })
 })
 
