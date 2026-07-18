@@ -74,7 +74,7 @@ export function NavDrawer({ isOpen, onClose, id }: NavDrawerProps) {
         role="dialog"
         aria-modal="true"
         aria-label="Navigation"
-        className="nav-drawer-panel fixed inset-y-0 left-0 z-[70] flex w-72 flex-col bg-(--surface) pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] shadow-xl"
+        className="nav-drawer-panel fixed inset-y-0 left-0 z-[70] flex w-72 flex-col bg-(--surface) pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] shadow-xl backdrop-blur-lg"
       >
         {/* Drawer header */}
         <div className="flex items-center justify-end border-b border-(--line) px-4 py-3">
