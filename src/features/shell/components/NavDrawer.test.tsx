@@ -73,16 +73,16 @@ describe('NavDrawer', () => {
     ).toBe('/settings')
   })
 
-  it('applies a backdrop blur to the backdrop', () => {
-    render(<NavDrawer isOpen={true} onClose={vi.fn()} />)
-    expect(screen.getByTestId('nav-drawer-backdrop').className).toContain(
-      'backdrop-blur',
-    )
-  })
-
-  it('applies a backdrop blur to the drawer panel', () => {
+  it('frosts the drawer panel with a backdrop blur', () => {
     render(<NavDrawer isOpen={true} onClose={vi.fn()} />)
     expect(screen.getByRole('dialog').className).toContain('backdrop-blur')
+  })
+
+  it('does not blur the overlay backdrop', () => {
+    render(<NavDrawer isOpen={true} onClose={vi.fn()} />)
+    expect(screen.getByTestId('nav-drawer-backdrop').className).not.toContain(
+      'backdrop-blur',
+    )
   })
 
   it('calls onClose when backdrop is clicked', () => {

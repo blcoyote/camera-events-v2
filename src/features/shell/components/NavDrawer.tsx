@@ -63,7 +63,7 @@ export function NavDrawer({ isOpen, onClose, id }: NavDrawerProps) {
       {/* Backdrop */}
       <div
         data-testid="nav-drawer-backdrop"
-        className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm"
+        className="fixed inset-0 z-[60] bg-black/40"
         aria-hidden="true"
         onClick={onClose}
       />
