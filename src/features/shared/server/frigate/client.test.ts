@@ -791,14 +791,34 @@ describe('getLatestSnapshot', () => {
   })
 })
 
-// ─── getCameraLiveStream ───
+// ─── getCameraHlsPlaylist / getCameraHlsSegment ───
 //
-// Proxies Frigate's MJPEG live endpoint (GET /api/{camera_name}). This is an
-// infinite multipart/x-mixed-replace stream, so it must never be given a
-// timeout signal — only the caller-supplied AbortSignal (tied to client
-// disconnect) may cancel it.
+// HLS (fMP4) live view, proxied through go2rtc's stream.m3u8 endpoint.
+// Unlike the JSON/binary helpers above, these are never routed through the
+// Frigate response cache and never apply a request timeout — the segment
+// fetch in particular streams indefinitely and must only be cancelled by the
+// caller-supplied AbortSignal.
 
-describe('getCameraLiveStream', () => {
+const GO2RTC_BASE = `${FRIGATE_URL}/live/webrtc/api`
+
+function mockFetchText({
+  status = 200,
+  headers = {},
+  text = '#EXTM3U\n',
+}: {
+  status?: number
+  headers?: Record<string, string>
+  text?: string
+} = {}) {
+  return vi.fn().mockResolvedValue({
+    ok: status >= 200 && status < 300,
+    status,
+    headers: new Headers(headers),
+    text: () => Promise.resolve(text),
+  })
+}
+
+describe('getCameraHlsPlaylist', () => {
   const originalEnv = process.env.FRIGATE_URL
   const originalFetch = globalThis.fetch
 
@@ -817,81 +837,156 @@ describe('getCameraLiveStream', () => {
     }
   })
 
-  it('returns ok:true with status, body, and headers on success', async () => {
-    const fetchMock = mockFetchStream({
+  it('builds the go2rtc stream.m3u8 URL ending with src=<camera>&mp4', async () => {
+    const fetchMock = mockFetchText()
+    globalThis.fetch = fetchMock
+    const { getCameraHlsPlaylist } = await import('./client')
+    await getCameraHlsPlaylist('front_door')
+
+    const calledUrl = fetchMock.mock.calls[0][0] as string
+    expect(calledUrl).toBe(`${GO2RTC_BASE}/stream.m3u8?src=front_door&mp4`)
+  })
+
+  it('returns ok:true with the upstream status, headers, and text on 200', async () => {
+    const playlistText = '#EXTM3U\n#EXT-X-ENDLIST\n'
+    const fetchMock = mockFetchText({
       status: 200,
-      headers: { 'Content-Type': 'multipart/x-mixed-replace; boundary=frame' },
+      headers: { 'Content-Type': 'application/vnd.apple.mpegurl' },
+      text: playlistText,
     })
     globalThis.fetch = fetchMock
-    const { getCameraLiveStream } = await import('./client')
-    const result = await getCameraLiveStream('front_door')
+    const { getCameraHlsPlaylist } = await import('./client')
+    const result = await getCameraHlsPlaylist('front_door')
 
     expect(result.ok).toBe(true)
     if (!result.ok) return
     expect(result.data.status).toBe(200)
-    expect(result.data.body).not.toBeNull()
     expect(result.data.headers.get('Content-Type')).toBe(
-      'multipart/x-mixed-replace; boundary=frame',
+      'application/vnd.apple.mpegurl',
     )
+    expect(result.data.text).toBe(playlistText)
   })
 
-  it('builds the URL as <FRIGATE_URL>/api/<camera> with no query params by default', async () => {
-    const fetchMock = mockFetchStream()
+  it('returns ok:true with the upstream status and empty text on a non-2xx response', async () => {
+    const fetchMock = mockFetchText({ status: 404 })
     globalThis.fetch = fetchMock
-    const { getCameraLiveStream } = await import('./client')
-    await getCameraLiveStream('front_door')
+    const { getCameraHlsPlaylist } = await import('./client')
+    const result = await getCameraHlsPlaylist('front_door')
 
-    const calledUrl = fetchMock.mock.calls[0][0] as string
-    expect(calledUrl).toBe(`${FRIGATE_URL}/api/front_door`)
-  })
-
-  it('includes fps and h query params only when provided', async () => {
-    const fetchMock = mockFetchStream()
-    globalThis.fetch = fetchMock
-    const { getCameraLiveStream } = await import('./client')
-    await getCameraLiveStream('front_door', { fps: 5, height: 480 })
-
-    const calledUrl = fetchMock.mock.calls[0][0] as string
-    expect(calledUrl).toContain('fps=5')
-    expect(calledUrl).toContain('h=480')
-  })
-
-  it('omits fps and h query params when not provided', async () => {
-    const fetchMock = mockFetchStream()
-    globalThis.fetch = fetchMock
-    const { getCameraLiveStream } = await import('./client')
-    await getCameraLiveStream('front_door')
-
-    const calledUrl = fetchMock.mock.calls[0][0] as string
-    expect(calledUrl).not.toContain('fps')
-    expect(calledUrl).not.toContain('h=')
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(result.data.status).toBe(404)
+    expect(result.data.text).toBe('')
   })
 
   it('passes the given signal through to fetch', async () => {
-    const fetchMock = mockFetchStream()
+    const fetchMock = mockFetchText()
     globalThis.fetch = fetchMock
-    const { getCameraLiveStream } = await import('./client')
+    const { getCameraHlsPlaylist } = await import('./client')
     const controller = new AbortController()
-    await getCameraLiveStream('front_door', { signal: controller.signal })
+    await getCameraHlsPlaylist('front_door', { signal: controller.signal })
 
     const init = fetchMock.mock.calls[0][1] as RequestInit
     expect(init.signal).toBe(controller.signal)
   })
 
-  it('does not set a timeout signal when no signal option is given', async () => {
+  it('returns { ok: false } on network failure', async () => {
+    globalThis.fetch = mockFetchNetworkError()
+    const { getCameraHlsPlaylist } = await import('./client')
+    const result = await getCameraHlsPlaylist('front_door')
+
+    expect(result.ok).toBe(false)
+    if (result.ok) return
+    expect(result.error).toContain('fetch failed')
+  })
+})
+
+describe('getCameraHlsSegment', () => {
+  const originalEnv = process.env.FRIGATE_URL
+  const originalFetch = globalThis.fetch
+
+  beforeEach(() => {
+    clearFrigateCache()
+    process.env.FRIGATE_URL = FRIGATE_URL
+  })
+
+  afterEach(() => {
+    globalThis.fetch = originalFetch
+    clearFrigateCache()
+    if (originalEnv === undefined) {
+      delete process.env.FRIGATE_URL
+    } else {
+      process.env.FRIGATE_URL = originalEnv
+    }
+  })
+
+  it('builds the URL as <go2rtc base>/<segmentRef>', async () => {
     const fetchMock = mockFetchStream()
     globalThis.fetch = fetchMock
-    const { getCameraLiveStream } = await import('./client')
-    await getCameraLiveStream('front_door')
+    const { getCameraHlsSegment } = await import('./client')
+    await getCameraHlsSegment('front_door', 'segment0.mp4?src=front_door')
+
+    const calledUrl = fetchMock.mock.calls[0][0] as string
+    expect(calledUrl).toBe(`${GO2RTC_BASE}/segment0.mp4?src=front_door`)
+  })
+
+  it('forwards a Range header when rangeHeader is given', async () => {
+    const fetchMock = mockFetchStream()
+    globalThis.fetch = fetchMock
+    const { getCameraHlsSegment } = await import('./client')
+    await getCameraHlsSegment('front_door', 'segment0.mp4', {
+      rangeHeader: 'bytes=0-99',
+    })
 
     const init = fetchMock.mock.calls[0][1] as RequestInit
-    expect(init.signal).toBeUndefined()
+    const sentHeaders = new Headers(init.headers)
+    expect(sentHeaders.get('Range')).toBe('bytes=0-99')
+  })
+
+  it('does not set a Range header when rangeHeader is not given', async () => {
+    const fetchMock = mockFetchStream()
+    globalThis.fetch = fetchMock
+    const { getCameraHlsSegment } = await import('./client')
+    await getCameraHlsSegment('front_door', 'segment0.mp4')
+
+    const init = fetchMock.mock.calls[0][1] as RequestInit
+    const sentHeaders = new Headers(init.headers)
+    expect(sentHeaders.has('Range')).toBe(false)
+  })
+
+  it('passes the given signal through to fetch', async () => {
+    const fetchMock = mockFetchStream()
+    globalThis.fetch = fetchMock
+    const { getCameraHlsSegment } = await import('./client')
+    const controller = new AbortController()
+    await getCameraHlsSegment('front_door', 'segment0.mp4', {
+      signal: controller.signal,
+    })
+
+    const init = fetchMock.mock.calls[0][1] as RequestInit
+    expect(init.signal).toBe(controller.signal)
+  })
+
+  it('returns ok:true with status, body, and headers on success', async () => {
+    const fetchMock = mockFetchStream({
+      status: 200,
+      headers: { 'Content-Type': 'video/mp4' },
+    })
+    globalThis.fetch = fetchMock
+    const { getCameraHlsSegment } = await import('./client')
+    const result = await getCameraHlsSegment('front_door', 'segment0.mp4')
+
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(result.data.status).toBe(200)
+    expect(result.data.body).not.toBeNull()
+    expect(result.data.headers.get('Content-Type')).toBe('video/mp4')
   })
 
   it('returns { ok: false } on network failure', async () => {
     globalThis.fetch = mockFetchNetworkError()
-    const { getCameraLiveStream } = await import('./client')
-    const result = await getCameraLiveStream('front_door')
+    const { getCameraHlsSegment } = await import('./client')
+    const result = await getCameraHlsSegment('front_door', 'segment0.mp4')
 
     expect(result.ok).toBe(false)
     if (result.ok) return

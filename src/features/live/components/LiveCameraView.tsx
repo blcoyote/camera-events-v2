@@ -1,25 +1,70 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
-function streamSrc(camera: string, refreshKey: number): string {
-  return `/api/live/${encodeURIComponent(camera)}/stream?k=${refreshKey}`
+function streamSrc(camera: string): string {
+  return `/api/live/${encodeURIComponent(camera)}/stream`
 }
 
 export function LiveCameraView({ camera }: { camera: string }) {
+  const videoRef = useRef<HTMLVideoElement>(null)
   const [refreshKey, setRefreshKey] = useState(0)
   const [hasError, setHasError] = useState(false)
 
   useEffect(() => {
+    const video = videoRef.current
+    if (!video) return
+
     setHasError(false)
-  }, [camera])
+
+    const controller = new AbortController()
+    const src = streamSrc(camera)
+    const onError = () => setHasError(true)
+
+    if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      video.src = src
+      video.addEventListener('error', onError)
+      return () => {
+        video.removeEventListener('error', onError)
+        video.removeAttribute('src')
+        video.load()
+      }
+    }
+
+    let hlsInstance: { destroy: () => void } | undefined
+
+    void (async () => {
+      const { default: Hls } = await import('hls.js')
+      if (controller.signal.aborted) return
+
+      if (!Hls.isSupported()) {
+        onError()
+        return
+      }
+
+      const hls = new Hls()
+      hlsInstance = hls
+      hls.on(Hls.Events.ERROR, (_event, data) => {
+        if (data.fatal) onError()
+      })
+      hls.loadSource(src)
+      hls.attachMedia(video)
+    })()
+
+    return () => {
+      controller.abort()
+      hlsInstance?.destroy()
+    }
+  }, [camera, refreshKey])
 
   return (
     <div className="relative aspect-video overflow-hidden rounded-4xl bg-(--surface-strong)">
-      <img
-        src={streamSrc(camera, refreshKey)}
-        alt={`Live view of ${camera}`}
+      <video
+        ref={videoRef}
+        playsInline
+        muted
+        autoPlay
+        controls
+        aria-label={`Live view of ${camera}`}
         className="h-full w-full object-contain"
-        onLoad={() => setHasError(false)}
-        onError={() => setHasError(true)}
       />
       <div className="pointer-events-none absolute inset-x-0 bottom-0 flex items-center justify-between gap-2 bg-gradient-to-t from-black/60 to-transparent px-4 py-3">
         <span className="text-sm font-semibold text-white">{camera}</span>

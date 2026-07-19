@@ -33,6 +33,7 @@
     "@tanstack/react-start": "1.168.26",
     "@tanstack/router-plugin": "1.168.18",
     "arctic": "^3.7.0",
+    "hls.js": "^1.6.16",
     "lucide-react": "^1.21.0",
     "mqtt": "^5.15.1",
     "nitro": "^3.0.260610-beta",

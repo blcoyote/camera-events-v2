@@ -43,11 +43,7 @@ describe('getLivePageState', () => {
 describe('LivePage', () => {
   it('shows the live view for the first camera initially', () => {
     render(<LivePage result={ok(['garage', 'kitchen'])} />)
-    const img = screen.getByAltText('Live view of garage')
-    expect(img).toHaveAttribute(
-      'src',
-      expect.stringContaining('/api/live/garage/stream'),
-    )
+    expect(screen.getByLabelText('Live view of garage')).toBeInTheDocument()
   })
 
   it('renders a picker button for each camera', () => {
@@ -65,11 +61,7 @@ describe('LivePage', () => {
     fireEvent.click(
       screen.getByRole('button', { name: 'Show live view for kitchen' }),
     )
-    const img = screen.getByAltText('Live view of kitchen')
-    expect(img).toHaveAttribute(
-      'src',
-      expect.stringContaining('/api/live/kitchen/stream'),
-    )
+    expect(screen.getByLabelText('Live view of kitchen')).toBeInTheDocument()
   })
 
   it('marks the selected camera button as pressed', () => {

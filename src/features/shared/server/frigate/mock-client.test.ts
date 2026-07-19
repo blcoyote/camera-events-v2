@@ -14,7 +14,8 @@ import {
   getConfig,
   getCameras,
   getLatestSnapshot,
-  getCameraLiveStream,
+  getCameraHlsPlaylist,
+  getCameraHlsSegment,
 } from './mock-client'
 
 const EXPECTED_CAMERAS = [
@@ -264,15 +265,28 @@ describe('mock-client', () => {
     })
   })
 
-  describe('getCameraLiveStream', () => {
-    it('returns a 200 result with a non-null body and image/jpeg content type', async () => {
-      const result = await getCameraLiveStream('front_porch')
+  describe('getCameraHlsPlaylist', () => {
+    it('returns a valid m3u8 playlist string with the correct content type', async () => {
+      const result = await getCameraHlsPlaylist('front_porch')
+      expect(result.ok).toBe(true)
+      if (!result.ok) return
+      expect(result.data.status).toBe(200)
+      expect(result.data.text).toContain('#EXTM3U')
+      expect(result.data.headers.get('Content-Type')).toBe(
+        'application/vnd.apple.mpegurl',
+      )
+    })
+  })
+
+  describe('getCameraHlsSegment', () => {
+    it('returns a 200 result with a non-null body and video/mp4 content type', async () => {
+      const result = await getCameraHlsSegment('front_porch', 'segment0.mp4')
       expect(result.ok).toBe(true)
       if (!result.ok) return
       expect(result.data.status).toBe(200)
       expect(result.data.body).not.toBeNull()
       expect(result.data.body).toBeInstanceOf(ReadableStream)
-      expect(result.data.headers.get('Content-Type')).toBe('image/jpeg')
+      expect(result.data.headers.get('Content-Type')).toBe('video/mp4')
     })
   })
 })
