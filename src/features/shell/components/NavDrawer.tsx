@@ -1,7 +1,7 @@
 import { createPortal } from 'react-dom'
 import { useEffect, useRef } from 'react'
 import { Link } from '@tanstack/react-router'
-import { X, Camera, Bell, Heart, Settings } from 'lucide-react'
+import { X, Camera, Bell, Heart, Settings, Video } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
 interface NavDrawerProps {
@@ -18,6 +18,7 @@ interface DrawerNavLink {
 
 const DRAWER_NAV_LINKS: DrawerNavLink[] = [
   { label: 'Cameras', to: '/cameras', Icon: Camera },
+  { label: 'Live', to: '/live', Icon: Video },
   { label: 'Events', to: '/camera-events', Icon: Bell },
   { label: 'Favorites', to: '/favorites', Icon: Heart },
   { label: 'Settings', to: '/settings', Icon: Settings },

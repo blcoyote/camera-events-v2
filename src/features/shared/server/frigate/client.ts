@@ -321,6 +321,42 @@ export async function getLatestSnapshot(
 }
 
 /**
+ * Streams Frigate's MJPEG live view (`GET /api/{camera_name}`), which
+ * responds with an infinite `multipart/x-mixed-replace` stream. Unlike other
+ * client functions, this must NOT apply a request timeout — the stream is
+ * meant to run indefinitely — and it is never routed through the cache.
+ * Callers should forward `options.signal` (typically tied to the proxying
+ * request's own AbortSignal) so the upstream fetch is cancelled when the
+ * client disconnects.
+ */
+export async function getCameraLiveStream(
+  cameraName: string,
+  options?: { signal?: AbortSignal; fps?: number; height?: number },
+): Promise<FrigateResult<FrigateClipStreamResponse>> {
+  if (process.env.FRIGATE_MOCK === 'true')
+    return (await loadMock()).getCameraLiveStream(cameraName, options)
+
+  try {
+    const url = buildUrl(`/api/${cameraName}`, {
+      fps: options?.fps,
+      h: options?.height,
+    })
+    const response = await fetch(url, { signal: options?.signal })
+    return {
+      ok: true,
+      data: {
+        status: response.status,
+        body: response.body,
+        headers: response.headers,
+      },
+    }
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err)
+    return { ok: false, error: message }
+  }
+}
+
+/**
  * Returns a sorted list of camera names from the Frigate config.
  */
 export async function getCameras(

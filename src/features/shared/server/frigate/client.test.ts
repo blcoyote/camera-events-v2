@@ -791,6 +791,114 @@ describe('getLatestSnapshot', () => {
   })
 })
 
+// ─── getCameraLiveStream ───
+//
+// Proxies Frigate's MJPEG live endpoint (GET /api/{camera_name}). This is an
+// infinite multipart/x-mixed-replace stream, so it must never be given a
+// timeout signal — only the caller-supplied AbortSignal (tied to client
+// disconnect) may cancel it.
+
+describe('getCameraLiveStream', () => {
+  const originalEnv = process.env.FRIGATE_URL
+  const originalFetch = globalThis.fetch
+
+  beforeEach(() => {
+    clearFrigateCache()
+    process.env.FRIGATE_URL = FRIGATE_URL
+  })
+
+  afterEach(() => {
+    globalThis.fetch = originalFetch
+    clearFrigateCache()
+    if (originalEnv === undefined) {
+      delete process.env.FRIGATE_URL
+    } else {
+      process.env.FRIGATE_URL = originalEnv
+    }
+  })
+
+  it('returns ok:true with status, body, and headers on success', async () => {
+    const fetchMock = mockFetchStream({
+      status: 200,
+      headers: { 'Content-Type': 'multipart/x-mixed-replace; boundary=frame' },
+    })
+    globalThis.fetch = fetchMock
+    const { getCameraLiveStream } = await import('./client')
+    const result = await getCameraLiveStream('front_door')
+
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(result.data.status).toBe(200)
+    expect(result.data.body).not.toBeNull()
+    expect(result.data.headers.get('Content-Type')).toBe(
+      'multipart/x-mixed-replace; boundary=frame',
+    )
+  })
+
+  it('builds the URL as <FRIGATE_URL>/api/<camera> with no query params by default', async () => {
+    const fetchMock = mockFetchStream()
+    globalThis.fetch = fetchMock
+    const { getCameraLiveStream } = await import('./client')
+    await getCameraLiveStream('front_door')
+
+    const calledUrl = fetchMock.mock.calls[0][0] as string
+    expect(calledUrl).toBe(`${FRIGATE_URL}/api/front_door`)
+  })
+
+  it('includes fps and h query params only when provided', async () => {
+    const fetchMock = mockFetchStream()
+    globalThis.fetch = fetchMock
+    const { getCameraLiveStream } = await import('./client')
+    await getCameraLiveStream('front_door', { fps: 5, height: 480 })
+
+    const calledUrl = fetchMock.mock.calls[0][0] as string
+    expect(calledUrl).toContain('fps=5')
+    expect(calledUrl).toContain('h=480')
+  })
+
+  it('omits fps and h query params when not provided', async () => {
+    const fetchMock = mockFetchStream()
+    globalThis.fetch = fetchMock
+    const { getCameraLiveStream } = await import('./client')
+    await getCameraLiveStream('front_door')
+
+    const calledUrl = fetchMock.mock.calls[0][0] as string
+    expect(calledUrl).not.toContain('fps')
+    expect(calledUrl).not.toContain('h=')
+  })
+
+  it('passes the given signal through to fetch', async () => {
+    const fetchMock = mockFetchStream()
+    globalThis.fetch = fetchMock
+    const { getCameraLiveStream } = await import('./client')
+    const controller = new AbortController()
+    await getCameraLiveStream('front_door', { signal: controller.signal })
+
+    const init = fetchMock.mock.calls[0][1] as RequestInit
+    expect(init.signal).toBe(controller.signal)
+  })
+
+  it('does not set a timeout signal when no signal option is given', async () => {
+    const fetchMock = mockFetchStream()
+    globalThis.fetch = fetchMock
+    const { getCameraLiveStream } = await import('./client')
+    await getCameraLiveStream('front_door')
+
+    const init = fetchMock.mock.calls[0][1] as RequestInit
+    expect(init.signal).toBeUndefined()
+  })
+
+  it('returns { ok: false } on network failure', async () => {
+    globalThis.fetch = mockFetchNetworkError()
+    const { getCameraLiveStream } = await import('./client')
+    const result = await getCameraLiveStream('front_door')
+
+    expect(result.ok).toBe(false)
+    if (result.ok) return
+    expect(result.error).toContain('fetch failed')
+  })
+})
+
 describe('frigateGet caching', () => {
   const originalEnv = process.env.FRIGATE_URL
   const originalFetch = globalThis.fetch

@@ -2,6 +2,7 @@ import '@tanstack/react-start/server-only'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import type { FrigateResult } from './config'
+import type { FrigateClipStreamResponse } from './client'
 import type {
   FrigateConfig,
   FrigateEvent,
@@ -542,6 +543,20 @@ export async function getLatestSnapshot(
   _timeoutMs?: number,
 ): Promise<FrigateResult<ArrayBuffer>> {
   return { ok: true, data: PLACEHOLDER_IMAGE }
+}
+
+export async function getCameraLiveStream(
+  _cameraName: string,
+  _options?: { signal?: AbortSignal; fps?: number; height?: number },
+): Promise<FrigateResult<FrigateClipStreamResponse>> {
+  return {
+    ok: true,
+    data: {
+      status: 200,
+      body: streamFromBuffer(PLACEHOLDER_IMAGE),
+      headers: new Headers({ 'Content-Type': 'image/jpeg' }),
+    },
+  }
 }
 
 export async function retainEvent(

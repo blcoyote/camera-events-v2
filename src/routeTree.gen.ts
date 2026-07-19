@@ -13,6 +13,7 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiTestAuthRouteImport } from './routes/api/test-auth'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as AuthenticatedLiveRouteImport } from './routes/_authenticated/live'
 import { Route as AuthenticatedFavoritesRouteImport } from './routes/_authenticated/favorites'
 import { Route as AuthenticatedCamerasRouteImport } from './routes/_authenticated/cameras'
 import { Route as ApiHealthIndexRouteImport } from './routes/api/health/index'
@@ -26,6 +27,7 @@ import { Route as ApiHealthReadyRouteImport } from './routes/api/health/ready'
 import { Route as ApiAuthLogoutRouteImport } from './routes/api/auth/logout'
 import { Route as ApiAuthGoogleRouteImport } from './routes/api/auth/google'
 import { Route as AuthenticatedCameraEventsIdRouteImport } from './routes/_authenticated/camera-events.$id'
+import { Route as ApiLiveNameStreamRouteImport } from './routes/api/live/$name/stream'
 import { Route as ApiEventsIdThumbnailRouteImport } from './routes/api/events/$id/thumbnail'
 import { Route as ApiEventsIdSnapshotRouteImport } from './routes/api/events/$id/snapshot'
 import { Route as ApiEventsIdClipRouteImport } from './routes/api/events/$id/clip'
@@ -49,6 +51,11 @@ const ApiTestAuthRoute = ApiTestAuthRouteImport.update({
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedLiveRoute = AuthenticatedLiveRouteImport.update({
+  id: '/live',
+  path: '/live',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedFavoritesRoute = AuthenticatedFavoritesRouteImport.update({
@@ -118,6 +125,11 @@ const AuthenticatedCameraEventsIdRoute =
     path: '/camera-events/$id',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const ApiLiveNameStreamRoute = ApiLiveNameStreamRouteImport.update({
+  id: '/api/live/$name/stream',
+  path: '/api/live/$name/stream',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiEventsIdThumbnailRoute = ApiEventsIdThumbnailRouteImport.update({
   id: '/api/events/$id/thumbnail',
   path: '/api/events/$id/thumbnail',
@@ -148,6 +160,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/cameras': typeof AuthenticatedCamerasRoute
   '/favorites': typeof AuthenticatedFavoritesRoute
+  '/live': typeof AuthenticatedLiveRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/api/test-auth': typeof ApiTestAuthRoute
   '/camera-events/$id': typeof AuthenticatedCameraEventsIdRoute
@@ -166,11 +179,13 @@ export interface FileRoutesByFullPath {
   '/api/events/$id/clip': typeof ApiEventsIdClipRoute
   '/api/events/$id/snapshot': typeof ApiEventsIdSnapshotRoute
   '/api/events/$id/thumbnail': typeof ApiEventsIdThumbnailRoute
+  '/api/live/$name/stream': typeof ApiLiveNameStreamRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/cameras': typeof AuthenticatedCamerasRoute
   '/favorites': typeof AuthenticatedFavoritesRoute
+  '/live': typeof AuthenticatedLiveRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/api/test-auth': typeof ApiTestAuthRoute
   '/camera-events/$id': typeof AuthenticatedCameraEventsIdRoute
@@ -189,6 +204,7 @@ export interface FileRoutesByTo {
   '/api/events/$id/clip': typeof ApiEventsIdClipRoute
   '/api/events/$id/snapshot': typeof ApiEventsIdSnapshotRoute
   '/api/events/$id/thumbnail': typeof ApiEventsIdThumbnailRoute
+  '/api/live/$name/stream': typeof ApiLiveNameStreamRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -196,6 +212,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/_authenticated/cameras': typeof AuthenticatedCamerasRoute
   '/_authenticated/favorites': typeof AuthenticatedFavoritesRoute
+  '/_authenticated/live': typeof AuthenticatedLiveRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/api/test-auth': typeof ApiTestAuthRoute
   '/_authenticated/camera-events/$id': typeof AuthenticatedCameraEventsIdRoute
@@ -214,6 +231,7 @@ export interface FileRoutesById {
   '/api/events/$id/clip': typeof ApiEventsIdClipRoute
   '/api/events/$id/snapshot': typeof ApiEventsIdSnapshotRoute
   '/api/events/$id/thumbnail': typeof ApiEventsIdThumbnailRoute
+  '/api/live/$name/stream': typeof ApiLiveNameStreamRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -221,6 +239,7 @@ export interface FileRouteTypes {
     | '/'
     | '/cameras'
     | '/favorites'
+    | '/live'
     | '/settings'
     | '/api/test-auth'
     | '/camera-events/$id'
@@ -239,11 +258,13 @@ export interface FileRouteTypes {
     | '/api/events/$id/clip'
     | '/api/events/$id/snapshot'
     | '/api/events/$id/thumbnail'
+    | '/api/live/$name/stream'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/cameras'
     | '/favorites'
+    | '/live'
     | '/settings'
     | '/api/test-auth'
     | '/camera-events/$id'
@@ -262,12 +283,14 @@ export interface FileRouteTypes {
     | '/api/events/$id/clip'
     | '/api/events/$id/snapshot'
     | '/api/events/$id/thumbnail'
+    | '/api/live/$name/stream'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/_authenticated/cameras'
     | '/_authenticated/favorites'
+    | '/_authenticated/live'
     | '/_authenticated/settings'
     | '/api/test-auth'
     | '/_authenticated/camera-events/$id'
@@ -286,6 +309,7 @@ export interface FileRouteTypes {
     | '/api/events/$id/clip'
     | '/api/events/$id/snapshot'
     | '/api/events/$id/thumbnail'
+    | '/api/live/$name/stream'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -305,6 +329,7 @@ export interface RootRouteChildren {
   ApiEventsIdClipRoute: typeof ApiEventsIdClipRoute
   ApiEventsIdSnapshotRoute: typeof ApiEventsIdSnapshotRoute
   ApiEventsIdThumbnailRoute: typeof ApiEventsIdThumbnailRoute
+  ApiLiveNameStreamRoute: typeof ApiLiveNameStreamRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -335,6 +360,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof AuthenticatedSettingsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/live': {
+      id: '/_authenticated/live'
+      path: '/live'
+      fullPath: '/live'
+      preLoaderRoute: typeof AuthenticatedLiveRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/favorites': {
@@ -428,6 +460,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCameraEventsIdRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/api/live/$name/stream': {
+      id: '/api/live/$name/stream'
+      path: '/api/live/$name/stream'
+      fullPath: '/api/live/$name/stream'
+      preLoaderRoute: typeof ApiLiveNameStreamRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/events/$id/thumbnail': {
       id: '/api/events/$id/thumbnail'
       path: '/api/events/$id/thumbnail'
@@ -469,6 +508,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteChildren {
   AuthenticatedCamerasRoute: typeof AuthenticatedCamerasRoute
   AuthenticatedFavoritesRoute: typeof AuthenticatedFavoritesRoute
+  AuthenticatedLiveRoute: typeof AuthenticatedLiveRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedCameraEventsIdRoute: typeof AuthenticatedCameraEventsIdRoute
   AuthenticatedCameraEventsIndexRoute: typeof AuthenticatedCameraEventsIndexRoute
@@ -477,6 +517,7 @@ interface AuthenticatedRouteChildren {
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedCamerasRoute: AuthenticatedCamerasRoute,
   AuthenticatedFavoritesRoute: AuthenticatedFavoritesRoute,
+  AuthenticatedLiveRoute: AuthenticatedLiveRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedCameraEventsIdRoute: AuthenticatedCameraEventsIdRoute,
   AuthenticatedCameraEventsIndexRoute: AuthenticatedCameraEventsIndexRoute,
@@ -515,6 +556,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiEventsIdClipRoute: ApiEventsIdClipRoute,
   ApiEventsIdSnapshotRoute: ApiEventsIdSnapshotRoute,
   ApiEventsIdThumbnailRoute: ApiEventsIdThumbnailRoute,
+  ApiLiveNameStreamRoute: ApiLiveNameStreamRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -14,6 +14,7 @@ import {
   getConfig,
   getCameras,
   getLatestSnapshot,
+  getCameraLiveStream,
 } from './mock-client'
 
 const EXPECTED_CAMERAS = [
@@ -260,6 +261,18 @@ describe('mock-client', () => {
       if (!result.ok) return
       expect(result.data).toBeInstanceOf(ArrayBuffer)
       expect(result.data.byteLength).toBeGreaterThan(0)
+    })
+  })
+
+  describe('getCameraLiveStream', () => {
+    it('returns a 200 result with a non-null body and image/jpeg content type', async () => {
+      const result = await getCameraLiveStream('front_porch')
+      expect(result.ok).toBe(true)
+      if (!result.ok) return
+      expect(result.data.status).toBe(200)
+      expect(result.data.body).not.toBeNull()
+      expect(result.data.body).toBeInstanceOf(ReadableStream)
+      expect(result.data.headers.get('Content-Type')).toBe('image/jpeg')
     })
   })
 })
