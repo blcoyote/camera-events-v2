@@ -1,9 +1,19 @@
 // @vitest-environment jsdom
-import { describe, it, expect, afterEach } from 'vitest'
+import { describe, it, expect, afterEach, vi } from 'vitest'
 import { render, screen, cleanup, fireEvent } from '@testing-library/react'
 import '@testing-library/jest-dom/vitest'
 import type { FrigateResult } from '#/features/shared/server/frigate/config'
+
 import { getLivePageState, LivePage } from './LivePage'
+
+// The MSE player wires up a WebSocket-backed <video-stream> web component in an
+// effect (no-op in jsdom); stub it so these tests assert LivePage's own picker
+// logic — which camera is passed through — not the player internals.
+vi.mock('#/features/live/components/LiveMsePlayer', () => ({
+  LiveMsePlayer: ({ camera }: { camera: string }) => (
+    <div data-testid="live-player" aria-label={`Live view of ${camera}`} />
+  ),
+}))
 
 afterEach(() => {
   cleanup()

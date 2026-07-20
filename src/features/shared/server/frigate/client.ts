@@ -1,5 +1,5 @@
 import '@tanstack/react-start/server-only'
-import { getFrigateUrl, getGo2RtcBase, DEFAULT_TIMEOUT_MS } from './config'
+import { getFrigateUrl, DEFAULT_TIMEOUT_MS } from './config'
 import type { FrigateResult } from './config'
 import { frigateCache } from './cache'
 import type {
@@ -318,96 +318,6 @@ export async function getLatestSnapshot(
   if (process.env.FRIGATE_MOCK === 'true')
     return (await loadMock()).getLatestSnapshot(cameraName, timeoutMs)
   return frigateBinary(`/api/${cameraName}/latest.jpg`, undefined, timeoutMs)
-}
-
-/**
- * Response shape for the HLS media playlist fetched from go2rtc.
- */
-export interface FrigateHlsPlaylistResponse {
-  status: number
-  headers: Headers
-  text: string
-}
-
-/**
- * Fetches an HLS (fMP4) media playlist for a camera's live view from
- * go2rtc's `stream.m3u8` endpoint (`GET /stream.m3u8?src={camera}&mp4`).
- * go2rtc expects the `mp4` flag as a valueless query param (`&mp4`, not
- * `mp4=`), so the query string is built manually rather than via
- * `URLSearchParams.set`. Never routed through the cache — the playlist is
- * live and must not be memoized. `ok: false` is reserved for true network
- * failures; a non-2xx upstream response is returned as `ok: true` with the
- * status and empty text so the proxy can mirror it.
- */
-export async function getCameraHlsPlaylist(
-  cameraName: string,
-  options?: { signal?: AbortSignal },
-): Promise<FrigateResult<FrigateHlsPlaylistResponse>> {
-  if (process.env.FRIGATE_MOCK === 'true')
-    return (await loadMock()).getCameraHlsPlaylist(cameraName, options)
-
-  try {
-    const url = `${getGo2RtcBase()}/stream.m3u8?src=${encodeURIComponent(cameraName)}&mp4`
-    const response = await fetch(url, { signal: options?.signal })
-    const text = response.ok ? await response.text() : ''
-    return {
-      ok: true,
-      data: {
-        status: response.status,
-        headers: response.headers,
-        text,
-      },
-    }
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err)
-    return { ok: false, error: message }
-  }
-}
-
-/**
- * Streams a single HLS init segment or media segment from go2rtc
- * (`GET /{segmentRef}`), where `segmentRef` is a relative path + query
- * string taken verbatim from a playlist entry the proxy has already
- * validated. `cameraName` is accepted for symmetry/logging only — the
- * fetched URL is derived entirely from `segmentRef`. Like
- * `getEventClipStream`, this must NOT apply a request timeout and is never
- * routed through the cache; callers forward `options.signal` so the upstream
- * fetch is cancelled when the client disconnects.
- */
-export async function getCameraHlsSegment(
-  cameraName: string,
-  segmentRef: string,
-  options?: { signal?: AbortSignal; rangeHeader?: string },
-): Promise<FrigateResult<FrigateClipStreamResponse>> {
-  if (process.env.FRIGATE_MOCK === 'true')
-    return (await loadMock()).getCameraHlsSegment(
-      cameraName,
-      segmentRef,
-      options,
-    )
-
-  try {
-    const url = `${getGo2RtcBase()}/${segmentRef}`
-    const headers = new Headers()
-    if (options?.rangeHeader !== undefined) {
-      headers.set('Range', options.rangeHeader)
-    }
-    const response = await fetch(url, {
-      headers,
-      signal: options?.signal,
-    })
-    return {
-      ok: true,
-      data: {
-        status: response.status,
-        body: response.body,
-        headers: response.headers,
-      },
-    }
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err)
-    return { ok: false, error: message }
-  }
 }
 
 /**

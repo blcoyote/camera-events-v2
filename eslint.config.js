@@ -21,6 +21,7 @@ export default [
       'public/sw.js',
       '.output',
       '.claude/worktrees/**',
+      'src/features/live/vendor/**',
     ],
   },
 ]

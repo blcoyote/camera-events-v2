@@ -27,8 +27,6 @@ import { Route as ApiHealthReadyRouteImport } from './routes/api/health/ready'
 import { Route as ApiAuthLogoutRouteImport } from './routes/api/auth/logout'
 import { Route as ApiAuthGoogleRouteImport } from './routes/api/auth/google'
 import { Route as AuthenticatedCameraEventsIdRouteImport } from './routes/_authenticated/camera-events.$id'
-import { Route as ApiLiveNameStreamRouteImport } from './routes/api/live/$name/stream'
-import { Route as ApiLiveNameSegmentRouteImport } from './routes/api/live/$name/segment'
 import { Route as ApiEventsIdThumbnailRouteImport } from './routes/api/events/$id/thumbnail'
 import { Route as ApiEventsIdSnapshotRouteImport } from './routes/api/events/$id/snapshot'
 import { Route as ApiEventsIdClipRouteImport } from './routes/api/events/$id/clip'
@@ -126,16 +124,6 @@ const AuthenticatedCameraEventsIdRoute =
     path: '/camera-events/$id',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-const ApiLiveNameStreamRoute = ApiLiveNameStreamRouteImport.update({
-  id: '/api/live/$name/stream',
-  path: '/api/live/$name/stream',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiLiveNameSegmentRoute = ApiLiveNameSegmentRouteImport.update({
-  id: '/api/live/$name/segment',
-  path: '/api/live/$name/segment',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiEventsIdThumbnailRoute = ApiEventsIdThumbnailRouteImport.update({
   id: '/api/events/$id/thumbnail',
   path: '/api/events/$id/thumbnail',
@@ -185,8 +173,6 @@ export interface FileRoutesByFullPath {
   '/api/events/$id/clip': typeof ApiEventsIdClipRoute
   '/api/events/$id/snapshot': typeof ApiEventsIdSnapshotRoute
   '/api/events/$id/thumbnail': typeof ApiEventsIdThumbnailRoute
-  '/api/live/$name/segment': typeof ApiLiveNameSegmentRoute
-  '/api/live/$name/stream': typeof ApiLiveNameStreamRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -211,8 +197,6 @@ export interface FileRoutesByTo {
   '/api/events/$id/clip': typeof ApiEventsIdClipRoute
   '/api/events/$id/snapshot': typeof ApiEventsIdSnapshotRoute
   '/api/events/$id/thumbnail': typeof ApiEventsIdThumbnailRoute
-  '/api/live/$name/segment': typeof ApiLiveNameSegmentRoute
-  '/api/live/$name/stream': typeof ApiLiveNameStreamRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -239,8 +223,6 @@ export interface FileRoutesById {
   '/api/events/$id/clip': typeof ApiEventsIdClipRoute
   '/api/events/$id/snapshot': typeof ApiEventsIdSnapshotRoute
   '/api/events/$id/thumbnail': typeof ApiEventsIdThumbnailRoute
-  '/api/live/$name/segment': typeof ApiLiveNameSegmentRoute
-  '/api/live/$name/stream': typeof ApiLiveNameStreamRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -267,8 +249,6 @@ export interface FileRouteTypes {
     | '/api/events/$id/clip'
     | '/api/events/$id/snapshot'
     | '/api/events/$id/thumbnail'
-    | '/api/live/$name/segment'
-    | '/api/live/$name/stream'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -293,8 +273,6 @@ export interface FileRouteTypes {
     | '/api/events/$id/clip'
     | '/api/events/$id/snapshot'
     | '/api/events/$id/thumbnail'
-    | '/api/live/$name/segment'
-    | '/api/live/$name/stream'
   id:
     | '__root__'
     | '/'
@@ -320,8 +298,6 @@ export interface FileRouteTypes {
     | '/api/events/$id/clip'
     | '/api/events/$id/snapshot'
     | '/api/events/$id/thumbnail'
-    | '/api/live/$name/segment'
-    | '/api/live/$name/stream'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -341,8 +317,6 @@ export interface RootRouteChildren {
   ApiEventsIdClipRoute: typeof ApiEventsIdClipRoute
   ApiEventsIdSnapshotRoute: typeof ApiEventsIdSnapshotRoute
   ApiEventsIdThumbnailRoute: typeof ApiEventsIdThumbnailRoute
-  ApiLiveNameSegmentRoute: typeof ApiLiveNameSegmentRoute
-  ApiLiveNameStreamRoute: typeof ApiLiveNameStreamRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -473,20 +447,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCameraEventsIdRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/api/live/$name/stream': {
-      id: '/api/live/$name/stream'
-      path: '/api/live/$name/stream'
-      fullPath: '/api/live/$name/stream'
-      preLoaderRoute: typeof ApiLiveNameStreamRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/live/$name/segment': {
-      id: '/api/live/$name/segment'
-      path: '/api/live/$name/segment'
-      fullPath: '/api/live/$name/segment'
-      preLoaderRoute: typeof ApiLiveNameSegmentRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/events/$id/thumbnail': {
       id: '/api/events/$id/thumbnail'
       path: '/api/events/$id/thumbnail'
@@ -576,8 +536,6 @@ const rootRouteChildren: RootRouteChildren = {
   ApiEventsIdClipRoute: ApiEventsIdClipRoute,
   ApiEventsIdSnapshotRoute: ApiEventsIdSnapshotRoute,
   ApiEventsIdThumbnailRoute: ApiEventsIdThumbnailRoute,
-  ApiLiveNameSegmentRoute: ApiLiveNameSegmentRoute,
-  ApiLiveNameStreamRoute: ApiLiveNameStreamRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

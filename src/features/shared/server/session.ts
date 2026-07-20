@@ -1,6 +1,7 @@
 import '@tanstack/react-start/server-only'
 import type { SessionConfig } from '@tanstack/react-start/server'
 import { useSession } from '@tanstack/react-start/server'
+import { mockEvent, unsealSession } from 'h3-v2'
 
 export type SessionData = {
   /** Google OpenID Connect subject identifier (unique per user) */
@@ -66,6 +67,66 @@ export async function resolveIsAuthenticated(): Promise<boolean> {
   try {
     const session = await useSession<SessionData>(getSessionConfig())
     return !!session.data.sub
+  } catch {
+    return false
+  }
+}
+
+/**
+ * Reads a single named cookie's raw value out of a `Cookie` request header,
+ * without relying on any request-scoped framework state. Cookie values are
+ * percent-encoded by the same `cookie-es` serializer h3 uses when setting
+ * the cookie, so we reverse that here; a value that isn't validly encoded
+ * (e.g. corrupted in transit) is returned as-is and will simply fail to
+ * unseal below.
+ */
+function readCookieValue(
+  cookieHeader: string,
+  name: string,
+): string | undefined {
+  for (const part of cookieHeader.split(';')) {
+    const eqIndex = part.indexOf('=')
+    if (eqIndex === -1) continue
+    const key = part.slice(0, eqIndex).trim()
+    if (key !== name) continue
+    const rawValue = part.slice(eqIndex + 1).trim()
+    try {
+      return decodeURIComponent(rawValue)
+    } catch {
+      return rawValue
+    }
+  }
+  return undefined
+}
+
+/**
+ * Authenticates a raw `Request` by reading and unsealing its `google-sso`
+ * session cookie *without* going through TanStack Start's request-scoped
+ * async context (`useSession` requires that context, which is unavailable
+ * outside a handled HTTP request — e.g. inside a raw WebSocket-upgrade
+ * hook). It unseals with the exact same primitive `useSession` uses under
+ * the hood (h3's `unsealSession`, from the `h3-v2` package that
+ * `@tanstack/react-start/server` depends on), so a cookie minted by the
+ * normal login flow verifies here too. Never throws — any missing,
+ * corrupted, expired, or tampered cookie resolves to `false`.
+ */
+export async function resolveIsAuthenticatedFromRequest(
+  request: Request,
+): Promise<boolean> {
+  try {
+    const cookieHeader = request.headers.get('cookie')
+    if (!cookieHeader) return false
+
+    const sealed = readCookieValue(cookieHeader, SESSION_COOKIE_NAME)
+    if (!sealed) return false
+
+    const { password, maxAge } = getSessionConfig()
+    const session = await unsealSession(
+      mockEvent(request),
+      { password, maxAge },
+      sealed,
+    )
+    return !!session.data?.sub
   } catch {
     return false
   }

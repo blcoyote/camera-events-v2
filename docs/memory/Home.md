@@ -36,7 +36,7 @@ this vault is meant to be used.
 - [[decisions/2026-04-28-runtime-portable-sqlite-driver]] — dual Node/Bun driver behind one interface
 - [[decisions/2026-06-29-obsidian-memory-vault]]
 - [[decisions/2026-07-07-login-allowlist-in-google-cloud]] — allow-list lives in Google Cloud, not app code
-- [[decisions/2026-07-19-live-hls-transport]] — /live streams over proxied HLS (fMP4), not MJPEG or WebRTC
+- [[decisions/2026-07-19-live-mse-websocket-transport]] — /live streams over MSE-fMP4 via an app-proxied go2rtc WebSocket (iOS 17.1+)
 
 ## ⚠️ Gotchas
 

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { FrigateResult } from '#/features/shared/server/frigate/config'
-import { LiveCameraView } from '#/features/live/components/LiveCameraView'
+import { LiveMsePlayer } from '#/features/live/components/LiveMsePlayer'
 
 export type LiveState =
   | { kind: 'cameras'; cameras: string[] }
@@ -80,7 +80,7 @@ export function LivePage({ result }: { result: FrigateResult<string[]> }) {
             })}
           </div>
           <div className="mt-4">
-            <LiveCameraView camera={activeCamera} />
+            <LiveMsePlayer camera={activeCamera} />
           </div>
         </>
       )}

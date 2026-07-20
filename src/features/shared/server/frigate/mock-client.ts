@@ -3,10 +3,6 @@ import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import type { FrigateResult } from './config'
 import type {
-  FrigateClipStreamResponse,
-  FrigateHlsPlaylistResponse,
-} from './client'
-import type {
   FrigateConfig,
   FrigateEvent,
   FrigateEventSummary,
@@ -546,46 +542,6 @@ export async function getLatestSnapshot(
   _timeoutMs?: number,
 ): Promise<FrigateResult<ArrayBuffer>> {
   return { ok: true, data: PLACEHOLDER_IMAGE }
-}
-
-const MOCK_HLS_PLAYLIST = `#EXTM3U
-#EXT-X-VERSION:7
-#EXT-X-TARGETDURATION:2
-#EXT-X-MAP:URI="init.mp4?src=mock"
-#EXTINF:2.000,
-segment0.mp4?src=mock
-#EXT-X-ENDLIST
-`
-
-export async function getCameraHlsPlaylist(
-  _cameraName: string,
-  _options?: { signal?: AbortSignal },
-): Promise<FrigateResult<FrigateHlsPlaylistResponse>> {
-  return {
-    ok: true,
-    data: {
-      status: 200,
-      headers: new Headers({
-        'Content-Type': 'application/vnd.apple.mpegurl',
-      }),
-      text: MOCK_HLS_PLAYLIST,
-    },
-  }
-}
-
-export async function getCameraHlsSegment(
-  _cameraName: string,
-  _segmentRef: string,
-  _options?: { signal?: AbortSignal; rangeHeader?: string },
-): Promise<FrigateResult<FrigateClipStreamResponse>> {
-  return {
-    ok: true,
-    data: {
-      status: 200,
-      body: streamFromBuffer(PLACEHOLDER_IMAGE),
-      headers: new Headers({ 'Content-Type': 'video/mp4' }),
-    },
-  }
 }
 
 export async function retainEvent(

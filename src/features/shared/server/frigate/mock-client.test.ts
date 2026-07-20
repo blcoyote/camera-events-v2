@@ -14,8 +14,6 @@ import {
   getConfig,
   getCameras,
   getLatestSnapshot,
-  getCameraHlsPlaylist,
-  getCameraHlsSegment,
 } from './mock-client'
 
 const EXPECTED_CAMERAS = [
@@ -262,31 +260,6 @@ describe('mock-client', () => {
       if (!result.ok) return
       expect(result.data).toBeInstanceOf(ArrayBuffer)
       expect(result.data.byteLength).toBeGreaterThan(0)
-    })
-  })
-
-  describe('getCameraHlsPlaylist', () => {
-    it('returns a valid m3u8 playlist string with the correct content type', async () => {
-      const result = await getCameraHlsPlaylist('front_porch')
-      expect(result.ok).toBe(true)
-      if (!result.ok) return
-      expect(result.data.status).toBe(200)
-      expect(result.data.text).toContain('#EXTM3U')
-      expect(result.data.headers.get('Content-Type')).toBe(
-        'application/vnd.apple.mpegurl',
-      )
-    })
-  })
-
-  describe('getCameraHlsSegment', () => {
-    it('returns a 200 result with a non-null body and video/mp4 content type', async () => {
-      const result = await getCameraHlsSegment('front_porch', 'segment0.mp4')
-      expect(result.ok).toBe(true)
-      if (!result.ok) return
-      expect(result.data.status).toBe(200)
-      expect(result.data.body).not.toBeNull()
-      expect(result.data.body).toBeInstanceOf(ReadableStream)
-      expect(result.data.headers.get('Content-Type')).toBe('video/mp4')
     })
   })
 })
