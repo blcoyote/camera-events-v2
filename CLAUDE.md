@@ -350,6 +350,7 @@ Security-critical validators like `isValidCameraName` and `isValidEventId` must 
 | `GOOGLE_CLIENT_SECRET`  | Yes               | Google OAuth client secret                                                               |
 | `FRIGATE_URL`           | Yes (unless mock) | Base URL of Frigate instance (e.g. `http://frigate:5000`)                                |
 | `FRIGATE_MOCK`          | No                | Set to `true` to use mock Frigate client                                                 |
+| `FRIGATE_GO2RTC_URL`    | No                | go2rtc base for `/live` MSE WebSocket relay (default `${FRIGATE_URL}/live/mse/api`)      |
 | `MQTT_URL`              | No                | MQTT broker URL (e.g. `mqtt://rabbitmq:1883`); push/cache-invalidation disabled if unset |
 | `VAPID_PUBLIC_KEY`      | No                | Web Push VAPID public key; push disabled if any VAPID var missing                        |
 | `VAPID_PRIVATE_KEY`     | No                | Web Push VAPID private key                                                               |

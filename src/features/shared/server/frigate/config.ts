@@ -24,3 +24,17 @@ export function getFrigateUrl(): string {
   }
   return raw.trim().replace(/\/+$/, '')
 }
+
+/**
+ * Base URL for go2rtc's HTTP API (HLS playlists, fMP4 segments), reached
+ * through Frigate by default. `FRIGATE_GO2RTC_URL` overrides the default
+ * derivation entirely (e.g. when go2rtc is reachable on its own host/port).
+ * Strips whitespace and trailing slashes.
+ */
+export function getGo2RtcBase(): string {
+  const override = process.env.FRIGATE_GO2RTC_URL
+  if (override && override.trim()) {
+    return override.trim().replace(/\/+$/, '')
+  }
+  return `${getFrigateUrl()}/live/mse/api`
+}
