@@ -61,10 +61,10 @@ describe('getGo2RtcBase', () => {
     }
   })
 
-  it('derives from FRIGATE_URL + /live/webrtc/api by default', () => {
+  it('derives from FRIGATE_URL + /live/mse/api by default', () => {
     delete process.env.FRIGATE_GO2RTC_URL
     process.env.FRIGATE_URL = 'http://frigate.local:5000'
-    expect(getGo2RtcBase()).toBe('http://frigate.local:5000/live/webrtc/api')
+    expect(getGo2RtcBase()).toBe('http://frigate.local:5000/live/mse/api')
   })
 
   it('uses FRIGATE_GO2RTC_URL when set, overriding the FRIGATE_URL derivation', () => {
@@ -82,6 +82,6 @@ describe('getGo2RtcBase', () => {
   it('ignores a blank FRIGATE_GO2RTC_URL and falls back to FRIGATE_URL derivation', () => {
     process.env.FRIGATE_URL = 'http://frigate.local:5000'
     process.env.FRIGATE_GO2RTC_URL = '   '
-    expect(getGo2RtcBase()).toBe('http://frigate.local:5000/live/webrtc/api')
+    expect(getGo2RtcBase()).toBe('http://frigate.local:5000/live/mse/api')
   })
 })

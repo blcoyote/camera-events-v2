@@ -36,5 +36,5 @@ export function getGo2RtcBase(): string {
   if (override && override.trim()) {
     return override.trim().replace(/\/+$/, '')
   }
-  return `${getFrigateUrl()}/live/webrtc/api`
+  return `${getFrigateUrl()}/live/mse/api`
 }

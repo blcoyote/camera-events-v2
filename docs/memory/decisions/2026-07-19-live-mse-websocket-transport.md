@@ -91,12 +91,17 @@ repo's Bun/Nitro/crossws versions (with the unauth handshake rejected).
 ## Caveat (needs live verification)
 
 Untestable from CI/mock (no real MSE/WebSocket/Frigate in jsdom). Before trusting
-`/live`: (1) confirm the go2rtc WS path — `FRIGATE_GO2RTC_URL` overrides the
-`${FRIGATE_URL}/live/webrtc/api` default if the Frigate version differs; (2) on a
-real **iPhone 17.1+ standalone PWA**, confirm the `<video>` plays live and the WS
-upgrade carries the `google-sso` cookie (no 401); (3) confirm the built
-`.output/server/index.mjs` contains the crossws `handleUpgrade` branch (proves
-`experimental.websocket` took effect).
+`/live`: (1) confirm the go2rtc WS path. The default `${FRIGATE_URL}/live/mse/api`
+(+ `/ws?src=NAME`) is verified against **Frigate 0.13.2's** nginx, which proxies
+`/live/mse/api/ws` → `go2rtc:1984/api/ws` (`docker/main/rootfs/.../nginx.conf` at
+tag `v0.13.2`); go2rtc's `/api/ws` MSE protocol is stable across the bundled
+version and the vendored v1.9.14 client. Frigate 0.14+ restructured live paths —
+`FRIGATE_GO2RTC_URL` overrides the default there. Sanity-check reachability with
+`curl "$FRIGATE_URL/api/go2rtc/api/streams"`. (2) on a real **iPhone 17.1+
+standalone PWA**, confirm the `<video>` plays live and the WS upgrade carries the
+`google-sso` cookie (no 401); (3) confirm the built `.output/server/index.mjs`
+contains the crossws `handleUpgrade` branch (proves `experimental.websocket` took
+effect).
 
 ## Why it matters
 

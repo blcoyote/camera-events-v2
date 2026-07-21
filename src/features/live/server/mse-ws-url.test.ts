@@ -25,14 +25,14 @@ describe('go2rtcMseWsUrl', () => {
   it('builds a ws:// URL from the default go2rtc base for a http FRIGATE_URL', () => {
     process.env.FRIGATE_URL = 'http://frigate:5000'
     expect(go2rtcMseWsUrl('garage')).toBe(
-      'ws://frigate:5000/live/webrtc/api/ws?src=garage',
+      'ws://frigate:5000/live/mse/api/ws?src=garage',
     )
   })
 
   it('builds a wss:// URL when FRIGATE_URL is https', () => {
     process.env.FRIGATE_URL = 'https://frigate:5000'
     expect(go2rtcMseWsUrl('garage')).toBe(
-      'wss://frigate:5000/live/webrtc/api/ws?src=garage',
+      'wss://frigate:5000/live/mse/api/ws?src=garage',
     )
   })
 
@@ -45,7 +45,7 @@ describe('go2rtcMseWsUrl', () => {
   it('URL-encodes the camera name in the query string', () => {
     process.env.FRIGATE_URL = 'http://frigate:5000'
     expect(go2rtcMseWsUrl('front_porch-2')).toBe(
-      'ws://frigate:5000/live/webrtc/api/ws?src=front_porch-2',
+      'ws://frigate:5000/live/mse/api/ws?src=front_porch-2',
     )
   })
 
