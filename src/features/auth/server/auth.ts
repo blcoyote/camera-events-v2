@@ -1,6 +1,7 @@
 import { createServerFn } from '@tanstack/react-start'
 import { useSession, clearSession } from '@tanstack/react-start/server'
 import { getSessionConfig } from '#/features/shared/server/session'
+import { computeSessionExpiry } from '#/features/shared/utils/sessionTtl'
 import type { SessionData } from '#/features/shared/server/session'
 
 type SessionLike = {
@@ -12,9 +13,15 @@ type SessionLike = {
  * Reads the current session data, slides the TTL by re-issuing the cookie,
  * and returns the user data — or null if unauthenticated.
  * Extracted for testability (accepts any session-shaped object).
+ *
+ * This is the single place the session TTL slides, so it is also the single
+ * place `expiresAt` is stamped. The stamp is always recomputed from `nowMs`
+ * (never carried over from the cookie) so it tracks the cookie that is being
+ * re-issued right now, and sessions predating the field acquire it here.
  */
 export async function resolveUserFromSession(
   session: SessionLike,
+  nowMs: number = Date.now(),
 ): Promise<SessionData | null> {
   if (!session.data.sub) return null
   const data: SessionData = {
@@ -22,6 +29,7 @@ export async function resolveUserFromSession(
     firstName: session.data.firstName ?? '',
     email: session.data.email ?? '',
     avatarUrl: session.data.avatarUrl ?? '',
+    expiresAt: computeSessionExpiry(nowMs),
   }
   try {
     await session.update(data)

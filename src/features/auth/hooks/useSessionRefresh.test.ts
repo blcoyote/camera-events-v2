@@ -6,6 +6,8 @@ import {
   needsSessionRefresh,
   SESSION_LAST_REFRESH_KEY,
   SESSION_REFRESH_THRESHOLD_MS,
+  SESSION_EXPIRY_REFRESH_WINDOW_MS,
+  SESSION_REFRESH_MIN_INTERVAL_MS,
 } from './useSessionRefresh'
 
 // ---------------------------------------------------------------------------
@@ -15,6 +17,12 @@ import {
 // because window.location.reload is non-configurable after spy restoration.
 // The listener wiring is verified separately below.
 // ---------------------------------------------------------------------------
+
+describe('SESSION_REFRESH_THRESHOLD_MS', () => {
+  it('is 1 hour in milliseconds', () => {
+    expect(SESSION_REFRESH_THRESHOLD_MS).toBe(60 * 60 * 1000)
+  })
+})
 
 describe('needsSessionRefresh', () => {
   it('returns false when elapsed time is less than the threshold', () => {
@@ -43,6 +51,61 @@ describe('needsSessionRefresh', () => {
     const now = 1_000_000_000
     const last = now - SESSION_REFRESH_THRESHOLD_MS - 24 * 60 * 60 * 1000
     expect(needsSessionRefresh(last, now)).toBe(true)
+  })
+
+  describe('proactive refresh near expiry', () => {
+    // Refreshing only after an idle gap is reactive: a session can still lapse
+    // while the app is used briefly and often. When the cookie is close to
+    // expiring, refresh regardless of how recently we last did.
+    const now = 1_000_000_000
+    const recent = now - SESSION_REFRESH_MIN_INTERVAL_MS - 1
+
+    it('returns true when the session expires inside the refresh window', () => {
+      const expiresAt = now + SESSION_EXPIRY_REFRESH_WINDOW_MS - 1
+      expect(needsSessionRefresh(recent, now, expiresAt)).toBe(true)
+    })
+
+    it('returns false when the session expires beyond the refresh window', () => {
+      const expiresAt = now + SESSION_EXPIRY_REFRESH_WINDOW_MS + 1
+      expect(needsSessionRefresh(recent, now, expiresAt)).toBe(false)
+    })
+
+    it('returns false when expiry is exactly at the window boundary', () => {
+      const expiresAt = now + SESSION_EXPIRY_REFRESH_WINDOW_MS
+      expect(needsSessionRefresh(recent, now, expiresAt)).toBe(false)
+    })
+
+    it('returns true for an already-expired session', () => {
+      expect(needsSessionRefresh(recent, now, now - 1000)).toBe(true)
+    })
+
+    it('ignores a null expiry (session predates the expiresAt field)', () => {
+      expect(needsSessionRefresh(recent, now, null)).toBe(false)
+    })
+  })
+
+  describe('minimum interval guard', () => {
+    // Without this floor, a cookie that fails to renew would reload the app on
+    // every foreground for the whole final day of its life.
+    const now = 1_000_000_000
+
+    it('returns false near expiry when we refreshed within the minimum interval', () => {
+      const justRefreshed = now - SESSION_REFRESH_MIN_INTERVAL_MS + 1
+      const expiresAt = now + 1000
+      expect(needsSessionRefresh(justRefreshed, now, expiresAt)).toBe(false)
+    })
+
+    it('returns true near expiry once the minimum interval has passed', () => {
+      const older = now - SESSION_REFRESH_MIN_INTERVAL_MS - 1
+      const expiresAt = now + 1000
+      expect(needsSessionRefresh(older, now, expiresAt)).toBe(true)
+    })
+
+    it('is shorter than the idle threshold so it only gates the expiry path', () => {
+      expect(SESSION_REFRESH_MIN_INTERVAL_MS).toBeLessThan(
+        SESSION_REFRESH_THRESHOLD_MS,
+      )
+    })
   })
 })
 
@@ -154,5 +217,26 @@ describe('useSessionRefresh', () => {
     const soonMs = t0 + SESSION_REFRESH_THRESHOLD_MS - 1000
 
     expect(needsSessionRefresh(storedMs, soonMs)).toBe(false)
+  })
+
+  it('accepts an expiresAt argument and re-runs the effect when it changes', () => {
+    mockStandalone(true)
+    const spy = vi.spyOn(document, 'addEventListener')
+    const { rerender } = renderHook(
+      ({ expiresAt }: { expiresAt: number | undefined }) =>
+        useSessionRefresh(true, expiresAt),
+      { initialProps: { expiresAt: t0 + 60_000 } },
+    )
+    const callsAfterMount = spy.mock.calls.filter(
+      ([event]) => event === 'visibilitychange',
+    ).length
+
+    rerender({ expiresAt: t0 + 120_000 })
+
+    const callsAfterRerender = spy.mock.calls.filter(
+      ([event]) => event === 'visibilitychange',
+    ).length
+    expect(callsAfterMount).toBe(1)
+    expect(callsAfterRerender).toBe(2)
   })
 })

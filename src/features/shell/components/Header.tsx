@@ -22,6 +22,7 @@ export function getHeaderAuthState(user: SessionData | null): {
   signOutAction: string
   navLinks: NavLink[]
   mobileTopLinks: NavLink[]
+  sessionExpiresAt: number | undefined
 } {
   const navLinks: NavLink[] = user
     ? [
@@ -50,6 +51,7 @@ export function getHeaderAuthState(user: SessionData | null): {
     signOutAction: '/api/auth/logout',
     navLinks,
     mobileTopLinks,
+    sessionExpiresAt: user?.expiresAt,
   }
 }
 
@@ -57,7 +59,7 @@ export default function Header() {
   const { user } = useRouteContext({ from: '__root__' })
   const state = getHeaderAuthState(user)
   const { onClick: onSignIn } = useStandaloneAuth(state.signInHref)
-  useSessionRefresh(!!user)
+  useSessionRefresh(!!user, state.sessionExpiresAt)
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const hamburgerRef = useRef<HTMLButtonElement>(null)
   const openedByKeyboard = useRef(false)

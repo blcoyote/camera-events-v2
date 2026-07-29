@@ -1,6 +1,7 @@
 import '@tanstack/react-start/server-only'
 import type { SessionConfig } from '@tanstack/react-start/server'
 import { useSession } from '@tanstack/react-start/server'
+import { SESSION_MAX_AGE_SECONDS } from '#/features/shared/utils/sessionTtl'
 
 export type SessionData = {
   /** Google OpenID Connect subject identifier (unique per user) */
@@ -8,6 +9,15 @@ export type SessionData = {
   firstName: string
   email: string
   avatarUrl: string
+  /**
+   * Epoch milliseconds at which the session cookie expires, stamped each time
+   * the TTL slides. Optional because sessions issued before this field existed
+   * are still valid — they gain it on their next page load.
+   *
+   * The session cookie is httpOnly, so this is the only way the client can see
+   * how much session lifetime is left and refresh proactively.
+   */
+  expiresAt?: number
 }
 
 /**
@@ -15,7 +25,6 @@ export type SessionData = {
  * to avoid module-scope env access.
  */
 export const SESSION_COOKIE_NAME = 'google-sso'
-export const SESSION_MAX_AGE_SECONDS = 7 * 24 * 60 * 60 // 7 days
 
 export const SESSION_CONFIG_BASE = {
   name: SESSION_COOKIE_NAME,

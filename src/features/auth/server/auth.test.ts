@@ -10,6 +10,7 @@ import {
   redirectTo,
   resolveUserFromSession,
 } from './auth'
+import { computeSessionExpiry } from '#/features/shared/utils/sessionTtl'
 import type { SessionData } from '#/features/shared/server/session'
 
 type MockSession = {
@@ -194,14 +195,16 @@ describe('resolveUserFromSession', () => {
       email: 'ada@example.com',
       avatarUrl: 'https://example.com/avatar.png',
     })
+    const now = 1_700_000_000_000
 
-    const result = await resolveUserFromSession(session)
+    const result = await resolveUserFromSession(session, now)
 
     expect(result).toEqual({
       sub: 'google-sub-123',
       firstName: 'Ada',
       email: 'ada@example.com',
       avatarUrl: 'https://example.com/avatar.png',
+      expiresAt: computeSessionExpiry(now),
     })
     expect(session.update).toHaveBeenCalledOnce()
     expect(session.update).toHaveBeenCalledWith({
@@ -209,7 +212,33 @@ describe('resolveUserFromSession', () => {
       firstName: 'Ada',
       email: 'ada@example.com',
       avatarUrl: 'https://example.com/avatar.png',
+      expiresAt: computeSessionExpiry(now),
     })
+  })
+
+  it('stamps a fresh expiry rather than reusing the stale one from the cookie', async () => {
+    const staleExpiry = 1_600_000_000_000
+    const session = makeSession({ sub: 'sub-1', expiresAt: staleExpiry })
+    const now = 1_700_000_000_000
+
+    const result = await resolveUserFromSession(session, now)
+
+    expect(result?.expiresAt).toBe(computeSessionExpiry(now))
+    expect(result?.expiresAt).not.toBe(staleExpiry)
+  })
+
+  it('defaults the expiry stamp to the current clock', async () => {
+    const before = Date.now()
+    const session = makeSession({ sub: 'sub-1' })
+
+    const result = await resolveUserFromSession(session)
+
+    expect(result?.expiresAt).toBeGreaterThanOrEqual(
+      computeSessionExpiry(before),
+    )
+    expect(result?.expiresAt).toBeLessThanOrEqual(
+      computeSessionExpiry(Date.now()),
+    )
   })
 
   it('returns SessionData even when session.update rejects (TTL slide is non-fatal)', async () => {
@@ -220,33 +249,38 @@ describe('resolveUserFromSession', () => {
       avatarUrl: 'https://example.com/avatar.png',
     })
     session.update.mockRejectedValue(new Error('cookie write failed'))
+    const now = 1_700_000_000_000
 
-    const result = await resolveUserFromSession(session)
+    const result = await resolveUserFromSession(session, now)
 
     expect(result).toEqual({
       sub: 'google-sub-123',
       firstName: 'Ada',
       email: 'ada@example.com',
       avatarUrl: 'https://example.com/avatar.png',
+      expiresAt: computeSessionExpiry(now),
     })
   })
 
   it('fills missing optional fields with empty strings', async () => {
     const session = makeSession({ sub: 'sub-only' })
+    const now = 1_700_000_000_000
 
-    const result = await resolveUserFromSession(session)
+    const result = await resolveUserFromSession(session, now)
 
     expect(result).toEqual({
       sub: 'sub-only',
       firstName: '',
       email: '',
       avatarUrl: '',
+      expiresAt: computeSessionExpiry(now),
     })
     expect(session.update).toHaveBeenCalledWith({
       sub: 'sub-only',
       firstName: '',
       email: '',
       avatarUrl: '',
+      expiresAt: computeSessionExpiry(now),
     })
   })
 })

@@ -13,6 +13,22 @@ function makeUser(overrides: Partial<SessionData> = {}): SessionData {
 }
 
 describe('getHeaderAuthState', () => {
+  it('returns the user session expiry so the refresh hook can act on it', () => {
+    const expiresAt = 1_700_000_000_000
+    const state = getHeaderAuthState(makeUser({ expiresAt }))
+    expect(state.sessionExpiresAt).toBe(expiresAt)
+  })
+
+  it('returns undefined sessionExpiresAt when user is null', () => {
+    expect(getHeaderAuthState(null).sessionExpiresAt).toBeUndefined()
+  })
+
+  it('returns undefined sessionExpiresAt for a session predating the field', () => {
+    const user = makeUser()
+    delete user.expiresAt
+    expect(getHeaderAuthState(user).sessionExpiresAt).toBeUndefined()
+  })
+
   it('returns showSignIn=true and empty navLinks when user is null', () => {
     const state = getHeaderAuthState(null)
     expect(state.showSignIn).toBe(true)
