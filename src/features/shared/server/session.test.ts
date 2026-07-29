@@ -2,19 +2,13 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import {
   SESSION_CONFIG_BASE,
   SESSION_COOKIE_NAME,
-  SESSION_MAX_AGE_SECONDS,
   getSessionConfig,
 } from './session'
+import { SESSION_MAX_AGE_SECONDS } from '#/features/shared/utils/sessionTtl'
 
 describe('SESSION_COOKIE_NAME', () => {
   it('is google-sso', () => {
     expect(SESSION_COOKIE_NAME).toBe('google-sso')
-  })
-})
-
-describe('SESSION_MAX_AGE_SECONDS', () => {
-  it('is 7 days in seconds', () => {
-    expect(SESSION_MAX_AGE_SECONDS).toBe(7 * 24 * 60 * 60)
   })
 })
 
