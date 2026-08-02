@@ -3,7 +3,7 @@ import mqtt from 'mqtt'
 import type { MqttClient } from 'mqtt'
 import { clearFrigateCache } from '#/features/shared/server/frigate/cache'
 import { EventBatcher } from './event-batcher'
-import type { FrigateEventInfo } from './event-batcher'
+import type { FrigateEventInfo, FlushMeta } from './event-batcher'
 import { notifyUsersForCamera } from './push-notify'
 
 /** MQTT topics to subscribe to for Frigate event updates. */
@@ -47,11 +47,13 @@ const batchWindowMs = parseBatchWindowMs(process.env.EVENT_BATCH_WINDOW_MS)
 export function dispatchBatch(
   camera: string,
   events: FrigateEventInfo[],
+  meta: FlushMeta,
 ): void {
+  const kind = meta.burstStart ? 'new burst' : 'continuation'
   console.log(
-    `[mqtt] Flushing batch for camera "${camera}" — ${events.length} event(s), dispatching push notifications`,
+    `[mqtt] Flushing batch for camera "${camera}" — ${events.length} event(s), ${kind}, dispatching push notifications`,
   )
-  notifyUsersForCamera(camera, events).catch((err) => {
+  notifyUsersForCamera(camera, events, meta).catch((err) => {
     console.error('[mqtt] Push notification dispatch failed:', err)
   })
 }

@@ -213,8 +213,24 @@ describe('handleTest', () => {
         title: 'Test Notification',
         body: 'Push notifications are working!',
         url: '/',
+        tag: 'push-test',
       },
     )
+  })
+
+  it('tags the test notification so it cannot replace a camera notification', async () => {
+    vi.mocked(isPushEnabled).mockReturnValue(true)
+    vi.mocked(sendPushNotification).mockResolvedValue(undefined)
+    vi.mocked(getPushStore).mockReturnValue({
+      getSubscriptionsByUserId: vi.fn(() => [
+        { endpoint: 'https://push.example.com/1', p256dh: 'k1', auth: 'a1' },
+      ]),
+    } as any)
+
+    await handleTest('user1')
+
+    const payload = vi.mocked(sendPushNotification).mock.calls[0][1]
+    expect(payload.tag).toBe('push-test')
   })
 
   it('returns sent: 0 when user has no subscriptions', async () => {

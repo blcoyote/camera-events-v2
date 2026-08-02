@@ -134,7 +134,7 @@ describe('dispatchBatch', () => {
       { id: '2', camera: 'front_porch', label: 'car', startTime: 2 },
     ]
 
-    dispatchBatch('front_porch', events)
+    dispatchBatch('front_porch', events, { burstStart: true })
 
     expect(
       logSpy.mock.calls.some(
@@ -143,7 +143,26 @@ describe('dispatchBatch', () => {
           String(call[0]).includes('2'),
       ),
     ).toBe(true)
-    expect(notifyMock).toHaveBeenCalledWith('front_porch', events)
+    expect(notifyMock).toHaveBeenCalledWith('front_porch', events, {
+      burstStart: true,
+    })
+
+    logSpy.mockRestore()
+  })
+
+  it('forwards a continuation flush so the dispatcher patches instead of alerting', async () => {
+    const { dispatchBatch } = await import('./mqtt')
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+
+    const events: FrigateEventInfo[] = [
+      { id: '3', camera: 'driveway', label: 'person', startTime: 3 },
+    ]
+
+    dispatchBatch('driveway', events, { burstStart: false })
+
+    expect(notifyMock).toHaveBeenCalledWith('driveway', events, {
+      burstStart: false,
+    })
 
     logSpy.mockRestore()
   })

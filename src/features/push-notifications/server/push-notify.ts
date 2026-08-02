@@ -1,16 +1,19 @@
 /**
  * Notification dispatcher — the flush callback for EventBatcher.
  *
- * For each subscribed user, filters events by per-camera preferences,
- * builds the appropriate push payload (single vs. bundled), and sends
- * notifications to all of the user's registered devices.
+ * For each subscribed user, filters events by per-camera preferences, builds a
+ * per-camera push payload, and sends it to the user's registered devices. The
+ * flush meta decides whether a push alerts (a new activity burst) or silently
+ * patches the notification already on screen (a continuation); continuations to
+ * Apple endpoints are additionally paced, since iOS re-alerts on every update.
  */
 
 import '@tanstack/react-start/server-only'
-import type { FrigateEventInfo } from './event-batcher'
+import type { FrigateEventInfo, FlushMeta } from './event-batcher'
 import { sendPushNotification, isPushEnabled } from './push'
 import type { PushPayload } from './push'
 import { getPushStore } from './push-store'
+import { SendThrottle, isAppleEndpoint } from './send-throttle'
 
 /** Extract the host of a push endpoint for logging, or 'unknown' if unparseable. */
 export function endpointHost(endpoint: string): string {
@@ -37,56 +40,107 @@ export function formatTime(unixSeconds: number): string {
   return d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
 }
 
-/** Build the push payload for a single event. */
-export function buildSinglePayload(event: FrigateEventInfo): PushPayload {
-  const camera = formatCameraName(event.camera)
-  const label = formatLabel(event.label)
-  const time = formatTime(event.startTime)
+/** Condense a label list to at most three names plus a "+N more" suffix. */
+function summarizeLabels(labels: string[]): string {
+  return (
+    labels.slice(0, 3).join(', ') +
+    (labels.length > 3 ? ` +${labels.length - 3} more` : '')
+  )
+}
+
+/**
+ * Notification tag for a camera. Per-camera rather than global so cameras
+ * alert independently, and so a camera's follow-up pushes replace its own
+ * notification instead of stacking or clobbering another camera's.
+ */
+export function cameraNotificationTag(camera: string): string {
+  return `camera-${camera}`
+}
+
+/**
+ * Build the push payload for one flush of a camera's events.
+ *
+ * `body` is a server-rendered fallback for service workers that predate
+ * client-side merging; current ones re-derive it from `event` so the count
+ * reflects the running total and the time uses the device's timezone.
+ */
+export function buildCameraPayload(
+  camera: string,
+  events: FrigateEventInfo[],
+  burstStart: boolean,
+): PushPayload {
+  const labels = [...new Set(events.map((e) => formatLabel(e.label)))]
+  const timestamp = Math.max(...events.map((e) => e.startTime))
+  const time = formatTime(timestamp)
+  const body =
+    events.length === 1
+      ? `${labels[0]} detected at ${time}`
+      : `${events.length} new events \u2014 ${summarizeLabels(labels)} at ${time}`
+
   return {
-    title: camera,
-    body: `${label} detected at ${time}`,
-    url: `/camera-events/${event.id}`,
+    title: formatCameraName(camera),
+    body,
+    url:
+      events.length === 1 ? `/camera-events/${events[0].id}` : '/camera-events',
     icon: '/icon-192.png',
-    event: { kind: 'single', label, timestamp: event.startTime },
+    tag: cameraNotificationTag(camera),
+    event: { camera, count: events.length, labels, timestamp, burstStart },
   }
 }
 
-/** Build the push payload for a batch of events from the same camera. */
-export function buildBundledPayload(
+/**
+ * Process-wide pacing state for update pushes to Apple endpoints.
+ * Tests inject their own instance via `options.throttle`.
+ */
+const appleUpdateThrottle = new SendThrottle()
+
+export interface NotifyOptions {
+  /** Override the shared Apple update throttle (tests). */
+  throttle?: SendThrottle
+  /** Override the clock, in epoch milliseconds (tests). */
+  now?: number
+}
+
+/**
+ * Decide whether one push should go out to one device.
+ *
+ * Burst starts always send — they are the alert the user is waiting for — and
+ * are recorded so the first follow-up waits a full interval. Updates send
+ * freely to browsers that honour `silent: true`; for Apple endpoints, where an
+ * update still alerts, they are paced by the throttle.
+ */
+function shouldSendToEndpoint(
+  endpoint: string,
   camera: string,
-  events: FrigateEventInfo[],
-): PushPayload {
-  const cameraDisplay = formatCameraName(camera)
-  const uniqueLabels = [...new Set(events.map((e) => formatLabel(e.label)))]
-  const labelSummary =
-    uniqueLabels.slice(0, 3).join(', ') +
-    (uniqueLabels.length > 3 ? ` +${uniqueLabels.length - 3} more` : '')
-  const latestTimestamp = Math.max(...events.map((e) => e.startTime))
-  const latestTime = formatTime(latestTimestamp)
-  return {
-    title: cameraDisplay,
-    body: `${events.length} new events \u2014 ${labelSummary} at ${latestTime}`,
-    url: '/camera-events',
-    icon: '/icon-192.png',
-    event: {
-      kind: 'bundled',
-      count: events.length,
-      labels: labelSummary,
-      timestamp: latestTimestamp,
-    },
+  burstStart: boolean,
+  throttle: SendThrottle,
+  now: number,
+): boolean {
+  const key = `${camera}|${endpoint}`
+  if (burstStart) {
+    throttle.record(key, now)
+    return true
   }
+  if (!isAppleEndpoint(endpoint)) return true
+  return throttle.tryAcquire(key, now)
 }
 
 /**
  * Flush callback: send push notifications for a batch of events from one camera.
  *
- * Called by the EventBatcher when a camera's window expires.
+ * Called by the EventBatcher on each flush. `meta.burstStart` distinguishes the
+ * alert that opens an activity burst from the follow-ups that silently patch it.
  */
 export async function notifyUsersForCamera(
   camera: string,
   events: FrigateEventInfo[],
+  meta: FlushMeta,
+  options: NotifyOptions = {},
 ): Promise<void> {
   if (!isPushEnabled() || events.length === 0) return
+
+  const throttle = options.throttle ?? appleUpdateThrottle
+  const now = options.now ?? Date.now()
 
   const store = await getPushStore()
   const userIds = store.getAllSubscribedUserIds()
@@ -103,10 +157,7 @@ export async function notifyUsersForCamera(
       continue
     }
 
-    const payload =
-      events.length === 1
-        ? buildSinglePayload(events[0])
-        : buildBundledPayload(camera, events)
+    const payload = buildCameraPayload(camera, events, meta.burstStart)
 
     const subscriptions = store.getSubscriptionsByUserId(userId)
     const hosts = subscriptions.map((sub) => endpointHost(sub.endpoint))
@@ -114,6 +165,20 @@ export async function notifyUsersForCamera(
       `[push-notify] Pushing to user ${userId} on ${subscriptions.length} device(s): ${hosts.join(', ')}`,
     )
     for (const sub of subscriptions) {
+      if (
+        !shouldSendToEndpoint(
+          sub.endpoint,
+          camera,
+          meta.burstStart,
+          throttle,
+          now,
+        )
+      ) {
+        console.log(
+          `[push-notify] Throttled update to ${endpointHost(sub.endpoint)} for camera "${camera}" — Apple endpoints are paced to avoid re-alerting`,
+        )
+        continue
+      }
       try {
         await sendPushNotification(
           {
