@@ -9,6 +9,8 @@
  * endpoints are therefore rate-limited.
  */
 
+import '@tanstack/react-start/server-only'
+
 /** Host that serves Web Push for Safari / iOS standalone PWAs. */
 const APPLE_PUSH_HOST = 'web.push.apple.com'
 

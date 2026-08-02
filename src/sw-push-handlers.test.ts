@@ -5,6 +5,7 @@ import {
   readNotificationState,
   planNotification,
   readExistingState,
+  resolveNotificationTag,
   getNotificationClickUrl,
   setPendingNavigationUrl,
   popPendingNavigationUrl,
@@ -497,6 +498,25 @@ describe('planNotification', () => {
   })
 })
 
+describe('resolveNotificationTag', () => {
+  it('uses the tag the payload carries', () => {
+    const payload = parsePushPayload({
+      title: 'Front Porch',
+      body: 'b',
+      url: '/',
+      tag: 'camera-front_porch',
+    })
+
+    expect(resolveNotificationTag(payload)).toBe('camera-front_porch')
+  })
+
+  it('falls back to the shared tag when the payload carries none', () => {
+    const payload = parsePushPayload({ title: 'T', body: 'b', url: '/' })
+
+    expect(resolveNotificationTag(payload)).toBe('camera-event')
+  })
+})
+
 describe('readExistingState', () => {
   const state = {
     camera: 'front_porch',
@@ -504,6 +524,16 @@ describe('readExistingState', () => {
     labels: ['Person'],
     timestamp: 1713182400,
     url: '/camera-events',
+  }
+
+  /** Pass `null` to build a payload that carries no tag at all. */
+  function makePayload(tag: string | null = 'camera-front_porch') {
+    return parsePushPayload({
+      title: 'Front Porch',
+      body: 'server fallback',
+      url: '/camera-events',
+      ...(tag === null ? {} : { tag }),
+    })
   }
 
   function makeRegistration(
@@ -524,11 +554,11 @@ describe('readExistingState', () => {
     ])
 
     await expect(
-      readExistingState(registration, 'camera-front_porch'),
+      readExistingState(registration, makePayload()),
     ).resolves.toEqual(state)
   })
 
-  it('queries only the tag it was asked about', async () => {
+  it("queries the payload's own tag", async () => {
     const seen: string[] = []
     const registration = {
       getNotifications: async (filter: { tag: string }) => {
@@ -537,14 +567,31 @@ describe('readExistingState', () => {
       },
     }
 
-    await readExistingState(registration, 'camera-driveway')
+    await readExistingState(registration, makePayload('camera-driveway'))
 
     expect(seen).toEqual(['camera-driveway'])
   })
 
+  it('looks up exactly the tag the notification will be shown under', async () => {
+    // Guards against the lookup tag and the display tag drifting apart, which
+    // would silently stop merging for payloads that carry no tag.
+    const payload = makePayload(null)
+    const seen: string[] = []
+    const registration = {
+      getNotifications: async (filter: { tag: string }) => {
+        seen.push(filter.tag)
+        return []
+      },
+    }
+
+    await readExistingState(registration, payload)
+
+    expect(seen).toEqual([planNotification(payload, null).tag])
+  })
+
   it('returns null when nothing is on screen', async () => {
     await expect(
-      readExistingState(makeRegistration([]), 'camera-front_porch'),
+      readExistingState(makeRegistration([]), makePayload()),
     ).resolves.toBeNull()
   })
 
@@ -555,15 +602,13 @@ describe('readExistingState', () => {
     ])
 
     await expect(
-      readExistingState(registration, 'camera-front_porch'),
+      readExistingState(registration, makePayload()),
     ).resolves.toEqual(state)
   })
 
   it('returns null when getNotifications is unsupported', async () => {
     // Older Safari builds expose no getNotifications at all.
-    await expect(
-      readExistingState({}, 'camera-front_porch'),
-    ).resolves.toBeNull()
+    await expect(readExistingState({}, makePayload())).resolves.toBeNull()
   })
 
   it('returns null when getNotifications throws', async () => {
@@ -572,7 +617,7 @@ describe('readExistingState', () => {
     })
 
     await expect(
-      readExistingState(registration, 'camera-front_porch'),
+      readExistingState(registration, makePayload()),
     ).resolves.toBeNull()
   })
 })

@@ -5,6 +5,8 @@
  * callers pass the raw string in and get a usable duration out.
  */
 
+import '@tanstack/react-start/server-only'
+
 /**
  * Parse a millisecond duration from an environment variable.
  *

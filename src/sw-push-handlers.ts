@@ -190,7 +190,18 @@ interface NotificationRegistration {
 }
 
 /**
- * Find the accumulated state of a notification still on screen for `tag`.
+ * The tag a payload's notification is grouped under.
+ *
+ * The single source of truth for tag resolution: both the lookup of what is
+ * already on screen and the notification eventually shown go through here, so
+ * they cannot drift apart and silently stop merging.
+ */
+export function resolveNotificationTag(payload: PushPayload): string {
+  return payload.tag ?? FALLBACK_TAG
+}
+
+/**
+ * Find the accumulated state of a notification still on screen for `payload`.
  *
  * Returns null when nothing is displayed — which means the user opened or
  * dismissed it — and also when the browser has no `getNotifications` at all
@@ -199,10 +210,12 @@ interface NotificationRegistration {
  */
 export async function readExistingState(
   registration: NotificationRegistration,
-  tag: string,
+  payload: PushPayload,
 ): Promise<NotificationState | null> {
   try {
-    const displayed = await registration.getNotifications?.({ tag })
+    const displayed = await registration.getNotifications?.({
+      tag: resolveNotificationTag(payload),
+    })
     if (!displayed) return null
     for (const notification of displayed) {
       const state = readNotificationState(notification.data)
@@ -226,7 +239,7 @@ export function planNotification(
   payload: PushPayload,
   existing: NotificationState | null,
 ): NotificationPlan {
-  const tag = payload.tag ?? FALLBACK_TAG
+  const tag = resolveNotificationTag(payload)
   const base = { title: payload.title, icon: payload.icon, tag }
 
   const event = payload.event

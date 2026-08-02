@@ -181,10 +181,7 @@ self.addEventListener('push', (event: PushEvent) => {
 
   event.waitUntil(
     (async () => {
-      const existing = await readExistingState(
-        self.registration,
-        payload.tag ?? 'camera-event',
-      )
+      const existing = await readExistingState(self.registration, payload)
       const plan = planNotification(payload, existing)
       await self.registration.showNotification(
         plan.title,

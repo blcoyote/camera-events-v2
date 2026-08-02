@@ -9,6 +9,8 @@
  * plus at most one follow-up per window while motion continues.
  */
 
+import '@tanstack/react-start/server-only'
+
 export interface FrigateEventInfo {
   id: string
   camera: string
