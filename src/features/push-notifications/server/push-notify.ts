@@ -14,6 +14,7 @@ import { sendPushNotification, isPushEnabled } from './push'
 import type { PushPayload } from './push'
 import { getPushStore } from './push-store'
 import { SendThrottle, isAppleEndpoint } from './send-throttle'
+import { resolveAppleUpdateIntervalMs } from './env'
 
 /** Extract the host of a push endpoint for logging, or 'unknown' if unparseable. */
 export function endpointHost(endpoint: string): string {
@@ -92,7 +93,9 @@ export function buildCameraPayload(
  * Process-wide pacing state for update pushes to Apple endpoints.
  * Tests inject their own instance via `options.throttle`.
  */
-const appleUpdateThrottle = new SendThrottle()
+const appleUpdateThrottle = new SendThrottle(
+  resolveAppleUpdateIntervalMs(process.env),
+)
 
 export interface NotifyOptions {
   /** Override the shared Apple update throttle (tests). */

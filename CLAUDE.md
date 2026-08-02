@@ -156,8 +156,8 @@ The skill covers the full layering model, import protection rules, and common mi
 2. MQTT subscriber connects to `MQTT_URL` and subscribes to `frigate/events` and `frigate/reviews`.
 3. Every incoming message clears the Frigate cache.
 4. New `frigate/events` messages are parsed by `parseFrigateEvent()` and fed into `EventBatcher`.
-5. `EventBatcher` accumulates events per camera and flushes after `EVENT_BATCH_WINDOW_MS` (default 30s).
-6. On flush, `notifyUsersForCamera()` loads all push subscriptions from SQLite, checks per-user camera preferences, and dispatches Web Push via `web-push`.
+5. `EventBatcher` flushes a camera's first event immediately (leading edge), then batches follow-ups into `EVENT_BATCH_WINDOW_MS` windows (default 30s). Each flush reports whether it opens a new activity burst — no events for `EVENT_BURST_GAP_MS` (default 10min) — or continues one.
+6. On flush, `notifyUsersForCamera()` loads all push subscriptions from SQLite, checks per-user camera preferences, and dispatches Web Push via `web-push`. Burst starts alert; continuations are patched into the notification already on screen by the service worker and are paced for Apple endpoints via `APPLE_UPDATE_INTERVAL_MS`. See `docs/specs/camera-motion-notification-dedup.md`.
 7. Push subscriptions and per-camera opt-out preferences are stored in `data/camera-events.db` (SQLite, WAL mode).
 8. Push is silently disabled if `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, or `VAPID_SUBJECT` are missing.
 
@@ -343,19 +343,21 @@ Security-critical validators like `isValidCameraName` and `isValidEventId` must 
 
 ## Environment Variables
 
-| Variable                | Required          | Purpose                                                                                  |
-| ----------------------- | ----------------- | ---------------------------------------------------------------------------------------- |
-| `SESSION_SECRET`        | Yes               | Cookie encryption key (≥32 chars)                                                        |
-| `GOOGLE_CLIENT_ID`      | Yes               | Google OAuth client ID                                                                   |
-| `GOOGLE_CLIENT_SECRET`  | Yes               | Google OAuth client secret                                                               |
-| `FRIGATE_URL`           | Yes (unless mock) | Base URL of Frigate instance (e.g. `http://frigate:5000`)                                |
-| `FRIGATE_MOCK`          | No                | Set to `true` to use mock Frigate client                                                 |
-| `MQTT_URL`              | No                | MQTT broker URL (e.g. `mqtt://rabbitmq:1883`); push/cache-invalidation disabled if unset |
-| `VAPID_PUBLIC_KEY`      | No                | Web Push VAPID public key; push disabled if any VAPID var missing                        |
-| `VAPID_PRIVATE_KEY`     | No                | Web Push VAPID private key                                                               |
-| `VAPID_SUBJECT`         | No                | Push contact (`mailto:...`); push disabled if any VAPID var missing                      |
-| `APP_URL`               | No                | Public app URL for OAuth redirect; falls back to request origin in dev                   |
-| `EVENT_BATCH_WINDOW_MS` | No                | Push notification batching window (default 30000ms)                                      |
+| Variable                   | Required          | Purpose                                                                                  |
+| -------------------------- | ----------------- | ---------------------------------------------------------------------------------------- |
+| `SESSION_SECRET`           | Yes               | Cookie encryption key (≥32 chars)                                                        |
+| `GOOGLE_CLIENT_ID`         | Yes               | Google OAuth client ID                                                                   |
+| `GOOGLE_CLIENT_SECRET`     | Yes               | Google OAuth client secret                                                               |
+| `FRIGATE_URL`              | Yes (unless mock) | Base URL of Frigate instance (e.g. `http://frigate:5000`)                                |
+| `FRIGATE_MOCK`             | No                | Set to `true` to use mock Frigate client                                                 |
+| `MQTT_URL`                 | No                | MQTT broker URL (e.g. `mqtt://rabbitmq:1883`); push/cache-invalidation disabled if unset |
+| `VAPID_PUBLIC_KEY`         | No                | Web Push VAPID public key; push disabled if any VAPID var missing                        |
+| `VAPID_PRIVATE_KEY`        | No                | Web Push VAPID private key                                                               |
+| `VAPID_SUBJECT`            | No                | Push contact (`mailto:...`); push disabled if any VAPID var missing                      |
+| `APP_URL`                  | No                | Public app URL for OAuth redirect; falls back to request origin in dev                   |
+| `EVENT_BATCH_WINDOW_MS`    | No                | Window for follow-up (patch) pushes per camera (default 30000ms)                         |
+| `EVENT_BURST_GAP_MS`       | No                | Quiet gap before a camera alerts again instead of patching (default 600000ms)            |
+| `APPLE_UPDATE_INTERVAL_MS` | No                | Min spacing between patch pushes to one Apple endpoint; 0 disables (default 300000ms)    |
 
 Generate VAPID keys with: `npx web-push generate-vapid-keys`
 

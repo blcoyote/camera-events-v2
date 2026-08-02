@@ -202,9 +202,26 @@ as motion continues.
 - **Merge state is per-notification, not durable.** A browser that drops the
   notification for its own reasons (shade cleared, OS restart) loses the running
   total and the next push alerts with a fresh count.
-- **The batch window, burst gap, and Apple interval are code constants** (30 s
-  via `EVENT_BATCH_WINDOW_MS`, 10 min, 5 min). Only the first is env-tunable
-  today.
 - **Service workers update lazily.** Until a client picks up the new SW, it will
   ignore the structured event it does not understand and fall back to the
   server-rendered `body` — correct, just without merging.
+
+## Configuration
+
+All three timings are environment-tunable, each falling back to its default when
+absent, blank, non-numeric, negative, or non-finite (`parseDurationMs` in
+`env.ts`; `"0"` is honoured rather than treated as falsy). Each is resolved
+independently, so one bad value cannot disturb the others.
+
+| Variable                   | Default           | Effect                                                                                                                                                |
+| -------------------------- | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `EVENT_BATCH_WINDOW_MS`    | `30000` (30 s)    | How long follow-up events are collected before the notification is patched again. The first event of a burst ignores this and alerts immediately.     |
+| `EVENT_BURST_GAP_MS`       | `600000` (10 min) | How long a camera must stay quiet before its next event alerts instead of patching. Lower = alerted about renewed activity sooner.                    |
+| `APPLE_UPDATE_INTERVAL_MS` | `300000` (5 min)  | Minimum spacing between patch pushes to one Apple endpoint per camera. `0` disables pacing, making iOS behave like Android (and buzz on every patch). |
+
+Reducing alert volume further means **raising** `EVENT_BURST_GAP_MS` (fewer
+re-alerts for renewed activity) and, on iOS, **raising**
+`APPLE_UPDATE_INTERVAL_MS` (fewer patch buzzes, staler count). Lowering
+`EVENT_BATCH_WINDOW_MS` does not increase alerts on Android or desktop — patches
+there are silent — but it does make iOS patches eligible more often, bounded by
+`APPLE_UPDATE_INTERVAL_MS`.
