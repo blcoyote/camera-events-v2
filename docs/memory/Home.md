@@ -37,11 +37,13 @@ this vault is meant to be used.
 - [[decisions/2026-06-29-obsidian-memory-vault]]
 - [[decisions/2026-07-07-login-allowlist-in-google-cloud]] — allow-list lives in Google Cloud, not app code
 - [[decisions/2026-07-29-session-lifetime-and-proactive-refresh]] — 30-day rolling session, client-visible `expiresAt`, proactive reload
+- [[decisions/2026-08-02-alert-once-per-burst-then-patch]] — one alert per activity burst, silent in-place patching after
 
 ## ⚠️ Gotchas
 
 - [[gotchas/ssr-hydration-browser-globals]]
 - [[gotchas/never-run-tsr-generate]]
+- [[gotchas/ios-ignores-silent-and-renotify]]
 
 ## 📌 Conventions reminders
 

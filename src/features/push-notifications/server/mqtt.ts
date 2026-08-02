@@ -3,8 +3,9 @@ import mqtt from 'mqtt'
 import type { MqttClient } from 'mqtt'
 import { clearFrigateCache } from '#/features/shared/server/frigate/cache'
 import { EventBatcher } from './event-batcher'
-import type { FrigateEventInfo } from './event-batcher'
+import type { FrigateEventInfo, FlushMeta } from './event-batcher'
 import { notifyUsersForCamera } from './push-notify'
+import { resolveBatcherConfig } from './env'
 
 /** MQTT topics to subscribe to for Frigate event updates. */
 export const SUBSCRIBED_TOPICS = ['frigate/events', 'frigate/reviews'] as const
@@ -24,21 +25,7 @@ export function _resetMqttConnectionState(): void {
   mqttConnectionState = 'not_configured'
 }
 
-/**
- * Parse the EVENT_BATCH_WINDOW_MS env variable into a millisecond count.
- * Defaults to 30 000 ms when the value is absent, empty, or non-numeric.
- * Unlike a plain `|| 30_000` guard, this correctly treats "0" as a valid
- * value (immediate flush with no batching window).
- */
-export function parseBatchWindowMs(envValue: string | undefined): number {
-  if (envValue === undefined) return 30_000
-  const trimmedEnvValue = envValue.trim()
-  if (trimmedEnvValue === '') return 30_000
-  const raw = Number(trimmedEnvValue)
-  return Number.isFinite(raw) ? raw : 30_000
-}
-
-const batchWindowMs = parseBatchWindowMs(process.env.EVENT_BATCH_WINDOW_MS)
+const { windowMs, burstGapMs } = resolveBatcherConfig(process.env)
 
 /**
  * Flush callback for the EventBatcher: log the batch and dispatch push
@@ -47,17 +34,19 @@ const batchWindowMs = parseBatchWindowMs(process.env.EVENT_BATCH_WINDOW_MS)
 export function dispatchBatch(
   camera: string,
   events: FrigateEventInfo[],
+  meta: FlushMeta,
 ): void {
+  const kind = meta.burstStart ? 'new burst' : 'continuation'
   console.log(
-    `[mqtt] Flushing batch for camera "${camera}" — ${events.length} event(s), dispatching push notifications`,
+    `[mqtt] Flushing batch for camera "${camera}" — ${events.length} event(s), ${kind}, dispatching push notifications`,
   )
-  notifyUsersForCamera(camera, events).catch((err) => {
+  notifyUsersForCamera(camera, events, meta).catch((err) => {
     console.error('[mqtt] Push notification dispatch failed:', err)
   })
 }
 
 /** Singleton event batcher — flushes per-camera batches to push notifications. */
-const eventBatcher = new EventBatcher(dispatchBatch, batchWindowMs)
+const eventBatcher = new EventBatcher(dispatchBatch, windowMs, burstGapMs)
 
 /**
  * Parse a Frigate MQTT event payload into a FrigateEventInfo, or null

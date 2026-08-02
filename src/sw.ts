@@ -11,6 +11,8 @@ import {
   getNotificationClickUrl,
   setPendingNavigationUrl,
   popPendingNavigationUrl,
+  planNotification,
+  readExistingState,
 } from './sw-push-handlers'
 
 declare global {
@@ -162,6 +164,11 @@ self.addEventListener('message', (event: ExtendableMessageEvent) => {
 
 // --- Web Push handlers ---
 
+// A camera's first sighting alerts; follow-ups within the same activity burst
+// merge into the notification already on screen and replace it silently, so
+// continued motion patches the running count instead of buzzing again. If the
+// notification is gone the user has opened or dismissed it, and the next push
+// alerts afresh.
 self.addEventListener('push', (event: PushEvent) => {
   let data: unknown
   try {
@@ -171,9 +178,17 @@ self.addEventListener('push', (event: PushEvent) => {
   }
 
   const payload = parsePushPayload(data)
-  const options = buildNotificationOptions(payload)
 
-  event.waitUntil(self.registration.showNotification(payload.title, options))
+  event.waitUntil(
+    (async () => {
+      const existing = await readExistingState(self.registration, payload)
+      const plan = planNotification(payload, existing)
+      await self.registration.showNotification(
+        plan.title,
+        buildNotificationOptions(plan),
+      )
+    })(),
+  )
 })
 
 self.addEventListener('notificationclick', (event: NotificationEvent) => {

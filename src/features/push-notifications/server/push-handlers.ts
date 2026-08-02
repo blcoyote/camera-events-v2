@@ -100,6 +100,8 @@ export async function handleTest(
     title: 'Test Notification',
     body: 'Push notifications are working!',
     url: '/',
+    // Its own tag, so a test push never replaces a live camera notification.
+    tag: 'push-test',
   }
 
   const results = await Promise.allSettled(

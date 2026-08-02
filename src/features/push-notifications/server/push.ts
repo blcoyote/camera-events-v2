@@ -2,16 +2,38 @@ import '@tanstack/react-start/server-only'
 import webPush from 'web-push'
 import { getPushStore } from './push-store'
 
-export type PushPayloadEvent =
-  | { kind: 'single'; label: string; timestamp: number }
-  | { kind: 'bundled'; count: number; labels: string; timestamp: number }
+/**
+ * Structured event data the service worker merges on.
+ *
+ * The SW re-derives the notification body from these fields so timestamps
+ * render in the device's timezone, and accumulates `count`/`labels` across
+ * pushes to patch a notification that is still on screen.
+ */
+export interface PushEventInfo {
+  /** Raw Frigate camera name — the merge identity. */
+  camera: string
+  /** Number of events in this push (not the running total). */
+  count: number
+  /** Unique display labels in this push, in first-seen order. */
+  labels: string[]
+  /** Latest event start time in this push, as unix seconds. */
+  timestamp: number
+  /**
+   * True when this push opens a new activity burst. Burst starts alert the
+   * user and reset the accumulated count; continuations patch the existing
+   * notification silently.
+   */
+  burstStart: boolean
+}
 
 export interface PushPayload {
   title: string
   body: string
   url: string
   icon?: string
-  event?: PushPayloadEvent
+  /** Groups notifications so a camera's follow-ups replace rather than stack. */
+  tag?: string
+  event?: PushEventInfo
 }
 
 export interface PushSubscriptionInfo {

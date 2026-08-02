@@ -134,7 +134,7 @@ describe('dispatchBatch', () => {
       { id: '2', camera: 'front_porch', label: 'car', startTime: 2 },
     ]
 
-    dispatchBatch('front_porch', events)
+    dispatchBatch('front_porch', events, { burstStart: true })
 
     expect(
       logSpy.mock.calls.some(
@@ -143,7 +143,26 @@ describe('dispatchBatch', () => {
           String(call[0]).includes('2'),
       ),
     ).toBe(true)
-    expect(notifyMock).toHaveBeenCalledWith('front_porch', events)
+    expect(notifyMock).toHaveBeenCalledWith('front_porch', events, {
+      burstStart: true,
+    })
+
+    logSpy.mockRestore()
+  })
+
+  it('forwards a continuation flush so the dispatcher patches instead of alerting', async () => {
+    const { dispatchBatch } = await import('./mqtt')
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+
+    const events: FrigateEventInfo[] = [
+      { id: '3', camera: 'driveway', label: 'person', startTime: 3 },
+    ]
+
+    dispatchBatch('driveway', events, { burstStart: false })
+
+    expect(notifyMock).toHaveBeenCalledWith('driveway', events, {
+      burstStart: false,
+    })
 
     logSpy.mockRestore()
   })
@@ -409,32 +428,5 @@ describe('getMqttConnectionState', () => {
     )?.[1]
     closeHandler()
     expect(getMqttConnectionState()).toBe('disconnected')
-  })
-})
-
-describe('parseBatchWindowMs', () => {
-  it('returns the provided positive value', async () => {
-    const { parseBatchWindowMs } = await import('./mqtt')
-    expect(parseBatchWindowMs('10000')).toBe(10_000)
-  })
-
-  it('returns the default (30000) when env is undefined', async () => {
-    const { parseBatchWindowMs } = await import('./mqtt')
-    expect(parseBatchWindowMs(undefined)).toBe(30_000)
-  })
-
-  it('returns the default when env is an empty string', async () => {
-    const { parseBatchWindowMs } = await import('./mqtt')
-    expect(parseBatchWindowMs('')).toBe(30_000)
-  })
-
-  it('returns the default when env is a non-numeric string', async () => {
-    const { parseBatchWindowMs } = await import('./mqtt')
-    expect(parseBatchWindowMs('banana')).toBe(30_000)
-  })
-
-  it('returns 0 when env is "0" (immediate flush, not treated as falsy)', async () => {
-    const { parseBatchWindowMs } = await import('./mqtt')
-    expect(parseBatchWindowMs('0')).toBe(0)
   })
 })
