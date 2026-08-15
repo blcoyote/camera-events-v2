@@ -4,8 +4,7 @@ import '@tanstack/react-start/server-only'
  * Consuming code pattern-matches on `ok` to handle success/failure.
  */
 export type FrigateResult<T> =
-  | { ok: true; data: T }
-  | { ok: false; error: string; status?: number }
+  { ok: true; data: T } | { ok: false; error: string; status?: number }
 
 /** Default request timeout in milliseconds. */
 export const DEFAULT_TIMEOUT_MS = 10_000

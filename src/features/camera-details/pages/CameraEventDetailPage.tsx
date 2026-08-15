@@ -19,8 +19,7 @@ import { FavoriteButton } from '#/features/shared/components/FavoriteButton'
 // ─── Pure functions (exported for testing) ───
 
 type DetailPageState =
-  | { kind: 'event'; event: FrigateEvent }
-  | { kind: 'error'; message: string }
+  { kind: 'event'; event: FrigateEvent } | { kind: 'error'; message: string }
 
 export function getDetailPageState(
   result: FrigateResult<FrigateEvent>,

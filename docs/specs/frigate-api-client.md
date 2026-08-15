@@ -127,8 +127,7 @@ Feature: Frigate API Client (Read Operations)
 
 ```typescript
 type FrigateResult<T> =
-  | { ok: true; data: T }
-  | { ok: false; error: string; status?: number }
+  { ok: true; data: T } | { ok: false; error: string; status?: number }
 ```
 
 **Configuration**: `FRIGATE_URL` env var (e.g., `http://192.168.1.100:5000`). Validated at call time. Trailing slash stripped.

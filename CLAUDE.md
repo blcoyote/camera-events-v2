@@ -444,6 +444,7 @@ gotchas, decision records, and the project glossary.
 - NEVER say "ready to push when you are" - YOU must push
 - If push fails, resolve and retry until it succeeds
 - **No AI attestations or co-authoring anywhere.** Do not include `Co-Authored-By:` trailers, `Generated with Claude` footers, `Claude-Session:` links, or any other AI attribution in commit messages, PR titles, PR bodies, code comments, or any other artifact pushed to the repository. This applies to all AI tools and models — Claude, Copilot, GPT, etc.
+
 <!-- END BEADS INTEGRATION -->
 
 ## graphify

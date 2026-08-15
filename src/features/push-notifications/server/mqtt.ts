@@ -11,9 +11,7 @@ import { resolveBatcherConfig } from './env'
 export const SUBSCRIBED_TOPICS = ['frigate/events', 'frigate/reviews'] as const
 
 export type MqttConnectionState =
-  | 'not_configured'
-  | 'connected'
-  | 'disconnected'
+  'not_configured' | 'connected' | 'disconnected'
 
 let mqttConnectionState: MqttConnectionState = 'not_configured'
 

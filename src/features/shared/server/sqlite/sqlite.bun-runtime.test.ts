@@ -51,8 +51,7 @@ describe.skipIf(!isBun)('openSqlite real Bun runtime', () => {
     db.prepare('INSERT INTO k (id, v) VALUES (?, ?)').run(1, 'one')
 
     const present = db.prepare('SELECT v FROM k WHERE id = ?').get(1) as
-      | { v: string }
-      | undefined
+      { v: string } | undefined
     expect(present).toEqual({ v: 'one' })
 
     const missing = db.prepare('SELECT v FROM k WHERE id = ?').get(999)
