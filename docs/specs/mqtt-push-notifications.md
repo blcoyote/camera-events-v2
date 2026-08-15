@@ -148,9 +148,7 @@ sendPushNotification()       ← existing web-push wrapper
 
 ```json
 {
-  "before": {
-    /* previous state */
-  },
+  "before": {/* previous state */},
   "after": {
     "id": "1713182400.123456-abc123",
     "camera": "front_porch",
