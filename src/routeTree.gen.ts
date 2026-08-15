@@ -9,46 +9,41 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as ApiTestAuthRouteImport } from './routes/api/test-auth'
-import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
-import { Route as AuthenticatedFavoritesRouteImport } from './routes/_authenticated/favorites'
+import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as AuthenticatedCamerasRouteImport } from './routes/_authenticated/cameras'
-import { Route as ApiHealthIndexRouteImport } from './routes/api/health/index'
+import { Route as AuthenticatedFavoritesRouteImport } from './routes/_authenticated/favorites'
+import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as ApiTestAuthRouteImport } from './routes/api/test-auth'
 import { Route as AuthenticatedCameraEventsIndexRouteImport } from './routes/_authenticated/camera-events.index'
-import { Route as ApiPushVapidPublicKeyRouteImport } from './routes/api/push/vapid-public-key'
-import { Route as ApiPushUnsubscribeRouteImport } from './routes/api/push/unsubscribe'
-import { Route as ApiPushTestRouteImport } from './routes/api/push/test'
-import { Route as ApiPushSubscribeRouteImport } from './routes/api/push/subscribe'
-import { Route as ApiPushPreferencesRouteImport } from './routes/api/push/preferences'
-import { Route as ApiHealthReadyRouteImport } from './routes/api/health/ready'
-import { Route as ApiAuthLogoutRouteImport } from './routes/api/auth/logout'
-import { Route as ApiAuthGoogleRouteImport } from './routes/api/auth/google'
 import { Route as AuthenticatedCameraEventsIdRouteImport } from './routes/_authenticated/camera-events.$id'
-import { Route as ApiEventsIdThumbnailRouteImport } from './routes/api/events/$id/thumbnail'
-import { Route as ApiEventsIdSnapshotRouteImport } from './routes/api/events/$id/snapshot'
-import { Route as ApiEventsIdClipRouteImport } from './routes/api/events/$id/clip'
-import { Route as ApiCamerasNameLatestRouteImport } from './routes/api/cameras/$name/latest'
+import { Route as ApiAuthGoogleRouteImport } from './routes/api/auth/google'
+import { Route as ApiAuthLogoutRouteImport } from './routes/api/auth/logout'
+import { Route as ApiHealthIndexRouteImport } from './routes/api/health/index'
+import { Route as ApiHealthReadyRouteImport } from './routes/api/health/ready'
+import { Route as ApiPushPreferencesRouteImport } from './routes/api/push/preferences'
+import { Route as ApiPushSubscribeRouteImport } from './routes/api/push/subscribe'
+import { Route as ApiPushTestRouteImport } from './routes/api/push/test'
+import { Route as ApiPushUnsubscribeRouteImport } from './routes/api/push/unsubscribe'
+import { Route as ApiPushVapidPublicKeyRouteImport } from './routes/api/push/vapid-public-key'
 import { Route as ApiAuthGoogleCallbackRouteImport } from './routes/api/auth/google/callback'
+import { Route as ApiCamerasNameLatestRouteImport } from './routes/api/cameras/$name/latest'
+import { Route as ApiEventsIdClipRouteImport } from './routes/api/events/$id/clip'
+import { Route as ApiEventsIdSnapshotRouteImport } from './routes/api/events/$id/snapshot'
+import { Route as ApiEventsIdThumbnailRouteImport } from './routes/api/events/$id/thumbnail'
 
-const AuthenticatedRoute = AuthenticatedRouteImport.update({
-  id: '/_authenticated',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiTestAuthRoute = ApiTestAuthRouteImport.update({
-  id: '/api/test-auth',
-  path: '/api/test-auth',
+const AuthenticatedRoute = AuthenticatedRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
+const AuthenticatedCamerasRoute = AuthenticatedCamerasRouteImport.update({
+  id: '/cameras',
+  path: '/cameras',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedFavoritesRoute = AuthenticatedFavoritesRouteImport.update({
@@ -56,14 +51,14 @@ const AuthenticatedFavoritesRoute = AuthenticatedFavoritesRouteImport.update({
   path: '/favorites',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AuthenticatedCamerasRoute = AuthenticatedCamerasRouteImport.update({
-  id: '/cameras',
-  path: '/cameras',
+const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const ApiHealthIndexRoute = ApiHealthIndexRouteImport.update({
-  id: '/api/health/',
-  path: '/api/health/',
+const ApiTestAuthRoute = ApiTestAuthRouteImport.update({
+  id: '/api/test-auth',
+  path: '/api/test-auth',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedCameraEventsIndexRoute =
@@ -72,34 +67,15 @@ const AuthenticatedCameraEventsIndexRoute =
     path: '/camera-events/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-const ApiPushVapidPublicKeyRoute = ApiPushVapidPublicKeyRouteImport.update({
-  id: '/api/push/vapid-public-key',
-  path: '/api/push/vapid-public-key',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPushUnsubscribeRoute = ApiPushUnsubscribeRouteImport.update({
-  id: '/api/push/unsubscribe',
-  path: '/api/push/unsubscribe',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPushTestRoute = ApiPushTestRouteImport.update({
-  id: '/api/push/test',
-  path: '/api/push/test',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPushSubscribeRoute = ApiPushSubscribeRouteImport.update({
-  id: '/api/push/subscribe',
-  path: '/api/push/subscribe',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPushPreferencesRoute = ApiPushPreferencesRouteImport.update({
-  id: '/api/push/preferences',
-  path: '/api/push/preferences',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiHealthReadyRoute = ApiHealthReadyRouteImport.update({
-  id: '/api/health/ready',
-  path: '/api/health/ready',
+const AuthenticatedCameraEventsIdRoute =
+  AuthenticatedCameraEventsIdRouteImport.update({
+    id: '/camera-events/$id',
+    path: '/camera-events/$id',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const ApiAuthGoogleRoute = ApiAuthGoogleRouteImport.update({
+  id: '/api/auth/google',
+  path: '/api/auth/google',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiAuthLogoutRoute = ApiAuthLogoutRouteImport.update({
@@ -107,25 +83,49 @@ const ApiAuthLogoutRoute = ApiAuthLogoutRouteImport.update({
   path: '/api/auth/logout',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiAuthGoogleRoute = ApiAuthGoogleRouteImport.update({
-  id: '/api/auth/google',
-  path: '/api/auth/google',
+const ApiHealthIndexRoute = ApiHealthIndexRouteImport.update({
+  id: '/api/health/',
+  path: '/api/health/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedCameraEventsIdRoute =
-  AuthenticatedCameraEventsIdRouteImport.update({
-    id: '/camera-events/$id',
-    path: '/camera-events/$id',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const ApiEventsIdThumbnailRoute = ApiEventsIdThumbnailRouteImport.update({
-  id: '/api/events/$id/thumbnail',
-  path: '/api/events/$id/thumbnail',
+const ApiHealthReadyRoute = ApiHealthReadyRouteImport.update({
+  id: '/api/health/ready',
+  path: '/api/health/ready',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiEventsIdSnapshotRoute = ApiEventsIdSnapshotRouteImport.update({
-  id: '/api/events/$id/snapshot',
-  path: '/api/events/$id/snapshot',
+const ApiPushPreferencesRoute = ApiPushPreferencesRouteImport.update({
+  id: '/api/push/preferences',
+  path: '/api/push/preferences',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPushSubscribeRoute = ApiPushSubscribeRouteImport.update({
+  id: '/api/push/subscribe',
+  path: '/api/push/subscribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPushTestRoute = ApiPushTestRouteImport.update({
+  id: '/api/push/test',
+  path: '/api/push/test',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPushUnsubscribeRoute = ApiPushUnsubscribeRouteImport.update({
+  id: '/api/push/unsubscribe',
+  path: '/api/push/unsubscribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPushVapidPublicKeyRoute = ApiPushVapidPublicKeyRouteImport.update({
+  id: '/api/push/vapid-public-key',
+  path: '/api/push/vapid-public-key',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAuthGoogleCallbackRoute = ApiAuthGoogleCallbackRouteImport.update({
+  id: '/callback',
+  path: '/callback',
+  getParentRoute: () => ApiAuthGoogleRoute,
+} as any)
+const ApiCamerasNameLatestRoute = ApiCamerasNameLatestRouteImport.update({
+  id: '/api/cameras/$name/latest',
+  path: '/api/cameras/$name/latest',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiEventsIdClipRoute = ApiEventsIdClipRouteImport.update({
@@ -133,15 +133,15 @@ const ApiEventsIdClipRoute = ApiEventsIdClipRouteImport.update({
   path: '/api/events/$id/clip',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiCamerasNameLatestRoute = ApiCamerasNameLatestRouteImport.update({
-  id: '/api/cameras/$name/latest',
-  path: '/api/cameras/$name/latest',
+const ApiEventsIdSnapshotRoute = ApiEventsIdSnapshotRouteImport.update({
+  id: '/api/events/$id/snapshot',
+  path: '/api/events/$id/snapshot',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiAuthGoogleCallbackRoute = ApiAuthGoogleCallbackRouteImport.update({
-  id: '/callback',
-  path: '/callback',
-  getParentRoute: () => ApiAuthGoogleRoute,
+const ApiEventsIdThumbnailRoute = ApiEventsIdThumbnailRouteImport.update({
+  id: '/api/events/$id/thumbnail',
+  path: '/api/events/$id/thumbnail',
+  getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -309,13 +309,6 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/_authenticated': {
-      id: '/_authenticated'
-      path: ''
-      fullPath: '/'
-      preLoaderRoute: typeof AuthenticatedRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/': {
       id: '/'
       path: '/'
@@ -323,18 +316,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/test-auth': {
-      id: '/api/test-auth'
-      path: '/api/test-auth'
-      fullPath: '/api/test-auth'
-      preLoaderRoute: typeof ApiTestAuthRouteImport
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/settings': {
-      id: '/_authenticated/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
+    '/_authenticated/cameras': {
+      id: '/_authenticated/cameras'
+      path: '/cameras'
+      fullPath: '/cameras'
+      preLoaderRoute: typeof AuthenticatedCamerasRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/favorites': {
@@ -344,18 +337,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedFavoritesRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/cameras': {
-      id: '/_authenticated/cameras'
-      path: '/cameras'
-      fullPath: '/cameras'
-      preLoaderRoute: typeof AuthenticatedCamerasRouteImport
+    '/_authenticated/settings': {
+      id: '/_authenticated/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/api/health/': {
-      id: '/api/health/'
-      path: '/api/health'
-      fullPath: '/api/health/'
-      preLoaderRoute: typeof ApiHealthIndexRouteImport
+    '/api/test-auth': {
+      id: '/api/test-auth'
+      path: '/api/test-auth'
+      fullPath: '/api/test-auth'
+      preLoaderRoute: typeof ApiTestAuthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/camera-events/': {
@@ -365,46 +358,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCameraEventsIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/api/push/vapid-public-key': {
-      id: '/api/push/vapid-public-key'
-      path: '/api/push/vapid-public-key'
-      fullPath: '/api/push/vapid-public-key'
-      preLoaderRoute: typeof ApiPushVapidPublicKeyRouteImport
-      parentRoute: typeof rootRouteImport
+    '/_authenticated/camera-events/$id': {
+      id: '/_authenticated/camera-events/$id'
+      path: '/camera-events/$id'
+      fullPath: '/camera-events/$id'
+      preLoaderRoute: typeof AuthenticatedCameraEventsIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
-    '/api/push/unsubscribe': {
-      id: '/api/push/unsubscribe'
-      path: '/api/push/unsubscribe'
-      fullPath: '/api/push/unsubscribe'
-      preLoaderRoute: typeof ApiPushUnsubscribeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/push/test': {
-      id: '/api/push/test'
-      path: '/api/push/test'
-      fullPath: '/api/push/test'
-      preLoaderRoute: typeof ApiPushTestRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/push/subscribe': {
-      id: '/api/push/subscribe'
-      path: '/api/push/subscribe'
-      fullPath: '/api/push/subscribe'
-      preLoaderRoute: typeof ApiPushSubscribeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/push/preferences': {
-      id: '/api/push/preferences'
-      path: '/api/push/preferences'
-      fullPath: '/api/push/preferences'
-      preLoaderRoute: typeof ApiPushPreferencesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/health/ready': {
-      id: '/api/health/ready'
-      path: '/api/health/ready'
-      fullPath: '/api/health/ready'
-      preLoaderRoute: typeof ApiHealthReadyRouteImport
+    '/api/auth/google': {
+      id: '/api/auth/google'
+      path: '/api/auth/google'
+      fullPath: '/api/auth/google'
+      preLoaderRoute: typeof ApiAuthGoogleRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/auth/logout': {
@@ -414,32 +379,67 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthLogoutRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/auth/google': {
-      id: '/api/auth/google'
-      path: '/api/auth/google'
-      fullPath: '/api/auth/google'
-      preLoaderRoute: typeof ApiAuthGoogleRouteImport
+    '/api/health/': {
+      id: '/api/health/'
+      path: '/api/health'
+      fullPath: '/api/health/'
+      preLoaderRoute: typeof ApiHealthIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/camera-events/$id': {
-      id: '/_authenticated/camera-events/$id'
-      path: '/camera-events/$id'
-      fullPath: '/camera-events/$id'
-      preLoaderRoute: typeof AuthenticatedCameraEventsIdRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/api/events/$id/thumbnail': {
-      id: '/api/events/$id/thumbnail'
-      path: '/api/events/$id/thumbnail'
-      fullPath: '/api/events/$id/thumbnail'
-      preLoaderRoute: typeof ApiEventsIdThumbnailRouteImport
+    '/api/health/ready': {
+      id: '/api/health/ready'
+      path: '/api/health/ready'
+      fullPath: '/api/health/ready'
+      preLoaderRoute: typeof ApiHealthReadyRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/events/$id/snapshot': {
-      id: '/api/events/$id/snapshot'
-      path: '/api/events/$id/snapshot'
-      fullPath: '/api/events/$id/snapshot'
-      preLoaderRoute: typeof ApiEventsIdSnapshotRouteImport
+    '/api/push/preferences': {
+      id: '/api/push/preferences'
+      path: '/api/push/preferences'
+      fullPath: '/api/push/preferences'
+      preLoaderRoute: typeof ApiPushPreferencesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/push/subscribe': {
+      id: '/api/push/subscribe'
+      path: '/api/push/subscribe'
+      fullPath: '/api/push/subscribe'
+      preLoaderRoute: typeof ApiPushSubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/push/test': {
+      id: '/api/push/test'
+      path: '/api/push/test'
+      fullPath: '/api/push/test'
+      preLoaderRoute: typeof ApiPushTestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/push/unsubscribe': {
+      id: '/api/push/unsubscribe'
+      path: '/api/push/unsubscribe'
+      fullPath: '/api/push/unsubscribe'
+      preLoaderRoute: typeof ApiPushUnsubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/push/vapid-public-key': {
+      id: '/api/push/vapid-public-key'
+      path: '/api/push/vapid-public-key'
+      fullPath: '/api/push/vapid-public-key'
+      preLoaderRoute: typeof ApiPushVapidPublicKeyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/auth/google/callback': {
+      id: '/api/auth/google/callback'
+      path: '/callback'
+      fullPath: '/api/auth/google/callback'
+      preLoaderRoute: typeof ApiAuthGoogleCallbackRouteImport
+      parentRoute: typeof ApiAuthGoogleRoute
+    }
+    '/api/cameras/$name/latest': {
+      id: '/api/cameras/$name/latest'
+      path: '/api/cameras/$name/latest'
+      fullPath: '/api/cameras/$name/latest'
+      preLoaderRoute: typeof ApiCamerasNameLatestRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/events/$id/clip': {
@@ -449,19 +449,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiEventsIdClipRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/cameras/$name/latest': {
-      id: '/api/cameras/$name/latest'
-      path: '/api/cameras/$name/latest'
-      fullPath: '/api/cameras/$name/latest'
-      preLoaderRoute: typeof ApiCamerasNameLatestRouteImport
+    '/api/events/$id/snapshot': {
+      id: '/api/events/$id/snapshot'
+      path: '/api/events/$id/snapshot'
+      fullPath: '/api/events/$id/snapshot'
+      preLoaderRoute: typeof ApiEventsIdSnapshotRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/auth/google/callback': {
-      id: '/api/auth/google/callback'
-      path: '/callback'
-      fullPath: '/api/auth/google/callback'
-      preLoaderRoute: typeof ApiAuthGoogleCallbackRouteImport
-      parentRoute: typeof ApiAuthGoogleRoute
+    '/api/events/$id/thumbnail': {
+      id: '/api/events/$id/thumbnail'
+      path: '/api/events/$id/thumbnail'
+      fullPath: '/api/events/$id/thumbnail'
+      preLoaderRoute: typeof ApiEventsIdThumbnailRouteImport
+      parentRoute: typeof rootRouteImport
     }
   }
 }

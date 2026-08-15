@@ -129,16 +129,46 @@ function mockStandalone(standalone: boolean) {
   })
 }
 
+function makeLocalStorageMock() {
+  let store: Record<string, string> = {}
+  return {
+    getItem: vi.fn((key: string) => store[key] ?? null),
+    setItem: vi.fn((key: string, value: string) => {
+      store[key] = String(value)
+    }),
+    removeItem: vi.fn((key: string) => {
+      delete store[key]
+    }),
+    clear: vi.fn(() => {
+      store = {}
+    }),
+    get length() {
+      return Object.keys(store).length
+    },
+    key: vi.fn((i: number) => Object.keys(store)[i] ?? null),
+  }
+}
+
 const t0 = new Date('2026-01-01T00:00:00Z').getTime()
 
 describe('useSessionRefresh', () => {
+  let mockStorage: ReturnType<typeof makeLocalStorageMock>
+
   beforeEach(() => {
-    localStorage.clear()
+    mockStorage = makeLocalStorageMock()
+    vi.stubGlobal('localStorage', mockStorage)
+    Object.defineProperty(window, 'localStorage', {
+      value: mockStorage,
+      writable: true,
+      configurable: true,
+    })
+    mockStorage.clear()
     vi.useFakeTimers()
     vi.setSystemTime(t0)
   })
 
   afterEach(() => {
+    vi.unstubAllGlobals()
     vi.useRealTimers()
     vi.restoreAllMocks()
   })
