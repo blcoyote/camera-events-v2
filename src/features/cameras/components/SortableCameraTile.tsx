@@ -41,6 +41,9 @@ export function SortableCameraTile({
       <MediaCard
         index={index}
         scanLines={false}
+        to={isEditing ? undefined : '/live/$name'}
+        params={isEditing ? undefined : { name }}
+        aria-label={`Live view of ${name}`}
         image={
           <img
             src={imgSrc}

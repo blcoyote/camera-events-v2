@@ -1,16 +1,16 @@
-# Graph Report - camera-events-v2  (2026-08-17)
+# Graph Report - camera-events-v2  (2026-08-15)
 
 ## Corpus Check
-- 316 files · ~146,416 words
+- 308 files · ~145,563 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1352 nodes · 2317 edges · 147 communities (62 shown, 85 thin omitted)
-- Extraction: 97% EXTRACTED · 3% INFERRED · 0% AMBIGUOUS · INFERRED: 72 edges (avg confidence: 0.72)
+- 1335 nodes · 2290 edges · 154 communities (69 shown, 85 thin omitted)
+- Extraction: 97% EXTRACTED · 3% INFERRED · 0% AMBIGUOUS · INFERRED: 71 edges (avg confidence: 0.73)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `b559bc19`
+- Built from commit: `fdf882c7`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -47,21 +47,26 @@
 - Cross-Platform PWA Constraint
 - scripts
 - SendThrottle
-- SortableCamerasGrid.tsx
+- NotificationSettings.tsx
 - client.test.ts
-- session-start-graphify.sh
-- jsdom
-- startMqttSubscriber Function
+- getSessionConfig
+- src/server/mqtt.ts Module
+- Frigate sample.config.yml
 - PR Checks Workflow
 - manifest.json
 - Storybook Stories for All Components and Pages Spec
 - env.ts
-- __root.tsx
-- @tanstack/react-router-devtools
+- resyncExistingPushSubscription
+- push_notification_preferences Table Usage
+- Subscription Storage (push-store.ts)
 - devDependencies
+- go2rtc RTSP Restream Config
 - package.json
+- cameras/server/snapshot-proxy.ts
 - EventBatcher
-- getSessionConfig
+- startMqttSubscriber Function
+- EventBatcher Class
+- FileRoutesByPath
 - mock-events.ts
 - boundingBox.ts
 - web-push.d.ts
@@ -85,6 +90,7 @@
 - pre-push
 - prepare-commit-msg
 - @dnd-kit/core
+- @dnd-kit/modifiers
 - @dnd-kit/sortable
 - @dnd-kit/utilities
 - Obsidian Memory Vault Decision
@@ -111,6 +117,7 @@
 - @serwist/build
 - @tailwindcss/typography
 - @tanstack/devtools-vite
+- @tanstack/eslint-config
 - @testing-library/dom
 - @testing-library/jest-dom
 - @testing-library/react
@@ -156,7 +163,7 @@
 
 ## God Nodes (most connected - your core abstractions)
 1. `getSessionConfig()` - 25 edges
-2. `FileRoutesByPath` - 25 edges
+2. `FileRoutesByPath` - 24 edges
 3. `CLAUDE.md Project Instructions` - 24 edges
 4. `loadMock()` - 18 edges
 5. `FrigateEvent` - 18 edges
@@ -175,8 +182,8 @@
   CLAUDE.md → docs/claude/deployment.md
 - `CLAUDE.md Project Instructions` --shares_data_with--> `PWA, SSR & Tailwind Doc`  [INFERRED]
   CLAUDE.md → docs/claude/pwa-ssr.md
-- `clearFrigateCache Function` --semantically_similar_to--> `clearFrigateCache Function`  [INFERRED] [semantically similar]
-  docs/specs/pull-to-refresh.md → docs/specs/mqtt-cache-invalidation.md
+- `CLAUDE.md Project Instructions` --shares_data_with--> `Authentication & Security Doc`  [INFERRED]
+  CLAUDE.md → docs/claude/auth-security.md
 
 ## Import Cycles
 - None detected.
@@ -195,39 +202,39 @@
 - **Favorite Toggle Persistence Pattern** — docs_specs_event_favorites_slice_1_favorite_button, docs_specs_event_favorites_slice_1_favorites_store, docs_specs_event_favorites_slice_1_event_favorites_table [INFERRED 0.85]
 - **Red-Green-Refactor Discipline Mandated Across Docs** — claude_skills_test_driven_development_skill_doc, claude_doc, docs_claude_testing_doc, agents_doc [INFERRED 0.85]
 
-## Communities (147 total, 85 thin omitted)
+## Communities (154 total, 85 thin omitted)
 
 ### Community 0 - "SettingsPage.tsx"
-Cohesion: 0.06
-Nodes (44): loadEventsFn, CameraPref, CameraPreferences(), formatCameraName(), NotificationSection(), NotificationSettings(), formatSubscribeError(), urlBase64ToUint8Array() (+36 more)
+Cohesion: 0.05
+Nodes (52): loadEventsFn, getSettingsContent(), paletteOptions, pillClass(), SettingsPage(), mockSetEventLimit, mockSetPalette, mockSetTheme (+44 more)
 
 ### Community 1 - "CameraEventDetailPage.tsx"
-Cohesion: 0.05
-Nodes (48): EventClipPlayer(), EventSnapshot(), InfoCard(), clampTranslation(), distance(), IDENTITY, midpoint(), SnapshotLightbox() (+40 more)
+Cohesion: 0.06
+Nodes (42): EventClipPlayer(), EventSnapshot(), InfoCard(), clampTranslation(), distance(), IDENTITY, midpoint(), SnapshotLightbox() (+34 more)
 
 ### Community 2 - "config.ts"
-Cohesion: 0.09
-Nodes (23): makeEvent(), mockEventClipPlayer, mockEventSnapshot, mockFavoriteButton, mockSnapshotLightbox, mockToggle, mockUseFavoriteToggle, successResult() (+15 more)
+Cohesion: 0.06
+Nodes (32): makeEvent(), mockEventClipPlayer, mockEventSnapshot, mockFavoriteButton, mockSnapshotLightbox, mockToggle, mockUseFavoriteToggle, successResult() (+24 more)
 
 ### Community 3 - "client.ts"
-Cohesion: 0.07
-Nodes (43): handleClipRequest(), mockFetchStream(), streamFrom(), loadEventFn, handleSnapshotRequest(), handleThumbnailRequest(), handleSnapshotRequest(), getUserFavoritedEventIdsHandler() (+35 more)
+Cohesion: 0.09
+Nodes (40): handleClipRequest(), mockFetchStream(), streamFrom(), handleSnapshotRequest(), handleThumbnailRequest(), getUserFavoritedEventIdsHandler(), getUserFavoritedEventsHandler(), toggleFavoriteHandler() (+32 more)
 
 ### Community 4 - "sqlite/index.ts"
 Cohesion: 0.07
-Nodes (34): getMqttConnectionState(), mockGetEvent, mockRequireSession, mockRetainEvent, mockUnretainEvent, createFavoritesStore(), FavoritesStore, checkDatabase() (+26 more)
+Nodes (37): getMqttConnectionState(), createPushStore(), PushStore, PushSubscriptionRow, mockGetEvent, mockRequireSession, mockRetainEvent, mockUnretainEvent (+29 more)
 
 ### Community 5 - "routeTree.gen.ts"
 Cohesion: 0.05
-Nodes (38): getRouter(), Register, @tanstack/react-router, ApiAuthGoogleCallbackRoute, ApiAuthGoogleRoute, ApiAuthGoogleRouteChildren, ApiAuthGoogleRouteWithChildren, ApiAuthLogoutRoute (+30 more)
+Nodes (38): getRouter(), Register, @tanstack/react-router, Route, ApiAuthGoogleCallbackRoute, ApiAuthGoogleRoute, ApiAuthGoogleRouteChildren, ApiAuthGoogleRouteWithChildren (+30 more)
 
 ### Community 6 - "CLAUDE.md Project Instructions"
 Cohesion: 0.08
 Nodes (41): Beads Config (.beads/config.yaml), bd CLI, Beads Issue Tracker, Beads README, Dolt Database, CLAUDE.md Project Instructions, EventBatcher Burst Detection, Feature-Sliced Architecture (+33 more)
 
 ### Community 7 - "camera-events.index.tsx"
-Cohesion: 0.08
-Nodes (28): CameraEventsLoading(), CamerasLoading(), loadCamerasFn, FavoritesLoading(), PullToRefreshIndicator(), SkeletonCard(), getScrollTop(), Options (+20 more)
+Cohesion: 0.06
+Nodes (35): loadEventFn, CameraEventsLoading(), CamerasLoading(), loadCamerasFn, FavoritesLoading(), FavoritesPage(), PullToRefreshIndicator(), SkeletonCard() (+27 more)
 
 ### Community 8 - "Header.tsx"
 Cohesion: 0.08
@@ -250,12 +257,12 @@ Cohesion: 0.12
 Nodes (20): BoundingBox, generateCameraConfig(), getCameras(), getConfig(), getEventClipStream(), getEventSnapshot(), getEventThumbnail(), getLatestSnapshot() (+12 more)
 
 ### Community 13 - "push-handlers.ts"
-Cohesion: 0.17
-Nodes (19): getVapidPublicKey(), handleGetPreferences(), HandlerResult, handleSetPreference(), handleSubscribe(), handleTest(), handleUnsubscribe(), handleVapidPublicKey() (+11 more)
+Cohesion: 0.27
+Nodes (15): getVapidPublicKey(), handleGetPreferences(), HandlerResult, handleSetPreference(), handleSubscribe(), handleTest(), handleUnsubscribe(), handleVapidPublicKey() (+7 more)
 
 ### Community 14 - "usePullToRefresh Hook"
-Cohesion: 0.09
-Nodes (23): Pull Activation Threshold (80px default), camera-events.index.tsx Route Integration, cameras.tsx Route Integration, clearCache Server Function, clearFrigateCache Function, iOS Native Pull-to-Refresh Conflict, overscroll-behavior-y: contain, PullToRefreshIndicator Component (+15 more)
+Cohesion: 0.10
+Nodes (21): Pull Activation Threshold (80px default), camera-events.index.tsx Route Integration, cameras.tsx Route Integration, iOS Native Pull-to-Refresh Conflict, overscroll-behavior-y: contain, PullToRefreshIndicator Component, touchmove preventDefault Technique, usePullToRefresh Hook (+13 more)
 
 ### Community 15 - "cache.ts"
 Cohesion: 0.13
@@ -274,7 +281,7 @@ Cohesion: 0.11
 Nodes (17): entry, ignoreBinaries, ignoreDependencies, project, $schema, only-allow, src/router.tsx, src/routes/**/*.{ts,tsx} (+9 more)
 
 ### Community 19 - "auth.ts"
-Cohesion: 0.18
+Cohesion: 0.20
 Nodes (19): buildOAuthState(), getCurrentUserFn, OAUTH_SCOPES, OAUTH_STATE_COOKIE_NAME, OAUTH_STATE_COOKIE_OPTIONS, parseOAuthState(), redirectTo(), resolveUserFromSession() (+11 more)
 
 ### Community 20 - "Home (Memory Vault Index)"
@@ -290,12 +297,12 @@ Cohesion: 0.16
 Nodes (15): Advisory, COLOR, fetchAdvisories(), FetchResult, Finding, formatFinding(), InstalledPackage, main() (+7 more)
 
 ### Community 23 - "session.ts"
-Cohesion: 0.23
+Cohesion: 0.22
 Nodes (8): SESSION_CONFIG_BASE, SESSION_COOKIE_NAME, SessionData, SESSION_MAX_AGE_SECONDS, getAuthRedirect(), Route, getHomeRedirect(), Route
 
 ### Community 24 - "dependencies"
 Cohesion: 0.13
-Nodes (15): arctic, @dnd-kit/modifiers, lucide-react, dependencies, arctic, @dnd-kit/modifiers, lucide-react, tailwindcss (+7 more)
+Nodes (15): arctic, lucide-react, dependencies, arctic, lucide-react, tailwindcss, @tanstack/react-router, @tanstack/react-router-devtools (+7 more)
 
 ### Community 25 - "Vertical Feature-Sliced Pattern"
 Cohesion: 0.18
@@ -325,17 +332,25 @@ Nodes (14): scripts, audit:advisories, build, check, dev, format, knip, lint (+6
 Cohesion: 0.29
 Nodes (4): NotifyOptions, shouldSendToEndpoint(), isAppleEndpoint(), SendThrottle
 
-### Community 32 - "SortableCamerasGrid.tsx"
-Cohesion: 0.11
-Nodes (14): reorderOnDragEnd(), SortableCamerasGrid(), SortableCamerasGridProps, DragEndEvent, SortableCameraTile(), SortableCameraTileProps, getOutput(), LiveSnapshot() (+6 more)
+### Community 32 - "NotificationSettings.tsx"
+Cohesion: 0.24
+Nodes (9): CameraPref, CameraPreferences(), formatCameraName(), NotificationSection(), NotificationSettings(), formatSubscribeError(), urlBase64ToUint8Array(), usePushSubscription() (+1 more)
 
 ### Community 33 - "client.test.ts"
 Cohesion: 0.17
 Nodes (4): MOCK_EVENT, MOCK_REVIEW, FrigateReview, FrigateReviewSummary
 
-### Community 36 - "startMqttSubscriber Function"
-Cohesion: 0.05
-Nodes (49): clearFrigateCache Function, frigate/events MQTT Topic, frigate/reviews MQTT Topic, src/server/mqtt.ts Module, MQTT_URL Environment Variable, MQTT.js v5 Library, Nitro MQTT Startup Plugin, onFrigateMessage Handler (+41 more)
+### Community 34 - "getSessionConfig"
+Cohesion: 0.39
+Nodes (6): decryptOAuthState(), deriveKey(), encryptOAuthState(), getSessionConfig(), Route, Route
+
+### Community 35 - "src/server/mqtt.ts Module"
+Cohesion: 0.22
+Nodes (10): clearFrigateCache Function, src/server/mqtt.ts Module, onFrigateMessage Handler, MQTT Event-Driven Cache Invalidation Spec, FrigateEventInfo Type, parseFrigateEvent Function, MQTT-Driven Push Notifications with Per-Camera Opt-Out Spec, clearCache Server Function (+2 more)
+
+### Community 36 - "Frigate sample.config.yml"
+Cohesion: 0.22
+Nodes (10): frigate/events MQTT Topic, frigate/reviews MQTT Topic, SUBSCRIBED_TOPICS Constant, Birdseye Continuous Mode, Coral EdgeTPU Detector, ffmpeg Global/Input/Hwaccel Args, Frigate sample.config.yml, Frigate MQTT Config Block (+2 more)
 
 ### Community 37 - "PR Checks Workflow"
 Cohesion: 0.29
@@ -353,21 +368,41 @@ Nodes (9): CameraEventDetailPage.stories.tsx, CameraEventsListPage.stories.tsx, 
 Cohesion: 0.52
 Nodes (5): BatcherConfig, Env, parseDurationMs(), resolveAppleUpdateIntervalMs(), resolveBatcherConfig()
 
-### Community 41 - "__root.tsx"
-Cohesion: 0.10
-Nodes (21): Palette, PALETTES, syncThemeColorMeta(), THEME_COLOR_MAP, applyPalette(), emitChange(), getServerSnapshot(), getSnapshot() (+13 more)
+### Community 41 - "resyncExistingPushSubscription"
+Cohesion: 0.44
+Nodes (4): resyncExistingPushSubscription(), resyncSubscription(), ServiceWorkerRegistration(), resyncMock
+
+### Community 42 - "push_notification_preferences Table Usage"
+Cohesion: 0.25
+Nodes (8): Opt-Out Default Preference Model, Preferences API (GET/PUT /api/push/preferences), push_notification_preferences Table Usage, Per-Camera Toggle Settings UI, push_notification_preferences Table, Settings Notifications Section, usePushSubscription Hook, Camera: gavl_vest
+
+### Community 43 - "Subscription Storage (push-store.ts)"
+Cohesion: 0.40
+Nodes (6): Push Subscription API Endpoints, push_subscriptions Table, Subscription Storage (push-store.ts), VAPID Key Config, GET /api/push/vapid-public-key, web-push Library Integration
 
 ### Community 44 - "devDependencies"
 Cohesion: 0.29
-Nodes (7): devDependencies, better-sqlite3, @tanstack/eslint-config, vite, better-sqlite3, @tanstack/eslint-config, vite
+Nodes (7): jsdom, devDependencies, better-sqlite3, jsdom, vite, better-sqlite3, vite
+
+### Community 45 - "go2rtc RTSP Restream Config"
+Cohesion: 0.29
+Nodes (7): Camera: garage, Camera: gavl_oest, Camera: have, Camera: koekken, Camera: stuen, Camera: vaerksted, go2rtc RTSP Restream Config
 
 ### Community 46 - "package.json"
 Cohesion: 0.29
 Nodes (6): imports, lint-staged, *.{js,jsx,ts,tsx,md,json,css,yml,yaml}, name, private, type
 
-### Community 51 - "getSessionConfig"
-Cohesion: 0.21
-Nodes (11): decryptOAuthState(), deriveKey(), encryptOAuthState(), isTestAuthEnabled(), getSessionConfig(), Route, Route, Route (+3 more)
+### Community 49 - "startMqttSubscriber Function"
+Cohesion: 0.40
+Nodes (5): MQTT_URL Environment Variable, MQTT.js v5 Library, Nitro MQTT Startup Plugin, RabbitMQ MQTT Broker, startMqttSubscriber Function
+
+### Community 50 - "EventBatcher Class"
+Cohesion: 0.40
+Nodes (5): EventBatcher Class, notifyUsersForCamera Function, Per-Camera 10-Second Batching Window, Preference Store (push-store.ts, extended), sendPushNotification Wrapper
+
+### Community 51 - "FileRoutesByPath"
+Cohesion: 0.36
+Nodes (5): isTestAuthEnabled(), Route, Route, FileRoutesById, FileRoutesByPath
 
 ### Community 52 - "mock-events.ts"
 Cohesion: 0.60
@@ -416,7 +451,7 @@ Nodes (3): For --cluster-only, For --update (incremental re-extraction), graphif
   docs/claude/backend.md · relation: semantically_similar_to
 
 ## Knowledge Gaps
-- **422 isolated node(s):** `session-start-graphify.sh script`, `entrypoint.sh script`, `$schema`, `src/routes/**/*.{ts,tsx}`, `src/router.tsx` (+417 more)
+- **420 isolated node(s):** `entrypoint.sh script`, `$schema`, `src/routes/**/*.{ts,tsx}`, `src/router.tsx`, `src/server.ts` (+415 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **85 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
@@ -427,13 +462,13 @@ _Questions this graph is uniquely positioned to answer:_
   _Edge tagged AMBIGUOUS (relation: conceptually_related_to) - confidence is low._
 - **What is the exact relationship between `EventBatcher Burst Detection` and `EventBatcher (fixed-window description)`?**
   _Edge tagged AMBIGUOUS (relation: semantically_similar_to) - confidence is low._
-- **Why does `FrigateEvent` connect `CameraEventDetailPage.tsx` to `SettingsPage.tsx`, `client.test.ts`, `config.ts`, `client.ts`, `types.ts`, `mock-client.ts`?**
-  _High betweenness centrality (0.019) - this node is a cross-community bridge._
+- **Why does `FrigateEvent` connect `CameraEventDetailPage.tsx` to `SettingsPage.tsx`, `client.test.ts`, `config.ts`, `client.ts`, `camera-events.index.tsx`, `types.ts`, `mock-client.ts`?**
+  _High betweenness centrality (0.017) - this node is a cross-community bridge._
 - **Why does `FrigateResult` connect `config.ts` to `SettingsPage.tsx`, `CameraEventDetailPage.tsx`, `client.ts`, `camera-events.index.tsx`, `mock-client.ts`?**
-  _High betweenness centrality (0.012) - this node is a cross-community bridge._
-- **Why does `clearCacheFn` connect `camera-events.index.tsx` to `session.ts`, `cache.ts`?**
-  _High betweenness centrality (0.006) - this node is a cross-community bridge._
+  _High betweenness centrality (0.015) - this node is a cross-community bridge._
+- **Why does `SendThrottle` connect `SendThrottle` to `push-notify.ts`?**
+  _High betweenness centrality (0.007) - this node is a cross-community bridge._
 - **Are the 7 inferred relationships involving `CLAUDE.md Project Instructions` (e.g. with `AGENTS.md` and `Authentication & Security Doc`) actually correct?**
   _`CLAUDE.md Project Instructions` has 7 INFERRED edges - model-reasoned connections that need verification._
-- **What connects `session-start-graphify.sh script`, `entrypoint.sh script`, `$schema` to the rest of the system?**
-  _422 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **What connects `entrypoint.sh script`, `$schema`, `src/routes/**/*.{ts,tsx}` to the rest of the system?**
+  _420 weakly-connected nodes found - possible documentation gaps or missing edges._
