@@ -9,7 +9,7 @@ import {
   getLabelDotColor,
   formatCameraName,
 } from '#/features/shared/utils/eventFormatting'
-import { SnapshotLightbox } from '../components/SnapshotLightbox'
+import { SnapshotLightbox } from '#/features/shared/components/SnapshotLightbox'
 import { EventSnapshot } from '../components/EventSnapshot'
 import { EventClipPlayer } from '../components/EventClipPlayer'
 import { InfoCard } from '../components/InfoCard'
