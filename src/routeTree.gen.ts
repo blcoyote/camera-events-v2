@@ -17,6 +17,7 @@ import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticat
 import { Route as ApiTestAuthRouteImport } from './routes/api/test-auth'
 import { Route as AuthenticatedCameraEventsIndexRouteImport } from './routes/_authenticated/camera-events.index'
 import { Route as AuthenticatedCameraEventsIdRouteImport } from './routes/_authenticated/camera-events.$id'
+import { Route as AuthenticatedLiveNameRouteImport } from './routes/_authenticated/live.$name'
 import { Route as ApiAuthGoogleRouteImport } from './routes/api/auth/google'
 import { Route as ApiAuthLogoutRouteImport } from './routes/api/auth/logout'
 import { Route as ApiHealthIndexRouteImport } from './routes/api/health/index'
@@ -73,6 +74,11 @@ const AuthenticatedCameraEventsIdRoute =
     path: '/camera-events/$id',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedLiveNameRoute = AuthenticatedLiveNameRouteImport.update({
+  id: '/live/$name',
+  path: '/live/$name',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const ApiAuthGoogleRoute = ApiAuthGoogleRouteImport.update({
   id: '/api/auth/google',
   path: '/api/auth/google',
@@ -151,6 +157,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AuthenticatedSettingsRoute
   '/api/test-auth': typeof ApiTestAuthRoute
   '/camera-events/$id': typeof AuthenticatedCameraEventsIdRoute
+  '/live/$name': typeof AuthenticatedLiveNameRoute
   '/api/auth/google': typeof ApiAuthGoogleRouteWithChildren
   '/api/auth/logout': typeof ApiAuthLogoutRoute
   '/api/health/ready': typeof ApiHealthReadyRoute
@@ -174,6 +181,7 @@ export interface FileRoutesByTo {
   '/settings': typeof AuthenticatedSettingsRoute
   '/api/test-auth': typeof ApiTestAuthRoute
   '/camera-events/$id': typeof AuthenticatedCameraEventsIdRoute
+  '/live/$name': typeof AuthenticatedLiveNameRoute
   '/api/auth/google': typeof ApiAuthGoogleRouteWithChildren
   '/api/auth/logout': typeof ApiAuthLogoutRoute
   '/api/health/ready': typeof ApiHealthReadyRoute
@@ -199,6 +207,7 @@ export interface FileRoutesById {
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/api/test-auth': typeof ApiTestAuthRoute
   '/_authenticated/camera-events/$id': typeof AuthenticatedCameraEventsIdRoute
+  '/_authenticated/live/$name': typeof AuthenticatedLiveNameRoute
   '/api/auth/google': typeof ApiAuthGoogleRouteWithChildren
   '/api/auth/logout': typeof ApiAuthLogoutRoute
   '/api/health/ready': typeof ApiHealthReadyRoute
@@ -224,6 +233,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/api/test-auth'
     | '/camera-events/$id'
+    | '/live/$name'
     | '/api/auth/google'
     | '/api/auth/logout'
     | '/api/health/ready'
@@ -247,6 +257,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/api/test-auth'
     | '/camera-events/$id'
+    | '/live/$name'
     | '/api/auth/google'
     | '/api/auth/logout'
     | '/api/health/ready'
@@ -271,6 +282,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings'
     | '/api/test-auth'
     | '/_authenticated/camera-events/$id'
+    | '/_authenticated/live/$name'
     | '/api/auth/google'
     | '/api/auth/logout'
     | '/api/health/ready'
@@ -363,6 +375,13 @@ declare module '@tanstack/react-router' {
       path: '/camera-events/$id'
       fullPath: '/camera-events/$id'
       preLoaderRoute: typeof AuthenticatedCameraEventsIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/live/$name': {
+      id: '/_authenticated/live/$name'
+      path: '/live/$name'
+      fullPath: '/live/$name'
+      preLoaderRoute: typeof AuthenticatedLiveNameRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/api/auth/google': {
@@ -471,6 +490,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedFavoritesRoute: typeof AuthenticatedFavoritesRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedCameraEventsIdRoute: typeof AuthenticatedCameraEventsIdRoute
+  AuthenticatedLiveNameRoute: typeof AuthenticatedLiveNameRoute
   AuthenticatedCameraEventsIndexRoute: typeof AuthenticatedCameraEventsIndexRoute
 }
 
@@ -479,6 +499,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedFavoritesRoute: AuthenticatedFavoritesRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedCameraEventsIdRoute: AuthenticatedCameraEventsIdRoute,
+  AuthenticatedLiveNameRoute: AuthenticatedLiveNameRoute,
   AuthenticatedCameraEventsIndexRoute: AuthenticatedCameraEventsIndexRoute,
 }
 

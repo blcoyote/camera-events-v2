@@ -107,4 +107,25 @@ describe('SortableCameraTile', () => {
     const json = JSON.stringify(output)
     expect(json).toContain('focus-visible')
   })
+
+  it('links to the live view page for the camera when not editing', () => {
+    const output = getOutput({
+      name: 'front_porch',
+      isEditing: false,
+      imgSrc: '/img',
+    })
+    const json = JSON.stringify(output)
+    expect(json).toContain('/live/$name')
+    expect(json).toContain('"name":"front_porch"')
+  })
+
+  it('does not link to the live view page while editing', () => {
+    const output = getOutput({
+      name: 'front_porch',
+      isEditing: true,
+      imgSrc: '/img',
+    })
+    const json = JSON.stringify(output)
+    expect(json).not.toContain('/live/$name')
+  })
 })
