@@ -4,6 +4,12 @@ import {
   MAX_EVENT_LIMIT,
   EVENT_LIMIT_STEP,
 } from '#/features/shared/hooks/useEventLimit'
+import {
+  useLiveViewRefreshInterval,
+  MIN_LIVE_VIEW_REFRESH_SECONDS,
+  MAX_LIVE_VIEW_REFRESH_SECONDS,
+  LIVE_VIEW_REFRESH_STEP,
+} from '#/features/shared/hooks/useLiveViewRefreshInterval'
 import { useTheme } from '#/features/shared/hooks/useTheme'
 import type { ThemeMode } from '#/features/shared/hooks/useTheme'
 import { usePalette } from '#/features/shared/hooks/usePalette'
@@ -39,6 +45,8 @@ const pillClass = (active: boolean) =>
 export function SettingsPage() {
   const content = getSettingsContent()
   const [eventLimit, setEventLimit] = useEventLimit()
+  const [liveViewRefreshSeconds, setLiveViewRefreshSeconds] =
+    useLiveViewRefreshInterval()
   const { mode, setTheme } = useTheme()
   const { palette, setPalette } = usePalette()
 
@@ -134,6 +142,54 @@ export function SettingsPage() {
           <p id="event-limit-desc" className="text-xs text-(--sea-ink-soft)">
             Controls how many events are loaded on the Camera Events page.
             Range: {MIN_EVENT_LIMIT}–{MAX_EVENT_LIMIT}.
+          </p>
+        </div>
+      </section>
+
+      <section className="island-shell mt-6 rounded-4xl px-6 py-8 sm:px-10 sm:py-10">
+        <h2 className="mb-6 text-lg font-semibold text-(--sea-ink)">
+          Live View
+        </h2>
+
+        <div className="flex flex-col gap-3">
+          <label
+            htmlFor="live-view-refresh-slider"
+            className="text-sm font-medium text-(--sea-ink)"
+          >
+            Refresh interval
+          </label>
+          <div className="flex items-center gap-4">
+            <input
+              id="live-view-refresh-slider"
+              type="range"
+              min={MIN_LIVE_VIEW_REFRESH_SECONDS}
+              max={MAX_LIVE_VIEW_REFRESH_SECONDS}
+              step={LIVE_VIEW_REFRESH_STEP}
+              value={liveViewRefreshSeconds}
+              onChange={(e) =>
+                setLiveViewRefreshSeconds(Number(e.target.value))
+              }
+              aria-label="Refresh interval"
+              aria-describedby="live-view-refresh-desc"
+              aria-valuemin={MIN_LIVE_VIEW_REFRESH_SECONDS}
+              aria-valuemax={MAX_LIVE_VIEW_REFRESH_SECONDS}
+              aria-valuenow={liveViewRefreshSeconds}
+              className="h-2 flex-1 cursor-pointer appearance-none rounded-full bg-(--chip-line) accent-(--sea-accent)"
+            />
+            <span
+              className="min-w-16 rounded-lg border border-(--chip-line) bg-(--chip-bg) px-3 py-1.5 text-center text-sm font-medium text-(--sea-ink) tabular-nums"
+              aria-live="polite"
+            >
+              {liveViewRefreshSeconds}s
+            </span>
+          </div>
+          <p
+            id="live-view-refresh-desc"
+            className="text-xs text-(--sea-ink-soft)"
+          >
+            How often the live camera snapshot refreshes. Range:{' '}
+            {MIN_LIVE_VIEW_REFRESH_SECONDS}–{MAX_LIVE_VIEW_REFRESH_SECONDS}{' '}
+            seconds.
           </p>
         </div>
       </section>

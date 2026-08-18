@@ -21,6 +21,7 @@ beforeEach(() => {
 afterEach(() => {
   vi.useRealTimers()
   vi.unstubAllGlobals()
+  localStorage.clear()
 })
 
 describe('useLiveSnapshot', () => {
@@ -76,5 +77,24 @@ describe('useLiveSnapshot', () => {
     })
 
     expect(result.current).toBe(afterSecond)
+  })
+
+  it('uses the refresh interval saved in localStorage instead of the 2s default', () => {
+    localStorage.setItem(
+      'live-view-refresh-interval-seconds',
+      JSON.stringify(5),
+    )
+    const { result } = renderHook(() => useLiveSnapshot('front_porch'))
+
+    act(() => {
+      vi.advanceTimersByTime(2000)
+    })
+    expect(FakeImage.instances).toHaveLength(0)
+
+    act(() => {
+      vi.advanceTimersByTime(3000)
+    })
+    expect(FakeImage.instances).toHaveLength(1)
+    expect(result.current).toBe('/api/cameras/front_porch/latest')
   })
 })
