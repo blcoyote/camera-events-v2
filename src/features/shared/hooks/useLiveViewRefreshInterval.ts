@@ -42,5 +42,6 @@ export function useLiveViewRefreshInterval() {
   return useLocalStorage<number>(
     LIVE_VIEW_REFRESH_INTERVAL_KEY,
     DEFAULT_LIVE_VIEW_REFRESH_SECONDS,
+    { initializeWithValue: false },
   )
 }
