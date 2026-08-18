@@ -1,12 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { useInterval } from 'usehooks-ts'
+import { useLiveViewRefreshInterval } from '#/features/shared/hooks/useLiveViewRefreshInterval'
 
-const REFRESH_INTERVAL_MS = 2000
-
-export function useLiveSnapshot(
-  cameraName: string,
-  intervalMs = REFRESH_INTERVAL_MS,
-): string {
+export function useLiveSnapshot(cameraName: string): string {
+  const [refreshSeconds] = useLiveViewRefreshInterval()
+  const intervalMs = refreshSeconds * 1000
   const baseUrl = `/api/cameras/${cameraName}/latest`
   const [src, setSrc] = useState(baseUrl)
   const latestRequestRef = useRef(baseUrl)

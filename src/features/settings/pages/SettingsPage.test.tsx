@@ -8,6 +8,7 @@ import { SettingsPage, getSettingsContent } from './SettingsPage'
 const mockSetTheme = vi.fn()
 const mockSetPalette = vi.fn()
 const mockSetEventLimit = vi.fn()
+const mockSetLiveViewRefreshSeconds = vi.fn()
 
 vi.mock('#/features/shared/hooks/useTheme', () => ({
   useTheme: vi.fn(() => ({
@@ -28,6 +29,12 @@ vi.mock('#/features/shared/hooks/useEventLimit', () => ({
   MAX_EVENT_LIMIT: 500,
   EVENT_LIMIT_STEP: 25,
 }))
+vi.mock('#/features/shared/hooks/useLiveViewRefreshInterval', () => ({
+  useLiveViewRefreshInterval: vi.fn(() => [2, mockSetLiveViewRefreshSeconds]),
+  MIN_LIVE_VIEW_REFRESH_SECONDS: 1,
+  MAX_LIVE_VIEW_REFRESH_SECONDS: 10,
+  LIVE_VIEW_REFRESH_STEP: 1,
+}))
 vi.mock('./NotificationSettings', () => ({
   NotificationSettings: () =>
     React.createElement('div', { 'data-testid': 'notification-settings' }),
@@ -38,6 +45,7 @@ afterEach(() => {
   mockSetTheme.mockReset()
   mockSetPalette.mockReset()
   mockSetEventLimit.mockReset()
+  mockSetLiveViewRefreshSeconds.mockReset()
 })
 
 describe('getSettingsContent', () => {
@@ -123,5 +131,19 @@ describe('SettingsPage', () => {
     const slider = screen.getByLabelText('Number of events to display')
     fireEvent.change(slider, { target: { value: '200' } })
     expect(mockSetEventLimit).toHaveBeenCalledWith(200)
+  })
+
+  it('renders the live view refresh slider with the value from the hook', () => {
+    render(<SettingsPage />)
+    const slider = screen.getByLabelText('Refresh interval')
+    expect(slider).toBeInTheDocument()
+    expect(slider).toHaveAttribute('value', '2')
+  })
+
+  it('calls setLiveViewRefreshSeconds with the new numeric value when the slider changes', () => {
+    render(<SettingsPage />)
+    const slider = screen.getByLabelText('Refresh interval')
+    fireEvent.change(slider, { target: { value: '7' } })
+    expect(mockSetLiveViewRefreshSeconds).toHaveBeenCalledWith(7)
   })
 })
