@@ -76,3 +76,29 @@ export function resolveAppleUpdateIntervalMs(env: Env): number {
     DEFAULT_APPLE_UPDATE_INTERVAL_MS,
   )
 }
+
+/** Consecutive zero-FPS readings required before a camera is declared offline. */
+const DEFAULT_OFFLINE_THRESHOLD = 2
+
+/**
+ * Resolve how many consecutive `frigate/stats` readings with `camera_fps === 0`
+ * are required before a camera is declared offline (`CAMERA_OFFLINE_THRESHOLD`).
+ *
+ * Frigate publishes `frigate/stats` on its own operator-configurable
+ * `stats_interval` (default 60 s), so this is expressed as a reading count
+ * rather than a duration — there's no fixed interval to measure milliseconds
+ * against. Falls back when the value is absent, blank, non-numeric,
+ * non-integer, or less than 1, since a threshold of zero or fewer readings
+ * doesn't make sense as "consecutive readings required". Raising it makes
+ * offline detection slower to trigger but more resistant to transient FPS
+ * blips; lowering it (minimum 1) makes detection faster but noisier.
+ */
+export function resolveOfflineThreshold(env: Env): number {
+  const value = env.CAMERA_OFFLINE_THRESHOLD
+  if (value === undefined) return DEFAULT_OFFLINE_THRESHOLD
+  const trimmed = value.trim()
+  if (trimmed === '') return DEFAULT_OFFLINE_THRESHOLD
+  const parsed = Number(trimmed)
+  if (!Number.isInteger(parsed) || parsed < 1) return DEFAULT_OFFLINE_THRESHOLD
+  return parsed
+}

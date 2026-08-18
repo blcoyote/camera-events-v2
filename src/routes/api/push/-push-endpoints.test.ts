@@ -6,6 +6,8 @@ import {
   handleTest,
   handleGetPreferences,
   handleSetPreference,
+  handleGetAvailabilityPreference,
+  handleSetAvailabilityPreference,
 } from '#/features/push-notifications/server/push-handlers'
 import {
   isPushEnabled,
@@ -372,5 +374,83 @@ describe('handleSetPreference', () => {
     expect(result.status).toBe(200)
     expect(result.body).toEqual({ ok: true })
     expect(mockSetPref).toHaveBeenCalledWith('user1', 'front_porch', false)
+  })
+})
+
+describe('handleGetAvailabilityPreference', () => {
+  it('returns 401 when unauthenticated', async () => {
+    const result = await handleGetAvailabilityPreference(null)
+    expect(result.status).toBe(401)
+  })
+
+  it('returns { enabled: false } when the store reports disabled', async () => {
+    vi.mocked(getPushStore).mockReturnValue({
+      isCameraAvailabilityEnabledForUser: vi.fn(() => false),
+    } as any)
+
+    const result = await handleGetAvailabilityPreference('user1')
+    expect(result.status).toBe(200)
+    expect(result.body).toEqual({ enabled: false })
+  })
+
+  it('returns { enabled: true } when the store reports enabled', async () => {
+    vi.mocked(getPushStore).mockReturnValue({
+      isCameraAvailabilityEnabledForUser: vi.fn(() => true),
+    } as any)
+
+    const result = await handleGetAvailabilityPreference('user1')
+    expect(result.status).toBe(200)
+    expect(result.body).toEqual({ enabled: true })
+  })
+})
+
+describe('handleSetAvailabilityPreference', () => {
+  it('returns 401 when unauthenticated', async () => {
+    const result = await handleSetAvailabilityPreference(null, {
+      enabled: true,
+    })
+    expect(result.status).toBe(401)
+  })
+
+  it('returns 400 when enabled is missing', async () => {
+    const result = await handleSetAvailabilityPreference('user1', {})
+    expect(result.status).toBe(400)
+  })
+
+  it('returns 400 when enabled is not a boolean', async () => {
+    const result = await handleSetAvailabilityPreference('user1', {
+      enabled: 'true',
+    })
+    expect(result.status).toBe(400)
+  })
+
+  it('calls setCameraAvailabilityPreference and returns ok for enabled: true', async () => {
+    const mockSetPref = vi.fn()
+    vi.mocked(getPushStore).mockReturnValue({
+      setCameraAvailabilityPreference: mockSetPref,
+    } as any)
+
+    const result = await handleSetAvailabilityPreference('user1', {
+      enabled: true,
+    })
+
+    expect(result.status).toBe(200)
+    expect(result.body).toEqual({ ok: true })
+    expect(mockSetPref).toHaveBeenCalledWith('user1', true)
+  })
+
+  it('calls setCameraAvailabilityPreference and returns ok for enabled: false', async () => {
+    const mockSetPref = vi.fn()
+    vi.mocked(getPushStore).mockReturnValue({
+      setCameraAvailabilityPreference: mockSetPref,
+    } as any)
+
+    const result = await handleSetAvailabilityPreference('user1', {
+      enabled: false,
+    })
+
+    expect(result.status).toBe(200)
+    expect(result.body).toEqual({ ok: true })
+    expect(mockSetPref).toHaveBeenCalledWith('user1', false)
   })
 })
