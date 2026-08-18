@@ -78,7 +78,7 @@ export function resolveAppleUpdateIntervalMs(env: Env): number {
 }
 
 /** Consecutive zero-FPS readings required before a camera is declared offline. */
-const DEFAULT_OFFLINE_THRESHOLD = 2
+const DEFAULT_OFFLINE_THRESHOLD = 10
 
 /**
  * Resolve how many consecutive `frigate/stats` readings with `camera_fps === 0`
