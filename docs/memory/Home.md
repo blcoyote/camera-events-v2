@@ -46,6 +46,11 @@ this vault is meant to be used.
 - [[gotchas/never-run-tsr-generate]]
 - [[gotchas/ios-ignores-silent-and-renotify]]
 
+## 🧪 Conventions
+
+- [[conventions/test-quality-heuristics]] — 8-question checklist for whether a
+  test earns its keep, with good/bad examples from a full-suite audit
+
 ## 📌 Conventions reminders
 
 - `bd` for issues, this vault for durable knowledge (see [[README]]).
