@@ -45,11 +45,15 @@ this vault is meant to be used.
 - [[gotchas/ssr-hydration-browser-globals]]
 - [[gotchas/never-run-tsr-generate]]
 - [[gotchas/ios-ignores-silent-and-renotify]]
+- [[gotchas/bd-unavailable-in-claude-containers]] — check `which bd` before
+  trusting the issue-tracking workflow
 
 ## 🧪 Conventions
 
 - [[conventions/test-quality-heuristics]] — 8-question checklist for whether a
   test earns its keep, with good/bad examples from a full-suite audit
+- [[fallback-tasks/README]] — plain-markdown issue tracking for when `bd` isn't
+  installed (ephemeral, not durable knowledge — see the note itself)
 
 ## 📌 Conventions reminders
 
