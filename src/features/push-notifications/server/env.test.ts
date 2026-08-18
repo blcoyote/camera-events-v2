@@ -114,39 +114,47 @@ describe('resolveAppleUpdateIntervalMs', () => {
 })
 
 describe('resolveOfflineThreshold', () => {
-  it('defaults to 2 when the env var is undefined', () => {
-    expect(resolveOfflineThreshold({})).toBe(2)
+  it('defaults to 10 when the env var is undefined', () => {
+    expect(resolveOfflineThreshold({})).toBe(10)
   })
 
   it('returns the default for an empty string', () => {
-    expect(resolveOfflineThreshold({ CAMERA_OFFLINE_THRESHOLD: '' })).toBe(2)
+    expect(resolveOfflineThreshold({ CAMERA_OFFLINE_THRESHOLD: '' })).toBe(10)
   })
 
   it('returns the default for a whitespace-only string', () => {
-    expect(resolveOfflineThreshold({ CAMERA_OFFLINE_THRESHOLD: '   ' })).toBe(2)
+    expect(resolveOfflineThreshold({ CAMERA_OFFLINE_THRESHOLD: '   ' })).toBe(
+      10,
+    )
   })
 
   it('returns the default for a non-numeric string', () => {
-    expect(resolveOfflineThreshold({ CAMERA_OFFLINE_THRESHOLD: 'abc' })).toBe(2)
+    expect(resolveOfflineThreshold({ CAMERA_OFFLINE_THRESHOLD: 'abc' })).toBe(
+      10,
+    )
   })
 
   it('returns the default for "0"', () => {
-    expect(resolveOfflineThreshold({ CAMERA_OFFLINE_THRESHOLD: '0' })).toBe(2)
+    expect(resolveOfflineThreshold({ CAMERA_OFFLINE_THRESHOLD: '0' })).toBe(10)
   })
 
   it('returns the default for a negative number string', () => {
-    expect(resolveOfflineThreshold({ CAMERA_OFFLINE_THRESHOLD: '-1' })).toBe(2)
+    expect(resolveOfflineThreshold({ CAMERA_OFFLINE_THRESHOLD: '-1' })).toBe(10)
   })
 
   it('returns the default for a non-integer string', () => {
-    expect(resolveOfflineThreshold({ CAMERA_OFFLINE_THRESHOLD: '2.5' })).toBe(2)
+    expect(resolveOfflineThreshold({ CAMERA_OFFLINE_THRESHOLD: '2.5' })).toBe(
+      10,
+    )
   })
 
   it('returns the default for a non-finite value', () => {
     expect(
       resolveOfflineThreshold({ CAMERA_OFFLINE_THRESHOLD: 'Infinity' }),
-    ).toBe(2)
-    expect(resolveOfflineThreshold({ CAMERA_OFFLINE_THRESHOLD: 'NaN' })).toBe(2)
+    ).toBe(10)
+    expect(resolveOfflineThreshold({ CAMERA_OFFLINE_THRESHOLD: 'NaN' })).toBe(
+      10,
+    )
   })
 
   it('returns the parsed integer for a valid positive integer string', () => {

@@ -200,7 +200,9 @@ describe('onFrigateMessage — availability tracker wiring', () => {
   it('flags a camera offline only once the default threshold of zero-fps readings is reached', async () => {
     const { onFrigateMessage } = await import('./mqtt')
 
-    onFrigateMessage('frigate/stats', statsPayload('front_porch', 0))
+    for (let i = 0; i < 9; i++) {
+      onFrigateMessage('frigate/stats', statsPayload('front_porch', 0))
+    }
     expect(notifyAvailabilityMock).not.toHaveBeenCalled()
 
     onFrigateMessage('frigate/stats', statsPayload('front_porch', 0))
@@ -214,8 +216,9 @@ describe('onFrigateMessage — availability tracker wiring', () => {
   it('flags a camera back online once fps recovers', async () => {
     const { onFrigateMessage } = await import('./mqtt')
 
-    onFrigateMessage('frigate/stats', statsPayload('front_porch', 0))
-    onFrigateMessage('frigate/stats', statsPayload('front_porch', 0))
+    for (let i = 0; i < 10; i++) {
+      onFrigateMessage('frigate/stats', statsPayload('front_porch', 0))
+    }
     notifyAvailabilityMock.mockClear()
 
     onFrigateMessage('frigate/stats', statsPayload('front_porch', 5))

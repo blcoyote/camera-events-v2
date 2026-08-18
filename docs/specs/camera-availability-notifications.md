@@ -20,7 +20,7 @@ topics are subscribed:
   periodically at Frigate's own configurable `stats_interval` (default 60s, set
   in the Frigate config, not by this app). Contains per-camera `camera_fps`. A
   camera reporting `camera_fps: 0` for `CAMERA_OFFLINE_THRESHOLD` consecutive
-  readings (default 2, i.e. ~2 minutes at Frigate's default interval) is
+  readings (default 10, i.e. ~10 minutes at Frigate's default interval) is
   declared offline; a single subsequent reading with `camera_fps > 0` declares
   it back online.
 - **`frigate/available`** — Frigate's own MQTT Last Will and Testament, a plain
