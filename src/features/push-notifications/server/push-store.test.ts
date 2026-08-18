@@ -200,6 +200,50 @@ describe('camera notification preferences', () => {
   })
 })
 
+describe('isCameraAvailabilityEnabledForUser', () => {
+  it('returns false when no preference row exists for the user (default OFF)', () => {
+    expect(store.isCameraAvailabilityEnabledForUser('user1')).toBe(false)
+  })
+
+  it('returns true after setCameraAvailabilityPreference(userId, true)', () => {
+    store.setCameraAvailabilityPreference('user1', true)
+    expect(store.isCameraAvailabilityEnabledForUser('user1')).toBe(true)
+  })
+
+  it('returns false again after enabling then disabling', () => {
+    store.setCameraAvailabilityPreference('user1', true)
+    store.setCameraAvailabilityPreference('user1', false)
+    expect(store.isCameraAvailabilityEnabledForUser('user1')).toBe(false)
+  })
+
+  it('is isolated per user', () => {
+    store.setCameraAvailabilityPreference('user1', true)
+    expect(store.isCameraAvailabilityEnabledForUser('user2')).toBe(false)
+  })
+})
+
+describe('setCameraAvailabilityPreference', () => {
+  it('does not create duplicate rows when called multiple times for the same user', () => {
+    store.setCameraAvailabilityPreference('user1', true)
+    store.setCameraAvailabilityPreference('user1', true)
+    store.setCameraAvailabilityPreference('user1', false)
+
+    const count = store.countRows(
+      "SELECT * FROM push_notification_preferences WHERE user_id = ? AND category = 'camera_availability'",
+      'user1',
+    )
+    expect(count).toBe(1)
+  })
+
+  it("does not affect that user's existing per-camera preferences", () => {
+    store.setPreference('user1', 'front_porch', false)
+    store.setCameraAvailabilityPreference('user1', true)
+
+    expect(store.isCameraEnabledForUser('user1', 'front_porch')).toBe(false)
+    expect(store.isCameraAvailabilityEnabledForUser('user1')).toBe(true)
+  })
+})
+
 describe('persistence across close/reopen', () => {
   it('retains subscriptions after closing and re-opening the database', async () => {
     store.saveSubscription('user1', 'https://push.example.com/1', 'k1', 'a1')

@@ -1,6 +1,7 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
 import { clearFrigateCache } from '#/features/shared/server/frigate/cache'
 import { notifyUsersForCamera } from './push-notify'
+import { notifyUsersForCameraAvailability } from './availability-notify'
 import type { FrigateEventInfo } from './event-batcher'
 
 vi.mock('mqtt', () => {
@@ -21,6 +22,10 @@ vi.mock('./push-notify', () => ({
   notifyUsersForCamera: vi.fn().mockResolvedValue(undefined),
 }))
 
+vi.mock('./availability-notify', () => ({
+  notifyUsersForCameraAvailability: vi.fn().mockResolvedValue(undefined),
+}))
+
 async function getMockClient() {
   const mod = await import('mqtt')
 
@@ -28,11 +33,13 @@ async function getMockClient() {
 }
 
 describe('SUBSCRIBED_TOPICS', () => {
-  it('contains frigate/events and frigate/reviews', async () => {
+  it('contains frigate/events, frigate/reviews, frigate/stats, and frigate/available', async () => {
     const { SUBSCRIBED_TOPICS } = await import('./mqtt')
     expect(SUBSCRIBED_TOPICS).toContain('frigate/events')
     expect(SUBSCRIBED_TOPICS).toContain('frigate/reviews')
-    expect(SUBSCRIBED_TOPICS).toHaveLength(2)
+    expect(SUBSCRIBED_TOPICS).toContain('frigate/stats')
+    expect(SUBSCRIBED_TOPICS).toContain('frigate/available')
+    expect(SUBSCRIBED_TOPICS).toHaveLength(4)
   })
 })
 
@@ -116,6 +123,117 @@ describe('onFrigateMessage', () => {
 
     logSpy.mockRestore()
   })
+
+  it('does not clear the Frigate cache for frigate/stats', async () => {
+    const { onFrigateMessage } = await import('./mqtt')
+    const { frigateCache } =
+      await import('#/features/shared/server/frigate/cache')
+
+    frigateCache.set('test-key', { ok: true, data: 'cached' })
+    expect(frigateCache.size).toBe(1)
+
+    onFrigateMessage(
+      'frigate/stats',
+      Buffer.from(JSON.stringify({ cameras: {} })),
+    )
+    expect(frigateCache.size).toBe(1)
+  })
+
+  it('does not clear the Frigate cache for frigate/available', async () => {
+    const { onFrigateMessage } = await import('./mqtt')
+    const { frigateCache } =
+      await import('#/features/shared/server/frigate/cache')
+
+    frigateCache.set('test-key', { ok: true, data: 'cached' })
+    expect(frigateCache.size).toBe(1)
+
+    onFrigateMessage('frigate/available', Buffer.from('online'))
+    expect(frigateCache.size).toBe(1)
+  })
+
+  it('logs "Ignored" for a malformed frigate/stats payload', async () => {
+    const { onFrigateMessage } = await import('./mqtt')
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+
+    expect(() =>
+      onFrigateMessage('frigate/stats', Buffer.from('not json')),
+    ).not.toThrow()
+
+    expect(
+      logSpy.mock.calls.some((call) => String(call[0]).includes('Ignored')),
+    ).toBe(true)
+
+    logSpy.mockRestore()
+  })
+
+  it('logs "Ignored" for an unexpected frigate/available payload', async () => {
+    const { onFrigateMessage } = await import('./mqtt')
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+
+    expect(() =>
+      onFrigateMessage('frigate/available', Buffer.from('unknown')),
+    ).not.toThrow()
+
+    expect(
+      logSpy.mock.calls.some((call) => String(call[0]).includes('Ignored')),
+    ).toBe(true)
+
+    logSpy.mockRestore()
+  })
+})
+
+describe('onFrigateMessage — availability tracker wiring', () => {
+  const notifyAvailabilityMock = vi.mocked(notifyUsersForCameraAvailability)
+
+  beforeEach(async () => {
+    notifyAvailabilityMock.mockClear()
+    const { _resetAvailabilityTracker } = await import('./mqtt')
+    _resetAvailabilityTracker()
+  })
+
+  function statsPayload(camera: string, cameraFps: number): Buffer {
+    return Buffer.from(
+      JSON.stringify({ cameras: { [camera]: { camera_fps: cameraFps } } }),
+    )
+  }
+
+  it('flags a camera offline only once the default threshold of zero-fps readings is reached', async () => {
+    const { onFrigateMessage } = await import('./mqtt')
+
+    onFrigateMessage('frigate/stats', statsPayload('front_porch', 0))
+    expect(notifyAvailabilityMock).not.toHaveBeenCalled()
+
+    onFrigateMessage('frigate/stats', statsPayload('front_porch', 0))
+    expect(notifyAvailabilityMock).toHaveBeenCalledTimes(1)
+    expect(notifyAvailabilityMock).toHaveBeenCalledWith(
+      'front_porch',
+      'offline',
+    )
+  })
+
+  it('flags a camera back online once fps recovers', async () => {
+    const { onFrigateMessage } = await import('./mqtt')
+
+    onFrigateMessage('frigate/stats', statsPayload('front_porch', 0))
+    onFrigateMessage('frigate/stats', statsPayload('front_porch', 0))
+    notifyAvailabilityMock.mockClear()
+
+    onFrigateMessage('frigate/stats', statsPayload('front_porch', 5))
+    expect(notifyAvailabilityMock).toHaveBeenCalledWith('front_porch', 'online')
+  })
+
+  it('flags every known camera offline immediately on frigate/available "offline" (not debounced)', async () => {
+    const { onFrigateMessage } = await import('./mqtt')
+
+    onFrigateMessage('frigate/stats', statsPayload('front_porch', 5))
+    notifyAvailabilityMock.mockClear()
+
+    onFrigateMessage('frigate/available', Buffer.from('offline'))
+    expect(notifyAvailabilityMock).toHaveBeenCalledWith(
+      'front_porch',
+      'offline',
+    )
+  })
 })
 
 describe('dispatchBatch', () => {
@@ -163,6 +281,32 @@ describe('dispatchBatch', () => {
     expect(notifyMock).toHaveBeenCalledWith('driveway', events, {
       burstStart: false,
     })
+
+    logSpy.mockRestore()
+  })
+})
+
+describe('dispatchAvailability', () => {
+  const notifyAvailabilityMock = vi.mocked(notifyUsersForCameraAvailability)
+
+  beforeEach(() => {
+    notifyAvailabilityMock.mockClear()
+  })
+
+  it('logs the transition and dispatches an availability push notification', async () => {
+    const { dispatchAvailability } = await import('./mqtt')
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+
+    dispatchAvailability('driveway', 'offline')
+
+    expect(
+      logSpy.mock.calls.some(
+        (call) =>
+          String(call[0]).includes('driveway') &&
+          String(call[0]).includes('offline'),
+      ),
+    ).toBe(true)
+    expect(notifyAvailabilityMock).toHaveBeenCalledWith('driveway', 'offline')
 
     logSpy.mockRestore()
   })
@@ -327,7 +471,12 @@ describe('startMqttSubscriber', () => {
     connectHandler()
 
     expect(mockClient.subscribe).toHaveBeenCalledWith(
-      ['frigate/events', 'frigate/reviews'],
+      [
+        'frigate/events',
+        'frigate/reviews',
+        'frigate/stats',
+        'frigate/available',
+      ],
       expect.any(Function),
     )
   })

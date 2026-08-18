@@ -3,6 +3,7 @@ import {
   parseDurationMs,
   resolveBatcherConfig,
   resolveAppleUpdateIntervalMs,
+  resolveOfflineThreshold,
 } from './env'
 
 describe('parseDurationMs', () => {
@@ -109,5 +110,47 @@ describe('resolveAppleUpdateIntervalMs', () => {
     expect(
       resolveAppleUpdateIntervalMs({ APPLE_UPDATE_INTERVAL_MS: '-5' }),
     ).toBe(300_000)
+  })
+})
+
+describe('resolveOfflineThreshold', () => {
+  it('defaults to 2 when the env var is undefined', () => {
+    expect(resolveOfflineThreshold({})).toBe(2)
+  })
+
+  it('returns the default for an empty string', () => {
+    expect(resolveOfflineThreshold({ CAMERA_OFFLINE_THRESHOLD: '' })).toBe(2)
+  })
+
+  it('returns the default for a whitespace-only string', () => {
+    expect(resolveOfflineThreshold({ CAMERA_OFFLINE_THRESHOLD: '   ' })).toBe(2)
+  })
+
+  it('returns the default for a non-numeric string', () => {
+    expect(resolveOfflineThreshold({ CAMERA_OFFLINE_THRESHOLD: 'abc' })).toBe(2)
+  })
+
+  it('returns the default for "0"', () => {
+    expect(resolveOfflineThreshold({ CAMERA_OFFLINE_THRESHOLD: '0' })).toBe(2)
+  })
+
+  it('returns the default for a negative number string', () => {
+    expect(resolveOfflineThreshold({ CAMERA_OFFLINE_THRESHOLD: '-1' })).toBe(2)
+  })
+
+  it('returns the default for a non-integer string', () => {
+    expect(resolveOfflineThreshold({ CAMERA_OFFLINE_THRESHOLD: '2.5' })).toBe(2)
+  })
+
+  it('returns the default for a non-finite value', () => {
+    expect(
+      resolveOfflineThreshold({ CAMERA_OFFLINE_THRESHOLD: 'Infinity' }),
+    ).toBe(2)
+    expect(resolveOfflineThreshold({ CAMERA_OFFLINE_THRESHOLD: 'NaN' })).toBe(2)
+  })
+
+  it('returns the parsed integer for a valid positive integer string', () => {
+    expect(resolveOfflineThreshold({ CAMERA_OFFLINE_THRESHOLD: '1' })).toBe(1)
+    expect(resolveOfflineThreshold({ CAMERA_OFFLINE_THRESHOLD: '5' })).toBe(5)
   })
 })

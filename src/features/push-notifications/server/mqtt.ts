@@ -5,10 +5,21 @@ import { clearFrigateCache } from '#/features/shared/server/frigate/cache'
 import { EventBatcher } from './event-batcher'
 import type { FrigateEventInfo, FlushMeta } from './event-batcher'
 import { notifyUsersForCamera } from './push-notify'
-import { resolveBatcherConfig } from './env'
+import {
+  CameraAvailabilityTracker,
+  parseFrigateStatsMessage,
+} from './camera-availability'
+import type { CameraAvailabilityStatus } from './camera-availability'
+import { notifyUsersForCameraAvailability } from './availability-notify'
+import { resolveBatcherConfig, resolveOfflineThreshold } from './env'
 
-/** MQTT topics to subscribe to for Frigate event updates. */
-export const SUBSCRIBED_TOPICS = ['frigate/events', 'frigate/reviews'] as const
+/** MQTT topics to subscribe to for Frigate event and availability updates. */
+export const SUBSCRIBED_TOPICS = [
+  'frigate/events',
+  'frigate/reviews',
+  'frigate/stats',
+  'frigate/available',
+] as const
 
 export type MqttConnectionState =
   'not_configured' | 'connected' | 'disconnected'
@@ -24,6 +35,7 @@ export function _resetMqttConnectionState(): void {
 }
 
 const { windowMs, burstGapMs } = resolveBatcherConfig(process.env)
+const offlineThreshold = resolveOfflineThreshold(process.env)
 
 /**
  * Flush callback for the EventBatcher: log the batch and dispatch push
@@ -45,6 +57,34 @@ export function dispatchBatch(
 
 /** Singleton event batcher — flushes per-camera batches to push notifications. */
 const eventBatcher = new EventBatcher(dispatchBatch, windowMs, burstGapMs)
+
+/**
+ * Transition callback for the CameraAvailabilityTracker: log the transition
+ * and dispatch an availability push notification. Exported for testing.
+ */
+export function dispatchAvailability(
+  camera: string,
+  status: CameraAvailabilityStatus,
+): void {
+  console.log(`[mqtt] Camera "${camera}" is now ${status}`)
+  notifyUsersForCameraAvailability(camera, status).catch((err) => {
+    console.error('[mqtt] Availability push dispatch failed:', err)
+  })
+}
+
+/** Singleton availability tracker — reassignable so tests can isolate state. */
+let availabilityTracker = new CameraAvailabilityTracker(
+  dispatchAvailability,
+  offlineThreshold,
+)
+
+/** Reset the availability tracker's internal state. Exported for testing only. */
+export function _resetAvailabilityTracker(): void {
+  availabilityTracker = new CameraAvailabilityTracker(
+    dispatchAvailability,
+    offlineThreshold,
+  )
+}
 
 /**
  * Parse a Frigate MQTT event payload into a FrigateEventInfo, or null
@@ -80,13 +120,18 @@ export function parseFrigateEvent(payload: Buffer): FrigateEventInfo | null {
 /**
  * Handle an incoming Frigate MQTT message.
  *
- * Clears the API cache for all topics. For `frigate/events`, also parses
- * the payload and feeds new events into the per-camera batcher for push
- * notification dispatch.
+ * Clears the API cache only for `frigate/events` and `frigate/reviews` —
+ * `frigate/stats` arrives on a heartbeat interval with no data change most of
+ * the time, so clearing the cache on every reading would defeat its purpose.
+ * `frigate/events` also feeds new events into the per-camera batcher for push
+ * notification dispatch; `frigate/stats` and `frigate/available` feed the
+ * camera availability tracker for online/offline push notifications.
  */
 export function onFrigateMessage(topic: string, payload: Buffer): void {
-  console.log(`[mqtt] Received message on ${topic} — clearing Frigate cache`)
-  clearFrigateCache()
+  if (topic === 'frigate/events' || topic === 'frigate/reviews') {
+    console.log(`[mqtt] Received message on ${topic} — clearing Frigate cache`)
+    clearFrigateCache()
+  }
 
   if (topic === 'frigate/events') {
     const event = parseFrigateEvent(payload)
@@ -98,6 +143,22 @@ export function onFrigateMessage(topic: string, payload: Buffer): void {
     } else {
       console.log(
         '[mqtt] Ignored frigate/events message (not a "new" event or malformed payload)',
+      )
+    }
+  } else if (topic === 'frigate/stats') {
+    const camerasFps = parseFrigateStatsMessage(payload)
+    if (camerasFps) {
+      availabilityTracker.handleStats(camerasFps)
+    } else {
+      console.log('[mqtt] Ignored frigate/stats message (malformed payload)')
+    }
+  } else if (topic === 'frigate/available') {
+    const status = payload.toString().trim()
+    if (status === 'online' || status === 'offline') {
+      availabilityTracker.handleServiceAvailability(status)
+    } else {
+      console.log(
+        `[mqtt] Ignored frigate/available message (unexpected payload: "${status}")`,
       )
     }
   }

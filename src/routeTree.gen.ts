@@ -22,6 +22,7 @@ import { Route as ApiAuthGoogleRouteImport } from './routes/api/auth/google'
 import { Route as ApiAuthLogoutRouteImport } from './routes/api/auth/logout'
 import { Route as ApiHealthIndexRouteImport } from './routes/api/health/index'
 import { Route as ApiHealthReadyRouteImport } from './routes/api/health/ready'
+import { Route as ApiPushAvailabilityPreferenceRouteImport } from './routes/api/push/availability-preference'
 import { Route as ApiPushPreferencesRouteImport } from './routes/api/push/preferences'
 import { Route as ApiPushSubscribeRouteImport } from './routes/api/push/subscribe'
 import { Route as ApiPushTestRouteImport } from './routes/api/push/test'
@@ -99,6 +100,12 @@ const ApiHealthReadyRoute = ApiHealthReadyRouteImport.update({
   path: '/api/health/ready',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPushAvailabilityPreferenceRoute =
+  ApiPushAvailabilityPreferenceRouteImport.update({
+    id: '/api/push/availability-preference',
+    path: '/api/push/availability-preference',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPushPreferencesRoute = ApiPushPreferencesRouteImport.update({
   id: '/api/push/preferences',
   path: '/api/push/preferences',
@@ -161,6 +168,7 @@ export interface FileRoutesByFullPath {
   '/api/auth/google': typeof ApiAuthGoogleRouteWithChildren
   '/api/auth/logout': typeof ApiAuthLogoutRoute
   '/api/health/ready': typeof ApiHealthReadyRoute
+  '/api/push/availability-preference': typeof ApiPushAvailabilityPreferenceRoute
   '/api/push/preferences': typeof ApiPushPreferencesRoute
   '/api/push/subscribe': typeof ApiPushSubscribeRoute
   '/api/push/test': typeof ApiPushTestRoute
@@ -185,6 +193,7 @@ export interface FileRoutesByTo {
   '/api/auth/google': typeof ApiAuthGoogleRouteWithChildren
   '/api/auth/logout': typeof ApiAuthLogoutRoute
   '/api/health/ready': typeof ApiHealthReadyRoute
+  '/api/push/availability-preference': typeof ApiPushAvailabilityPreferenceRoute
   '/api/push/preferences': typeof ApiPushPreferencesRoute
   '/api/push/subscribe': typeof ApiPushSubscribeRoute
   '/api/push/test': typeof ApiPushTestRoute
@@ -211,6 +220,7 @@ export interface FileRoutesById {
   '/api/auth/google': typeof ApiAuthGoogleRouteWithChildren
   '/api/auth/logout': typeof ApiAuthLogoutRoute
   '/api/health/ready': typeof ApiHealthReadyRoute
+  '/api/push/availability-preference': typeof ApiPushAvailabilityPreferenceRoute
   '/api/push/preferences': typeof ApiPushPreferencesRoute
   '/api/push/subscribe': typeof ApiPushSubscribeRoute
   '/api/push/test': typeof ApiPushTestRoute
@@ -237,6 +247,7 @@ export interface FileRouteTypes {
     | '/api/auth/google'
     | '/api/auth/logout'
     | '/api/health/ready'
+    | '/api/push/availability-preference'
     | '/api/push/preferences'
     | '/api/push/subscribe'
     | '/api/push/test'
@@ -261,6 +272,7 @@ export interface FileRouteTypes {
     | '/api/auth/google'
     | '/api/auth/logout'
     | '/api/health/ready'
+    | '/api/push/availability-preference'
     | '/api/push/preferences'
     | '/api/push/subscribe'
     | '/api/push/test'
@@ -286,6 +298,7 @@ export interface FileRouteTypes {
     | '/api/auth/google'
     | '/api/auth/logout'
     | '/api/health/ready'
+    | '/api/push/availability-preference'
     | '/api/push/preferences'
     | '/api/push/subscribe'
     | '/api/push/test'
@@ -307,6 +320,7 @@ export interface RootRouteChildren {
   ApiAuthGoogleRoute: typeof ApiAuthGoogleRouteWithChildren
   ApiAuthLogoutRoute: typeof ApiAuthLogoutRoute
   ApiHealthReadyRoute: typeof ApiHealthReadyRoute
+  ApiPushAvailabilityPreferenceRoute: typeof ApiPushAvailabilityPreferenceRoute
   ApiPushPreferencesRoute: typeof ApiPushPreferencesRoute
   ApiPushSubscribeRoute: typeof ApiPushSubscribeRoute
   ApiPushTestRoute: typeof ApiPushTestRoute
@@ -410,6 +424,13 @@ declare module '@tanstack/react-router' {
       path: '/api/health/ready'
       fullPath: '/api/health/ready'
       preLoaderRoute: typeof ApiHealthReadyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/push/availability-preference': {
+      id: '/api/push/availability-preference'
+      path: '/api/push/availability-preference'
+      fullPath: '/api/push/availability-preference'
+      preLoaderRoute: typeof ApiPushAvailabilityPreferenceRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/push/preferences': {
@@ -526,6 +547,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAuthGoogleRoute: ApiAuthGoogleRouteWithChildren,
   ApiAuthLogoutRoute: ApiAuthLogoutRoute,
   ApiHealthReadyRoute: ApiHealthReadyRoute,
+  ApiPushAvailabilityPreferenceRoute: ApiPushAvailabilityPreferenceRoute,
   ApiPushPreferencesRoute: ApiPushPreferencesRoute,
   ApiPushSubscribeRoute: ApiPushSubscribeRoute,
   ApiPushTestRoute: ApiPushTestRoute,

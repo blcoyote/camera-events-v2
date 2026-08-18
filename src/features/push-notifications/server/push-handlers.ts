@@ -171,3 +171,35 @@ export async function handleSetPreference(
   ;(await getPushStore()).setPreference(userId, camera, enabled)
   return { status: 200, body: { ok: true } }
 }
+
+export async function handleGetAvailabilityPreference(
+  userId: string | null,
+): Promise<HandlerResult> {
+  if (!userId) {
+    return { status: 401, body: { error: 'Unauthorized' } }
+  }
+  const enabled = (await getPushStore()).isCameraAvailabilityEnabledForUser(
+    userId,
+  )
+  return { status: 200, body: { enabled } }
+}
+
+export async function handleSetAvailabilityPreference(
+  userId: string | null,
+  body: Record<string, unknown>,
+): Promise<HandlerResult> {
+  if (!userId) {
+    return { status: 401, body: { error: 'Unauthorized' } }
+  }
+
+  const enabled = typeof body.enabled === 'boolean' ? body.enabled : null
+  if (enabled === null) {
+    return {
+      status: 400,
+      body: { error: 'Invalid request: enabled (boolean) is required' },
+    }
+  }
+
+  ;(await getPushStore()).setCameraAvailabilityPreference(userId, enabled)
+  return { status: 200, body: { ok: true } }
+}

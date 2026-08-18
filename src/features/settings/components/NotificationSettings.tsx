@@ -3,6 +3,7 @@ import { usePushSubscription } from '../hooks/usePushSubscription'
 import { NotificationSection } from './NotificationSection'
 import { CameraPreferences } from './CameraPreferences'
 import type { CameraPref } from './CameraPreferences'
+import { AvailabilityAlertsToggle } from './AvailabilityAlertsToggle'
 
 export function NotificationSettings() {
   const {
@@ -21,6 +22,7 @@ export function NotificationSettings() {
   const [hasMounted, setHasMounted] = useState(false)
   const [cameraPrefs, setCameraPrefs] = useState<CameraPref[]>([])
   const [prefsLoading, setPrefsLoading] = useState(false)
+  const [availabilityEnabled, setAvailabilityEnabled] = useState(false)
 
   useEffect(() => {
     setHasMounted(true)
@@ -43,12 +45,27 @@ export function NotificationSettings() {
     }
   }, [])
 
-  // Load camera preferences when subscribed
+  const loadAvailabilityPreference = useCallback(async () => {
+    try {
+      const res = await fetch('/api/push/availability-preference', {
+        credentials: 'include',
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setAvailabilityEnabled(Boolean(data.enabled))
+      }
+    } catch {
+      // Silently fail — toggle will just keep its default (off)
+    }
+  }, [])
+
+  // Load camera and availability preferences when subscribed
   useEffect(() => {
     if (isSubscribed) {
       loadPreferences()
+      loadAvailabilityPreference()
     }
-  }, [isSubscribed, loadPreferences])
+  }, [isSubscribed, loadPreferences, loadAvailabilityPreference])
 
   // Before the client effect runs, render a neutral placeholder so SSR
   // and initial client markup match (avoids hydration mismatch).
@@ -145,6 +162,26 @@ export function NotificationSettings() {
     }
   }
 
+  async function handleToggleAvailability(enabled: boolean) {
+    // Optimistic update
+    setAvailabilityEnabled(enabled)
+    try {
+      const res = await fetch('/api/push/availability-preference', {
+        method: 'PUT',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled }),
+      })
+      if (!res.ok) {
+        // Revert on failure
+        setAvailabilityEnabled(!enabled)
+      }
+    } catch {
+      // Revert on network error
+      setAvailabilityEnabled(!enabled)
+    }
+  }
+
   return (
     <NotificationSection>
       <div className="flex flex-col gap-4">
@@ -177,6 +214,10 @@ export function NotificationSettings() {
                 {isLoading ? 'Sending...' : 'Send Test Notification'}
               </button>
             </div>
+            <AvailabilityAlertsToggle
+              enabled={availabilityEnabled}
+              onToggle={handleToggleAvailability}
+            />
             {cameraPrefs.length > 0 && (
               <CameraPreferences
                 cameras={cameraPrefs}

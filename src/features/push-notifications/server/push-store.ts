@@ -29,6 +29,8 @@ export interface PushStore {
   getDisabledCameras: (userId: string) => string[]
   isCameraEnabledForUser: (userId: string, camera: string) => boolean
   setPreference: (userId: string, camera: string, enabled: boolean) => void
+  isCameraAvailabilityEnabledForUser: (userId: string) => boolean
+  setCameraAvailabilityPreference: (userId: string, enabled: boolean) => void
   /** Inspection helper for tests: list user table names. */
   tableNames: () => string[]
   /** Inspection helper for tests: list column names of `table`. */
@@ -103,6 +105,17 @@ export async function createPushStore(
         enabled = excluded.enabled,
         updated_at = datetime('now')
     `),
+    getAvailabilityPref: db.prepare(
+      `SELECT enabled FROM push_notification_preferences
+       WHERE user_id = ? AND category = 'camera_availability' AND resource_id = 'global'`,
+    ),
+    upsertAvailabilityPref: db.prepare(`
+      INSERT INTO push_notification_preferences (user_id, category, resource_id, enabled)
+      VALUES (?, 'camera_availability', 'global', ?)
+      ON CONFLICT(user_id, category, resource_id) DO UPDATE SET
+        enabled = excluded.enabled,
+        updated_at = datetime('now')
+    `),
   }
 
   return {
@@ -143,6 +156,17 @@ export async function createPushStore(
 
     setPreference(userId, camera, enabled) {
       stmts.upsertPref.run(userId, camera, enabled ? 1 : 0)
+    },
+
+    isCameraAvailabilityEnabledForUser(userId) {
+      const row = stmts.getAvailabilityPref.get(userId) as
+        { enabled: number } | null | undefined
+      // No row = default DISABLED (opt-in model) — the opposite default of isCameraEnabledForUser
+      return row != null && row.enabled === 1
+    },
+
+    setCameraAvailabilityPreference(userId, enabled) {
+      stmts.upsertAvailabilityPref.run(userId, enabled ? 1 : 0)
     },
 
     tableNames() {
