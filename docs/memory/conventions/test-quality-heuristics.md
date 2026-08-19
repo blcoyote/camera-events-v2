@@ -65,7 +65,7 @@ fewer, sharper tests instead of inflating the count.
    real Frigate-backed list). `bun run knip` should catch these — run it before
    trusting a test file's continued existence.
 6. **Is the exhaustiveness deliberate, or just volume?** Full branch/input
-   enumeration is *correct*, not padding, when the logic is a security boundary,
+   enumeration is _correct_, not padding, when the logic is a security boundary,
    a timing/race condition, or has genuinely independent branches — e.g.
    `test-auth-guard.test.ts`'s case-sensitivity + truthy-coercion checks on a
    prod-auth-bypass gate, `event-batcher.test.ts`'s burst-gap-vs-window boundary
@@ -91,7 +91,7 @@ fewer, sharper tests instead of inflating the count.
 
 ### Good examples (keep doing this)
 
-- **Fail-closed negative tests**: assert *no side effect happened*, not just that
+- **Fail-closed negative tests**: assert _no side effect happened_, not just that
   an error was thrown — `clip-proxy.test.ts` (401/400 guards assert `fetch` was
   never called), `favorites-fns.test.ts` (`writes no DB row when unauthorized`).
 - **Minimal-mock integration**: `mqtt-cache.integration.test.ts` mocks only
@@ -109,20 +109,20 @@ fewer, sharper tests instead of inflating the count.
 
 ### Bad examples (the anti-pattern catalogue)
 
-| Anti-pattern | Example | Why it's bad |
-|---|---|---|
-| Tests a hand-copied reimplementation, not the real code | `useRefetchOnFocus.test.ts`, most of `usePushSubscription.test.ts` | Stays green through a real regression — worse than no test |
-| Never imports the component/module under test | `NotificationSettings.test.ts` | Same as above; 5 real conditional branches + optimistic-update logic have zero coverage |
-| Tautological constant check | `expect(SESSION_COOKIE_NAME).toBe('google-sso')` | Can only fail on a deliberate edit; not a behavior test |
-| Type-shape placeholder for a hook with real logic | `usePullToRefresh.test.ts`, `useRefetchOnMount.test.ts` | Builds an object literal, asserts a property of the literal it just wrote; never calls the hook |
-| Cosmetic-input duplicate | Same `typeof fps === 'number'` guard tested with `'n/a'`, `undefined`, `null` separately | Same branch, no new path; one boundary case would do |
-| CSS-class/DOM-structure as behavior proxy | `NavDrawer.test.tsx` `backdrop-blur` class match | Breaks on harmless refactor, doesn't verify the actual visual requirement |
-| Over-mocked wiring-only test | `EventCard.test.tsx` (every child mocked, only prop-forwarding asserted) | Proves nothing about the component's actual conditional rendering |
-| Log-string as the only assertion on a side effect | `mqtt.test.ts` (`console.log` text match instead of `eventBatcher.add` call) | A mutant that drops the real call but keeps the log line survives |
-| Testing dead code | `boundingBox.test.ts`, `mock-events.test.ts` | Protects nothing reachable by the running app |
-| Wholesale duplicate test file | `-cameras.test.ts` vs `CamerasPage.test.tsx` | Same function/branches tested twice in two locations; delete the redundant one |
-| "Contract" test that doesn't enforce the contract it names | `push-store.driver-contract.test.ts` (claims Node/Bun parity, no Bun-gated companion, never runs under Bun in CI) | Name promises more than the test infra actually delivers |
-| Misleading test name | `"calls getEvent for all IDs in parallel"` (would pass for a sequential loop too) | Gives false confidence about a property nothing checks |
+| Anti-pattern                                               | Example                                                                                                           | Why it's bad                                                                                    |
+| ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| Tests a hand-copied reimplementation, not the real code    | `useRefetchOnFocus.test.ts`, most of `usePushSubscription.test.ts`                                                | Stays green through a real regression — worse than no test                                      |
+| Never imports the component/module under test              | `NotificationSettings.test.ts`                                                                                    | Same as above; 5 real conditional branches + optimistic-update logic have zero coverage         |
+| Tautological constant check                                | `expect(SESSION_COOKIE_NAME).toBe('google-sso')`                                                                  | Can only fail on a deliberate edit; not a behavior test                                         |
+| Type-shape placeholder for a hook with real logic          | `usePullToRefresh.test.ts`, `useRefetchOnMount.test.ts`                                                           | Builds an object literal, asserts a property of the literal it just wrote; never calls the hook |
+| Cosmetic-input duplicate                                   | Same `typeof fps === 'number'` guard tested with `'n/a'`, `undefined`, `null` separately                          | Same branch, no new path; one boundary case would do                                            |
+| CSS-class/DOM-structure as behavior proxy                  | `NavDrawer.test.tsx` `backdrop-blur` class match                                                                  | Breaks on harmless refactor, doesn't verify the actual visual requirement                       |
+| Over-mocked wiring-only test                               | `EventCard.test.tsx` (every child mocked, only prop-forwarding asserted)                                          | Proves nothing about the component's actual conditional rendering                               |
+| Log-string as the only assertion on a side effect          | `mqtt.test.ts` (`console.log` text match instead of `eventBatcher.add` call)                                      | A mutant that drops the real call but keeps the log line survives                               |
+| Testing dead code                                          | `boundingBox.test.ts`, `mock-events.test.ts`                                                                      | Protects nothing reachable by the running app                                                   |
+| Wholesale duplicate test file                              | `-cameras.test.ts` vs `CamerasPage.test.tsx`                                                                      | Same function/branches tested twice in two locations; delete the redundant one                  |
+| "Contract" test that doesn't enforce the contract it names | `push-store.driver-contract.test.ts` (claims Node/Bun parity, no Bun-gated companion, never runs under Bun in CI) | Name promises more than the test infra actually delivers                                        |
+| Misleading test name                                       | `"calls getEvent for all IDs in parallel"` (would pass for a sequential loop too)                                 | Gives false confidence about a property nothing checks                                          |
 
 ### The inverse failure mode: gaps hiding under a false sense of coverage
 
