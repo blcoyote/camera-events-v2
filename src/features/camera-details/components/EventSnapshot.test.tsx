@@ -36,4 +36,20 @@ describe('EventSnapshot', () => {
     button.click()
     expect(onZoom).toHaveBeenCalledOnce()
   })
+
+  it('labels the button as a fullscreen affordance, not a zoom one', () => {
+    render(
+      <EventSnapshot
+        eventId="front_door.123"
+        camera="front_door"
+        label="person"
+        onZoom={() => {}}
+      />,
+    )
+    const button = screen.getByRole('button')
+    expect(button.getAttribute('aria-label')).toContain(
+      'tap to view fullscreen',
+    )
+    expect(button.getAttribute('aria-label')).not.toContain('zoom')
+  })
 })
