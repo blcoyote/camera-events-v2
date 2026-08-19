@@ -26,10 +26,10 @@ tasks concurrently never collide on the same file.
 
 ```markdown
 ---
-status: open        # open | in_progress | closed
-priority: normal    # low | normal | high
+status: open # open | in_progress | closed
+priority: normal # low | normal | high
 created: 2026-08-18
-depends_on: []       # slugs of other fallback-tasks files this is blocked on
+depends_on: [] # slugs of other fallback-tasks files this is blocked on
 ---
 
 # Fix isValidEventId test gap
@@ -44,12 +44,12 @@ as isValidCameraName. See docs/memory/conventions/test-quality-heuristics.md.
 
 ## Working the queue (grep instead of `bd` commands)
 
-| `bd` command | Fallback equivalent |
-|---|---|
-| `bd ready` | `grep -rL "^status: open" docs/memory/fallback-tasks/*.md` won't work as a negative match — use: `grep -l "^status: open" docs/memory/fallback-tasks/*.md`, then manually skip any with an unmet `depends_on` |
-| `bd show <id>` | `cat docs/memory/fallback-tasks/<slug>.md` |
-| `bd update <id> --claim` | Edit the file's frontmatter: `status: open` → `status: in_progress` |
-| `bd close <id>` | Edit frontmatter to `status: closed`, fill in `## Outcome` |
+| `bd` command             | Fallback equivalent                                                                                                                                                                                           |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `bd ready`               | `grep -rL "^status: open" docs/memory/fallback-tasks/*.md` won't work as a negative match — use: `grep -l "^status: open" docs/memory/fallback-tasks/*.md`, then manually skip any with an unmet `depends_on` |
+| `bd show <id>`           | `cat docs/memory/fallback-tasks/<slug>.md`                                                                                                                                                                    |
+| `bd update <id> --claim` | Edit the file's frontmatter: `status: open` → `status: in_progress`                                                                                                                                           |
+| `bd close <id>`          | Edit frontmatter to `status: closed`, fill in `## Outcome`                                                                                                                                                    |
 
 ## Migrating back to `bd`
 
