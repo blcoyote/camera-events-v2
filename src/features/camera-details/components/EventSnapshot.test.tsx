@@ -1,20 +1,11 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import { render, screen, cleanup, fireEvent, act } from '@testing-library/react'
+import { render, cleanup, screen } from '@testing-library/react'
 import '@testing-library/jest-dom/vitest'
 import { EventSnapshot } from './EventSnapshot'
 
-const mockSnapshotLightbox = vi.fn((_props: unknown) => null)
-vi.mock('#/features/shared/components/SnapshotLightbox', () => ({
-  SnapshotLightbox: (props: unknown) => {
-    mockSnapshotLightbox(props)
-    return null
-  },
-}))
-
 afterEach(() => {
   cleanup()
-  mockSnapshotLightbox.mockClear()
 })
 
 describe('EventSnapshot', () => {
@@ -24,89 +15,41 @@ describe('EventSnapshot', () => {
         eventId="front_door.123"
         camera="front_door"
         label="person"
+        onZoom={() => {}}
       />,
     )
     const img = screen.getByRole('img')
     expect(img).toHaveAttribute('src', '/api/events/front_door.123/snapshot')
   })
 
-  it('sets alt text from the label and camera', () => {
+  it('invokes onZoom when the snapshot button is clicked', async () => {
+    const onZoom = vi.fn()
     render(
       <EventSnapshot
         eventId="front_door.123"
         camera="front_door"
         label="person"
+        onZoom={onZoom}
       />,
     )
-    expect(
-      screen.getByAltText('Snapshot of Person detected by Front Door'),
-    ).toBeInTheDocument()
+    const button = screen.getByRole('button')
+    button.click()
+    expect(onZoom).toHaveBeenCalledOnce()
   })
 
-  it('renders a fullscreen button', () => {
+  it('labels the button as a fullscreen affordance, not a zoom one', () => {
     render(
       <EventSnapshot
         eventId="front_door.123"
         camera="front_door"
         label="person"
+        onZoom={() => {}}
       />,
     )
-    expect(
-      screen.getByRole('button', { name: 'View fullscreen' }),
-    ).toBeInTheDocument()
-  })
-
-  it('renders the lightbox closed by default', () => {
-    render(
-      <EventSnapshot
-        eventId="front_door.123"
-        camera="front_door"
-        label="person"
-      />,
+    const button = screen.getByRole('button')
+    expect(button.getAttribute('aria-label')).toContain(
+      'tap to view fullscreen',
     )
-    expect(mockSnapshotLightbox).toHaveBeenCalledWith(
-      expect.objectContaining({ open: false }),
-    )
-  })
-
-  it('opens the lightbox with the current snapshot when the fullscreen button is clicked', () => {
-    render(
-      <EventSnapshot
-        eventId="front_door.123"
-        camera="front_door"
-        label="person"
-      />,
-    )
-    fireEvent.click(screen.getByRole('button', { name: 'View fullscreen' }))
-
-    expect(mockSnapshotLightbox).toHaveBeenLastCalledWith(
-      expect.objectContaining({
-        open: true,
-        src: '/api/events/front_door.123/snapshot',
-        alt: 'Snapshot of Person detected by Front Door',
-      }),
-    )
-  })
-
-  it('closes the lightbox when its onClose is invoked', () => {
-    render(
-      <EventSnapshot
-        eventId="front_door.123"
-        camera="front_door"
-        label="person"
-      />,
-    )
-    fireEvent.click(screen.getByRole('button', { name: 'View fullscreen' }))
-
-    const { onClose } = mockSnapshotLightbox.mock.calls.at(-1)?.[0] as {
-      onClose: () => void
-    }
-    act(() => {
-      onClose()
-    })
-
-    expect(mockSnapshotLightbox).toHaveBeenLastCalledWith(
-      expect.objectContaining({ open: false }),
-    )
+    expect(button.getAttribute('aria-label')).not.toContain('zoom')
   })
 })
