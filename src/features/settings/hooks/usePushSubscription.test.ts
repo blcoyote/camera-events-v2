@@ -1,14 +1,10 @@
+// @vitest-environment jsdom
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import { formatSubscribeError } from './usePushSubscription'
-
-/**
- * Tests for the push subscription logic.
- *
- * Since @testing-library/react's renderHook has React version conflicts in
- * this project's vitest setup, we test the hook's logic through its exported
- * helper functions and verify the hook's browser API interactions through
- * integration-style mocking.
- */
+import { renderHook, act, waitFor } from '@testing-library/react'
+import {
+  formatSubscribeError,
+  usePushSubscription,
+} from './usePushSubscription'
 
 describe('formatSubscribeError', () => {
   it('returns generic copy for 5xx responses without leaking server detail', () => {
@@ -56,83 +52,116 @@ describe('formatSubscribeError', () => {
   })
 })
 
-describe('usePushSubscription helpers', () => {
-  describe('browser support detection', () => {
-    it('detects PushManager when present', () => {
-      vi.stubGlobal('PushManager', class {})
-      expect(typeof globalThis.PushManager !== 'undefined').toBe(true)
-      vi.unstubAllGlobals()
-    })
-
-    it('detects PushManager absence', () => {
-      // In Node, PushManager is not defined by default
-      // (previous test stubs it; this test verifies the check logic)
-      vi.unstubAllGlobals()
-      expect(typeof globalThis.PushManager !== 'undefined').toBe(false)
-    })
+describe('usePushSubscription', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
   })
 
-  describe('permission state', () => {
-    afterEach(() => {
-      vi.unstubAllGlobals()
-    })
+  /** Default mock ServiceWorkerRegistration: no existing subscription. */
+  function makeRegistration(
+    overrides: {
+      subscribe?: ReturnType<typeof vi.fn>
+      getSubscription?: ReturnType<typeof vi.fn>
+    } = {},
+  ) {
+    return {
+      pushManager: {
+        subscribe: overrides.subscribe ?? vi.fn(),
+        getSubscription:
+          overrides.getSubscription ?? vi.fn().mockResolvedValue(null),
+      },
+    }
+  }
 
-    it('reads "default" permission', () => {
-      vi.stubGlobal('Notification', { permission: 'default' })
-      expect(Notification.permission).toBe('default')
+  /**
+   * Stubs `PushManager` (so `isSupported` is true) and `navigator` (so
+   * `navigator.serviceWorker.ready` resolves to the given registration).
+   * `vi.stubGlobal('navigator', ...)` replaces the whole object rather than
+   * patching jsdom's built-in `navigator` in place — jsdom's own navigator
+   * has non-configurable accessor properties that make patching individual
+   * fields awkward, so a full replacement (restored by `vi.unstubAllGlobals`
+   * in `afterEach`) is the clean option here, matching the pattern already
+   * used in `pushResync.test.ts`.
+   */
+  function stubBrowserSupport(options: {
+    registration?: ReturnType<typeof makeRegistration>
+    brave?: unknown
+  }) {
+    vi.stubGlobal('PushManager', class {})
+    vi.stubGlobal('navigator', {
+      serviceWorker: {
+        ready: Promise.resolve(options.registration ?? makeRegistration()),
+      },
+      brave: options.brave,
     })
+  }
 
-    it('reads "granted" permission', () => {
-      vi.stubGlobal('Notification', { permission: 'granted' })
-      expect(Notification.permission).toBe('granted')
+  function stubVapidFetchOk(fetchMock: ReturnType<typeof vi.fn>) {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ publicKey: 'test-vapid-key' }),
     })
+  }
 
-    it('reads "denied" permission (previously blocked at browser level)', () => {
-      vi.stubGlobal('Notification', { permission: 'denied' })
-      expect(Notification.permission).toBe('denied')
-    })
-  })
-
-  describe('VAPID public key fetch', () => {
-    afterEach(() => {
-      vi.unstubAllGlobals()
-    })
-
-    it('fetches public key from server', async () => {
-      const fetchMock = vi.fn().mockResolvedValue({
-        ok: true,
-        json: () => Promise.resolve({ publicKey: 'test-vapid-key' }),
-      })
+  describe('mount-time detection effect', () => {
+    it('stays unsupported and never calls fetch when PushManager is undefined', async () => {
+      const fetchMock = vi.fn()
       vi.stubGlobal('fetch', fetchMock)
 
-      const res = await fetch('/api/push/vapid-public-key')
-      const data = await res.json()
+      const { result } = renderHook(() => usePushSubscription())
 
-      expect(fetchMock).toHaveBeenCalledWith('/api/push/vapid-public-key')
-      expect(data.publicKey).toBe('test-vapid-key')
+      await waitFor(() => {
+        expect(result.current.isSupported).toBe(false)
+      })
+      expect(fetchMock).not.toHaveBeenCalled()
     })
 
-    it('handles 503 when VAPID not configured', async () => {
-      const fetchMock = vi.fn().mockResolvedValue({
-        ok: false,
-        status: 503,
-        json: () =>
-          Promise.resolve({ error: 'Push notifications are not configured' }),
+    it('detects support, push-enabled, and an existing subscription', async () => {
+      const existingSub = { endpoint: 'https://push.example.com/existing' }
+      const registration = makeRegistration({
+        getSubscription: vi.fn().mockResolvedValue(existingSub),
       })
+      stubBrowserSupport({ registration })
+      const fetchMock = vi.fn()
+      stubVapidFetchOk(fetchMock)
       vi.stubGlobal('fetch', fetchMock)
 
-      const res = await fetch('/api/push/vapid-public-key')
-      expect(res.ok).toBe(false)
-      expect(res.status).toBe(503)
+      const { result } = renderHook(() => usePushSubscription())
+
+      await waitFor(() => {
+        expect(result.current.isSubscribed).toBe(true)
+      })
+      expect(result.current.isSupported).toBe(true)
+      expect(result.current.isPushEnabled).toBe(true)
     })
   })
 
-  describe('subscribe flow', () => {
-    afterEach(() => {
-      vi.unstubAllGlobals()
+  describe('subscribe', () => {
+    it('sets a blocked-in-settings error and never calls pushManager.subscribe when permission is denied', async () => {
+      const registration = makeRegistration()
+      stubBrowserSupport({ registration })
+      vi.stubGlobal('Notification', {
+        permission: 'default',
+        requestPermission: vi.fn().mockResolvedValue('denied'),
+      })
+      const fetchMock = vi.fn()
+      stubVapidFetchOk(fetchMock)
+      vi.stubGlobal('fetch', fetchMock)
+
+      const { result } = renderHook(() => usePushSubscription())
+      await waitFor(() => expect(result.current.isPushEnabled).toBe(true))
+
+      await act(async () => {
+        await result.current.subscribe()
+      })
+
+      expect(result.current.error).toBe(
+        'Notifications are blocked in your browser settings.',
+      )
+      expect(registration.pushManager.subscribe).not.toHaveBeenCalled()
     })
 
-    it('calls PushManager.subscribe with correct params', async () => {
+    it('subscribes successfully: existing subscription is stored and error is cleared', async () => {
       const mockSubscription = {
         endpoint: 'https://push.example.com/sub1',
         toJSON: () => ({
@@ -141,179 +170,235 @@ describe('usePushSubscription helpers', () => {
         }),
         unsubscribe: vi.fn().mockResolvedValue(true),
       }
-
-      const subscribeMock = vi.fn().mockResolvedValue(mockSubscription)
-      const mockRegistration = {
-        pushManager: {
-          subscribe: subscribeMock,
-          getSubscription: vi.fn().mockResolvedValue(null),
-        },
-      }
-
-      vi.stubGlobal('navigator', {
-        serviceWorker: {
-          ready: Promise.resolve(mockRegistration),
-        },
+      const registration = makeRegistration({
+        subscribe: vi.fn().mockResolvedValue(mockSubscription),
       })
-
-      const registration = await navigator.serviceWorker.ready
-      const sub = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: 'test-vapid-key',
+      stubBrowserSupport({ registration })
+      vi.stubGlobal('Notification', {
+        permission: 'default',
+        requestPermission: vi.fn().mockResolvedValue('granted'),
       })
-
-      expect(subscribeMock).toHaveBeenCalledWith({
-        userVisibleOnly: true,
-        applicationServerKey: 'test-vapid-key',
-      })
-      expect(sub.endpoint).toBe('https://push.example.com/sub1')
-    })
-
-    it('POSTs subscription to server', async () => {
-      const fetchMock = vi.fn().mockResolvedValue({
+      const fetchMock = vi.fn()
+      stubVapidFetchOk(fetchMock)
+      fetchMock.mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve({ ok: true }),
       })
       vi.stubGlobal('fetch', fetchMock)
 
-      await fetch('/api/push/subscribe', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          endpoint: 'https://push.example.com/sub1',
-          keys: { p256dh: 'p-key', auth: 'a-key' },
-        }),
+      const { result } = renderHook(() => usePushSubscription())
+      await waitFor(() => expect(result.current.isPushEnabled).toBe(true))
+
+      await act(async () => {
+        await result.current.subscribe()
       })
 
-      expect(fetchMock).toHaveBeenCalledWith(
+      expect(registration.pushManager.subscribe).toHaveBeenCalledWith(
+        expect.objectContaining({ userVisibleOnly: true }),
+      )
+      expect(fetchMock).toHaveBeenLastCalledWith(
         '/api/push/subscribe',
         expect.objectContaining({
           method: 'POST',
-          body: expect.stringContaining('push.example.com'),
+          body: JSON.stringify({
+            endpoint: 'https://push.example.com/sub1',
+            keys: { p256dh: 'p-key', auth: 'a-key' },
+          }),
         }),
       )
+      expect(result.current.isSubscribed).toBe(true)
+      expect(result.current.error).toBeNull()
     })
 
-    it('produces Brave-specific error when push service is blocked', () => {
-      vi.stubGlobal('navigator', { brave: {} })
-
-      const err = new DOMException(
-        'Registration failed - push service error',
-        'AbortError',
-      )
-      const isBrave = !!(navigator as any).brave
-      const isBraveBlock =
-        isBrave && err instanceof DOMException && err.name === 'AbortError'
-
-      expect(isBraveBlock).toBe(true)
-      vi.unstubAllGlobals()
-    })
-
-    it('does not produce Brave error for non-Brave browsers', () => {
-      // navigator without .brave
-      vi.stubGlobal('navigator', {})
-
-      const err = new DOMException(
-        'Registration failed - push service error',
-        'AbortError',
-      )
-      const isBrave = !!(navigator as any).brave
-      const isBraveBlock =
-        isBrave && err instanceof DOMException && err.name === 'AbortError'
-
-      expect(isBraveBlock).toBe(false)
-      vi.unstubAllGlobals()
-    })
-
-    it('rolls back subscription on server error', async () => {
-      const unsubscribeMock = vi.fn().mockResolvedValue(true)
+    it('rolls back the local subscription and surfaces the real formatSubscribeError message on server rejection', async () => {
       const mockSubscription = {
         endpoint: 'https://push.example.com/sub1',
         toJSON: () => ({
           endpoint: 'https://push.example.com/sub1',
           keys: { p256dh: 'p-key', auth: 'a-key' },
         }),
-        unsubscribe: unsubscribeMock,
+        unsubscribe: vi.fn().mockResolvedValue(true),
       }
-
-      // Simulate: server rejects the subscription
-      const fetchMock = vi.fn().mockResolvedValue({
+      const registration = makeRegistration({
+        subscribe: vi.fn().mockResolvedValue(mockSubscription),
+      })
+      stubBrowserSupport({ registration })
+      vi.stubGlobal('Notification', {
+        permission: 'default',
+        requestPermission: vi.fn().mockResolvedValue('granted'),
+      })
+      const fetchMock = vi.fn()
+      stubVapidFetchOk(fetchMock)
+      fetchMock.mockResolvedValueOnce({
         ok: false,
-        status: 500,
-        json: () => Promise.resolve({ error: 'Server error' }),
+        status: 400,
+        json: () => Promise.resolve({ error: 'bad endpoint' }),
       })
       vi.stubGlobal('fetch', fetchMock)
 
-      const res = await fetch('/api/push/subscribe', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          endpoint: mockSubscription.endpoint,
-          keys: mockSubscription.toJSON().keys,
-        }),
+      const { result } = renderHook(() => usePushSubscription())
+      await waitFor(() => expect(result.current.isPushEnabled).toBe(true))
+
+      await act(async () => {
+        await result.current.subscribe()
       })
 
-      // On server error, the hook would unsubscribe locally
-      if (!res.ok) {
-        await mockSubscription.unsubscribe()
-      }
+      // Proves the rollback happened, not just that an error was set.
+      expect(mockSubscription.unsubscribe).toHaveBeenCalledOnce()
+      // Asserting the exact formatSubscribeError(400, ...) output (not a
+      // substring the test could satisfy by accident) proves the real
+      // function ran rather than a duplicated/copied error string.
+      expect(result.current.error).toBe(
+        formatSubscribeError(400, { error: 'bad endpoint' }),
+      )
+      expect(result.current.error).toContain('bad endpoint')
+      expect(result.current.isSubscribed).toBe(false)
+    })
 
-      expect(unsubscribeMock).toHaveBeenCalled()
+    it('shows the Brave-specific message when navigator.brave is set and pushManager.subscribe aborts', async () => {
+      const abortErr = new DOMException('Registration failed', 'AbortError')
+      const registration = makeRegistration({
+        subscribe: vi.fn().mockRejectedValue(abortErr),
+      })
+      stubBrowserSupport({ registration, brave: {} })
+      vi.stubGlobal('Notification', {
+        permission: 'default',
+        requestPermission: vi.fn().mockResolvedValue('granted'),
+      })
+      const fetchMock = vi.fn()
+      stubVapidFetchOk(fetchMock)
+      vi.stubGlobal('fetch', fetchMock)
+
+      const { result } = renderHook(() => usePushSubscription())
+      await waitFor(() => expect(result.current.isPushEnabled).toBe(true))
+
+      await act(async () => {
+        await result.current.subscribe()
+      })
+
+      expect(result.current.error).toContain('Brave blocks push notifications')
+    })
+
+    it('falls back to the generic error message for the same AbortError when navigator.brave is undefined', async () => {
+      const abortErr = new DOMException('Registration failed', 'AbortError')
+      const registration = makeRegistration({
+        subscribe: vi.fn().mockRejectedValue(abortErr),
+      })
+      stubBrowserSupport({ registration, brave: undefined })
+      vi.stubGlobal('Notification', {
+        permission: 'default',
+        requestPermission: vi.fn().mockResolvedValue('granted'),
+      })
+      const fetchMock = vi.fn()
+      stubVapidFetchOk(fetchMock)
+      vi.stubGlobal('fetch', fetchMock)
+
+      const { result } = renderHook(() => usePushSubscription())
+      await waitFor(() => expect(result.current.isPushEnabled).toBe(true))
+
+      await act(async () => {
+        await result.current.subscribe()
+      })
+
+      // Note: jsdom's DOMException does not extend Error (unlike real
+      // browsers, where the DOM spec has DOMException inherit from Error),
+      // so the hook's `err instanceof Error` check is false here and it
+      // falls through to the hard-coded 'Failed to subscribe' fallback
+      // rather than `err.message`. What matters for this test is that the
+      // Brave-specific branch was NOT taken — proving `isBrave` genuinely
+      // gates the message rather than the DOMException/AbortError check
+      // alone (see the previous test, where the exact same error triggers
+      // the Brave copy once `isBrave` is true).
+      expect(result.current.error).toBe('Failed to subscribe')
+      expect(result.current.error).not.toContain('Brave')
     })
   })
 
-  describe('unsubscribe flow', () => {
-    afterEach(() => {
-      vi.unstubAllGlobals()
-    })
-
-    it('calls unsubscribe and POSTs to server', async () => {
-      const unsubscribeMock = vi.fn().mockResolvedValue(true)
-      const fetchMock = vi.fn().mockResolvedValue({
+  describe('unsubscribe', () => {
+    it('calls the subscription unsubscribe(), POSTs the endpoint, and resets isSubscribed', async () => {
+      const existingSub = {
+        endpoint: 'https://push.example.com/existing',
+        unsubscribe: vi.fn().mockResolvedValue(true),
+      }
+      const registration = makeRegistration({
+        getSubscription: vi.fn().mockResolvedValue(existingSub),
+      })
+      stubBrowserSupport({ registration })
+      const fetchMock = vi.fn()
+      stubVapidFetchOk(fetchMock)
+      fetchMock.mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve({ ok: true }),
       })
       vi.stubGlobal('fetch', fetchMock)
 
-      // Simulate unsubscribe flow
-      await unsubscribeMock()
-      await fetch('/api/push/unsubscribe', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ endpoint: 'https://push.example.com/sub1' }),
+      const { result } = renderHook(() => usePushSubscription())
+      await waitFor(() => expect(result.current.isSubscribed).toBe(true))
+
+      await act(async () => {
+        await result.current.unsubscribe()
       })
 
-      expect(unsubscribeMock).toHaveBeenCalled()
-      expect(fetchMock).toHaveBeenCalledWith(
+      expect(existingSub.unsubscribe).toHaveBeenCalledOnce()
+      expect(fetchMock).toHaveBeenLastCalledWith(
         '/api/push/unsubscribe',
-        expect.objectContaining({ method: 'POST' }),
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({
+            endpoint: 'https://push.example.com/existing',
+          }),
+        }),
       )
+      expect(result.current.isSubscribed).toBe(false)
     })
   })
 
-  describe('sendTest flow', () => {
-    afterEach(() => {
-      vi.unstubAllGlobals()
-    })
-
-    it('POSTs to /api/push/test and returns sent count', async () => {
-      const fetchMock = vi.fn().mockResolvedValue({
+  describe('sendTest', () => {
+    it('resolves to the server-reported sent count on success', async () => {
+      const registration = makeRegistration()
+      stubBrowserSupport({ registration })
+      const fetchMock = vi.fn()
+      stubVapidFetchOk(fetchMock)
+      fetchMock.mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve({ sent: 2 }),
       })
       vi.stubGlobal('fetch', fetchMock)
 
-      const res = await fetch('/api/push/test', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      })
-      const data = await res.json()
+      const { result } = renderHook(() => usePushSubscription())
+      await waitFor(() => expect(result.current.isPushEnabled).toBe(true))
 
-      expect(data.sent).toBe(2)
-      expect(fetchMock).toHaveBeenCalledWith(
-        '/api/push/test',
-        expect.objectContaining({ method: 'POST' }),
-      )
+      let sent: number | undefined
+      await act(async () => {
+        sent = await result.current.sendTest()
+      })
+
+      expect(sent).toBe(2)
+      expect(result.current.error).toBeNull()
+    })
+
+    it('resolves to 0 and sets an error when the server responds not-ok', async () => {
+      const registration = makeRegistration()
+      stubBrowserSupport({ registration })
+      const fetchMock = vi.fn()
+      stubVapidFetchOk(fetchMock)
+      fetchMock.mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        json: () => Promise.resolve({}),
+      })
+      vi.stubGlobal('fetch', fetchMock)
+
+      const { result } = renderHook(() => usePushSubscription())
+      await waitFor(() => expect(result.current.isPushEnabled).toBe(true))
+
+      let sent: number | undefined
+      await act(async () => {
+        sent = await result.current.sendTest()
+      })
+
+      expect(sent).toBe(0)
+      expect(result.current.error).not.toBeNull()
     })
   })
 })

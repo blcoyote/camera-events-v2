@@ -116,8 +116,13 @@ describe('removeSubscription', () => {
   })
 
   it('does nothing when subscription does not exist', () => {
+    store.saveSubscription('user1', 'https://push.example.com/1', 'k1', 'a1')
+
     store.removeSubscription('user1', 'https://nonexistent.example.com')
-    // no throw
+
+    const subs = store.getSubscriptionsByUserId('user1')
+    expect(subs).toHaveLength(1)
+    expect(subs[0].endpoint).toBe('https://push.example.com/1')
   })
 })
 

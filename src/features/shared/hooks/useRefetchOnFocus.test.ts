@@ -1,7 +1,9 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { renderHook, cleanup } from '@testing-library/react'
+import { useRefetchOnFocus } from './useRefetchOnFocus'
 
-describe('useRefetchOnFocus contract', () => {
+describe('useRefetchOnFocus', () => {
   let originalVisibilityState: PropertyDescriptor | undefined
 
   beforeEach(() => {
@@ -13,7 +15,9 @@ describe('useRefetchOnFocus contract', () => {
   })
 
   afterEach(() => {
+    cleanup()
     vi.useRealTimers()
+    vi.restoreAllMocks()
     if (originalVisibilityState) {
       Object.defineProperty(
         document,
@@ -39,93 +43,118 @@ describe('useRefetchOnFocus contract', () => {
     document.dispatchEvent(new Event('visibilitychange'))
   }
 
-  it('calls onRefresh when page becomes visible after the throttle interval', () => {
+  it('does not call onRefresh immediately on mount', () => {
+    const onRefresh = vi.fn().mockResolvedValue(undefined)
+
+    renderHook(() => useRefetchOnFocus({ onRefresh, minIntervalMs: 10_000 }))
+
+    expect(onRefresh).not.toHaveBeenCalled()
+  })
+
+  it('calls onRefresh when the page becomes visible after minIntervalMs has elapsed since mount', () => {
     const onRefresh = vi.fn().mockResolvedValue(undefined)
     const minIntervalMs = 10_000
 
-    const handler = () => {
-      if (document.visibilityState !== 'visible') return
-      onRefresh()
-    }
-    document.addEventListener('visibilitychange', handler)
+    renderHook(() => useRefetchOnFocus({ onRefresh, minIntervalMs }))
 
     vi.advanceTimersByTime(minIntervalMs + 1)
     setVisibilityState('visible')
     fireVisibilityChange()
 
     expect(onRefresh).toHaveBeenCalledTimes(1)
-
-    document.removeEventListener('visibilitychange', handler)
   })
 
-  it('does not call onRefresh when page becomes hidden', () => {
+  it('does not call onRefresh when visibilitychange fires while visibilityState is hidden', () => {
     const onRefresh = vi.fn().mockResolvedValue(undefined)
+    const minIntervalMs = 10_000
 
-    const handler = () => {
-      if (document.visibilityState !== 'visible') return
-      onRefresh()
-    }
-    document.addEventListener('visibilitychange', handler)
+    renderHook(() => useRefetchOnFocus({ onRefresh, minIntervalMs }))
 
+    vi.advanceTimersByTime(minIntervalMs + 1)
     setVisibilityState('hidden')
     fireVisibilityChange()
 
     expect(onRefresh).not.toHaveBeenCalled()
-
-    document.removeEventListener('visibilitychange', handler)
   })
 
-  it('throttles rapid visibility changes', () => {
+  it('throttles rapid visibility-to-visible transitions within minIntervalMs, then fires again after the interval elapses', () => {
     const onRefresh = vi.fn().mockResolvedValue(undefined)
     const minIntervalMs = 10_000
-    let lastRefetch = Date.now()
 
-    const handler = () => {
-      if (document.visibilityState !== 'visible') return
-      const now = Date.now()
-      if (now - lastRefetch < minIntervalMs) return
-      lastRefetch = now
-      onRefresh()
-    }
-    document.addEventListener('visibilitychange', handler)
+    renderHook(() => useRefetchOnFocus({ onRefresh, minIntervalMs }))
 
     vi.advanceTimersByTime(minIntervalMs + 1)
     setVisibilityState('visible')
     fireVisibilityChange()
     expect(onRefresh).toHaveBeenCalledTimes(1)
 
+    // A second visible transition well within the throttle window is ignored.
     setVisibilityState('hidden')
     fireVisibilityChange()
     setVisibilityState('visible')
     fireVisibilityChange()
     expect(onRefresh).toHaveBeenCalledTimes(1)
 
+    // A third transition after the interval has elapsed fires again.
     vi.advanceTimersByTime(minIntervalMs + 1)
     setVisibilityState('hidden')
     fireVisibilityChange()
     setVisibilityState('visible')
     fireVisibilityChange()
     expect(onRefresh).toHaveBeenCalledTimes(2)
-
-    document.removeEventListener('visibilitychange', handler)
   })
 
-  it('does not refetch immediately on a fresh page load', () => {
-    const onRefresh = vi.fn().mockResolvedValue(undefined)
+  it('calls the latest onRefresh reference, not a stale one captured at mount, when the callback prop changes without unmounting', () => {
+    const onRefreshA = vi.fn().mockResolvedValue(undefined)
+    const onRefreshB = vi.fn().mockResolvedValue(undefined)
     const minIntervalMs = 10_000
-    const lastRefetch = Date.now()
 
-    const handler = () => {
-      if (document.visibilityState !== 'visible') return
-      if (Date.now() - lastRefetch < minIntervalMs) return
-      onRefresh()
-    }
-    document.addEventListener('visibilitychange', handler)
+    const { rerender } = renderHook(
+      (props: { onRefresh: () => Promise<void> }) =>
+        useRefetchOnFocus({ onRefresh: props.onRefresh, minIntervalMs }),
+      { initialProps: { onRefresh: onRefreshA } },
+    )
 
+    // Swap the callback identity without unmounting, exactly as a parent
+    // component re-rendering with a fresh closure would do.
+    rerender({ onRefresh: onRefreshB })
+
+    vi.advanceTimersByTime(minIntervalMs + 1)
     setVisibilityState('visible')
     fireVisibilityChange()
-    expect(onRefresh).not.toHaveBeenCalled()
 
-    document.removeEventListener('visibilitychange', handler)
+    expect(onRefreshB).toHaveBeenCalledTimes(1)
+    expect(onRefreshA).not.toHaveBeenCalled()
+  })
+
+  it('removes the visibilitychange listener on unmount', () => {
+    const onRefresh = vi.fn().mockResolvedValue(undefined)
+    const removeEventListenerSpy = vi.spyOn(document, 'removeEventListener')
+
+    const { unmount } = renderHook(() =>
+      useRefetchOnFocus({ onRefresh, minIntervalMs: 10_000 }),
+    )
+
+    unmount()
+
+    expect(removeEventListenerSpy).toHaveBeenCalledWith(
+      'visibilitychange',
+      expect.any(Function),
+    )
+  })
+
+  it('respects a custom minIntervalMs distinct from the 10s default', () => {
+    const onRefresh = vi.fn().mockResolvedValue(undefined)
+    const minIntervalMs = 2_000
+
+    renderHook(() => useRefetchOnFocus({ onRefresh, minIntervalMs }))
+
+    // Elapse past the custom 2s interval but well under the 10s default —
+    // if the default were used instead, this would not fire.
+    vi.advanceTimersByTime(minIntervalMs + 1)
+    setVisibilityState('visible')
+    fireVisibilityChange()
+
+    expect(onRefresh).toHaveBeenCalledTimes(1)
   })
 })
