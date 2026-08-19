@@ -9,7 +9,6 @@ import {
   getLabelDotColor,
   formatCameraName,
 } from '#/features/shared/utils/eventFormatting'
-import { SnapshotLightbox } from '#/features/shared/components/SnapshotLightbox'
 import { EventSnapshot } from '../components/EventSnapshot'
 import { EventClipPlayer } from '../components/EventClipPlayer'
 import { InfoCard } from '../components/InfoCard'
@@ -76,7 +75,6 @@ export function CameraEventDetailPage({
   initialFavorited?: boolean
 }) {
   const state = getDetailPageState(result)
-  const [lightboxOpen, setLightboxOpen] = useState(false)
   // Latches to true on first accordion open. We don't mount the
   // EventClipPlayer until this is true, so preload='metadata' doesn't
   // fire against the proxy on every page visit. Once opened, the player
@@ -115,9 +113,6 @@ export function CameraEventDetailPage({
 
   const { event } = state
   const dotColor = getLabelDotColor(event.label)
-
-  const snapshotSrc = `/api/events/${event.id}/snapshot`
-  const snapshotAlt = `Snapshot of ${formatLabelName(event.label)} detected by ${formatCameraName(event.camera)}`
 
   return (
     <main id="main-content" className="page-wrap px-4 pb-8 pt-6 sm:pt-14">
@@ -165,16 +160,13 @@ export function CameraEventDetailPage({
         </div>
 
         {event.has_snapshot && (
-          <>
-            <div className="-mx-4 mb-6 sm:mx-0 sm:mb-8">
-              <EventSnapshot
-                eventId={event.id}
-                camera={event.camera}
-                label={event.label}
-                onZoom={() => setLightboxOpen(true)}
-              />
-            </div>
-          </>
+          <div className="-mx-4 mb-6 sm:mx-0 sm:mb-8">
+            <EventSnapshot
+              eventId={event.id}
+              camera={event.camera}
+              label={event.label}
+            />
+          </div>
         )}
 
         {event.has_clip && (
@@ -286,15 +278,6 @@ export function CameraEventDetailPage({
           </div>
         )}
       </section>
-
-      {event.has_snapshot && (
-        <SnapshotLightbox
-          src={snapshotSrc}
-          alt={snapshotAlt}
-          open={lightboxOpen}
-          onClose={() => setLightboxOpen(false)}
-        />
-      )}
     </main>
   )
 }

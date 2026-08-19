@@ -38,14 +38,6 @@ vi.mock('../components/EventSnapshot', () => ({
   },
 }))
 
-const mockSnapshotLightbox = vi.fn((_props: unknown) => null)
-vi.mock('#/features/shared/components/SnapshotLightbox', () => ({
-  SnapshotLightbox: (props: unknown) => {
-    mockSnapshotLightbox(props)
-    return null
-  },
-}))
-
 const mockEventClipPlayer = vi.fn(
   (_props: { onError?: () => void; eventId: string }) => null,
 )
