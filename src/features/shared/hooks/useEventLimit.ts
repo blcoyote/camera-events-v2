@@ -53,6 +53,7 @@ export function useEventLimit() {
   const [eventLimit, setLocalStorage] = useLocalStorage<number>(
     EVENT_LIMIT_KEY,
     DEFAULT_EVENT_LIMIT,
+    { initializeWithValue: false },
   )
 
   const setEventLimit = useCallback(

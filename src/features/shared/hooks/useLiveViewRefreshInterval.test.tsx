@@ -1,6 +1,9 @@
-import { describe, expect, it, beforeEach, vi } from 'vitest'
+// @vitest-environment jsdom
+import { describe, expect, it, beforeEach, afterEach, vi } from 'vitest'
+import { render, cleanup } from '@testing-library/react'
 import {
   readLiveViewRefreshSeconds,
+  useLiveViewRefreshInterval,
   LIVE_VIEW_REFRESH_INTERVAL_KEY,
   DEFAULT_LIVE_VIEW_REFRESH_SECONDS,
   MIN_LIVE_VIEW_REFRESH_SECONDS,
@@ -80,5 +83,41 @@ describe('readLiveViewRefreshSeconds', () => {
   it('returns default when localStorage is unavailable', () => {
     vi.stubGlobal('localStorage', undefined)
     expect(readLiveViewRefreshSeconds()).toBe(DEFAULT_LIVE_VIEW_REFRESH_SECONDS)
+  })
+})
+
+describe('useLiveViewRefreshInterval', () => {
+  const store: Record<string, string> = {}
+
+  beforeEach(() => {
+    for (const key of Object.keys(store)) delete store[key]
+    vi.stubGlobal('localStorage', {
+      getItem: (key: string) => store[key] ?? null,
+      setItem: (key: string, value: string) => {
+        store[key] = value
+      },
+      removeItem: (key: string) => {
+        delete store[key]
+      },
+    })
+  })
+
+  afterEach(() => {
+    cleanup()
+  })
+
+  it('renders the default interval on first render even when a different value is already stored (no SSR hydration mismatch)', () => {
+    store[LIVE_VIEW_REFRESH_INTERVAL_KEY] = JSON.stringify(7)
+    const renders: number[] = []
+    function TestComponent() {
+      const [seconds] = useLiveViewRefreshInterval()
+      renders.push(seconds)
+      return null
+    }
+
+    render(<TestComponent />)
+
+    expect(renders[0]).toBe(DEFAULT_LIVE_VIEW_REFRESH_SECONDS)
+    expect(renders[renders.length - 1]).toBe(7)
   })
 })

@@ -1,7 +1,10 @@
-import { describe, expect, it, beforeEach, vi } from 'vitest'
+// @vitest-environment jsdom
+import { describe, expect, it, beforeEach, afterEach, vi } from 'vitest'
+import { render, cleanup } from '@testing-library/react'
 import {
   readEventLimit,
   readEventLimitFromCookies,
+  useEventLimit,
   EVENT_LIMIT_KEY,
   EVENT_LIMIT_COOKIE,
   DEFAULT_EVENT_LIMIT,
@@ -113,5 +116,41 @@ describe('readEventLimitFromCookies', () => {
     expect(readEventLimitFromCookies(`event-limit=${MAX_EVENT_LIMIT}`)).toBe(
       MAX_EVENT_LIMIT,
     )
+  })
+})
+
+describe('useEventLimit', () => {
+  const store: Record<string, string> = {}
+
+  beforeEach(() => {
+    for (const key of Object.keys(store)) delete store[key]
+    vi.stubGlobal('localStorage', {
+      getItem: (key: string) => store[key] ?? null,
+      setItem: (key: string, value: string) => {
+        store[key] = value
+      },
+      removeItem: (key: string) => {
+        delete store[key]
+      },
+    })
+  })
+
+  afterEach(() => {
+    cleanup()
+  })
+
+  it('renders the default limit on first render even when a different value is already stored (no SSR hydration mismatch)', () => {
+    store[EVENT_LIMIT_KEY] = JSON.stringify(60)
+    const renders: number[] = []
+    function TestComponent() {
+      const [eventLimit] = useEventLimit()
+      renders.push(eventLimit)
+      return null
+    }
+
+    render(<TestComponent />)
+
+    expect(renders[0]).toBe(DEFAULT_EVENT_LIMIT)
+    expect(renders[renders.length - 1]).toBe(60)
   })
 })
