@@ -100,12 +100,18 @@ export function getDownloadUrl(
  * The deadline is anchored at mount rather than recomputed per tick so the
  * polling cannot outlive the window even if a retry never lands — a stuck
  * loader must not turn into an indefinite drip of requests at Frigate.
+ *
+ * Retries are serialized: the caller's handler re-runs the route loader, which
+ * waits on Frigate for up to its full request timeout, so a fixed interval
+ * would otherwise stack refetches on a slow instance. A rejected retry is
+ * swallowed — nothing awaits it — and releases the guard so a single failure
+ * cannot wedge the poller.
  */
 function usePendingEventRetry(
   active: boolean,
   eventId: string,
   nowMs: number,
-  onRetry?: () => void,
+  onRetry?: () => void | Promise<void>,
 ): void {
   const startedAt = parseEventStartTimeMs(eventId)
   const remainingMs =
@@ -125,12 +131,21 @@ function usePendingEventRetry(
     if (!active || !canRetry || remainingMs <= 0) return
 
     const deadline = Date.now() + remainingMs
+    let inFlight = false
+
     const timer = setInterval(() => {
       if (Date.now() >= deadline) {
         clearInterval(timer)
         return
       }
-      retryRef.current?.()
+      if (inFlight) return
+
+      inFlight = true
+      void Promise.resolve(retryRef.current?.())
+        .catch(() => {})
+        .finally(() => {
+          inFlight = false
+        })
     }, PENDING_RETRY_INTERVAL_MS)
 
     return () => clearInterval(timer)
@@ -156,7 +171,7 @@ export function CameraEventDetailPage({
    */
   nowMs?: number
   /** Re-runs the loader. Drives the pending state's retries. */
-  onRetry?: () => void
+  onRetry?: () => void | Promise<void>
   initialFavorited?: boolean
 }) {
   const [fallbackNow] = useState(() => Date.now())

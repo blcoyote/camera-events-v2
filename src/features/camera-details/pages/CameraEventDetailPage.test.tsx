@@ -283,7 +283,7 @@ describe('CameraEventDetailPage', () => {
       expect(screen.queryByText(/event not found/i)).toBeNull()
     })
 
-    it('retries automatically while the event may still appear', () => {
+    it('retries automatically while the event may still appear', async () => {
       const onRetry = vi.fn()
       render(
         <CameraEventDetailPage
@@ -294,14 +294,14 @@ describe('CameraEventDetailPage', () => {
       )
       expect(onRetry).not.toHaveBeenCalled()
 
-      vi.advanceTimersByTime(3_000)
+      await vi.advanceTimersByTimeAsync(3_000)
       expect(onRetry).toHaveBeenCalledTimes(1)
 
-      vi.advanceTimersByTime(3_000)
+      await vi.advanceTimersByTimeAsync(3_000)
       expect(onRetry).toHaveBeenCalledTimes(2)
     })
 
-    it('stops retrying once the event is too old to still be pending', () => {
+    it('stops retrying once the event is too old to still be pending', async () => {
       const onRetry = vi.fn()
       render(
         <CameraEventDetailPage
@@ -311,12 +311,12 @@ describe('CameraEventDetailPage', () => {
         />,
       )
 
-      vi.advanceTimersByTime(3_000)
+      await vi.advanceTimersByTimeAsync(3_000)
       expect(onRetry).toHaveBeenCalledTimes(1)
 
       // Past the pending window the row is not coming — stop hammering Frigate.
       vi.setSystemTime(startedAt + 130_000)
-      vi.advanceTimersByTime(3_000)
+      await vi.advanceTimersByTimeAsync(3_000)
       expect(onRetry).toHaveBeenCalledTimes(1)
     })
 
@@ -331,6 +331,56 @@ describe('CameraEventDetailPage', () => {
       )
       fireEvent.click(screen.getByRole('button', { name: /check again/i }))
       expect(onRetry).toHaveBeenCalledTimes(1)
+    })
+
+    it('does not start another retry while one is still in flight', async () => {
+      // The route hands us an async handler and the Frigate client waits up to
+      // 10s, so a fixed interval could otherwise stack invalidations.
+      let settle: (() => void) | undefined
+      const onRetry = vi.fn(
+        () =>
+          new Promise<void>((resolve) => {
+            settle = resolve
+          }),
+      )
+
+      render(
+        <CameraEventDetailPage
+          result={{ ok: false, error: 'HTTP 404', status: 404 }}
+          eventId={eventId}
+          onRetry={onRetry}
+        />,
+      )
+
+      await vi.advanceTimersByTimeAsync(3_000)
+      expect(onRetry).toHaveBeenCalledTimes(1)
+
+      await vi.advanceTimersByTimeAsync(6_000)
+      expect(onRetry).toHaveBeenCalledTimes(1)
+
+      settle?.()
+      await vi.advanceTimersByTimeAsync(3_000)
+      expect(onRetry).toHaveBeenCalledTimes(2)
+    })
+
+    it('keeps retrying after a retry rejects', async () => {
+      // A rejected refresh must clear the in-flight guard, not wedge the
+      // poller — and must be caught, since nothing awaits the returned promise.
+      const onRetry = vi.fn(() => Promise.reject(new Error('offline')))
+
+      render(
+        <CameraEventDetailPage
+          result={{ ok: false, error: 'HTTP 404', status: 404 }}
+          eventId={eventId}
+          onRetry={onRetry}
+        />,
+      )
+
+      await vi.advanceTimersByTimeAsync(3_000)
+      expect(onRetry).toHaveBeenCalledTimes(1)
+
+      await vi.advanceTimersByTimeAsync(3_000)
+      expect(onRetry).toHaveBeenCalledTimes(2)
     })
 
     it('does not retry when no retry handler is supplied', () => {
