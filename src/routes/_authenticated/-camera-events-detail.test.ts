@@ -38,9 +38,14 @@ function makeEvent(overrides: Partial<FrigateEvent> = {}): FrigateEvent {
 }
 
 describe('getDetailPageState', () => {
+  // An ID whose embedded start time is far in the past, so a 404 on it is a
+  // genuine "gone" rather than an event Frigate is still writing.
+  const OLD_ID = '1713095000.123456-abcdef'
+  const NOW = 1713095000_000 + 24 * 60 * 60 * 1000
+
   it('returns event state when result is ok', () => {
     const event = makeEvent()
-    const state = getDetailPageState({ ok: true, data: event })
+    const state = getDetailPageState({ ok: true, data: event }, OLD_ID, NOW)
     expect(state.kind).toBe('event')
     if (state.kind === 'event') {
       expect(state.event).toBe(event)
@@ -48,11 +53,11 @@ describe('getDetailPageState', () => {
   })
 
   it('returns error state with 404 message when not found', () => {
-    const state = getDetailPageState({
-      ok: false,
-      error: 'HTTP 404',
-      status: 404,
-    })
+    const state = getDetailPageState(
+      { ok: false, error: 'HTTP 404', status: 404 },
+      OLD_ID,
+      NOW,
+    )
     expect(state.kind).toBe('error')
     if (state.kind === 'error') {
       expect(state.message).toContain("doesn't exist")
@@ -60,7 +65,11 @@ describe('getDetailPageState', () => {
   })
 
   it('returns error state with generic message on other errors', () => {
-    const state = getDetailPageState({ ok: false, error: 'timeout' })
+    const state = getDetailPageState(
+      { ok: false, error: 'timeout' },
+      OLD_ID,
+      NOW,
+    )
     expect(state.kind).toBe('error')
     if (state.kind === 'error') {
       expect(state.message).toContain('Could not load event')

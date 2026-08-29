@@ -59,6 +59,20 @@ export function cameraNotificationTag(camera: string): string {
 }
 
 /**
+ * Whether an event can be deep-linked to its detail page.
+ *
+ * Frigate writes an event row only once the tracked object has a clip or a
+ * snapshot (`should_update_db` in `frigate/events/maintainer.py`), and the
+ * `"new"` MQTT message is published *before* that — sometimes long before,
+ * and for objects that never move, never enter a required zone, or end as a
+ * false positive, never at all. Deep-linking to one of those yields a 404
+ * “event doesn't exist” page, so those pushes point at the events list instead.
+ */
+export function isDeepLinkable(event: FrigateEventInfo): boolean {
+  return event.hasSnapshot || event.hasClip
+}
+
+/**
  * Build the push payload for one flush of a camera's events.
  *
  * `body` is a server-rendered fallback for service workers that predate
@@ -82,7 +96,9 @@ export function buildCameraPayload(
     title: formatCameraName(camera),
     body,
     url:
-      events.length === 1 ? `/camera-events/${events[0].id}` : '/camera-events',
+      events.length === 1 && isDeepLinkable(events[0])
+        ? `/camera-events/${events[0].id}`
+        : '/camera-events',
     icon: '/icon-192.png',
     tag: cameraNotificationTag(camera),
     event: { camera, count: events.length, labels, timestamp, burstStart },

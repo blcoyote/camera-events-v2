@@ -30,6 +30,8 @@ function makeEvent(
     camera: 'front_porch',
     label: 'person',
     startTime: 1713182400,
+    hasSnapshot: true,
+    hasClip: false,
     ...overrides,
   }
 }
@@ -83,6 +85,29 @@ describe('buildCameraPayload', () => {
     expect(payload.body).toContain('Person detected at')
     expect(payload.url).toBe('/camera-events/1713182400.123-abc')
     expect(payload.icon).toBe('/icon-192.png')
+  })
+
+  it('links a single clip-only event to its detail page', () => {
+    const payload = buildCameraPayload(
+      'front_porch',
+      [makeEvent({ hasSnapshot: false, hasClip: true })],
+      true,
+    )
+
+    expect(payload.url).toBe('/camera-events/1713182400.123-abc')
+  })
+
+  it('links to the events list when Frigate has not persisted the event', () => {
+    // Neither flag set means Frigate has written no row for this event yet,
+    // and may never — the detail page would 404. Alert, but do not deep-link.
+    const payload = buildCameraPayload(
+      'front_porch',
+      [makeEvent({ hasSnapshot: false, hasClip: false })],
+      true,
+    )
+
+    expect(payload.body).toContain('Person detected at')
+    expect(payload.url).toBe('/camera-events')
   })
 
   it('links multiple events to the events list', () => {

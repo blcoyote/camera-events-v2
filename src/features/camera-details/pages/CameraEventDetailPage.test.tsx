@@ -64,7 +64,7 @@ vi.mock('../components/InfoCard', () => ({
 }))
 
 // Import component AFTER mocks
-const { CameraEventDetailPage, getDownloadUrl } =
+const { CameraEventDetailPage, getDownloadUrl, getDetailPageState } =
   await import('./CameraEventDetailPage')
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────
@@ -128,6 +128,62 @@ describe('getDownloadUrl', () => {
   })
 })
 
+describe('getDetailPageState', () => {
+  // Frigate IDs embed their start time, so the state can be derived without
+  // asking Frigate anything: 1713095000 seconds -> 1713095000000 ms.
+  const RECENT_ID = '1713095000.123456-abcdef'
+  const RECENT_NOW = 1713095000_000 + 10_000
+
+  it('returns the event when the load succeeded', () => {
+    const result = successResult()
+    expect(getDetailPageState(result, RECENT_ID, RECENT_NOW)).toEqual({
+      kind: 'event',
+      event: result.ok ? result.data : undefined,
+    })
+  })
+
+  it('reports a 404 on a freshly started event as still processing', () => {
+    // Frigate publishes the "new" MQTT message before it writes the event row,
+    // so a notification tapped immediately can arrive ahead of the data.
+    const state = getDetailPageState(
+      { ok: false, error: 'HTTP 404', status: 404 },
+      RECENT_ID,
+      RECENT_NOW,
+    )
+    expect(state.kind).toBe('pending')
+  })
+
+  it('reports a 404 on an old event as not found', () => {
+    const state = getDetailPageState(
+      { ok: false, error: 'HTTP 404', status: 404 },
+      RECENT_ID,
+      1713095000_000 + 60 * 60 * 1000,
+    )
+    expect(state.kind).toBe('error')
+  })
+
+  it('reports a 404 as not found when the ID carries no start time', () => {
+    const state = getDetailPageState(
+      { ok: false, error: 'HTTP 404', status: 404 },
+      'not-a-frigate-id-shape',
+      RECENT_NOW,
+    )
+    expect(state.kind).toBe('error')
+  })
+
+  it('never treats a non-404 failure as pending, however fresh the ID', () => {
+    const state = getDetailPageState(
+      { ok: false, error: 'fetch failed' },
+      RECENT_ID,
+      RECENT_NOW,
+    )
+    expect(state).toEqual({
+      kind: 'error',
+      message: 'Could not load event. Check that Frigate is running.',
+    })
+  })
+})
+
 describe('CameraEventDetailPage', () => {
   describe('with a successful result', () => {
     it('calls useFavoriteToggle with (event.id, true) when initialFavorited=true', () => {
@@ -169,10 +225,13 @@ describe('CameraEventDetailPage', () => {
   })
 
   describe('error result', () => {
+    const OLD_ID = '1713095000.123456-abcdef'
+
     it('does not render a FavoriteButton on error', () => {
       render(
         <CameraEventDetailPage
           result={{ ok: false, error: 'Not found', status: 404 }}
+          eventId={OLD_ID}
         />,
       )
       // Hook is called (React rules: no conditional hooks), but button not rendered
@@ -183,9 +242,107 @@ describe('CameraEventDetailPage', () => {
       render(
         <CameraEventDetailPage
           result={{ ok: false, error: 'Not found', status: 404 }}
+          eventId={OLD_ID}
         />,
       )
       expect(mockUseFavoriteToggle).toHaveBeenCalled()
+    })
+
+    it('says the event does not exist for a 404 on a long-past event', () => {
+      render(
+        <CameraEventDetailPage
+          result={{ ok: false, error: 'HTTP 404', status: 404 }}
+          eventId={OLD_ID}
+        />,
+      )
+      expect(screen.getByText(/event not found/i)).toBeInTheDocument()
+    })
+  })
+
+  describe('pending result (Frigate has not written the event yet)', () => {
+    const eventId = '1713095000.123456-abcdef'
+    const startedAt = 1713095000_000
+
+    beforeEach(() => {
+      vi.useFakeTimers({ shouldAdvanceTime: true })
+      vi.setSystemTime(startedAt + 5_000)
+    })
+
+    afterEach(() => {
+      vi.useRealTimers()
+    })
+
+    it('says the event is still being saved rather than that it does not exist', () => {
+      render(
+        <CameraEventDetailPage
+          result={{ ok: false, error: 'HTTP 404', status: 404 }}
+          eventId={eventId}
+        />,
+      )
+      expect(screen.getByText(/still being saved/i)).toBeInTheDocument()
+      expect(screen.queryByText(/event not found/i)).toBeNull()
+    })
+
+    it('retries automatically while the event may still appear', () => {
+      const onRetry = vi.fn()
+      render(
+        <CameraEventDetailPage
+          result={{ ok: false, error: 'HTTP 404', status: 404 }}
+          eventId={eventId}
+          onRetry={onRetry}
+        />,
+      )
+      expect(onRetry).not.toHaveBeenCalled()
+
+      vi.advanceTimersByTime(3_000)
+      expect(onRetry).toHaveBeenCalledTimes(1)
+
+      vi.advanceTimersByTime(3_000)
+      expect(onRetry).toHaveBeenCalledTimes(2)
+    })
+
+    it('stops retrying once the event is too old to still be pending', () => {
+      const onRetry = vi.fn()
+      render(
+        <CameraEventDetailPage
+          result={{ ok: false, error: 'HTTP 404', status: 404 }}
+          eventId={eventId}
+          onRetry={onRetry}
+        />,
+      )
+
+      vi.advanceTimersByTime(3_000)
+      expect(onRetry).toHaveBeenCalledTimes(1)
+
+      // Past the pending window the row is not coming — stop hammering Frigate.
+      vi.setSystemTime(startedAt + 130_000)
+      vi.advanceTimersByTime(3_000)
+      expect(onRetry).toHaveBeenCalledTimes(1)
+    })
+
+    it('offers a manual retry', () => {
+      const onRetry = vi.fn()
+      render(
+        <CameraEventDetailPage
+          result={{ ok: false, error: 'HTTP 404', status: 404 }}
+          eventId={eventId}
+          onRetry={onRetry}
+        />,
+      )
+      fireEvent.click(screen.getByRole('button', { name: /check again/i }))
+      expect(onRetry).toHaveBeenCalledTimes(1)
+    })
+
+    it('does not retry when no retry handler is supplied', () => {
+      expect(() => {
+        render(
+          <CameraEventDetailPage
+            result={{ ok: false, error: 'HTTP 404', status: 404 }}
+            eventId={eventId}
+          />,
+        )
+        vi.advanceTimersByTime(9_000)
+      }).not.toThrow()
     })
   })
 

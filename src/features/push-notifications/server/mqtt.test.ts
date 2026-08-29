@@ -251,8 +251,22 @@ describe('dispatchBatch', () => {
     const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
 
     const events: FrigateEventInfo[] = [
-      { id: '1', camera: 'front_porch', label: 'person', startTime: 1 },
-      { id: '2', camera: 'front_porch', label: 'car', startTime: 2 },
+      {
+        id: '1',
+        camera: 'front_porch',
+        label: 'person',
+        startTime: 1,
+        hasSnapshot: true,
+        hasClip: false,
+      },
+      {
+        id: '2',
+        camera: 'front_porch',
+        label: 'car',
+        startTime: 2,
+        hasSnapshot: true,
+        hasClip: false,
+      },
     ]
 
     dispatchBatch('front_porch', events, { burstStart: true })
@@ -276,7 +290,14 @@ describe('dispatchBatch', () => {
     const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
 
     const events: FrigateEventInfo[] = [
-      { id: '3', camera: 'driveway', label: 'person', startTime: 3 },
+      {
+        id: '3',
+        camera: 'driveway',
+        label: 'person',
+        startTime: 3,
+        hasSnapshot: true,
+        hasClip: false,
+      },
     ]
 
     dispatchBatch('driveway', events, { burstStart: false })
@@ -333,6 +354,8 @@ describe('parseFrigateEvent', () => {
           start_time: 1713182400.123,
           score: 0.87,
           zones: ['yard'],
+          has_snapshot: true,
+          has_clip: false,
         },
       }),
     )
@@ -341,7 +364,38 @@ describe('parseFrigateEvent', () => {
       camera: 'front_porch',
       label: 'person',
       startTime: 1713182400.123,
+      hasSnapshot: true,
+      hasClip: false,
     })
+  })
+
+  it('carries has_clip through when Frigate is retaining a recording', async () => {
+    const { parseFrigateEvent } = await import('./mqtt')
+    const result = parseFrigateEvent(
+      makePayload({
+        type: 'new',
+        after: {
+          id: 'x',
+          camera: 'c',
+          label: 'person',
+          start_time: 1,
+          has_snapshot: false,
+          has_clip: true,
+        },
+      }),
+    )
+    expect(result).toMatchObject({ hasSnapshot: false, hasClip: true })
+  })
+
+  it('defaults both persistence flags to false when Frigate omits them', async () => {
+    const { parseFrigateEvent } = await import('./mqtt')
+    const result = parseFrigateEvent(
+      makePayload({
+        type: 'new',
+        after: { id: 'x', camera: 'c', label: 'person', start_time: 1 },
+      }),
+    )
+    expect(result).toMatchObject({ hasSnapshot: false, hasClip: false })
   })
 
   it('returns null for "update" events', async () => {
