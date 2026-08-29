@@ -16,6 +16,16 @@ export interface FrigateEventInfo {
   camera: string
   label: string
   startTime: number
+  /**
+   * Frigate's own persistence predicate, as of the `"new"` message.
+   *
+   * Frigate only writes an event row once `has_clip || has_snapshot` holds
+   * (see `should_update_db` in `frigate/events/maintainer.py`), so an event
+   * whose flags are both false is not yet — and may never be — retrievable
+   * from `GET /api/events/{id}`. Deep-linking to one produces a 404.
+   */
+  hasSnapshot: boolean
+  hasClip: boolean
 }
 
 /** Default gap of quiet after which a camera's next event starts a new burst. */

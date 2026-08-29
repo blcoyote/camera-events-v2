@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { Camera, Clock, MapPin, Film, Image } from 'lucide-react'
 import type { FrigateResult } from '#/features/shared/server/frigate/config'
@@ -13,19 +13,47 @@ import { SnapshotLightbox } from '#/features/shared/components/SnapshotLightbox'
 import { EventSnapshot } from '../components/EventSnapshot'
 import { EventClipPlayer } from '../components/EventClipPlayer'
 import { InfoCard } from '../components/InfoCard'
+import { parseEventStartTimeMs } from '../utils/eventId'
 import { useFavoriteToggle } from '#/features/shared/hooks/useFavoriteToggle'
 import { FavoriteButton } from '#/features/shared/components/FavoriteButton'
 
 // ─── Pure functions (exported for testing) ───
 
 type DetailPageState =
-  { kind: 'event'; event: FrigateEvent } | { kind: 'error'; message: string }
+  | { kind: 'event'; event: FrigateEvent }
+  | { kind: 'pending' }
+  | { kind: 'error'; message: string }
+
+/**
+ * How long after an event's start a 404 is read as "Frigate hasn't written the
+ * row yet" rather than "this event does not exist".
+ *
+ * Frigate publishes the `"new"` MQTT message that triggers our push *before*
+ * it inserts the event row — the insert only happens once the tracked object
+ * has a clip or a snapshot. Tapping the notification fast enough can therefore
+ * beat the write. Past this window the row is not coming, so the honest answer
+ * is "not found".
+ */
+const PENDING_EVENT_WINDOW_MS = 120_000
+
+/** How often the pending state re-asks Frigate for the event. */
+const PENDING_RETRY_INTERVAL_MS = 3_000
 
 export function getDetailPageState(
   result: FrigateResult<FrigateEvent>,
+  eventId: string,
+  nowMs: number,
 ): DetailPageState {
   if (!result.ok) {
     if (result.status === 404) {
+      const startedAt = parseEventStartTimeMs(eventId)
+      if (
+        startedAt !== null &&
+        nowMs - startedAt >= 0 &&
+        nowMs - startedAt < PENDING_EVENT_WINDOW_MS
+      ) {
+        return { kind: 'pending' }
+      }
       return {
         kind: 'error',
         message:
@@ -66,16 +94,92 @@ export function getDownloadUrl(
   return `/api/events/${eventId}/${extension}?download=true`
 }
 
+/**
+ * Poll for an event Frigate has not finished writing yet.
+ *
+ * The deadline is anchored at mount rather than recomputed per tick so the
+ * polling cannot outlive the window even if a retry never lands — a stuck
+ * loader must not turn into an indefinite drip of requests at Frigate.
+ *
+ * Retries are serialized: the caller's handler re-runs the route loader, which
+ * waits on Frigate for up to its full request timeout, so a fixed interval
+ * would otherwise stack refetches on a slow instance. A rejected retry is
+ * swallowed — nothing awaits it — and releases the guard so a single failure
+ * cannot wedge the poller.
+ */
+function usePendingEventRetry(
+  active: boolean,
+  eventId: string,
+  nowMs: number,
+  onRetry?: () => void | Promise<void>,
+): void {
+  const startedAt = parseEventStartTimeMs(eventId)
+  const remainingMs =
+    startedAt === null ? 0 : PENDING_EVENT_WINDOW_MS - (nowMs - startedAt)
+
+  // Callers pass an inline handler, so its identity changes on every render.
+  // Reading it through a ref keeps the interval from being torn down and
+  // restarted each time — which would otherwise stop it ever elapsing.
+  const retryRef = useRef(onRetry)
+  useEffect(() => {
+    retryRef.current = onRetry
+  })
+
+  const canRetry = !!onRetry
+
+  useEffect(() => {
+    if (!active || !canRetry || remainingMs <= 0) return
+
+    const deadline = Date.now() + remainingMs
+    let inFlight = false
+
+    const timer = setInterval(() => {
+      if (Date.now() >= deadline) {
+        clearInterval(timer)
+        return
+      }
+      if (inFlight) return
+
+      inFlight = true
+      void Promise.resolve(retryRef.current?.())
+        .catch(() => {})
+        .finally(() => {
+          inFlight = false
+        })
+    }, PENDING_RETRY_INTERVAL_MS)
+
+    return () => clearInterval(timer)
+  }, [active, canRetry, remainingMs])
+}
+
 // ─── Components ───
 
 export function CameraEventDetailPage({
   result,
+  eventId: requestedEventId = '',
+  nowMs,
+  onRetry,
   initialFavorited = false,
 }: {
   result: FrigateResult<FrigateEvent>
+  /** The ID that was requested — the only handle we have when the load 404s. */
+  eventId?: string
+  /**
+   * When the result was loaded, as epoch ms. Supplied by the route loader so
+   * the server and the client agree on the event's age at first paint; falling
+   * back to a render-time clock would risk a hydration mismatch.
+   */
+  nowMs?: number
+  /** Re-runs the loader. Drives the pending state's retries. */
+  onRetry?: () => void | Promise<void>
   initialFavorited?: boolean
 }) {
-  const state = getDetailPageState(result)
+  const [fallbackNow] = useState(() => Date.now())
+  const state = getDetailPageState(
+    result,
+    requestedEventId,
+    nowMs ?? fallbackNow,
+  )
   const [lightboxOpen, setLightboxOpen] = useState(false)
   // Latches to true on first accordion open. We don't mount the
   // EventClipPlayer until this is true, so preload='metadata' doesn't
@@ -90,6 +194,45 @@ export function CameraEventDetailPage({
     error: favoriteError,
     toggle,
   } = useFavoriteToggle(eventId, initialFavorited)
+
+  usePendingEventRetry(
+    state.kind === 'pending',
+    requestedEventId,
+    nowMs ?? fallbackNow,
+    onRetry,
+  )
+
+  if (state.kind === 'pending') {
+    return (
+      <main id="main-content" className="page-wrap px-4 py-6 sm:py-12">
+        <section className="island-shell rise-in rounded-4xl px-5 py-6 text-center sm:px-8 sm:py-8">
+          <p className="island-kicker mb-1">Camera Events</p>
+          <h1 className="display-title mb-3 text-2xl font-bold text-(--sea-ink) sm:text-4xl">
+            Still being saved
+          </h1>
+          <p className="mx-auto mb-6 max-w-md text-base text-(--sea-ink-soft) sm:text-lg">
+            Frigate is still writing this event to disk. It should appear in a
+            moment — this page is checking automatically.
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <button
+              type="button"
+              onClick={onRetry}
+              className="inline-flex min-h-11 items-center rounded-full border border-(--accent-muted-border) bg-(--accent-muted-bg) px-5 py-2.5 text-sm font-semibold text-(--lagoon-deep) transition hover:-translate-y-0.5 hover:bg-(--accent-muted-hover-bg)"
+            >
+              Check again
+            </button>
+            <Link
+              to="/camera-events"
+              className="inline-flex min-h-11 items-center rounded-full px-5 py-2.5 text-sm font-semibold text-(--sea-ink-soft) no-underline transition hover:text-(--sea-ink)"
+            >
+              Back to Camera Events
+            </Link>
+          </div>
+        </section>
+      </main>
+    )
+  }
 
   if (state.kind === 'error') {
     return (

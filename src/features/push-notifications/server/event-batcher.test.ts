@@ -10,6 +10,8 @@ function makeEvent(
     camera: 'front_porch',
     label: 'person',
     startTime: 1713182400,
+    hasSnapshot: true,
+    hasClip: false,
     ...overrides,
   }
 }

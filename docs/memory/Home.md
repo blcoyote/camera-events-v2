@@ -39,6 +39,7 @@ this vault is meant to be used.
 - [[decisions/2026-07-29-session-lifetime-and-proactive-refresh]] — 30-day rolling session, client-visible `expiresAt`, proactive reload
 - [[decisions/2026-08-02-alert-once-per-burst-then-patch]] — one alert per activity burst, silent in-place patching after
 - [[decisions/2026-08-18-camera-availability-detection]] — camera offline/online via frigate/stats + frigate/available, no polling
+- [[decisions/2026-08-29-ghost-event-notifications]] — gate the notification deep link on Frigate's own persistence flags, not the push
 
 ## ⚠️ Gotchas
 
@@ -47,6 +48,8 @@ this vault is meant to be used.
 - [[gotchas/ios-ignores-silent-and-renotify]]
 - [[gotchas/bd-unavailable-in-claude-containers]] — check `which bd` before
   trusting the issue-tracking workflow
+- [[gotchas/frigate-publishes-new-before-persisting]] — the `"new"` MQTT message
+  arrives before (and sometimes instead of) the event row
 
 ## 🧪 Conventions
 

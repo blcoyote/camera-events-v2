@@ -11,13 +11,17 @@ export const Route = createFileRoute('/_authenticated/camera-events/$id')({
       loadEventFn({ data: params.id }),
       getUserFavoritedEventIdsFn().catch((): string[] => []),
     ])
-    return { result, favoritedEventIds }
+    // Stamped here rather than read during render so the server and the client
+    // agree on the event's age at first paint. The detail page uses it to tell
+    // "Frigate hasn't written this event yet" from "this event is gone".
+    return { result, favoritedEventIds, loadedAt: Date.now() }
   },
   component: CameraEventDetailRoute,
 })
 
 function CameraEventDetailRoute() {
-  const { result, favoritedEventIds } = Route.useLoaderData()
+  const { result, favoritedEventIds, loadedAt } = Route.useLoaderData()
+  const { id } = Route.useParams()
   const router = useRouter()
 
   const onRefresh = async () => {
@@ -30,6 +34,9 @@ function CameraEventDetailRoute() {
   return (
     <CameraEventDetailPage
       result={result}
+      eventId={id}
+      nowMs={loadedAt}
+      onRetry={onRefresh}
       initialFavorited={favoritedEventIds.includes(
         result.ok ? result.data.id : '',
       )}

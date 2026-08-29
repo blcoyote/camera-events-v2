@@ -111,6 +111,8 @@ export function parseFrigateEvent(payload: Buffer): FrigateEventInfo | null {
       camera: after.camera,
       label: after.label,
       startTime: after.start_time,
+      hasSnapshot: after.has_snapshot === true,
+      hasClip: after.has_clip === true,
     }
   } catch {
     return null
