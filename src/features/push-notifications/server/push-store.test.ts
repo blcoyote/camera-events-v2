@@ -80,6 +80,18 @@ describe('parseMuteUntil', () => {
   it('returns the parsed number for a valid epoch millisecond string', () => {
     expect(parseMuteUntil('1700000000000')).toBe(1700000000000)
   })
+
+  it('returns null for "1e100" (finite but not a safe integer)', () => {
+    expect(parseMuteUntil('1e100')).toBeNull()
+  })
+
+  it('returns null for a non-integer like "1.5"', () => {
+    expect(parseMuteUntil('1.5')).toBeNull()
+  })
+
+  it('returns null for a negative value', () => {
+    expect(parseMuteUntil('-1')).toBeNull()
+  })
 })
 
 describe('getNotificationMuteUntil', () => {
@@ -108,6 +120,16 @@ describe('setNotificationMuteUntil', () => {
       "SELECT * FROM push_global_settings WHERE key = 'notification_mute_until'",
     )
     expect(count).toBe(1)
+  })
+
+  it('survives closing and reopening the database at the same path', async () => {
+    const dbPath = path.join(tmpDir, 'test.db')
+    store.setNotificationMuteUntil(1700000000000)
+
+    store.close()
+    store = await createPushStore(dbPath)
+
+    expect(store.getNotificationMuteUntil()).toBe(1700000000000)
   })
 })
 

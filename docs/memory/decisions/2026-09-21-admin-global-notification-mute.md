@@ -37,12 +37,17 @@ Four properties hold this together:
    obvious fit for a single-process Bun server, and it fails in the one case
    that matters: a deploy or crash-restart inside the window un-mutes silently
    and lets the alert storm through, at the moment nobody is looking.
-2. **Fail-closed on read, in the safe direction.** A missing row, an empty
-   string, or garbage reads as **not muted** via `parseMuteUntil()`. Note this
-   is the opposite polarity from `toIsAdmin()`: for a permission flag, safe
-   means "deny"; here, safe means "deliver". A corrupt value must never be able
-   to wedge the system into permanent silence. A store error is logged and
-   treated as not muted for the same reason.
+2. **Fail-closed on read, in the safe direction, in two layers.**
+   `parseMuteUntil()` in `push-store.ts` accepts only a non-negative safe
+   integer, so a missing row, an empty string, or garbage like `"1e100"`
+   (finite but not a safe integer) reads as **not muted**. `isMuteActive()` in
+   `notification-mute.ts` additionally caps a deadline at one mute window from
+   now, so a structurally-valid but corrupt far-future value (a year-2100
+   timestamp) is also treated as not muted. Together these deliver the
+   guarantee that a corrupt value can never wedge the system into permanent
+   silence. Note the polarity is the opposite of `toIsAdmin()`: for a
+   permission flag, safe means "deny"; here, safe means "deliver". A store
+   error is logged and treated as not muted for the same reason.
 3. **Expiry is never written.** The read path compares and returns; there is no
    sweep job, no flag to clear, and no write when a mute lapses.
 4. **Enforced at the dispatchers, not upstream.** `notifyUsersForCamera()` and
@@ -57,9 +62,11 @@ on those anyway ([[gotchas/ios-ignores-silent-and-renotify]]), so a silent-flag
 implementation would work on Android and desktop and fail on the platform this
 app treats as first-class ([[decisions/2026-04-17-cross-platform-pwa-first]]).
 
-**Authorization is re-read per request.** `POST /api/push/mute` resolves the
-session `sub` and then calls `userStore.isAdmin(sub)`: `401` unauthenticated,
-`403` signed-in non-admin. Admin status is deliberately **not** put in the
+**Authorization is re-read per request.** Both `GET` and `POST
+/api/push/mute` resolve the session `sub` and then call
+`userStore.isAdmin(sub)`: `401` unauthenticated, `403` signed-in non-admin.
+`GET` is gated identically to `POST` so mute state is never returned to a
+non-admin. Admin status is deliberately **not** put in the
 session cookie or in router context — that was alternative 1 of the users-table
 decision and it stays rejected. The client-side gate (the Settings section
 renders `null` unless `GET /api/push/mute` reported `isAdmin: true`) is

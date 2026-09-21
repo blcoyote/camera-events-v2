@@ -56,10 +56,17 @@ up` in the middle of the window would otherwise silently un-mute and let the
 alert storm the admin just suppressed through — the exact failure the feature
 exists to prevent, at the exact moment it is least visible.
 
-Reads are fail-closed in the _safe_ direction: a missing row, an empty string,
-or an unparseable value reads as **not muted**. A corrupt value must never be
-able to wedge the system into permanent silence; the worst outcome of a bad read
-is a notification the admin wanted suppressed, not a notification that never
+Reads are fail-closed in the _safe_ direction, via two layers of validation. In
+`push-store.ts`, `parseMuteUntil()` accepts only a non-negative safe integer —
+a missing row, an empty string, a non-numeric string, or a value like `"1e100"`
+(finite but not a safe integer) all read as **not muted**. In
+`notification-mute.ts`, `isMuteActive()` additionally caps how far in the
+future a deadline may be: no legitimate deadline is ever further out than one
+mute window from now, so a structurally-valid but corrupt far-future value
+(e.g. a year-2100 timestamp) is also treated as not muted. Together these two
+layers are what deliver the guarantee: a corrupt value must never be able to
+wedge the system into permanent silence; the worst outcome of a bad read is a
+notification the admin wanted suppressed, not a notification that never
 arrives.
 
 Expiry is not stored as a flag and never swept. `getNotificationMuteUntil()`
@@ -94,12 +101,14 @@ platform the app treats as a first-class target.
 
 ### Authorization
 
-`POST /api/push/mute` resolves the session `sub`, then re-reads
+Both `GET` and `POST /api/push/mute` resolve the session `sub`, then re-read
 `userStore.isAdmin(sub)` on every call: `401` with no session, `403` for a
-signed-in non-admin. The client-side gate — the section renders `null` unless
-`GET /api/push/mute` reported `isAdmin: true` — is presentation only. Admin
-status is never carried in the session cookie or in router context, so
-demoting a user takes effect on their next request rather than their next login.
+signed-in non-admin. `GET` is admin-gated the same as `POST` so mute state
+itself is never leaked to a non-admin caller. The client-side gate — the
+section renders `null` unless `GET /api/push/mute` reported `isAdmin: true` —
+is presentation only. Admin status is never carried in the session cookie or
+in router context, so demoting a user takes effect on their next request
+rather than their next login.
 
 ### Client
 

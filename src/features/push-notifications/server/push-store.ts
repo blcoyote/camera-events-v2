@@ -10,13 +10,17 @@ const NOTIFICATION_MUTE_UNTIL_KEY = 'notification_mute_until'
 
 /**
  * Parses a stored settings value as an epoch-millisecond mute-until timestamp.
- * Fails closed: anything that isn't a finite number (missing row, empty
- * string, non-numeric string, NaN, Infinity) reads as "no mute" (null).
+ * Fails closed: anything that isn't a non-negative safe integer (missing row,
+ * empty string, non-numeric string, NaN, Infinity, a value like "1e100" that
+ * is finite but not a safe integer, a fractional value, or a negative value)
+ * reads as "no mute" (null). Restricting to safe integers (rather than merely
+ * finite) is required so a corrupt row can never be parsed as a deadline far
+ * enough in the future to mute the app effectively forever.
  */
 export function parseMuteUntil(value: unknown): number | null {
   if (typeof value !== 'string' || value === '') return null
   const parsed = Number(value)
-  return Number.isFinite(parsed) ? parsed : null
+  return Number.isSafeInteger(parsed) && parsed >= 0 ? parsed : null
 }
 
 interface PushSubscriptionRow {

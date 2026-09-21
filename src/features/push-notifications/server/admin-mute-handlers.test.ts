@@ -63,16 +63,16 @@ describe('handleGetNotificationMute', () => {
     expect(result.body).toEqual({ isAdmin: true, mutedUntil: null })
   })
 
-  it('returns isAdmin: false and mutedUntil: null for a signed-in non-admin', async () => {
+  it('returns 403 for a signed-in non-admin', async () => {
     vi.mocked(getUserStore).mockResolvedValue({
       isAdmin: vi.fn(() => false),
     } as any)
-    vi.mocked(getActiveMuteUntil).mockResolvedValue(null)
 
     const result = await handleGetNotificationMute('regular-user')
 
-    expect(result.status).toBe(200)
-    expect(result.body).toEqual({ isAdmin: false, mutedUntil: null })
+    expect(result.status).toBe(403)
+    expect(result.body).toEqual({ error: 'Forbidden' })
+    expect(getActiveMuteUntil).not.toHaveBeenCalled()
   })
 })
 

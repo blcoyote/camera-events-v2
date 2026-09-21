@@ -14,12 +14,27 @@ import { getPushStore } from './push-store'
 /** How long one admin mute lasts. */
 export const NOTIFICATION_MUTE_DURATION_MS = 10 * 60 * 1000
 
-/** Pure: is a stored deadline still in the future at `nowMs`? */
+/**
+ * Pure: is a stored deadline still in the future at `nowMs`?
+ *
+ * The upper bound (`nowMs + NOTIFICATION_MUTE_DURATION_MS`) is what actually
+ * delivers the "a corrupt value can never wedge the app into permanent
+ * silence" guarantee: no legitimate deadline is ever further out than one
+ * mute window from now, so anything beyond that ceiling is treated as
+ * inactive rather than as an active mute. One side effect is a deliberate
+ * fail-open choice: a backwards server-clock jump can make a real, in-window
+ * deadline read as "too far in the future" and end the mute early — that is
+ * accepted, since erring toward delivering notifications is always the safe
+ * direction here.
+ */
 export function isMuteActive(
   muteUntilMs: number | null,
   nowMs: number,
 ): boolean {
-  return muteUntilMs !== null && muteUntilMs > nowMs
+  if (muteUntilMs === null) return false
+  return (
+    muteUntilMs > nowMs && muteUntilMs <= nowMs + NOTIFICATION_MUTE_DURATION_MS
+  )
 }
 
 /**

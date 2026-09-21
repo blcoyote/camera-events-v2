@@ -20,10 +20,16 @@ export async function handleGetNotificationMute(
 
   // Admin status is deliberately not carried in the session cookie, so it is
   // re-read from the store on every call rather than trusted from a claim.
+  // Check authentication before authorization, as the POST handler does: a
+  // signed-in non-admin gets 403, never a 200 that leaks the mute state.
   const isAdmin = (await getUserStore()).isAdmin(userId)
+  if (!isAdmin) {
+    return { status: 403, body: { error: 'Forbidden' } }
+  }
+
   const mutedUntil = await getActiveMuteUntil()
 
-  return { status: 200, body: { isAdmin, mutedUntil } }
+  return { status: 200, body: { isAdmin: true, mutedUntil } }
 }
 
 export async function handleMuteAllNotifications(

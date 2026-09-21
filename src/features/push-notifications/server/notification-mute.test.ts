@@ -28,6 +28,19 @@ describe('isMuteActive', () => {
   it('returns true when the deadline is still in the future', () => {
     expect(isMuteActive(1_500, 1_000)).toBe(true)
   })
+
+  it('treats a deadline exactly one full window ahead as active', () => {
+    expect(isMuteActive(1_000 + NOTIFICATION_MUTE_DURATION_MS, 1_000)).toBe(
+      true,
+    )
+  })
+
+  it('rejects a deadline further ahead than one full window (corrupt value cannot mute forever)', () => {
+    expect(isMuteActive(1_000 + NOTIFICATION_MUTE_DURATION_MS + 1, 1_000)).toBe(
+      false,
+    )
+    expect(isMuteActive(4_102_444_800_000, 1_000)).toBe(false)
+  })
 })
 
 describe('getActiveMuteUntil', () => {
