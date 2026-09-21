@@ -18,7 +18,10 @@ beforeEach(() => {
 
 describe('GET /api/auth/admin-status', () => {
   it('marks the response as non-cacheable so a stale role never survives a login switch', async () => {
-    const response = await Route.options.server!.handlers!.GET!({})
+    const handlers = Route.options.server!.handlers as {
+      GET: () => Promise<Response>
+    }
+    const response = await handlers.GET()
 
     expect(response.headers.get('Cache-Control')).toBe('no-store')
   })
