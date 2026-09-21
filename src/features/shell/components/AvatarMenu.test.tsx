@@ -1,8 +1,23 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, screen, cleanup, fireEvent, act } from '@testing-library/react'
+import {
+  render,
+  screen,
+  cleanup,
+  fireEvent,
+  act,
+  waitFor,
+} from '@testing-library/react'
 import '@testing-library/jest-dom/vitest'
 import { AvatarMenu } from './AvatarMenu'
+
+function jsonResponse(status: number, body: unknown) {
+  return {
+    ok: status >= 200 && status < 300,
+    status,
+    json: () => Promise.resolve(body),
+  } as Response
+}
 
 describe('AvatarMenu', () => {
   const originalFetch = globalThis.fetch
@@ -10,7 +25,9 @@ describe('AvatarMenu', () => {
   let assignMock: ReturnType<typeof vi.fn>
 
   beforeEach(() => {
-    globalThis.fetch = vi.fn().mockResolvedValue({ ok: true })
+    globalThis.fetch = vi
+      .fn()
+      .mockResolvedValue(jsonResponse(200, { isAdmin: false }))
     assignMock = vi.fn()
     Object.defineProperty(window, 'location', {
       configurable: true,
@@ -148,5 +165,114 @@ describe('AvatarMenu', () => {
       credentials: 'include',
     })
     expect(assignMock).toHaveBeenCalledWith('/')
+  })
+
+  it('checks admin status on mount', () => {
+    render(
+      <AvatarMenu
+        avatarUrl=""
+        initials="AB"
+        signOutAction="/api/auth/logout"
+      />,
+    )
+
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      '/api/auth/admin-status',
+      expect.objectContaining({ credentials: 'include' }),
+    )
+  })
+
+  it('shows no admin badge before the check resolves (SSR-safe default)', () => {
+    globalThis.fetch = vi
+      .fn()
+      .mockResolvedValue(jsonResponse(200, { isAdmin: true }))
+
+    render(
+      <AvatarMenu
+        avatarUrl=""
+        initials="AB"
+        signOutAction="/api/auth/logout"
+      />,
+    )
+
+    expect(
+      screen.getByRole('button', { name: 'Account menu' }),
+    ).toBeInTheDocument()
+    expect(screen.queryByTestId('admin-badge')).not.toBeInTheDocument()
+  })
+
+  it('shows an admin badge once the check reports isAdmin: true', async () => {
+    globalThis.fetch = vi
+      .fn()
+      .mockResolvedValue(jsonResponse(200, { isAdmin: true }))
+
+    render(
+      <AvatarMenu
+        avatarUrl=""
+        initials="AB"
+        signOutAction="/api/auth/logout"
+      />,
+    )
+
+    await waitFor(() => {
+      expect(screen.getByTestId('admin-badge')).toBeInTheDocument()
+    })
+    expect(
+      screen.getByRole('button', { name: 'Account menu (Admin)' }),
+    ).toBeInTheDocument()
+  })
+
+  it('shows no admin badge when the check reports isAdmin: false', async () => {
+    render(
+      <AvatarMenu
+        avatarUrl=""
+        initials="AB"
+        signOutAction="/api/auth/logout"
+      />,
+    )
+
+    await waitFor(() => {
+      expect(globalThis.fetch).toHaveBeenCalled()
+    })
+    expect(screen.queryByTestId('admin-badge')).not.toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: 'Account menu' }),
+    ).toBeInTheDocument()
+  })
+
+  it('shows no admin badge when the check rejects', async () => {
+    globalThis.fetch = vi.fn().mockRejectedValue(new Error('network down'))
+
+    render(
+      <AvatarMenu
+        avatarUrl=""
+        initials="AB"
+        signOutAction="/api/auth/logout"
+      />,
+    )
+
+    await waitFor(() => {
+      expect(globalThis.fetch).toHaveBeenCalled()
+    })
+    expect(screen.queryByTestId('admin-badge')).not.toBeInTheDocument()
+  })
+
+  it('shows no admin badge when the check responds 401', async () => {
+    globalThis.fetch = vi
+      .fn()
+      .mockResolvedValue(jsonResponse(401, { error: 'Unauthorized' }))
+
+    render(
+      <AvatarMenu
+        avatarUrl=""
+        initials="AB"
+        signOutAction="/api/auth/logout"
+      />,
+    )
+
+    await waitFor(() => {
+      expect(globalThis.fetch).toHaveBeenCalled()
+    })
+    expect(screen.queryByTestId('admin-badge')).not.toBeInTheDocument()
   })
 })

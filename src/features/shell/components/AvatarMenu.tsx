@@ -10,6 +10,7 @@ export function AvatarMenu({
   signOutAction: string
 }) {
   const [open, setOpen] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
   const menuItemRef = useRef<HTMLButtonElement>(null)
@@ -17,6 +18,30 @@ export function AvatarMenu({
   const close = useCallback(() => {
     setOpen(false)
     buttonRef.current?.focus()
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function checkAdminStatus() {
+      try {
+        const res = await fetch('/api/auth/admin-status', {
+          credentials: 'include',
+        })
+        if (!res.ok) return
+        const data = await res.json()
+        if (cancelled) return
+        setIsAdmin(Boolean(data.isAdmin))
+      } catch {
+        // Silently fail — the badge just stays hidden.
+      }
+    }
+
+    checkAdminStatus()
+
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   useEffect(() => {
@@ -64,18 +89,30 @@ export function AvatarMenu({
         onClick={() => setOpen((prev) => !prev)}
         aria-expanded={open}
         aria-haspopup="true"
-        aria-label="Account menu"
-        className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border border-(--line) bg-(--surface) text-sm font-semibold text-(--sea-ink) transition hover:border-(--lagoon-deep)"
+        aria-label={isAdmin ? 'Account menu (Admin)' : 'Account menu'}
+        className="relative flex h-11 w-11 items-center justify-center rounded-full border border-(--line) bg-(--surface) text-sm font-semibold text-(--sea-ink) transition hover:border-(--lagoon-deep)"
       >
-        {avatarUrl ? (
-          <img
-            src={avatarUrl}
-            alt=""
-            className="h-full w-full object-cover"
-            referrerPolicy="no-referrer"
-          />
-        ) : (
-          <span aria-hidden="true">{initials}</span>
+        <span className="flex h-full w-full items-center justify-center overflow-hidden rounded-full">
+          {avatarUrl ? (
+            <img
+              src={avatarUrl}
+              alt=""
+              className="h-full w-full object-cover"
+              referrerPolicy="no-referrer"
+            />
+          ) : (
+            <span aria-hidden="true">{initials}</span>
+          )}
+        </span>
+        {isAdmin && (
+          <span
+            aria-hidden="true"
+            data-testid="admin-badge"
+            title="Admin"
+            className="absolute -right-0.5 -bottom-0.5 min-w-4 rounded-full border-2 border-(--surface) bg-(--lagoon-deep) px-1 text-[9px] leading-[14px] font-bold text-white"
+          >
+            A
+          </span>
         )}
       </button>
 
