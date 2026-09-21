@@ -46,18 +46,22 @@ export const Route = createFileRoute('/api/push/mute')({
             // Corrupted session
           }
 
-          // Do not return 400 here on a JSON parse failure: that would let an
-          // unauthenticated (or non-admin) caller's invalid body short-circuit
-          // ahead of the handler's own 401/403 checks. Passing `undefined`
-          // through instead lets the handler run its existing 401 -> 403 ->
-          // 400 order, so a malformed body only ever surfaces as a 400 once
-          // the caller has already been proven to be an authenticated admin —
-          // without duplicating the auth check here in the route.
+          // Only read the body once a session is present. An unauthenticated
+          // (or non-admin) caller is rejected by the handler's 401/403
+          // regardless of the body, so parsing it first would be wasted work
+          // and needless exposure to a large or slow request body —
+          // `undefined` flows through to the same rejection. With a session,
+          // a JSON parse failure is still passed through as `undefined`
+          // rather than short-circuited here, so a malformed body only ever
+          // surfaces as a 400 via the handler's existing 401 -> 403 -> 400
+          // order — without duplicating the auth check in the route.
           let body: unknown
-          try {
-            body = await request.json()
-          } catch {
-            body = undefined
+          if (userId) {
+            try {
+              body = await request.json()
+            } catch {
+              body = undefined
+            }
           }
 
           const result = await handleSetNotificationMute(userId, body)

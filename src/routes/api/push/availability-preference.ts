@@ -49,18 +49,22 @@ export const Route = createFileRoute('/api/push/availability-preference')({
             // Corrupted session
           }
 
-          // Do not return 400 here on a JSON parse failure: that would let an
-          // unauthenticated caller's invalid body short-circuit ahead of the
-          // handler's own 401 check. Passing `undefined` through instead lets
-          // the handler run its existing 401 -> 400 order, so a malformed
-          // body only ever surfaces as a 400 once the caller has already
-          // been proven to be authenticated — without duplicating the auth
-          // check here in the route.
+          // Only read the body once a session is present — an unauthenticated
+          // caller always gets the handler's 401, so parsing the body first
+          // would be wasted work and needless exposure to a large or slow
+          // request body. `undefined` flows through to the same 401. Once
+          // there is a session, a JSON parse failure is still passed through
+          // as `undefined` rather than short-circuited here, so a malformed
+          // body only ever surfaces as a 400 via the handler's existing
+          // 401 -> 400 order — without duplicating the auth check in the
+          // route.
           let body: unknown
-          try {
-            body = await request.json()
-          } catch {
-            body = undefined
+          if (userId) {
+            try {
+              body = await request.json()
+            } catch {
+              body = undefined
+            }
           }
 
           const result = await handleSetAvailabilityPreference(userId, body)
