@@ -17,17 +17,22 @@ export const Route = createFileRoute('/api/push/unsubscribe')({
             // Corrupted session
           }
 
-          let body: any
-          try {
-            body = await request.json()
-          } catch {
-            return new Response(
-              JSON.stringify({ error: 'Invalid JSON body' }),
-              {
-                status: 400,
-                headers: { 'Content-Type': 'application/json' },
-              },
-            )
+          // Only read the body once a session is present: an unauthenticated
+          // caller is rejected by the handler's 401 no matter what the body
+          // holds, so reading it beforehand is wasted work and needless
+          // exposure to a large or slow request body. `undefined` flows
+          // through to the same 401. With a session, a JSON parse failure is
+          // still passed through as `undefined` instead of short-circuited
+          // here, so a malformed body only ever surfaces as a 400 via the
+          // handler's existing 401 -> 400 order — without duplicating the
+          // auth check in the route.
+          let body: unknown
+          if (userId) {
+            try {
+              body = await request.json()
+            } catch {
+              body = undefined
+            }
           }
 
           const result = await handleUnsubscribe(userId, body)

@@ -133,6 +133,61 @@ describe('handleSubscribe', () => {
       error: expect.stringContaining('endpoint URL'),
     })
   })
+
+  describe('malformed top-level body', () => {
+    beforeEach(() => {
+      vi.mocked(isPushEnabled).mockReturnValue(true)
+    })
+
+    it('returns 400 rather than throwing when the body is null', async () => {
+      const result = await handleSubscribe('user1', null)
+      expect(result.status).toBe(400)
+    })
+
+    it('returns 400 rather than throwing when the body is undefined', async () => {
+      const result = await handleSubscribe('user1', undefined)
+      expect(result.status).toBe(400)
+    })
+
+    it('returns 400 rather than throwing when the body is a string', async () => {
+      const result = await handleSubscribe('user1', 'nope')
+      expect(result.status).toBe(400)
+    })
+
+    it('returns 400 rather than throwing when the body is an array', async () => {
+      const result = await handleSubscribe('user1', [])
+      expect(result.status).toBe(400)
+    })
+  })
+
+  describe('malformed keys field', () => {
+    beforeEach(() => {
+      vi.mocked(isPushEnabled).mockReturnValue(true)
+    })
+
+    it('returns 400 rather than throwing when keys is null', async () => {
+      const result = await handleSubscribe('user1', {
+        endpoint: 'https://push.example.com',
+        keys: null,
+      })
+      expect(result.status).toBe(400)
+    })
+
+    it('returns 400 rather than throwing when keys is a string', async () => {
+      const result = await handleSubscribe('user1', {
+        endpoint: 'https://push.example.com',
+        keys: 'nope',
+      })
+      expect(result.status).toBe(400)
+    })
+  })
+
+  describe('ordering: auth before body validation', () => {
+    it('returns 401 for a null body when userId is null, never 400', async () => {
+      const result = await handleSubscribe(null, null)
+      expect(result.status).toBe(401)
+    })
+  })
 })
 
 describe('handleUnsubscribe', () => {
@@ -174,6 +229,35 @@ describe('handleUnsubscribe', () => {
     expect(result.status).toBe(400)
     expect(result.body).toMatchObject({
       error: expect.stringContaining('endpoint'),
+    })
+  })
+
+  describe('malformed top-level body', () => {
+    it('returns 400 rather than throwing when the body is null', async () => {
+      const result = await handleUnsubscribe('user1', null)
+      expect(result.status).toBe(400)
+    })
+
+    it('returns 400 rather than throwing when the body is undefined', async () => {
+      const result = await handleUnsubscribe('user1', undefined)
+      expect(result.status).toBe(400)
+    })
+
+    it('returns 400 rather than throwing when the body is a string', async () => {
+      const result = await handleUnsubscribe('user1', 'nope')
+      expect(result.status).toBe(400)
+    })
+
+    it('returns 400 rather than throwing when the body is an array', async () => {
+      const result = await handleUnsubscribe('user1', [])
+      expect(result.status).toBe(400)
+    })
+  })
+
+  describe('ordering: auth before body validation', () => {
+    it('returns 401 for a null body when userId is null, never 400', async () => {
+      const result = await handleUnsubscribe(null, null)
+      expect(result.status).toBe(401)
     })
   })
 })
@@ -375,6 +459,35 @@ describe('handleSetPreference', () => {
     expect(result.body).toEqual({ ok: true })
     expect(mockSetPref).toHaveBeenCalledWith('user1', 'front_porch', false)
   })
+
+  describe('malformed top-level body', () => {
+    it('returns 400 rather than throwing when the body is null', async () => {
+      const result = await handleSetPreference('user1', null)
+      expect(result.status).toBe(400)
+    })
+
+    it('returns 400 rather than throwing when the body is undefined', async () => {
+      const result = await handleSetPreference('user1', undefined)
+      expect(result.status).toBe(400)
+    })
+
+    it('returns 400 rather than throwing when the body is a string', async () => {
+      const result = await handleSetPreference('user1', 'nope')
+      expect(result.status).toBe(400)
+    })
+
+    it('returns 400 rather than throwing when the body is an array', async () => {
+      const result = await handleSetPreference('user1', [])
+      expect(result.status).toBe(400)
+    })
+  })
+
+  describe('ordering: auth before body validation', () => {
+    it('returns 401 for a null body when userId is null, never 400', async () => {
+      const result = await handleSetPreference(null, null)
+      expect(result.status).toBe(401)
+    })
+  })
 })
 
 describe('handleGetAvailabilityPreference', () => {
@@ -452,5 +565,34 @@ describe('handleSetAvailabilityPreference', () => {
     expect(result.status).toBe(200)
     expect(result.body).toEqual({ ok: true })
     expect(mockSetPref).toHaveBeenCalledWith('user1', false)
+  })
+
+  describe('malformed top-level body', () => {
+    it('returns 400 rather than throwing when the body is null', async () => {
+      const result = await handleSetAvailabilityPreference('user1', null)
+      expect(result.status).toBe(400)
+    })
+
+    it('returns 400 rather than throwing when the body is undefined', async () => {
+      const result = await handleSetAvailabilityPreference('user1', undefined)
+      expect(result.status).toBe(400)
+    })
+
+    it('returns 400 rather than throwing when the body is a string', async () => {
+      const result = await handleSetAvailabilityPreference('user1', 'nope')
+      expect(result.status).toBe(400)
+    })
+
+    it('returns 400 rather than throwing when the body is an array', async () => {
+      const result = await handleSetAvailabilityPreference('user1', [])
+      expect(result.status).toBe(400)
+    })
+  })
+
+  describe('ordering: auth before body validation', () => {
+    it('returns 401 for a null body when userId is null, never 400', async () => {
+      const result = await handleSetAvailabilityPreference(null, null)
+      expect(result.status).toBe(401)
+    })
   })
 })

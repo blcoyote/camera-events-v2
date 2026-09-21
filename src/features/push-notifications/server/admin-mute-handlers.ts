@@ -2,6 +2,7 @@ import '@tanstack/react-start/server-only'
 import { getUserStore } from '#/features/shared/server/users/user-store'
 import { getActiveMuteUntil, applyNotificationMute } from './notification-mute'
 import { isValidMuteDurationMs } from '#/features/shared/utils/muteDurations'
+import { readBodyField } from './request-body'
 
 interface HandlerResult {
   status: number
@@ -51,10 +52,7 @@ export async function handleSetNotificationMute(
   // through malformed JSON as `undefined` rather than pre-rejecting it).
   // Read durationMs null-safely so any of those fall through to the normal
   // 400 branch below instead of throwing.
-  const durationMs =
-    typeof body === 'object' && body !== null
-      ? (body as Record<string, unknown>).durationMs
-      : undefined
+  const durationMs = readBodyField(body, 'durationMs')
 
   // Authorization is checked before input validation is even attempted, so a
   // non-admin's malformed body never reaches the allowlist check.
