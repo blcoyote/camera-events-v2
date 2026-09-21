@@ -12,6 +12,7 @@ import { sendPushNotification, isPushEnabled } from './push'
 import type { PushPayload } from './push'
 import { getPushStore } from './push-store'
 import { formatCameraName } from './push-notify'
+import { areNotificationsMuted } from './notification-mute'
 
 export type CameraAvailabilityStatus = 'online' | 'offline'
 
@@ -55,6 +56,13 @@ export async function notifyUsersForCameraAvailability(
   status: CameraAvailabilityStatus,
 ): Promise<void> {
   if (!isPushEnabled()) return
+
+  if (await areNotificationsMuted()) {
+    console.log(
+      `[availability-notify] Camera "${camera}" ${status} suppressed — notifications are globally muted`,
+    )
+    return
+  }
 
   const store = await getPushStore()
   const userIds = store.getAllSubscribedUserIds()

@@ -23,6 +23,7 @@ import { Route as ApiAuthLogoutRouteImport } from './routes/api/auth/logout'
 import { Route as ApiHealthIndexRouteImport } from './routes/api/health/index'
 import { Route as ApiHealthReadyRouteImport } from './routes/api/health/ready'
 import { Route as ApiPushAvailabilityPreferenceRouteImport } from './routes/api/push/availability-preference'
+import { Route as ApiPushMuteRouteImport } from './routes/api/push/mute'
 import { Route as ApiPushPreferencesRouteImport } from './routes/api/push/preferences'
 import { Route as ApiPushSubscribeRouteImport } from './routes/api/push/subscribe'
 import { Route as ApiPushTestRouteImport } from './routes/api/push/test'
@@ -106,6 +107,11 @@ const ApiPushAvailabilityPreferenceRoute =
     path: '/api/push/availability-preference',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPushMuteRoute = ApiPushMuteRouteImport.update({
+  id: '/api/push/mute',
+  path: '/api/push/mute',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPushPreferencesRoute = ApiPushPreferencesRouteImport.update({
   id: '/api/push/preferences',
   path: '/api/push/preferences',
@@ -169,6 +175,7 @@ export interface FileRoutesByFullPath {
   '/api/auth/logout': typeof ApiAuthLogoutRoute
   '/api/health/ready': typeof ApiHealthReadyRoute
   '/api/push/availability-preference': typeof ApiPushAvailabilityPreferenceRoute
+  '/api/push/mute': typeof ApiPushMuteRoute
   '/api/push/preferences': typeof ApiPushPreferencesRoute
   '/api/push/subscribe': typeof ApiPushSubscribeRoute
   '/api/push/test': typeof ApiPushTestRoute
@@ -194,6 +201,7 @@ export interface FileRoutesByTo {
   '/api/auth/logout': typeof ApiAuthLogoutRoute
   '/api/health/ready': typeof ApiHealthReadyRoute
   '/api/push/availability-preference': typeof ApiPushAvailabilityPreferenceRoute
+  '/api/push/mute': typeof ApiPushMuteRoute
   '/api/push/preferences': typeof ApiPushPreferencesRoute
   '/api/push/subscribe': typeof ApiPushSubscribeRoute
   '/api/push/test': typeof ApiPushTestRoute
@@ -221,6 +229,7 @@ export interface FileRoutesById {
   '/api/auth/logout': typeof ApiAuthLogoutRoute
   '/api/health/ready': typeof ApiHealthReadyRoute
   '/api/push/availability-preference': typeof ApiPushAvailabilityPreferenceRoute
+  '/api/push/mute': typeof ApiPushMuteRoute
   '/api/push/preferences': typeof ApiPushPreferencesRoute
   '/api/push/subscribe': typeof ApiPushSubscribeRoute
   '/api/push/test': typeof ApiPushTestRoute
@@ -248,6 +257,7 @@ export interface FileRouteTypes {
     | '/api/auth/logout'
     | '/api/health/ready'
     | '/api/push/availability-preference'
+    | '/api/push/mute'
     | '/api/push/preferences'
     | '/api/push/subscribe'
     | '/api/push/test'
@@ -273,6 +283,7 @@ export interface FileRouteTypes {
     | '/api/auth/logout'
     | '/api/health/ready'
     | '/api/push/availability-preference'
+    | '/api/push/mute'
     | '/api/push/preferences'
     | '/api/push/subscribe'
     | '/api/push/test'
@@ -299,6 +310,7 @@ export interface FileRouteTypes {
     | '/api/auth/logout'
     | '/api/health/ready'
     | '/api/push/availability-preference'
+    | '/api/push/mute'
     | '/api/push/preferences'
     | '/api/push/subscribe'
     | '/api/push/test'
@@ -321,6 +333,7 @@ export interface RootRouteChildren {
   ApiAuthLogoutRoute: typeof ApiAuthLogoutRoute
   ApiHealthReadyRoute: typeof ApiHealthReadyRoute
   ApiPushAvailabilityPreferenceRoute: typeof ApiPushAvailabilityPreferenceRoute
+  ApiPushMuteRoute: typeof ApiPushMuteRoute
   ApiPushPreferencesRoute: typeof ApiPushPreferencesRoute
   ApiPushSubscribeRoute: typeof ApiPushSubscribeRoute
   ApiPushTestRoute: typeof ApiPushTestRoute
@@ -431,6 +444,13 @@ declare module '@tanstack/react-router' {
       path: '/api/push/availability-preference'
       fullPath: '/api/push/availability-preference'
       preLoaderRoute: typeof ApiPushAvailabilityPreferenceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/push/mute': {
+      id: '/api/push/mute'
+      path: '/api/push/mute'
+      fullPath: '/api/push/mute'
+      preLoaderRoute: typeof ApiPushMuteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/push/preferences': {
@@ -548,6 +568,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAuthLogoutRoute: ApiAuthLogoutRoute,
   ApiHealthReadyRoute: ApiHealthReadyRoute,
   ApiPushAvailabilityPreferenceRoute: ApiPushAvailabilityPreferenceRoute,
+  ApiPushMuteRoute: ApiPushMuteRoute,
   ApiPushPreferencesRoute: ApiPushPreferencesRoute,
   ApiPushSubscribeRoute: ApiPushSubscribeRoute,
   ApiPushTestRoute: ApiPushTestRoute,

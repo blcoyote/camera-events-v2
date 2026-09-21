@@ -15,6 +15,7 @@ import type { ThemeMode } from '#/features/shared/hooks/useTheme'
 import { usePalette } from '#/features/shared/hooks/usePalette'
 import type { Palette } from '#/features/shared/hooks/usePalette'
 import { NotificationSettings } from '../components/NotificationSettings'
+import { AdminNotificationMute } from '../components/AdminNotificationMute'
 
 export function getSettingsContent(): { heading: string; description: string } {
   return {
@@ -194,6 +195,7 @@ export function SettingsPage() {
         </div>
       </section>
       <NotificationSettings />
+      <AdminNotificationMute />
     </main>
   )
 }

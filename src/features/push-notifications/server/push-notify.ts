@@ -15,6 +15,7 @@ import type { PushPayload } from './push'
 import { getPushStore } from './push-store'
 import { SendThrottle, isAppleEndpoint } from './send-throttle'
 import { resolveAppleUpdateIntervalMs } from './env'
+import { areNotificationsMuted } from './notification-mute'
 
 /** Extract the host of a push endpoint for logging, or 'unknown' if unparseable. */
 export function endpointHost(endpoint: string): string {
@@ -160,6 +161,13 @@ export async function notifyUsersForCamera(
 
   const throttle = options.throttle ?? appleUpdateThrottle
   const now = options.now ?? Date.now()
+
+  if (await areNotificationsMuted(now)) {
+    console.log(
+      `[push-notify] Camera "${camera}": ${events.length} event(s) suppressed — notifications are globally muted`,
+    )
+    return
+  }
 
   const store = await getPushStore()
   const userIds = store.getAllSubscribedUserIds()

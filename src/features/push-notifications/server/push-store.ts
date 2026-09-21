@@ -6,6 +6,23 @@ import { dirname } from 'node:path'
 
 const DEFAULT_DB_PATH = 'data/camera-events.db'
 
+const NOTIFICATION_MUTE_UNTIL_KEY = 'notification_mute_until'
+
+/**
+ * Parses a stored settings value as an epoch-millisecond mute-until timestamp.
+ * Fails closed: anything that isn't a non-negative safe integer (missing row,
+ * empty string, non-numeric string, NaN, Infinity, a value like "1e100" that
+ * is finite but not a safe integer, a fractional value, or a negative value)
+ * reads as "no mute" (null). Restricting to safe integers (rather than merely
+ * finite) is required so a corrupt row can never be parsed as a deadline far
+ * enough in the future to mute the app effectively forever.
+ */
+export function parseMuteUntil(value: unknown): number | null {
+  if (typeof value !== 'string' || value === '') return null
+  const parsed = Number(value)
+  return Number.isSafeInteger(parsed) && parsed >= 0 ? parsed : null
+}
+
 interface PushSubscriptionRow {
   id: number
   user_id: string
@@ -31,6 +48,14 @@ export interface PushStore {
   setPreference: (userId: string, camera: string, enabled: boolean) => void
   isCameraAvailabilityEnabledForUser: (userId: string) => boolean
   setCameraAvailabilityPreference: (userId: string, enabled: boolean) => void
+  /**
+   * Epoch milliseconds until which all automatic push notifications are
+   * suppressed for every user, or null when no mute has ever been set or the
+   * stored value is unusable. Expiry is NOT evaluated here — callers compare
+   * against their own clock.
+   */
+  getNotificationMuteUntil: () => number | null
+  setNotificationMuteUntil: (untilMs: number) => void
   /** Inspection helper for tests: list user table names. */
   tableNames: () => string[]
   /** Inspection helper for tests: list column names of `table`. */
@@ -71,6 +96,12 @@ export async function createPushStore(
       enabled     INTEGER NOT NULL DEFAULT 1,
       updated_at  TEXT NOT NULL DEFAULT (datetime('now')),
       UNIQUE(user_id, category, resource_id)
+    );
+
+    CREATE TABLE IF NOT EXISTS push_global_settings (
+      key        TEXT PRIMARY KEY,
+      value      TEXT NOT NULL,
+      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
   `)
 
@@ -114,6 +145,16 @@ export async function createPushStore(
       VALUES (?, 'camera_availability', 'global', ?)
       ON CONFLICT(user_id, category, resource_id) DO UPDATE SET
         enabled = excluded.enabled,
+        updated_at = datetime('now')
+    `),
+    getGlobalSetting: db.prepare(
+      'SELECT value FROM push_global_settings WHERE key = ?',
+    ),
+    upsertGlobalSetting: db.prepare(`
+      INSERT INTO push_global_settings (key, value)
+      VALUES (?, ?)
+      ON CONFLICT(key) DO UPDATE SET
+        value = excluded.value,
         updated_at = datetime('now')
     `),
   }
@@ -167,6 +208,19 @@ export async function createPushStore(
 
     setCameraAvailabilityPreference(userId, enabled) {
       stmts.upsertAvailabilityPref.run(userId, enabled ? 1 : 0)
+    },
+
+    getNotificationMuteUntil() {
+      const row = stmts.getGlobalSetting.get(NOTIFICATION_MUTE_UNTIL_KEY) as
+        { value: string } | null | undefined
+      return parseMuteUntil(row?.value)
+    },
+
+    setNotificationMuteUntil(untilMs) {
+      stmts.upsertGlobalSetting.run(
+        NOTIFICATION_MUTE_UNTIL_KEY,
+        String(untilMs),
+      )
     },
 
     tableNames() {

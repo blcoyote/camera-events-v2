@@ -41,6 +41,7 @@ this vault is meant to be used.
 - [[decisions/2026-08-18-camera-availability-detection]] — camera offline/online via frigate/stats + frigate/available, no polling
 - [[decisions/2026-08-29-ghost-event-notifications]] — gate the notification deep link on Frigate's own persistence flags, not the push
 - [[decisions/2026-09-21-users-table-and-admin-flag]] — users table keyed by Google `sub`; `is_admin` fails closed, seeded one-way from `ADMIN_EMAILS`
+- [[decisions/2026-09-21-admin-global-notification-mute]] — admin silences all push for 10 minutes; deadline in SQLite, enforced at the dispatchers
 
 ## ⚠️ Gotchas
 
