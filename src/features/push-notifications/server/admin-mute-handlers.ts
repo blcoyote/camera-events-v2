@@ -31,7 +31,7 @@ export async function handleGetNotificationMute(
 
 export async function handleSetNotificationMute(
   userId: string | null,
-  body: Record<string, unknown>,
+  body: unknown,
 ): Promise<HandlerResult> {
   // Check authentication before authorization: an anonymous caller must get
   // 401, and a signed-in non-admin must get 403 — never leak one as the other.
@@ -46,9 +46,19 @@ export async function handleSetNotificationMute(
     return { status: 403, body: { error: 'Forbidden' } }
   }
 
+  // The body's shape is untrusted (it may be a parsed-but-non-object JSON
+  // value like `null`, a string, or an array — see the route, which passes
+  // through malformed JSON as `undefined` rather than pre-rejecting it).
+  // Read durationMs null-safely so any of those fall through to the normal
+  // 400 branch below instead of throwing.
+  const durationMs =
+    typeof body === 'object' && body !== null
+      ? (body as Record<string, unknown>).durationMs
+      : undefined
+
   // Authorization is checked before input validation is even attempted, so a
   // non-admin's malformed body never reaches the allowlist check.
-  if (!isValidMuteDurationMs(body.durationMs)) {
+  if (!isValidMuteDurationMs(durationMs)) {
     return {
       status: 400,
       body: {
@@ -58,9 +68,9 @@ export async function handleSetNotificationMute(
     }
   }
 
-  const mutedUntil = await applyNotificationMute(body.durationMs)
+  const mutedUntil = await applyNotificationMute(durationMs)
   return {
     status: 200,
-    body: { mutedUntil, durationMs: body.durationMs },
+    body: { mutedUntil, durationMs },
   }
 }

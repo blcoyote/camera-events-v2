@@ -176,4 +176,78 @@ describe('handleSetNotificationMute', () => {
     expect(result.body).toEqual({ mutedUntil: null, durationMs: 0 })
     expect(applyNotificationMute).toHaveBeenCalledWith(0)
   })
+
+  describe('malformed top-level body (admin caller)', () => {
+    beforeEach(() => {
+      vi.mocked(getUserStore).mockResolvedValue({
+        isAdmin: vi.fn(() => true),
+      } as any)
+    })
+
+    it('returns 400 rather than throwing when the body is null', async () => {
+      const result = await handleSetNotificationMute('admin-user', null)
+
+      expect(result.status).toBe(400)
+      expect(applyNotificationMute).not.toHaveBeenCalled()
+    })
+
+    it('returns 400 when the body is undefined', async () => {
+      const result = await handleSetNotificationMute('admin-user', undefined)
+
+      expect(result.status).toBe(400)
+      expect(applyNotificationMute).not.toHaveBeenCalled()
+    })
+
+    it('returns 400 when the body is a string', async () => {
+      const result = await handleSetNotificationMute('admin-user', 'nope')
+
+      expect(result.status).toBe(400)
+      expect(applyNotificationMute).not.toHaveBeenCalled()
+    })
+
+    it('returns 400 when the body is an array', async () => {
+      const result = await handleSetNotificationMute('admin-user', [])
+
+      expect(result.status).toBe(400)
+      expect(applyNotificationMute).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('malformed body ordering: auth before validation', () => {
+    it('returns 401 for a null body when userId is null, never 400', async () => {
+      const result = await handleSetNotificationMute(null, null)
+
+      expect(result.status).toBe(401)
+      expect(applyNotificationMute).not.toHaveBeenCalled()
+    })
+
+    it('returns 401 for an undefined body when userId is null, never 400', async () => {
+      const result = await handleSetNotificationMute(null, undefined)
+
+      expect(result.status).toBe(401)
+      expect(applyNotificationMute).not.toHaveBeenCalled()
+    })
+
+    it('returns 403 for a null body from a signed-in non-admin, never 400', async () => {
+      vi.mocked(getUserStore).mockResolvedValue({
+        isAdmin: vi.fn(() => false),
+      } as any)
+
+      const result = await handleSetNotificationMute('regular-user', null)
+
+      expect(result.status).toBe(403)
+      expect(applyNotificationMute).not.toHaveBeenCalled()
+    })
+
+    it('returns 403 for an undefined body from a signed-in non-admin, never 400', async () => {
+      vi.mocked(getUserStore).mockResolvedValue({
+        isAdmin: vi.fn(() => false),
+      } as any)
+
+      const result = await handleSetNotificationMute('regular-user', undefined)
+
+      expect(result.status).toBe(403)
+      expect(applyNotificationMute).not.toHaveBeenCalled()
+    })
+  })
 })

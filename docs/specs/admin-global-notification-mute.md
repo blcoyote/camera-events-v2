@@ -146,9 +146,11 @@ rather than their next login.
 
 `AdminNotificationMute` fetches its own state on mount and renders nothing until
 it does, which keeps the SSR and first-client renders identical (`isAdmin`
-starts `false`) and keeps admin status out of the server-rendered HTML. While a
-mute is active the button is disabled and a one-second interval ticks a `M:SS`
-countdown in an `aria-live="polite"` region.
+starts `false`) and keeps admin status out of the server-rendered HTML. The
+button stays available while a mute is active, so the admin can shorten,
+extend, or clear it; it is disabled only while a submit is in flight. A
+one-second interval ticks a countdown — `M:SS` under an hour, `H:MM:SS` at an
+hour or more — in an `aria-live="polite"` region.
 
 ## Alternatives Considered
 

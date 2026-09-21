@@ -31,10 +31,18 @@ afterEach(() => {
 })
 
 describe('PushStore driver contract: schema', () => {
-  it('initializes both required tables', () => {
+  it('initializes all required tables', () => {
     const names = store.tableNames()
     expect(names).toContain('push_subscriptions')
     expect(names).toContain('push_notification_preferences')
+    expect(names).toContain('push_global_settings')
+  })
+
+  it('global settings table has the expected columns', () => {
+    const names = store.tableColumns('push_global_settings')
+    for (const expected of ['key', 'value', 'updated_at']) {
+      expect(names).toContain(expected)
+    }
   })
 
   it('preferences table has the expected columns', () => {
@@ -185,5 +193,50 @@ describe('PushStore driver contract: persistence', () => {
 
     // Re-assign so afterEach.close() doesn't double-close the prior handle.
     store = await createPushStore(path.join(tmpDir, 'dummy.db'))
+  })
+
+  it('retains the notification mute deadline after close + reopen against the same path', async () => {
+    const muteUntil = Date.now() + 60 * 60 * 1000
+    store.setNotificationMuteUntil(muteUntil)
+    store.close()
+
+    const reopened = await createPushStore(dbPath)
+    try {
+      expect(reopened.getNotificationMuteUntil()).toBe(muteUntil)
+    } finally {
+      reopened.close()
+    }
+
+    // Re-assign so afterEach.close() doesn't double-close the prior handle.
+    store = await createPushStore(path.join(tmpDir, 'dummy.db'))
+  })
+})
+
+describe('PushStore driver contract: global mute setting', () => {
+  it('returns null on a fresh store', () => {
+    expect(store.getNotificationMuteUntil()).toBeNull()
+  })
+
+  it('round-trips a written deadline', () => {
+    const muteUntil = Date.now() + 10 * 60 * 1000
+    store.setNotificationMuteUntil(muteUntil)
+    expect(store.getNotificationMuteUntil()).toBe(muteUntil)
+  })
+
+  it('upserts on repeated writes — a second write replaces the first, still exactly one row', () => {
+    store.setNotificationMuteUntil(Date.now() + 10 * 60 * 1000)
+    const secondMuteUntil = Date.now() + 60 * 60 * 1000
+    store.setNotificationMuteUntil(secondMuteUntil)
+
+    expect(store.getNotificationMuteUntil()).toBe(secondMuteUntil)
+    const count = store.countRows(
+      "SELECT key FROM push_global_settings WHERE key = 'notification_mute_until'",
+    )
+    expect(count).toBe(1)
+  })
+
+  it('reads back 0 as 0 (the clear sentinel) rather than null', () => {
+    store.setNotificationMuteUntil(0)
+    expect(store.getNotificationMuteUntil()).toBe(0)
   })
 })
