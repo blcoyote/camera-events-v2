@@ -37,8 +37,20 @@ allow-list in app code would be redundant and create two places to keep in sync.
 If the access model ever changes (e.g. self-service public signup, or moving the
 allow-list into the app), supersede this note.
 
+## Not to be confused with `ADMIN_EMAILS`
+
+Since 2026-09-21 there **is** an env var in app code that holds a list of email
+addresses: `ADMIN_EMAILS`. It does not violate this decision and does not
+supersede it. This note is about _who may sign in_, which remains a Google
+Cloud concern. `ADMIN_EMAILS` only picks which already-authorized account gets
+the `users.is_admin` role once signed in — something Google Cloud cannot
+express. Being listed there grants no access on its own.
+See [[decisions/2026-09-21-users-table-and-admin-flag]].
+
 ## Related
 
 - [[Home]]
+- [[decisions/2026-09-21-users-table-and-admin-flag]] — the admin role, a
+  separate concern from sign-in access
 - Server-function auth rule in `CLAUDE.md` (every `createServerFn` calls
   `requireSession()`)
