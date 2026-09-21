@@ -6,6 +6,7 @@ import {
 } from './availability-notify'
 import { isPushEnabled, sendPushNotification } from './push'
 import { getPushStore } from './push-store'
+import { areNotificationsMuted } from './notification-mute'
 
 vi.mock('./push', () => ({
   isPushEnabled: vi.fn(),
@@ -14,6 +15,10 @@ vi.mock('./push', () => ({
 
 vi.mock('./push-store', () => ({
   getPushStore: vi.fn(),
+}))
+
+vi.mock('./notification-mute', () => ({
+  areNotificationsMuted: vi.fn(),
 }))
 
 describe('cameraAvailabilityNotificationTag', () => {
@@ -56,6 +61,7 @@ describe('notifyUsersForCameraAvailability', () => {
   const isPushEnabledMock = vi.mocked(isPushEnabled)
   const sendPushNotificationMock = vi.mocked(sendPushNotification)
   const getPushStoreMock = vi.mocked(getPushStore)
+  const areNotificationsMutedMock = vi.mocked(areNotificationsMuted)
 
   function makeStore(
     overrides: {
@@ -85,6 +91,8 @@ describe('notifyUsersForCameraAvailability', () => {
     isPushEnabledMock.mockReset()
     sendPushNotificationMock.mockReset()
     getPushStoreMock.mockReset()
+    areNotificationsMutedMock.mockReset()
+    areNotificationsMutedMock.mockResolvedValue(false)
     consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
   })
 
@@ -227,5 +235,35 @@ describe('notifyUsersForCameraAvailability', () => {
       expect.stringContaining('https://push.example/fail'),
       'boom',
     )
+  })
+
+  describe('global notification mute', () => {
+    it('suppresses dispatch and never consults the push store when muted', async () => {
+      isPushEnabledMock.mockReturnValue(true)
+      areNotificationsMutedMock.mockResolvedValue(true)
+
+      await notifyUsersForCameraAvailability('front_porch', 'offline')
+
+      expect(sendPushNotificationMock).not.toHaveBeenCalled()
+      expect(getPushStoreMock).not.toHaveBeenCalled()
+    })
+
+    it('dispatches as normal when not muted', async () => {
+      isPushEnabledMock.mockReturnValue(true)
+      areNotificationsMutedMock.mockResolvedValue(false)
+      const store = makeStore({
+        getAllSubscribedUserIds: () => ['user-1'],
+        isCameraAvailabilityEnabledForUser: () => true,
+        getSubscriptionsByUserId: () => [
+          { endpoint: 'https://push.example/a', p256dh: 'p1', auth: 'a1' },
+        ],
+      })
+      getPushStoreMock.mockResolvedValue(store as never)
+      sendPushNotificationMock.mockResolvedValue(undefined)
+
+      await notifyUsersForCameraAvailability('front_porch', 'offline')
+
+      expect(sendPushNotificationMock).toHaveBeenCalledTimes(1)
+    })
   })
 })

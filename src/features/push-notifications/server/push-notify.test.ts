@@ -12,6 +12,7 @@ import type { FrigateEventInfo } from './event-batcher'
 import { isPushEnabled, sendPushNotification } from './push'
 import { SendThrottle } from './send-throttle'
 import { getPushStore } from './push-store'
+import { areNotificationsMuted } from './notification-mute'
 
 vi.mock('./push', () => ({
   isPushEnabled: vi.fn(),
@@ -20,6 +21,10 @@ vi.mock('./push', () => ({
 
 vi.mock('./push-store', () => ({
   getPushStore: vi.fn(),
+}))
+
+vi.mock('./notification-mute', () => ({
+  areNotificationsMuted: vi.fn(),
 }))
 
 function makeEvent(
@@ -230,6 +235,7 @@ describe('notifyUsersForCamera', () => {
   const isPushEnabledMock = vi.mocked(isPushEnabled)
   const sendPushNotificationMock = vi.mocked(sendPushNotification)
   const getPushStoreMock = vi.mocked(getPushStore)
+  const areNotificationsMutedMock = vi.mocked(areNotificationsMuted)
 
   function makeStore(
     overrides: {
@@ -260,6 +266,8 @@ describe('notifyUsersForCamera', () => {
     isPushEnabledMock.mockReset()
     sendPushNotificationMock.mockReset()
     getPushStoreMock.mockReset()
+    areNotificationsMutedMock.mockReset()
+    areNotificationsMutedMock.mockResolvedValue(false)
     consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
     consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
   })
@@ -634,6 +642,53 @@ describe('notifyUsersForCamera', () => {
       )
 
       expect(endpointsSentTo().filter((e) => e === APPLE)).toHaveLength(2)
+    })
+  })
+
+  describe('global notification mute', () => {
+    it('suppresses dispatch and never consults the push store when muted', async () => {
+      isPushEnabledMock.mockReturnValue(true)
+      areNotificationsMutedMock.mockResolvedValue(true)
+
+      await notifyUsersForCamera('front_porch', [makeEvent()], {
+        burstStart: true,
+      })
+
+      expect(sendPushNotificationMock).not.toHaveBeenCalled()
+      expect(getPushStoreMock).not.toHaveBeenCalled()
+    })
+
+    it('checks the mute using the same clock the function is using', async () => {
+      isPushEnabledMock.mockReturnValue(true)
+      areNotificationsMutedMock.mockResolvedValue(true)
+
+      await notifyUsersForCamera(
+        'front_porch',
+        [makeEvent()],
+        { burstStart: true },
+        { now: 12_345 },
+      )
+
+      expect(areNotificationsMutedMock).toHaveBeenCalledWith(12_345)
+    })
+
+    it('dispatches as normal when not muted', async () => {
+      isPushEnabledMock.mockReturnValue(true)
+      areNotificationsMutedMock.mockResolvedValue(false)
+      const store = makeStore({
+        getAllSubscribedUserIds: () => ['user-1'],
+        getSubscriptionsByUserId: () => [
+          { endpoint: 'https://push.example/a', p256dh: 'p1', auth: 'a1' },
+        ],
+      })
+      getPushStoreMock.mockResolvedValue(store as never)
+      sendPushNotificationMock.mockResolvedValue(undefined)
+
+      await notifyUsersForCamera('front_porch', [makeEvent()], {
+        burstStart: true,
+      })
+
+      expect(sendPushNotificationMock).toHaveBeenCalledTimes(1)
     })
   })
 })

@@ -104,11 +104,12 @@ authentication and knows nothing about this app's roles. Being listed in
 `ADMIN_EMAILS` grants no access on its own; you still have to pass the
 Google-side gate.
 
-**Nothing consumes `is_admin` yet.** The flag is written and readable, but no
-route, server function or UI branches on it. Anything that starts to must call
-`store.isAdmin(sub)` server-side after `requireSession()` — never trust a
-client-supplied claim, and never add the flag to the session cookie as a
-shortcut, which would reintroduce alternative 1 through the back door.
+**Every consumer of `is_admin` re-reads it server-side.** The first one is the
+admin notification mute ([[decisions/2026-09-21-admin-global-notification-mute]]),
+which calls `store.isAdmin(sub)` on each request after resolving the session.
+Anything that follows must do the same — never trust a client-supplied claim,
+and never add the flag to the session cookie as a shortcut, which would
+reintroduce alternative 1 through the back door.
 
 ## Related
 
