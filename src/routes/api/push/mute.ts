@@ -4,7 +4,7 @@ import { getSessionConfig } from '#/features/shared/server/session'
 import type { SessionData } from '#/features/shared/server/session'
 import {
   handleGetNotificationMute,
-  handleMuteAllNotifications,
+  handleSetNotificationMute,
 } from '#/features/push-notifications/server/admin-mute-handlers'
 
 export const Route = createFileRoute('/api/push/mute')({
@@ -36,7 +36,7 @@ export const Route = createFileRoute('/api/push/mute')({
         }
       },
 
-      POST: async () => {
+      POST: async ({ request }) => {
         try {
           let userId: string | null = null
           try {
@@ -46,7 +46,20 @@ export const Route = createFileRoute('/api/push/mute')({
             // Corrupted session
           }
 
-          const result = await handleMuteAllNotifications(userId)
+          let body: any
+          try {
+            body = await request.json()
+          } catch {
+            return new Response(
+              JSON.stringify({ error: 'Invalid JSON body' }),
+              {
+                status: 400,
+                headers: { 'Content-Type': 'application/json' },
+              },
+            )
+          }
+
+          const result = await handleSetNotificationMute(userId, body)
           return new Response(JSON.stringify(result.body), {
             status: result.status,
             headers: { 'Content-Type': 'application/json' },

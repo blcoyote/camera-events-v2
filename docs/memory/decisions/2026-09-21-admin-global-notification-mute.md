@@ -5,7 +5,8 @@ created: 2026-09-21
 
 # Admin-triggered global notification mute, persisted and enforced at dispatch
 
-> One admin button silences every user's push notifications for ten minutes.
+> An admin picks a duration — Off, or 10 minutes up to 6 hours — and every
+> user's push notifications stop until it lapses; Off clears an active mute.
 > The deadline is a row in SQLite, not a variable, and it is enforced at the two
 > dispatchers — so events keep flowing, only the outbound push is dropped.
 
@@ -27,9 +28,19 @@ exactly what an admin wants to avoid, and then remembering to undo it.
 
 **A single global deadline, stored in SQLite.** A new `push_global_settings`
 key/value table holds `notification_mute_until` as an epoch-millisecond
-timestamp in text. `muteAllNotifications()` writes `now + 10 minutes`;
-`areNotificationsMuted(now)` compares the stored deadline against the caller's
-clock.
+timestamp in text. `applyNotificationMute(durationMs)` writes
+`now + durationMs`; `areNotificationsMuted(now)` compares the stored deadline
+against the caller's clock. A `durationMs` of 0 writes `0`, which every read
+path already sees as lapsed — so clearing a mute needs no separate column, no
+delete, and no "never muted" vs "explicitly resumed" distinction.
+
+The duration comes from a fixed ladder in
+`src/features/shared/utils/muteDurations.ts` (Off, 10m, 30m, 1h, 2h, 4h, 6h),
+validated server-side as an **allowlist**. It lives in `shared/` because the
+dropdown and the handler must agree and features may not import from one
+another; duplicating a contract whose halves must agree is how they stop
+agreeing. The default is Off, so submitting without touching the dropdown
+resumes rather than silences.
 
 Four properties hold this together:
 
@@ -41,9 +52,13 @@ Four properties hold this together:
    `parseMuteUntil()` in `push-store.ts` accepts only a non-negative safe
    integer, so a missing row, an empty string, or garbage like `"1e100"`
    (finite but not a safe integer) reads as **not muted**. `isMuteActive()` in
-   `notification-mute.ts` additionally caps a deadline at one mute window from
-   now, so a structurally-valid but corrupt far-future value (a year-2100
-   timestamp) is also treated as not muted. Together these deliver the
+   `notification-mute.ts` additionally caps a deadline at `MAX_MUTE_DURATION_MS`
+   (the longest offered option) from now, so a structurally-valid but corrupt
+   far-future value (a year-2100 timestamp) is also treated as not muted. That
+   ceiling is coupled to the ladder on purpose, and the coupling is load-
+   bearing: adding a longer option widens the blast radius of a corrupt row by
+   the same amount, so it is a deliberate weakening of this guarantee rather
+   than a free UI change. Together these deliver the
    guarantee that a corrupt value can never wedge the system into permanent
    silence. Note the polarity is the opposite of `toIsAdmin()`: for a
    permission flag, safe means "deny"; here, safe means "deliver". A store
@@ -87,9 +102,14 @@ presentation only.
 4. **Per-user snooze.** Useful, and a different feature — it requires every user
    to act, which is the thing being avoided.
 5. **Send with `silent: true`.** Rejected on iOS behaviour, above.
-6. **Include an early-cancel button.** Deferred, not rejected: ten minutes is
-   short enough to wait out, and it doubles the state machine. Adding it later
-   is additive (`setNotificationMuteUntil(0)` plus a button).
+6. **A separate early-cancel button.** The original fixed-window version
+   deferred cancelling entirely. With selectable durations a mute can run for
+   six hours, so waiting it out stopped being acceptable — but cancelling
+   became the `Off` rung of the ladder rather than a second control, keeping
+   one submit path, one handler and one validation rule.
+7. **A free-form minutes input, or a range check instead of an allowlist.**
+   Rejected — it makes the set of reachable deadlines unbounded, which is
+   exactly what the corruption ceiling relies on being small and known.
 
 ## Why it matters
 

@@ -1,12 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
-  NOTIFICATION_MUTE_DURATION_MS,
   isMuteActive,
   getActiveMuteUntil,
   areNotificationsMuted,
-  muteAllNotifications,
+  applyNotificationMute,
 } from './notification-mute'
 import { getPushStore } from './push-store'
+import { MAX_MUTE_DURATION_MS } from '#/features/shared/utils/muteDurations'
 
 vi.mock('./push-store', () => ({
   getPushStore: vi.fn(),
@@ -30,15 +30,16 @@ describe('isMuteActive', () => {
   })
 
   it('treats a deadline exactly one full window ahead as active', () => {
-    expect(isMuteActive(1_000 + NOTIFICATION_MUTE_DURATION_MS, 1_000)).toBe(
-      true,
-    )
+    expect(isMuteActive(1_000 + MAX_MUTE_DURATION_MS, 1_000)).toBe(true)
+  })
+
+  it('treats a six-hour deadline as active', () => {
+    const sixHoursMs = 6 * 60 * 60 * 1000
+    expect(isMuteActive(1_000 + sixHoursMs, 1_000)).toBe(true)
   })
 
   it('rejects a deadline further ahead than one full window (corrupt value cannot mute forever)', () => {
-    expect(isMuteActive(1_000 + NOTIFICATION_MUTE_DURATION_MS + 1, 1_000)).toBe(
-      false,
-    )
+    expect(isMuteActive(1_000 + MAX_MUTE_DURATION_MS + 1, 1_000)).toBe(false)
     expect(isMuteActive(4_102_444_800_000, 1_000)).toBe(false)
   })
 })
@@ -130,35 +131,44 @@ describe('areNotificationsMuted', () => {
   })
 })
 
-describe('muteAllNotifications', () => {
+describe('applyNotificationMute', () => {
   const getPushStoreMock = vi.mocked(getPushStore)
 
   beforeEach(() => {
     getPushStoreMock.mockReset()
   })
 
-  it('sets the deadline to now + the mute duration and returns it', async () => {
+  it('sets the deadline to now + durationMs and returns it for a non-zero duration', async () => {
     const setNotificationMuteUntil = vi.fn()
     getPushStoreMock.mockResolvedValue({ setNotificationMuteUntil } as never)
 
-    const result = await muteAllNotifications(1_000)
+    const result = await applyNotificationMute(30 * 60 * 1000, 1_000)
 
-    expect(result).toBe(1_000 + NOTIFICATION_MUTE_DURATION_MS)
+    expect(result).toBe(1_000 + 30 * 60 * 1000)
     expect(setNotificationMuteUntil).toHaveBeenCalledWith(
-      1_000 + NOTIFICATION_MUTE_DURATION_MS,
+      1_000 + 30 * 60 * 1000,
     )
+  })
+
+  it('clears the mute (writes 0 and returns null) for a zero duration', async () => {
+    const setNotificationMuteUntil = vi.fn()
+    getPushStoreMock.mockResolvedValue({ setNotificationMuteUntil } as never)
+
+    const result = await applyNotificationMute(0, 1_000)
+
+    expect(result).toBeNull()
+    expect(setNotificationMuteUntil).toHaveBeenCalledWith(0)
   })
 
   it('defaults nowMs to the current time', async () => {
     const setNotificationMuteUntil = vi.fn()
     getPushStoreMock.mockResolvedValue({ setNotificationMuteUntil } as never)
     const before = Date.now()
+    const durationMs = 60_000
 
-    const result = await muteAllNotifications()
+    const result = await applyNotificationMute(durationMs)
 
-    expect(result).toBeGreaterThanOrEqual(
-      before + NOTIFICATION_MUTE_DURATION_MS,
-    )
+    expect(result).toBeGreaterThanOrEqual(before + durationMs)
     expect(setNotificationMuteUntil).toHaveBeenCalledWith(result)
   })
 
@@ -168,12 +178,16 @@ describe('muteAllNotifications', () => {
     })
     getPushStoreMock.mockResolvedValue({ setNotificationMuteUntil } as never)
 
-    await expect(muteAllNotifications(1_000)).rejects.toThrow('write failed')
+    await expect(applyNotificationMute(60_000, 1_000)).rejects.toThrow(
+      'write failed',
+    )
   })
 
   it('propagates an error when getPushStore itself throws', async () => {
     getPushStoreMock.mockRejectedValue(new Error('db unavailable'))
 
-    await expect(muteAllNotifications(1_000)).rejects.toThrow('db unavailable')
+    await expect(applyNotificationMute(60_000, 1_000)).rejects.toThrow(
+      'db unavailable',
+    )
   })
 })

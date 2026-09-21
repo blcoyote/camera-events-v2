@@ -1,13 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import {
   handleGetNotificationMute,
-  handleMuteAllNotifications,
+  handleSetNotificationMute,
 } from '#/features/push-notifications/server/admin-mute-handlers'
 import { getUserStore } from '#/features/shared/server/users/user-store'
 import {
-  NOTIFICATION_MUTE_DURATION_MS,
   getActiveMuteUntil,
-  muteAllNotifications,
+  applyNotificationMute,
 } from '#/features/push-notifications/server/notification-mute'
 import type * as NotificationMuteModule from '#/features/push-notifications/server/notification-mute'
 
@@ -18,7 +17,7 @@ vi.mock('#/features/shared/server/users/user-store', () => ({
 vi.mock('./notification-mute', async (importOriginal) => ({
   ...(await importOriginal<typeof NotificationMuteModule>()),
   getActiveMuteUntil: vi.fn(),
-  muteAllNotifications: vi.fn(),
+  applyNotificationMute: vi.fn(),
 }))
 
 beforeEach(() => {
@@ -76,9 +75,9 @@ describe('handleGetNotificationMute', () => {
   })
 })
 
-describe('handleMuteAllNotifications', () => {
+describe('handleSetNotificationMute', () => {
   it('returns 401 when userId is null', async () => {
-    const result = await handleMuteAllNotifications(null)
+    const result = await handleSetNotificationMute(null, { durationMs: 0 })
     expect(result.status).toBe(401)
     expect(result.body).toEqual({ error: 'Unauthorized' })
   })
@@ -88,27 +87,93 @@ describe('handleMuteAllNotifications', () => {
       isAdmin: vi.fn(() => false),
     } as any)
 
-    const result = await handleMuteAllNotifications('regular-user')
+    const result = await handleSetNotificationMute('regular-user', {
+      durationMs: 10 * 60 * 1000,
+    })
 
     expect(result.status).toBe(403)
     expect(result.body).toEqual({ error: 'Forbidden' })
-    expect(muteAllNotifications).not.toHaveBeenCalled()
+    expect(applyNotificationMute).not.toHaveBeenCalled()
   })
 
-  it('mutes for an admin and returns the deadline plus duration', async () => {
+  describe('input validation (admin caller)', () => {
+    beforeEach(() => {
+      vi.mocked(getUserStore).mockResolvedValue({
+        isAdmin: vi.fn(() => true),
+      } as any)
+    })
+
+    it('returns 400 when durationMs is missing', async () => {
+      const result = await handleSetNotificationMute('admin-user', {})
+
+      expect(result.status).toBe(400)
+      expect(result.body).toEqual({
+        error:
+          'Invalid request: durationMs must be one of the supported mute durations',
+      })
+      expect(applyNotificationMute).not.toHaveBeenCalled()
+    })
+
+    it('returns 400 when durationMs is a string', async () => {
+      const result = await handleSetNotificationMute('admin-user', {
+        durationMs: '600000',
+      })
+
+      expect(result.status).toBe(400)
+      expect(applyNotificationMute).not.toHaveBeenCalled()
+    })
+
+    it('returns 400 for an off-ladder duration', async () => {
+      const result = await handleSetNotificationMute('admin-user', {
+        durationMs: 7 * 60 * 1000,
+      })
+
+      expect(result.status).toBe(400)
+      expect(applyNotificationMute).not.toHaveBeenCalled()
+    })
+
+    it('returns 400 for a duration above the maximum', async () => {
+      const result = await handleSetNotificationMute('admin-user', {
+        durationMs: 7 * 60 * 60 * 1000,
+      })
+
+      expect(result.status).toBe(400)
+      expect(applyNotificationMute).not.toHaveBeenCalled()
+    })
+  })
+
+  it('mutes for an admin for a six-hour duration and returns the deadline', async () => {
     vi.mocked(getUserStore).mockResolvedValue({
       isAdmin: vi.fn(() => true),
     } as any)
-    const muteUntil = Date.now() + NOTIFICATION_MUTE_DURATION_MS
-    vi.mocked(muteAllNotifications).mockResolvedValue(muteUntil)
+    const sixHoursMs = 6 * 60 * 60 * 1000
+    const muteUntil = Date.now() + sixHoursMs
+    vi.mocked(applyNotificationMute).mockResolvedValue(muteUntil)
 
-    const result = await handleMuteAllNotifications('admin-user')
+    const result = await handleSetNotificationMute('admin-user', {
+      durationMs: sixHoursMs,
+    })
 
     expect(result.status).toBe(200)
     expect(result.body).toEqual({
       mutedUntil: muteUntil,
-      durationMs: NOTIFICATION_MUTE_DURATION_MS,
+      durationMs: sixHoursMs,
     })
-    expect(muteAllNotifications).toHaveBeenCalledOnce()
+    expect(applyNotificationMute).toHaveBeenCalledWith(sixHoursMs)
+  })
+
+  it('clears the mute for an admin submitting durationMs: 0', async () => {
+    vi.mocked(getUserStore).mockResolvedValue({
+      isAdmin: vi.fn(() => true),
+    } as any)
+    vi.mocked(applyNotificationMute).mockResolvedValue(null)
+
+    const result = await handleSetNotificationMute('admin-user', {
+      durationMs: 0,
+    })
+
+    expect(result.status).toBe(200)
+    expect(result.body).toEqual({ mutedUntil: null, durationMs: 0 })
+    expect(applyNotificationMute).toHaveBeenCalledWith(0)
   })
 })

@@ -1,10 +1,7 @@
 import '@tanstack/react-start/server-only'
 import { getUserStore } from '#/features/shared/server/users/user-store'
-import {
-  NOTIFICATION_MUTE_DURATION_MS,
-  getActiveMuteUntil,
-  muteAllNotifications,
-} from './notification-mute'
+import { getActiveMuteUntil, applyNotificationMute } from './notification-mute'
+import { isValidMuteDurationMs } from '#/features/shared/utils/muteDurations'
 
 interface HandlerResult {
   status: number
@@ -32,8 +29,9 @@ export async function handleGetNotificationMute(
   return { status: 200, body: { isAdmin: true, mutedUntil } }
 }
 
-export async function handleMuteAllNotifications(
+export async function handleSetNotificationMute(
   userId: string | null,
+  body: Record<string, unknown>,
 ): Promise<HandlerResult> {
   // Check authentication before authorization: an anonymous caller must get
   // 401, and a signed-in non-admin must get 403 — never leak one as the other.
@@ -48,9 +46,21 @@ export async function handleMuteAllNotifications(
     return { status: 403, body: { error: 'Forbidden' } }
   }
 
-  const mutedUntil = await muteAllNotifications()
+  // Authorization is checked before input validation is even attempted, so a
+  // non-admin's malformed body never reaches the allowlist check.
+  if (!isValidMuteDurationMs(body.durationMs)) {
+    return {
+      status: 400,
+      body: {
+        error:
+          'Invalid request: durationMs must be one of the supported mute durations',
+      },
+    }
+  }
+
+  const mutedUntil = await applyNotificationMute(body.durationMs)
   return {
     status: 200,
-    body: { mutedUntil, durationMs: NOTIFICATION_MUTE_DURATION_MS },
+    body: { mutedUntil, durationMs: body.durationMs },
   }
 }

@@ -3,20 +3,27 @@
 ## Intent Description
 
 An admin needs a way to stop every push notification going to every user for a
-short, fixed window — the case that motivated it is physical work in front of a
+bounded window — the case that motivated it is physical work in front of a
 camera (deliveries, gardening, a party in the driveway) that would otherwise
 spray motion alerts at every subscribed device for as long as it lasts. Today
 the only mitigations are per-user and per-camera: each user can opt a camera out
 of motion alerts in Settings, and each user can unsubscribe their own device.
-Neither helps an admin who wants to spare _everyone_ for the next ten minutes
+Neither helps an admin who wants to spare _everyone_ for the next few hours
 without touching anyone's stored preferences.
 
-The control is a single button on the Settings page, visible only to users whose
-`users.is_admin` row is set (see
-`docs/specs/user-table-admin-flag.md`): **Silence all notifications for 10
-minutes**. While the window is open, motion alerts and camera offline/online
-alerts are not delivered to anyone. When it lapses, notifications resume with no
-further action.
+The control is a duration dropdown plus a button on the Settings page, visible
+only to users whose `users.is_admin` row is set (see
+`docs/specs/user-table-admin-flag.md`). The dropdown offers a fixed ladder —
+**Off, 10 minutes, 30 minutes, 1 hour, 2 hours, 4 hours, 6 hours** — and
+defaults to **Off**. Submitting a duration silences motion alerts and camera
+offline/online alerts for everyone until it lapses; submitting **Off** clears
+any active mute and resumes notifications immediately. A lapsed mute needs no
+action at all.
+
+The default is Off rather than the longest or most recent choice so that
+opening Settings and submitting without touching the dropdown resumes
+notifications rather than silencing them — the accident-proof direction for a
+control that affects every user.
 
 ## Scope
 
@@ -31,9 +38,6 @@ further action.
 
 **Out of scope**
 
-- Cancelling an active mute early. Ten minutes is short enough that waiting it
-  out is acceptable, and a cancel button doubles the state machine (and the
-  audit questions) for a case that resolves itself.
 - Per-camera or per-user scoping of the mute. This is deliberately the blunt
   instrument; the fine-grained controls already exist next to it.
 - An audit log of who muted when. Nothing else in this app is audited, and
@@ -56,18 +60,46 @@ up` in the middle of the window would otherwise silently un-mute and let the
 alert storm the admin just suppressed through — the exact failure the feature
 exists to prevent, at the exact moment it is least visible.
 
+Clearing a mute writes `0` rather than deleting the row: `parseMuteUntil('0')`
+yields `0`, and `isMuteActive(0, now)` is false because `0 > now` fails. One
+write path covers both setting and clearing, and no read path has to
+distinguish "never muted" from "explicitly resumed".
+
 Reads are fail-closed in the _safe_ direction, via two layers of validation. In
 `push-store.ts`, `parseMuteUntil()` accepts only a non-negative safe integer —
 a missing row, an empty string, a non-numeric string, or a value like `"1e100"`
 (finite but not a safe integer) all read as **not muted**. In
 `notification-mute.ts`, `isMuteActive()` additionally caps how far in the
-future a deadline may be: no legitimate deadline is ever further out than one
-mute window from now, so a structurally-valid but corrupt far-future value
-(e.g. a year-2100 timestamp) is also treated as not muted. Together these two
-layers are what deliver the guarantee: a corrupt value must never be able to
-wedge the system into permanent silence; the worst outcome of a bad read is a
-notification the admin wanted suppressed, not a notification that never
-arrives.
+future a deadline may be: no legitimate deadline is ever further out than
+`MAX_MUTE_DURATION_MS` (the longest offered option) from now, so a
+structurally-valid but corrupt far-future value (e.g. a year-2100 timestamp) is
+also treated as not muted. Together these two layers are what deliver the
+guarantee: a corrupt value must never be able to wedge the system into
+permanent silence; the worst outcome of a bad read is a notification the admin
+wanted suppressed, not a notification that never arrives.
+
+That ceiling is coupled to the duration ladder, and the coupling is load-
+bearing: it is what caps the blast radius of a corrupt row at one maximum
+window. Widening the ladder widens the ceiling, so a longer option is a
+deliberate weakening of the corruption guarantee, not a free UI change.
+
+### The duration ladder
+
+`src/features/shared/utils/muteDurations.ts` holds the ladder as a shared,
+isomorphic contract. The Settings dropdown renders it and the `POST` handler
+validates against it, so the two cannot drift — an option the client offers but
+the server rejects would look like a broken button.
+
+It lives in `shared/` rather than in either feature because features must never
+import from one another, and this is genuinely one value used by both sides of
+a request. The architecture's "prefer duplication over coupling" guidance does
+not apply: duplicating a contract whose halves must agree is how the halves
+stop agreeing.
+
+Validation is an **allowlist**, not a range check. A range would accept any
+value up to six hours, including absurdly precise ones, and would let the set
+of reachable deadlines grow without bound; the ladder keeps that set small and
+known, which is also what keeps the corruption ceiling meaningful.
 
 Expiry is not stored as a flag and never swept. `getNotificationMuteUntil()`
 returns the raw deadline and callers compare it against their own clock, so a
@@ -149,13 +181,23 @@ behaviour, as above.
   told, misleadingly, that push is broken. The cost is that the mute is not
   literally "no push can leave the server"; it is "no _event_ reaches a user
   unbidden", which is the property the feature is actually for.
-- **No early cancel.** An admin who mis-clicks waits out ten minutes. Accepted
-  for the scope reasons above; adding a cancel later is a small, additive change
-  (`setNotificationMuteUntil(0)` plus a second button).
-- **Last write wins.** Two admins muting concurrently is a single-row upsert; no
-  locking, no merge. The later deadline is not preserved if the earlier write
-  lands second, which for a fixed-length window from `now` is a sub-second
-  discrepancy.
+- **Cancelling is a duration, not a separate control.** Submitting **Off** is
+  how an active mute is cleared, rather than a second "cancel" button appearing
+  only while muted. One submit path means one server handler, one validation
+  rule and one state machine; the cost is that "resume now" reads as a dropdown
+  choice rather than an obvious standalone action.
+- **The button stays enabled while a mute is active.** It was disabled when the
+  only possible action was starting a fixed window. Now it is needed precisely
+  _during_ a mute — to shorten it, extend it, or clear it — so disabling it
+  would lock the admin out of the control for as long as the mute they want to
+  change is running.
+- **Last write wins, and a re-submit restarts rather than extends.** Two admins
+  submitting concurrently is a single-row upsert; no locking, no merge.
+  Submitting again replaces the deadline with `now + durationMs`, so choosing a
+  shorter duration during a longer mute shortens it. That is the intuitive
+  reading of "mute for 30 minutes" and it keeps clearing (duration 0) on the
+  same path, but it does mean a mute can be silently cut short by a second
+  admin who picked a smaller number.
 - **Server clock only.** The deadline is compared against the server's clock in
   the dispatchers and against the browser's clock only for the countdown
   display. A skewed client shows a wrong countdown; it cannot change when the

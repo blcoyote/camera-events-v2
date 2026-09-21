@@ -82,4 +82,16 @@ describe('formatRemaining', () => {
   it('pads seconds under 10 with a leading zero', () => {
     expect(formatRemaining(65_000)).toBe('1:05')
   })
+
+  it('formats 6 hours as H:MM:SS', () => {
+    expect(formatRemaining(21_600_000)).toBe('6:00:00')
+  })
+
+  it('formats exactly 1 hour as H:MM:SS', () => {
+    expect(formatRemaining(3_600_000)).toBe('1:00:00')
+  })
+
+  it('formats just under 1 hour as M:SS, not H:MM:SS', () => {
+    expect(formatRemaining(3_599_000)).toBe('59:59')
+  })
 })
