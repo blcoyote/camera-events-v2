@@ -95,6 +95,7 @@ src/routes/
     auth/google.ts                # GET /api/auth/google — OAuth initiation
     auth/google/callback.ts       # GET /api/auth/google/callback — OAuth callback
     auth/logout.ts                # POST /api/auth/logout
+    auth/admin-status.ts          # GET /api/auth/admin-status — current user's is_admin flag, re-read fresh per request
     cameras/$name/latest.ts       # GET /api/cameras/:name/latest — proxied live snapshot
     events/$id/clip.ts            # GET /api/events/:id/clip
     events/$id/snapshot.ts        # GET /api/events/:id/snapshot

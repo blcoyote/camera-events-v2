@@ -18,6 +18,7 @@ import { Route as ApiTestAuthRouteImport } from './routes/api/test-auth'
 import { Route as AuthenticatedCameraEventsIndexRouteImport } from './routes/_authenticated/camera-events.index'
 import { Route as AuthenticatedCameraEventsIdRouteImport } from './routes/_authenticated/camera-events.$id'
 import { Route as AuthenticatedLiveNameRouteImport } from './routes/_authenticated/live.$name'
+import { Route as ApiAuthAdminStatusRouteImport } from './routes/api/auth/admin-status'
 import { Route as ApiAuthGoogleRouteImport } from './routes/api/auth/google'
 import { Route as ApiAuthLogoutRouteImport } from './routes/api/auth/logout'
 import { Route as ApiHealthIndexRouteImport } from './routes/api/health/index'
@@ -80,6 +81,11 @@ const AuthenticatedLiveNameRoute = AuthenticatedLiveNameRouteImport.update({
   id: '/live/$name',
   path: '/live/$name',
   getParentRoute: () => AuthenticatedRoute,
+} as any)
+const ApiAuthAdminStatusRoute = ApiAuthAdminStatusRouteImport.update({
+  id: '/api/auth/admin-status',
+  path: '/api/auth/admin-status',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiAuthGoogleRoute = ApiAuthGoogleRouteImport.update({
   id: '/api/auth/google',
@@ -171,6 +177,7 @@ export interface FileRoutesByFullPath {
   '/api/test-auth': typeof ApiTestAuthRoute
   '/camera-events/$id': typeof AuthenticatedCameraEventsIdRoute
   '/live/$name': typeof AuthenticatedLiveNameRoute
+  '/api/auth/admin-status': typeof ApiAuthAdminStatusRoute
   '/api/auth/google': typeof ApiAuthGoogleRouteWithChildren
   '/api/auth/logout': typeof ApiAuthLogoutRoute
   '/api/health/ready': typeof ApiHealthReadyRoute
@@ -197,6 +204,7 @@ export interface FileRoutesByTo {
   '/api/test-auth': typeof ApiTestAuthRoute
   '/camera-events/$id': typeof AuthenticatedCameraEventsIdRoute
   '/live/$name': typeof AuthenticatedLiveNameRoute
+  '/api/auth/admin-status': typeof ApiAuthAdminStatusRoute
   '/api/auth/google': typeof ApiAuthGoogleRouteWithChildren
   '/api/auth/logout': typeof ApiAuthLogoutRoute
   '/api/health/ready': typeof ApiHealthReadyRoute
@@ -225,6 +233,7 @@ export interface FileRoutesById {
   '/api/test-auth': typeof ApiTestAuthRoute
   '/_authenticated/camera-events/$id': typeof AuthenticatedCameraEventsIdRoute
   '/_authenticated/live/$name': typeof AuthenticatedLiveNameRoute
+  '/api/auth/admin-status': typeof ApiAuthAdminStatusRoute
   '/api/auth/google': typeof ApiAuthGoogleRouteWithChildren
   '/api/auth/logout': typeof ApiAuthLogoutRoute
   '/api/health/ready': typeof ApiHealthReadyRoute
@@ -253,6 +262,7 @@ export interface FileRouteTypes {
     | '/api/test-auth'
     | '/camera-events/$id'
     | '/live/$name'
+    | '/api/auth/admin-status'
     | '/api/auth/google'
     | '/api/auth/logout'
     | '/api/health/ready'
@@ -279,6 +289,7 @@ export interface FileRouteTypes {
     | '/api/test-auth'
     | '/camera-events/$id'
     | '/live/$name'
+    | '/api/auth/admin-status'
     | '/api/auth/google'
     | '/api/auth/logout'
     | '/api/health/ready'
@@ -306,6 +317,7 @@ export interface FileRouteTypes {
     | '/api/test-auth'
     | '/_authenticated/camera-events/$id'
     | '/_authenticated/live/$name'
+    | '/api/auth/admin-status'
     | '/api/auth/google'
     | '/api/auth/logout'
     | '/api/health/ready'
@@ -329,6 +341,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   ApiTestAuthRoute: typeof ApiTestAuthRoute
+  ApiAuthAdminStatusRoute: typeof ApiAuthAdminStatusRoute
   ApiAuthGoogleRoute: typeof ApiAuthGoogleRouteWithChildren
   ApiAuthLogoutRoute: typeof ApiAuthLogoutRoute
   ApiHealthReadyRoute: typeof ApiHealthReadyRoute
@@ -410,6 +423,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/live/$name'
       preLoaderRoute: typeof AuthenticatedLiveNameRouteImport
       parentRoute: typeof AuthenticatedRoute
+    }
+    '/api/auth/admin-status': {
+      id: '/api/auth/admin-status'
+      path: '/api/auth/admin-status'
+      fullPath: '/api/auth/admin-status'
+      preLoaderRoute: typeof ApiAuthAdminStatusRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/auth/google': {
       id: '/api/auth/google'
@@ -564,6 +584,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   ApiTestAuthRoute: ApiTestAuthRoute,
+  ApiAuthAdminStatusRoute: ApiAuthAdminStatusRoute,
   ApiAuthGoogleRoute: ApiAuthGoogleRouteWithChildren,
   ApiAuthLogoutRoute: ApiAuthLogoutRoute,
   ApiHealthReadyRoute: ApiHealthReadyRoute,
