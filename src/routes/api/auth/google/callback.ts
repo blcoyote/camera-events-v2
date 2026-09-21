@@ -18,6 +18,8 @@ import {
   redirectTo,
 } from '#/features/auth/server/auth'
 import { decryptOAuthState } from '#/features/auth/server/auth-crypto'
+import { recordUserLogin } from '#/features/auth/server/record-user-login'
+import { getUserStore } from '#/features/shared/server/users/user-store'
 import { getSessionConfig } from '#/features/shared/server/session'
 import type { SessionData } from '#/features/shared/server/session'
 
@@ -91,6 +93,16 @@ export const Route = createFileRoute('/api/auth/google/callback')({
           }
 
           const sessionData = parseIdTokenClaims(idTokenClaims)
+
+          // Record the user and seed admin status from ADMIN_EMAILS. Deliberately
+          // non-fatal: a database problem must not stop a valid sign-in, and an
+          // unrecorded user simply reads as non-admin, which is the safe direction.
+          try {
+            const userStore = await getUserStore()
+            recordUserLogin(userStore, sessionData, process.env.ADMIN_EMAILS)
+          } catch (error) {
+            console.warn('[auth] failed to record user login', error)
+          }
 
           // Write session
           const session = await useSession<SessionData>(getSessionConfig())
