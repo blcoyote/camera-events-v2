@@ -20,7 +20,12 @@ export const Route = createFileRoute('/api/auth/admin-status')({
           const result = await handleGetAdminStatus(userId)
           return new Response(JSON.stringify(result.body), {
             status: result.status,
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+              'Content-Type': 'application/json',
+              // A cached isAdmin: true must never survive a logout/login as
+              // a different user, or an admin's demotion.
+              'Cache-Control': 'no-store',
+            },
           })
         } catch (err) {
           console.error('[auth/admin-status GET] Unhandled error:', err)
