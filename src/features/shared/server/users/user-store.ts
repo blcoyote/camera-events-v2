@@ -142,7 +142,10 @@ let _storePromise: Promise<UserStore> | null = null
 
 export function getUserStore(): Promise<UserStore> {
   if (!_storePromise) {
-    _storePromise = createUserStore()
+    _storePromise = createUserStore().catch((err) => {
+      _storePromise = null
+      throw err
+    })
   }
   return _storePromise
 }

@@ -1,9 +1,10 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import fs from 'node:fs'
 import path from 'node:path'
 import os from 'node:os'
 import type { UserStore } from './user-store'
 import { createUserStore, toIsAdmin } from './user-store'
+import { openSqlite } from '#/features/shared/server/sqlite'
 
 let store: UserStore
 let tmpDir: string
@@ -117,13 +118,26 @@ describe('upsertUser', () => {
     ).toBe(1)
   })
 
-  it('updates profile fields and last_login_at on a return visit', () => {
+  it('updates profile fields and last_login_at on a return visit', async () => {
     store.upsertUser({
       sub: 'sub-1',
       email: 'old@example.com',
       firstName: 'Old',
       avatarUrl: 'https://example.com/old.png',
     })
+
+    // Backdate last_login_at deterministically. datetime('now') has
+    // one-second granularity, so two upserts in the same test tick can
+    // produce an identical timestamp — asserting "changed" against the
+    // real current time would be flaky. Backdating to a fixed sentinel
+    // and asserting it moved away from that sentinel is deterministic.
+    const dbPath = path.join(tmpDir, 'test.db')
+    const raw = await openSqlite(dbPath)
+    raw
+      .prepare('UPDATE users SET last_login_at = ? WHERE sub = ?')
+      .run('2000-01-01 00:00:00', 'sub-1')
+    raw.close()
+
     store.upsertUser({
       sub: 'sub-1',
       email: 'new@example.com',
@@ -134,6 +148,7 @@ describe('upsertUser', () => {
     expect(row?.email).toBe('new@example.com')
     expect(row?.first_name).toBe('New')
     expect(row?.avatar_url).toBe('https://example.com/new.png')
+    expect(row?.last_login_at).not.toBe('2000-01-01 00:00:00')
   })
 
   it('never clobbers is_admin or created_at on a repeat login (regression guard)', () => {
@@ -300,5 +315,63 @@ describe('close', () => {
 
     // Re-assign so afterEach close() does not fail on already-closed db
     store = await createUserStore(path.join(tmpDir, 'dummy.db'))
+  })
+})
+
+describe('getUserStore singleton', () => {
+  let singletonTmpDir: string
+  let originalCwd: string
+
+  beforeEach(() => {
+    singletonTmpDir = fs.mkdtempSync(
+      path.join(os.tmpdir(), 'user-store-singleton-'),
+    )
+    // getUserStore() has no dbPath override (unlike getPushStore's
+    // PUSH_DB_PATH), so it always resolves the default relative path
+    // ('data/camera-events.db'). Chdir into a scratch dir so these tests
+    // never touch the real repo's data/ directory or a live dev DB.
+    originalCwd = process.cwd()
+    process.chdir(singletonTmpDir)
+  })
+
+  afterEach(() => {
+    process.chdir(originalCwd)
+    // resetModules clears the module registry but NOT doMock registrations,
+    // so unmock explicitly — otherwise a test added below this block would
+    // silently receive the mocked sqlite module.
+    vi.doUnmock('#/features/shared/server/sqlite')
+    vi.resetModules()
+    fs.rmSync(singletonTmpDir, { recursive: true, force: true })
+  })
+
+  it('caches the store across calls', async () => {
+    const { getUserStore } = await import('./user-store')
+    const s1 = await getUserStore()
+    const s2 = await getUserStore()
+    expect(s1).toBe(s2)
+    s1.close()
+  })
+
+  it('does not cache a rejection', async () => {
+    // Reuse the real (statically imported, un-mocked) openSqlite as the
+    // fallback for call #2 below.
+    const originalOpen = openSqlite
+    let callCount = 0
+
+    vi.doMock('#/features/shared/server/sqlite', () => ({
+      openSqlite: vi.fn(async (...args: Parameters<typeof originalOpen>) => {
+        callCount++
+        if (callCount === 1) throw new Error('Simulated open failure')
+        return originalOpen(...args)
+      }),
+    }))
+
+    const { getUserStore } = await import('./user-store')
+
+    await expect(getUserStore()).rejects.toThrow('Simulated open failure')
+    // Second call must succeed (not re-throw the cached rejection)
+    const s = await getUserStore()
+    expect(typeof s.upsertUser).toBe('function')
+    s.close()
   })
 })
