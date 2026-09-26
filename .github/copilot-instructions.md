@@ -2,6 +2,12 @@
 
 Trust these instructions. They are validated against the current repo. Only search the codebase if something here is incomplete or proves wrong.
 
+## Instruction and Skill Discovery
+
+- At the start of every task, consult `CLAUDE.md` and inspect `.claude/` for applicable project skills and agent definitions. Do not rely only on remembered summaries when the files are available.
+- Before work covered by a skill, read that skill's `SKILL.md` and follow its workflow.
+- When delegating, explicitly direct the agent to `CLAUDE.md` and provide the relevant `.claude/skills/<skill>/SKILL.md` instructions. Check `.claude/agents/` for project agent definitions; if none exist, use only an otherwise available agent appropriate to the task.
+
 ## What this repository is
 
 A self-hosted Progressive Web App (PWA) for browsing [Frigate NVR](https://frigate.video/) motion events and delivering Web Push notifications. Frigate publishes events over MQTT; the app batches them per camera and pushes notifications to subscribed iOS/Android/desktop devices.
