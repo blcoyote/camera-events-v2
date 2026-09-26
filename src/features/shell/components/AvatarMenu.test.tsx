@@ -8,8 +8,21 @@ import {
   act,
   waitFor,
 } from '@testing-library/react'
+import type { ComponentProps, ReactNode } from 'react'
 import '@testing-library/jest-dom/vitest'
 import { AvatarMenu } from './AvatarMenu'
+
+vi.mock('@tanstack/react-router', () => ({
+  Link: ({
+    to,
+    children,
+    ...props
+  }: ComponentProps<'a'> & { to: string; children: ReactNode }) => (
+    <a href={to} {...props}>
+      {children}
+    </a>
+  ),
+}))
 
 function jsonResponse(status: number, body: unknown) {
   return {
@@ -104,6 +117,60 @@ describe('AvatarMenu', () => {
 
     expect(trigger).toHaveAttribute('aria-expanded', 'true')
     expect(screen.getByRole('menu')).toBeInTheDocument()
+  })
+
+  it('includes a link to the settings page when open', () => {
+    render(
+      <AvatarMenu
+        avatarUrl=""
+        initials="AB"
+        signOutAction="/api/auth/logout"
+      />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Account menu' }))
+
+    expect(screen.getByRole('menuitem', { name: 'Settings' })).toHaveAttribute(
+      'href',
+      '/settings',
+    )
+  })
+
+  it('moves focus between menu items with arrow keys', () => {
+    render(
+      <AvatarMenu
+        avatarUrl=""
+        initials="AB"
+        signOutAction="/api/auth/logout"
+      />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Account menu' }))
+
+    const menu = screen.getByRole('menu')
+    const signOutItem = screen.getByRole('menuitem', { name: 'Sign out' })
+    const settingsItem = screen.getByRole('menuitem', { name: 'Settings' })
+
+    expect(document.activeElement).toBe(signOutItem)
+    fireEvent.keyDown(menu, { key: 'ArrowDown' })
+    expect(document.activeElement).toBe(settingsItem)
+    fireEvent.keyDown(menu, { key: 'ArrowUp' })
+    expect(document.activeElement).toBe(signOutItem)
+  })
+
+  it('closes the menu when navigating to settings', () => {
+    render(
+      <AvatarMenu
+        avatarUrl=""
+        initials="AB"
+        signOutAction="/api/auth/logout"
+      />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Account menu' }))
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Settings' }))
+
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument()
   })
 
   it('closes the menu on Escape key', () => {
