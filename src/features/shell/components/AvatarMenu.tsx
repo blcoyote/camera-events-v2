@@ -139,6 +139,13 @@ export function AvatarMenu({
           >
             Sign out
           </button>
+          <a
+            href="/settings"
+            role="menuitem"
+            className="block w-full min-h-11 px-4 py-3 text-left text-sm font-medium text-(--sea-ink) transition hover:bg-(--link-bg-hover)"
+          >
+            Settings
+          </a>
         </div>
       )}
     </div>

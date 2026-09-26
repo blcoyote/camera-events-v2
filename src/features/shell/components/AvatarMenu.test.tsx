@@ -106,6 +106,23 @@ describe('AvatarMenu', () => {
     expect(screen.getByRole('menu')).toBeInTheDocument()
   })
 
+  it('includes a link to the settings page when open', () => {
+    render(
+      <AvatarMenu
+        avatarUrl=""
+        initials="AB"
+        signOutAction="/api/auth/logout"
+      />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Account menu' }))
+
+    expect(screen.getByRole('menuitem', { name: 'Settings' })).toHaveAttribute(
+      'href',
+      '/settings',
+    )
+  })
+
   it('closes the menu on Escape key', () => {
     render(
       <AvatarMenu
