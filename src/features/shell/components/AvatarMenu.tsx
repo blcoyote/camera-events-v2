@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { Link } from '@tanstack/react-router'
 
 export function AvatarMenu({
   avatarUrl,
@@ -13,7 +14,7 @@ export function AvatarMenu({
   const [isAdmin, setIsAdmin] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
-  const menuItemRef = useRef<HTMLButtonElement>(null)
+  const menuItemRefs = useRef<Array<HTMLButtonElement | HTMLAnchorElement>>([])
 
   const close = useCallback(() => {
     setOpen(false)
@@ -46,7 +47,7 @@ export function AvatarMenu({
 
   useEffect(() => {
     if (!open) return
-    menuItemRef.current?.focus()
+    menuItemRefs.current[0]?.focus()
 
     function handleClickOutside(e: MouseEvent) {
       if (
@@ -73,7 +74,22 @@ export function AvatarMenu({
       case 'Home':
       case 'End':
         e.preventDefault()
-        menuItemRef.current?.focus()
+        {
+          const currentIndex = menuItemRefs.current.findIndex(
+            (item) => item === document.activeElement,
+          )
+          const lastIndex = menuItemRefs.current.length - 1
+          const targetIndex =
+            e.key === 'Home'
+              ? 0
+              : e.key === 'End'
+                ? lastIndex
+                : (currentIndex +
+                    (e.key === 'ArrowDown' ? 1 : -1) +
+                    menuItemRefs.current.length) %
+                  menuItemRefs.current.length
+          menuItemRefs.current[targetIndex]?.focus()
+        }
         break
       case 'Tab':
         close()
@@ -124,7 +140,9 @@ export function AvatarMenu({
           className="absolute right-0 top-full z-50 mt-2 min-w-40 overflow-hidden rounded-xl border border-(--line) bg-(--surface-strong) shadow-[0_8px_24px_rgba(30,90,72,0.12)]"
         >
           <button
-            ref={menuItemRef}
+            ref={(element) => {
+              if (element) menuItemRefs.current[0] = element
+            }}
             type="button"
             role="menuitem"
             tabIndex={-1}
@@ -139,13 +157,18 @@ export function AvatarMenu({
           >
             Sign out
           </button>
-          <a
-            href="/settings"
+          <Link
+            ref={(element) => {
+              if (element) menuItemRefs.current[1] = element
+            }}
+            to="/settings"
             role="menuitem"
+            tabIndex={-1}
+            onClick={close}
             className="block w-full min-h-11 px-4 py-3 text-left text-sm font-medium text-(--sea-ink) transition hover:bg-(--link-bg-hover)"
           >
             Settings
-          </a>
+          </Link>
         </div>
       )}
     </div>
