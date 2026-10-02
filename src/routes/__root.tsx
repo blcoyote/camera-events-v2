@@ -42,7 +42,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
         content: 'width=device-width, initial-scale=1, viewport-fit=cover',
       },
       {
-        title: 'Camera Events v2',
+        title: 'Camera Events',
       },
       {
         name: 'theme-color',
@@ -62,7 +62,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       },
       {
         name: 'apple-mobile-web-app-title',
-        content: 'Camera Events v2',
+        content: 'Camera Events',
       },
     ],
     links: [

@@ -1,4 +1,4 @@
-# Camera Events v2
+# Camera Events
 
 A self-hosted PWA for browsing and monitoring [Frigate NVR](https://frigate.video/) events. Receives live motion events from Frigate over MQTT and pushes notifications to subscribed devices (iOS, Android, desktop). Built as a TanStack Start SSR app with offline-capable service worker caching.
 

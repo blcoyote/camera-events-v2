@@ -24,7 +24,7 @@ You can expect an acknowledgement within 48 hours and a resolution or status upd
 
 ## Security Model
 
-Camera Events v2 is a **self-hosted, single-owner application**. The threat model assumes:
+Camera Events is a **self-hosted, single-owner application**. The threat model assumes:
 
 - The server runs on a private network or behind a reverse proxy with TLS termination
 - The app owner controls the Frigate NVR and MQTT broker
