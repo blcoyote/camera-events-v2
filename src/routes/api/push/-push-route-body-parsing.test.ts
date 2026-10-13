@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import type { SessionData } from '#/features/shared/server/session'
+import type * as SessionModule from '#/features/shared/server/session'
 
 /**
  * Route-level coverage for the "don't read the body before auth" guard.
@@ -14,10 +15,11 @@ import type { SessionData } from '#/features/shared/server/session'
  * unauthenticated caller.
  */
 
-const mockUseSession = vi.fn()
+const mockGetAppSession = vi.fn()
 
-vi.mock('@tanstack/react-start/server', () => ({
-  useSession: (...args: unknown[]) => mockUseSession(...args),
+vi.mock('#/features/shared/server/session', async (importOriginal) => ({
+  ...(await importOriginal<typeof SessionModule>()),
+  getAppSession: (...args: unknown[]) => mockGetAppSession(...args),
 }))
 
 const mockHandleSubscribe = vi.fn()
@@ -59,10 +61,9 @@ function sessionWithSub(sub: string | undefined): {
   return { data: sub === undefined ? {} : { sub } }
 }
 
-// The routes call the real `getSessionConfig()` (only `useSession` itself is
-// mocked), which throws without a sufficiently long `SESSION_SECRET`. Give it
-// one so the route's own try/catch doesn't swallow every session as
-// "corrupted" regardless of what the mocked `useSession` resolves to.
+// `getAppSession` itself is mocked (see above), so the routes never reach the
+// real `getSessionConfig()` / `SESSION_SECRET` check — but keep a valid value
+// in place defensively in case any transitively-imported code reads it.
 const originalSessionSecret = process.env.SESSION_SECRET
 
 beforeEach(() => {
@@ -77,7 +78,7 @@ afterEach(() => {
 
 describe('POST /api/push/subscribe route handler', () => {
   it('does not read the request body when there is no session sub', async () => {
-    mockUseSession.mockResolvedValue(sessionWithSub(undefined))
+    mockGetAppSession.mockResolvedValue(sessionWithSub(undefined))
     mockHandleSubscribe.mockResolvedValue({ status: 401, body: {} })
     const { Route } = await import('./subscribe')
     const request = makeRequest()
@@ -89,7 +90,7 @@ describe('POST /api/push/subscribe route handler', () => {
   })
 
   it('reads the request body when there is a session sub', async () => {
-    mockUseSession.mockResolvedValue(sessionWithSub('user-1'))
+    mockGetAppSession.mockResolvedValue(sessionWithSub('user-1'))
     mockHandleSubscribe.mockResolvedValue({ status: 200, body: {} })
     const { Route } = await import('./subscribe')
     const request = makeRequest()
@@ -106,7 +107,7 @@ describe('POST /api/push/subscribe route handler', () => {
 
 describe('POST /api/push/unsubscribe route handler', () => {
   it('does not read the request body when there is no session sub', async () => {
-    mockUseSession.mockResolvedValue(sessionWithSub(undefined))
+    mockGetAppSession.mockResolvedValue(sessionWithSub(undefined))
     mockHandleUnsubscribe.mockResolvedValue({ status: 401, body: {} })
     const { Route } = await import('./unsubscribe')
     const request = makeRequest()
@@ -118,7 +119,7 @@ describe('POST /api/push/unsubscribe route handler', () => {
   })
 
   it('reads the request body when there is a session sub', async () => {
-    mockUseSession.mockResolvedValue(sessionWithSub('user-1'))
+    mockGetAppSession.mockResolvedValue(sessionWithSub('user-1'))
     mockHandleUnsubscribe.mockResolvedValue({ status: 200, body: {} })
     const { Route } = await import('./unsubscribe')
     const request = makeRequest()
@@ -135,7 +136,7 @@ describe('POST /api/push/unsubscribe route handler', () => {
 
 describe('PUT /api/push/preferences route handler', () => {
   it('does not read the request body when there is no session sub', async () => {
-    mockUseSession.mockResolvedValue(sessionWithSub(undefined))
+    mockGetAppSession.mockResolvedValue(sessionWithSub(undefined))
     mockHandleSetPreference.mockResolvedValue({ status: 401, body: {} })
     const { Route } = await import('./preferences')
     const request = makeRequest()
@@ -147,7 +148,7 @@ describe('PUT /api/push/preferences route handler', () => {
   })
 
   it('reads the request body when there is a session sub', async () => {
-    mockUseSession.mockResolvedValue(sessionWithSub('user-1'))
+    mockGetAppSession.mockResolvedValue(sessionWithSub('user-1'))
     mockHandleSetPreference.mockResolvedValue({ status: 200, body: {} })
     const { Route } = await import('./preferences')
     const request = makeRequest()
@@ -165,7 +166,7 @@ describe('PUT /api/push/preferences route handler', () => {
 
 describe('PUT /api/push/availability-preference route handler', () => {
   it('does not read the request body when there is no session sub', async () => {
-    mockUseSession.mockResolvedValue(sessionWithSub(undefined))
+    mockGetAppSession.mockResolvedValue(sessionWithSub(undefined))
     mockHandleSetAvailabilityPreference.mockResolvedValue({
       status: 401,
       body: {},
@@ -183,7 +184,7 @@ describe('PUT /api/push/availability-preference route handler', () => {
   })
 
   it('reads the request body when there is a session sub', async () => {
-    mockUseSession.mockResolvedValue(sessionWithSub('user-1'))
+    mockGetAppSession.mockResolvedValue(sessionWithSub('user-1'))
     mockHandleSetAvailabilityPreference.mockResolvedValue({
       status: 200,
       body: {},
@@ -203,7 +204,7 @@ describe('PUT /api/push/availability-preference route handler', () => {
 
 describe('POST /api/push/mute route handler', () => {
   it('does not read the request body when there is no session sub', async () => {
-    mockUseSession.mockResolvedValue(sessionWithSub(undefined))
+    mockGetAppSession.mockResolvedValue(sessionWithSub(undefined))
     mockHandleSetNotificationMute.mockResolvedValue({ status: 401, body: {} })
     const { Route } = await import('./mute')
     const request = makeRequest()
@@ -215,7 +216,7 @@ describe('POST /api/push/mute route handler', () => {
   })
 
   it('reads the request body when there is a session sub', async () => {
-    mockUseSession.mockResolvedValue(sessionWithSub('admin-1'))
+    mockGetAppSession.mockResolvedValue(sessionWithSub('admin-1'))
     mockHandleSetNotificationMute.mockResolvedValue({ status: 200, body: {} })
     const { Route } = await import('./mute')
     const request = makeRequest()

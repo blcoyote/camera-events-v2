@@ -139,7 +139,7 @@ The skill covers the full layering model, import protection rules, and common mi
 - **Google OAuth via Arctic.** The flow is: `GET /api/auth/google` → Google → `GET /api/auth/google/callback` → set encrypted session cookie → redirect.
 - OAuth state (PKCE `codeVerifier` + `state` + optional `returnTo`) is encoded as base64 JSON in the `oauth_state` cookie (5-minute TTL, `httpOnly`, `sameSite: lax`).
 - `returnTo` paths are validated by `sanitizeReturnTo()` — only same-origin relative paths are accepted; absolute URLs, protocol-relative, and backslash paths are rejected.
-- Session cookie name: `google-sso`; 7-day TTL; `httpOnly`, `secure` in production, `sameSite: lax`.
+- Session cookie name: `google-sso`; 30-day absolute TTL from sign-in; `httpOnly`, `secure` in production, `sameSite: lax`. Sessions are app-owned (`getAppSession` / `startNewAppSession` / `clearAppSession` in `#/features/shared/server/session`) — TanStack Start no longer provides `useSession`. See `docs/memory/decisions/2026-10-13-app-owned-session-cookie.md`.
 - `SESSION_SECRET` env var must be ≥ 32 characters. It is validated at call time (not module scope) to avoid env-access during SSR module init.
 - `requireSession()` → returns the user's Google `sub` ID or throws `'Unauthorized'`.
 - `getCurrentUserFn` is a server function called in `__root.tsx`'s `beforeLoad` to populate `context.user` for all routes.

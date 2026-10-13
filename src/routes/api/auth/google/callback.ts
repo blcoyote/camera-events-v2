@@ -1,10 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { decodeIdToken } from 'arctic'
-import {
-  getCookie,
-  deleteCookie,
-  useSession,
-} from '@tanstack/react-start/server'
+import { getCookie, deleteCookie } from '@tanstack/react-start/server'
 import {
   getGoogleProvider,
   getAppOrigin,
@@ -20,8 +16,7 @@ import {
 import { decryptOAuthState } from '#/features/auth/server/auth-crypto'
 import { recordUserLogin } from '#/features/auth/server/record-user-login'
 import { getUserStore } from '#/features/shared/server/users/user-store'
-import { getSessionConfig } from '#/features/shared/server/session'
-import type { SessionData } from '#/features/shared/server/session'
+import { startNewAppSession } from '#/features/shared/server/session'
 
 export const Route = createFileRoute('/api/auth/google/callback')({
   server: {
@@ -104,9 +99,9 @@ export const Route = createFileRoute('/api/auth/google/callback')({
             console.warn('[auth] failed to record user login', error)
           }
 
-          // Write session
-          const session = await useSession<SessionData>(getSessionConfig())
-          await session.update(sessionData)
+          // Write session — always rotate (new id/createdAt) at sign-in
+          // rather than merging into a stale/anonymous session.
+          await startNewAppSession(sessionData)
 
           // Clean up oauth_state cookie
           deleteCookie(OAUTH_STATE_COOKIE_NAME)

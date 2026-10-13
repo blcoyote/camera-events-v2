@@ -1,6 +1,8 @@
 import { createServerFn } from '@tanstack/react-start'
-import { useSession, clearSession } from '@tanstack/react-start/server'
-import { getSessionConfig } from '#/features/shared/server/session'
+import {
+  getAppSession,
+  clearAppSession,
+} from '#/features/shared/server/session'
 import { computeSessionExpiry } from '#/features/shared/utils/sessionTtl'
 import type { SessionData } from '#/features/shared/server/session'
 
@@ -136,12 +138,12 @@ export function parseOAuthState(
 export const getCurrentUserFn = createServerFn({ method: 'GET' }).handler(
   async (): Promise<SessionData | null> => {
     try {
-      const session = await useSession<SessionData>(getSessionConfig())
+      const session = await getAppSession()
       return await resolveUserFromSession(session)
     } catch {
       // Corrupted or tampered cookie — treat as unauthenticated
       try {
-        await clearSession(getSessionConfig())
+        await clearAppSession()
       } catch {
         // Ignore clear errors
       }

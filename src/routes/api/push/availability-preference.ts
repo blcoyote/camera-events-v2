@@ -1,7 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useSession } from '@tanstack/react-start/server'
-import { getSessionConfig } from '#/features/shared/server/session'
-import type { SessionData } from '#/features/shared/server/session'
+import { getAppSession } from '#/features/shared/server/session'
 import {
   handleGetAvailabilityPreference,
   handleSetAvailabilityPreference,
@@ -14,7 +12,7 @@ export const Route = createFileRoute('/api/push/availability-preference')({
         try {
           let userId: string | null = null
           try {
-            const session = await useSession<SessionData>(getSessionConfig())
+            const session = await getAppSession()
             userId = session.data.sub || null
           } catch {
             // Corrupted session
@@ -43,7 +41,7 @@ export const Route = createFileRoute('/api/push/availability-preference')({
         try {
           let userId: string | null = null
           try {
-            const session = await useSession<SessionData>(getSessionConfig())
+            const session = await getAppSession()
             userId = session.data.sub || null
           } catch {
             // Corrupted session
