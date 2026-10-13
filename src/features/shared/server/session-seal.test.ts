@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   createStoredSession,
   sealStoredSession,
@@ -10,13 +10,16 @@ const TEST_PASSWORD = 'test-session-secret-at-least-32-characters-long'
 const THIRTY_DAYS_SECONDS = 30 * 24 * 60 * 60
 
 /**
- * Sealed by the old h3/iron-webcrypto session implementation with
- * `password = TEST_PASSWORD` and iron `ttl = 0` (no iron-level expiry —
- * h3 relies entirely on its own maxAge check). Used to prove our
- * reimplementation stays byte-compatible with existing user cookies.
+ * Sealed by the legacy h3/iron-webcrypto session implementation with
+ * `password = TEST_PASSWORD` and the production `maxAge = 30 days`, while
+ * `Date.now()` was pinned to `H3_FIXTURE_CREATED_AT` (so iron's own
+ * `ttl = maxAge * 1000` embeds an expiration of `createdAt + 30 days`,
+ * matching what real production cookies carry). Used to prove our
+ * reimplementation stays byte-compatible with existing user cookies, and
+ * that they unseal rather than silently logging everyone out.
  */
 const H3_FIXTURE_SEALED =
-  'Fe26.2**2408add8e1e1eea0b1abeee3c882220514ff968f7f9a9169c3d79c1e7ae380a5*baZJzpguBTqhZun85g4H5Q*3QgP2mySSNlodk1UkT6z9acaQweKgTNmVpjc0KueZ3Pz9BFby4DSZyQLrZySkYBSJTT_Ih9VJtNCX9P3CIvw-ShYO0ba-XtZrHU6pfTZXiK-zC87cA_wovZ6LOKvkZ6EnEShXB-ndVUxt3YfiwFHIPHvpAz0kcaXIY0gpZI_oVfbubfFnyrU7LnsoN6plTuSLm7xAIq43HlxOJqgcgzvoqI0z-Fu9P36ae95uTvL0ig**49fd17bbe6ed16f1d3b2fd6ec837b8886ae5798cda80e51bd5c94b3e390a6de4*-CxwYVI7olYCYa7P3oP32KJXt7gPBfOKhDlb3BEPCHQ'
+  'Fe26.2**3ada362d64655846b1dd40daf80eb0d779a88b368e99956ba52692da07495803*sSNgw8zrDlRGPDYzTZ8axQ*FmrCKTSvgj4q10HDub2x-q945I_sWBxL6WYKcUyuoBz93fZQregNkK9nKtI73q1Lb62XsI6y1n3GD8Ikpc2K7NlmdOlEz9NPtZ-58YNFewzv7Y0Bqt46aVnP2m7zfmeiu1XwOE6AJAruK5ZEFdfnjkWe7YPT6QYK2sQcbNUJUn8XxUqWwAyz-Fjgw7rocuyBVX3NVG9UoVKaKvIUc4ClXssFA-jpf0tquk3ZhXEYwdg*1792592000000*a098140f09004ad19b56a1746a8019accee8154e1609781ff0ea721df9ecfc40*3mVa3OFIQdTI1soIJZlkY0r1pJ2bf-wHjokDeh8QMAg'
 
 const H3_FIXTURE_CREATED_AT = 1790000000000
 
@@ -28,46 +31,87 @@ type FixtureData = {
 }
 
 describe('unsealStoredSession', () => {
-  it('unseals a legacy h3/iron cookie byte-for-byte compatibly', async () => {
-    const result = await unsealStoredSession<FixtureData>(
-      H3_FIXTURE_SEALED,
-      TEST_PASSWORD,
-      THIRTY_DAYS_SECONDS,
-      H3_FIXTURE_CREATED_AT + 1000,
-    )
-
-    expect(result).toEqual({
-      id: '00000000-0000-4000-8000-000000000001',
-      createdAt: H3_FIXTURE_CREATED_AT,
-      data: {
-        sub: 'google-sub-123',
-        firstName: 'Ada',
-        email: 'ada@example.com',
-        avatarUrl: '',
-      },
+  describe('legacy h3 fixture (production 30-day maxAge)', () => {
+    // iron-webcrypto validates its own embedded expiration against the real
+    // clock (Date.now()), independent of the `nowMs` argument passed to
+    // unsealStoredSession — so the system clock must be pinned to the same
+    // instant used as `nowMs` for these assertions to be meaningful.
+    beforeEach(() => {
+      vi.useFakeTimers()
     })
-  })
 
-  it('returns null once the stored maxAge has elapsed since createdAt', async () => {
-    const result = await unsealStoredSession<FixtureData>(
-      H3_FIXTURE_SEALED,
-      TEST_PASSWORD,
-      THIRTY_DAYS_SECONDS,
-      H3_FIXTURE_CREATED_AT + THIRTY_DAYS_SECONDS * 1000 + 1,
-    )
+    afterEach(() => {
+      vi.useRealTimers()
+    })
 
-    expect(result).toBeNull()
-  })
+    it('unseals a legacy h3/iron cookie byte-for-byte compatibly', async () => {
+      vi.setSystemTime(H3_FIXTURE_CREATED_AT + 1000)
 
-  it('returns null for the wrong password', async () => {
-    const result = await unsealStoredSession<FixtureData>(
-      H3_FIXTURE_SEALED,
-      'a-completely-different-password-of-32-chars-plus',
-      THIRTY_DAYS_SECONDS,
-      H3_FIXTURE_CREATED_AT + 1000,
-    )
+      const result = await unsealStoredSession<FixtureData>(
+        H3_FIXTURE_SEALED,
+        TEST_PASSWORD,
+        THIRTY_DAYS_SECONDS,
+        H3_FIXTURE_CREATED_AT + 1000,
+      )
 
-    expect(result).toBeNull()
+      expect(result).toEqual({
+        id: '00000000-0000-4000-8000-000000000001',
+        createdAt: H3_FIXTURE_CREATED_AT,
+        data: {
+          sub: 'google-sub-123',
+          firstName: 'Ada',
+          email: 'ada@example.com',
+          avatarUrl: '',
+        },
+      })
+    })
+
+    it('returns null once the stored maxAge has elapsed since createdAt', async () => {
+      const nowMs = H3_FIXTURE_CREATED_AT + THIRTY_DAYS_SECONDS * 1000 + 1
+      vi.setSystemTime(nowMs)
+
+      const result = await unsealStoredSession<FixtureData>(
+        H3_FIXTURE_SEALED,
+        TEST_PASSWORD,
+        THIRTY_DAYS_SECONDS,
+        nowMs,
+      )
+
+      expect(result).toBeNull()
+    })
+
+    it('returns null for the wrong password', async () => {
+      vi.setSystemTime(H3_FIXTURE_CREATED_AT + 1000)
+
+      const result = await unsealStoredSession<FixtureData>(
+        H3_FIXTURE_SEALED,
+        'a-completely-different-password-of-32-chars-plus',
+        THIRTY_DAYS_SECONDS,
+        H3_FIXTURE_CREATED_AT + 1000,
+      )
+
+      expect(result).toBeNull()
+    })
+
+    it('returns null when the sealed value has been tampered with', async () => {
+      vi.setSystemTime(H3_FIXTURE_CREATED_AT + 1000)
+
+      const midpoint = Math.floor(H3_FIXTURE_SEALED.length / 2)
+      const tamperedChar = H3_FIXTURE_SEALED[midpoint] === 'a' ? 'b' : 'a'
+      const tampered =
+        H3_FIXTURE_SEALED.slice(0, midpoint) +
+        tamperedChar +
+        H3_FIXTURE_SEALED.slice(midpoint + 1)
+
+      const result = await unsealStoredSession<FixtureData>(
+        tampered,
+        TEST_PASSWORD,
+        THIRTY_DAYS_SECONDS,
+        H3_FIXTURE_CREATED_AT + 1000,
+      )
+
+      expect(result).toBeNull()
+    })
   })
 
   it('returns null for a garbage string', async () => {
@@ -75,24 +119,6 @@ describe('unsealStoredSession', () => {
       'not-a-sealed-value-at-all',
       TEST_PASSWORD,
       THIRTY_DAYS_SECONDS,
-    )
-
-    expect(result).toBeNull()
-  })
-
-  it('returns null when the sealed value has been tampered with', async () => {
-    const midpoint = Math.floor(H3_FIXTURE_SEALED.length / 2)
-    const tamperedChar = H3_FIXTURE_SEALED[midpoint] === 'a' ? 'b' : 'a'
-    const tampered =
-      H3_FIXTURE_SEALED.slice(0, midpoint) +
-      tamperedChar +
-      H3_FIXTURE_SEALED.slice(midpoint + 1)
-
-    const result = await unsealStoredSession<FixtureData>(
-      tampered,
-      TEST_PASSWORD,
-      THIRTY_DAYS_SECONDS,
-      H3_FIXTURE_CREATED_AT + 1000,
     )
 
     expect(result).toBeNull()

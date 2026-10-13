@@ -1,8 +1,4 @@
 import { createServerFn } from '@tanstack/react-start'
-import {
-  getAppSession,
-  clearAppSession,
-} from '#/features/shared/server/session'
 import { computeSessionExpiry } from '#/features/shared/utils/sessionTtl'
 import type { SessionData } from '#/features/shared/server/session'
 
@@ -137,6 +133,8 @@ export function parseOAuthState(
  */
 export const getCurrentUserFn = createServerFn({ method: 'GET' }).handler(
   async (): Promise<SessionData | null> => {
+    const { getAppSession, clearAppSession } =
+      await import('#/features/shared/server/session')
     try {
       const session = await getAppSession()
       return await resolveUserFromSession(session)
