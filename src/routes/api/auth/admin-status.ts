@@ -1,7 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useSession } from '@tanstack/react-start/server'
-import { getSessionConfig } from '#/features/shared/server/session'
-import type { SessionData } from '#/features/shared/server/session'
+import { getAppSession } from '#/features/shared/server/session'
 import { handleGetAdminStatus } from '#/features/auth/server/admin-status-handlers'
 
 export const Route = createFileRoute('/api/auth/admin-status')({
@@ -11,7 +9,7 @@ export const Route = createFileRoute('/api/auth/admin-status')({
         try {
           let userId: string | null = null
           try {
-            const session = await useSession<SessionData>(getSessionConfig())
+            const session = await getAppSession()
             userId = session.data.sub || null
           } catch {
             // Corrupted session

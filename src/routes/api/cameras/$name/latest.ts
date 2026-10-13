@@ -1,7 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useSession } from '@tanstack/react-start/server'
-import { getSessionConfig } from '#/features/shared/server/session'
-import type { SessionData } from '#/features/shared/server/session'
+import { getAppSession } from '#/features/shared/server/session'
 import { handleSnapshotRequest } from '#/features/cameras/server/snapshot-proxy'
 
 export const Route = createFileRoute('/api/cameras/$name/latest')({
@@ -10,7 +8,7 @@ export const Route = createFileRoute('/api/cameras/$name/latest')({
       GET: async ({ params }) => {
         let isAuthenticated = false
         try {
-          const session = await useSession<SessionData>(getSessionConfig())
+          const session = await getAppSession()
           isAuthenticated = !!session.data.sub
         } catch {
           // Corrupted session — treat as unauthenticated

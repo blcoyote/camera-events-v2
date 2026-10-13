@@ -1,6 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useSession } from '@tanstack/react-start/server'
-import { getSessionConfig } from '#/features/shared/server/session'
+import { startNewAppSession } from '#/features/shared/server/session'
 import { isTestAuthEnabled } from '#/features/auth/server/test-auth-guard'
 
 export const Route = createFileRoute('/api/test-auth')({
@@ -20,8 +19,7 @@ export const Route = createFileRoute('/api/test-auth')({
         // Only allow internal paths — reject protocol-relative URLs and external hosts
         const redirect =
           raw.startsWith('/') && !raw.startsWith('//') ? raw : '/cameras'
-        const session = await useSession(getSessionConfig())
-        await session.update({
+        await startNewAppSession({
           sub: 'test-e2e-user',
           firstName: 'Test',
           email: 'test@e2e.local',

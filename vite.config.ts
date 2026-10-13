@@ -4,7 +4,7 @@ import { devtools } from '@tanstack/devtools-vite'
 import { tanstackStart } from '@tanstack/react-start/plugin/vite'
 import viteReact from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
-import { swPlugin } from './vite-plugin-sw'
+import { swPlugin } from './vite-plugin-sw.ts'
 import { nitro } from 'nitro/vite'
 
 const isTest = !!process.env.VITEST

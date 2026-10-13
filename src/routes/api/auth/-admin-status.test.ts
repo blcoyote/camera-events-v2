@@ -1,8 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { Route } from './admin-status'
+import type * as SessionModule from '#/features/shared/server/session'
 
-vi.mock('@tanstack/react-start/server', () => ({
-  useSession: vi.fn().mockResolvedValue({ data: { sub: null } }),
+vi.mock('#/features/shared/server/session', async (importOriginal) => ({
+  ...(await importOriginal<typeof SessionModule>()),
+  getAppSession: vi.fn().mockResolvedValue({ data: { sub: null } }),
 }))
 
 vi.mock('#/features/auth/server/admin-status-handlers', () => ({
