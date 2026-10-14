@@ -22,6 +22,7 @@ declare module 'web-push' {
     sendNotification: (
       subscription: PushSubscription,
       payload: string | Buffer,
+      options?: { timeout?: number },
     ) => Promise<SendResult>
     generateVAPIDKeys: () => { publicKey: string; privateKey: string }
   }

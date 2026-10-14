@@ -29,6 +29,10 @@ export interface DeliveryDeps {
   isPushEnabled: () => boolean
   isMuted: (now: number) => Promise<boolean>
   getStore: () => Promise<DeliveryStore>
+  /**
+   * Must settle: reject on a hung transport. Per-key serialization relies on it;
+   * the web-push adapter enforces this with PUSH_SEND_TIMEOUT_MS.
+   */
   send: (
     subscription: PushSubscriptionInfo,
     payload: PushPayload,

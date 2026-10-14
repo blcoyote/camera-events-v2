@@ -49,7 +49,14 @@ batcher, reproduced by suppressing after it. Fixed first as ce-d44.
    attempted nor sent, since nobody was there to alert. Deliveries that share a
    burst key run one at a time, because `dispatchBatch` does not await earlier
    notifications and two overlapping promoted deliveries would both send an Alert;
-   other keys and requests without a Burst are not serialized. A natural new Burst clears it too. A muted continuation records nothing, because that
+   other keys and requests without a Burst are not serialized. Serialization
+   makes a hung connection block the camera's queue, so `deps.send` must settle:
+   the web-push adapter passes a 10 s transport `timeout` (`PUSH_SEND_TIMEOUT_MS`).
+   The Mute check also runs inside the queue, so a flush that arrived during a Mute
+   and waited behind a slow send is judged against the Mute at the time it runs. That
+   window is at most the send timeout and the result is a notification for motion
+   seconds old, so capturing the decision at arrival was rejected as more complexity
+   than the race is worth. A natural new Burst clears it too. A muted continuation records nothing, because that
    Burst's Alert was already delivered before the Mute, so Patches afterwards
    stay Patches. The promoted Alert is a normal Alert built from that flush's
    events only; it does not mention the Mute.
