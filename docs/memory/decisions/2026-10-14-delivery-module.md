@@ -41,8 +41,10 @@ batcher, reproduced by suppressing after it. Fixed first as ce-d44.
    pacing; availability supplies the global opt-in and nothing else.
 3. **Promotion state lives in the Delivery instance.** When Mute swallows a flush
    with `burst.start`, the burst key is remembered. The next unmuted delivery for
-   that key is treated as `burstStart: true` and the entry is cleared; a natural
-   new Burst clears it too. A muted continuation records nothing, because that
+   that key is treated as `burstStart: true`. The entry is cleared only once that
+   Alert is settled: a send succeeded, or nobody was eligible or reachable. If the
+   store read throws or every attempted send fails, the entry stays and the next
+   flush is promoted again. A natural new Burst clears it too. A muted continuation records nothing, because that
    Burst's Alert was already delivered before the Mute, so Patches afterwards
    stay Patches. The promoted Alert is a normal Alert built from that flush's
    events only; it does not mention the Mute.
@@ -62,6 +64,21 @@ The Apple update throttle and the `now` override remain per-call options on
 still an import-time singleton in `push-notify.ts`. The motion policy owns it,
 as intended, but it is not injected through Delivery's dependencies. Moving the
 wiring to one construction point is a separate, weaker candidate.
+
+Consequences of that split, all deliberate:
+
+- **Two clocks.** Mute is checked with Delivery's injected `now` (default
+  `Date.now`), not `NotifyOptions.now`. Only the throttle uses the override, so a
+  caller passing `now` no longer moves the Mute check. Tests that need a fixed
+  Mute clock inject `createDelivery({ now })` through `NotifyOptions.delivery`.
+- **Payload built once.** `buildPayload` runs once per delivery, after the Mute
+  gate, rather than per eligible user. It is pure, so callers see no difference.
+- **Logging.** The per-flush "N event(s) to dispatch across M user(s)" line is
+  gone; Delivery logs the Mute suppression, a per-user "Pushing to user" line
+  (also for availability, which had none) and send failures.
+- **Tests.** The two policy test files still `vi.mock` the push, store and Mute
+  modules and run through a real default Delivery, so they overlap with
+  `delivery.test.ts`. Swallowed-Alert tests inject a fresh Delivery instead.
 
 ## Alternatives
 

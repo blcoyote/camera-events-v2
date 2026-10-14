@@ -7,8 +7,9 @@ created: 2026-09-21
 
 > An admin picks a duration — Off, or 10 minutes up to 6 hours — and every
 > user's push notifications stop until it lapses; Off clears an active mute.
-> The deadline is a row in SQLite, not a variable, and it is enforced at the two
-> dispatchers — so events keep flowing, only the outbound push is dropped.
+> The deadline is a row in SQLite, not a variable, and it is enforced at dispatch
+> (since [[decisions/2026-10-14-delivery-module]], in one Delivery module) — so
+> events keep flowing, only the outbound push is dropped.
 
 ## Context
 

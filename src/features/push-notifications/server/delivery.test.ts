@@ -290,5 +290,90 @@ describe('createDelivery', () => {
       await run(d, 'k', false)
       expect(buildPayload).toHaveBeenLastCalledWith(false)
     })
+
+    describe('flag is cleared only once the promoted Alert is settled', () => {
+      /** Mute a burst start, then run one unmuted continuation with `second` overrides; returns buildPayload. */
+      async function mutedStartThenUnmuted(second: Partial<DeliveryDeps>) {
+        let muted = true
+        let phase: 'first' | 'second' = 'first'
+        const base = makeDeps({ isMuted: () => Promise.resolve(muted) })
+        const deps: DeliveryDeps = {
+          ...base,
+          getStore: () =>
+            phase === 'second' && second.getStore
+              ? second.getStore()
+              : base.getStore(),
+          send: (sub, payload) =>
+            phase === 'second' && second.send
+              ? second.send(sub, payload)
+              : base.send(sub, payload),
+        }
+        const buildPayload = vi.fn(makePayload)
+        const d = createDelivery(deps)
+        const run = (start: boolean, extra: Partial<DeliveryRequest> = {}) =>
+          d.deliver(
+            makeRequest({
+              burst: { key: 'k', start },
+              buildPayload,
+              ...extra,
+            }),
+          )
+        await run(true)
+        muted = false
+        phase = 'second'
+        return { run, buildPayload }
+      }
+
+      it('keeps the flag when the store read throws, and propagates the error', async () => {
+        const getStore = vi
+          .fn()
+          .mockRejectedValueOnce(new Error('db down'))
+          .mockResolvedValue(makeStore({ u1: [makeSub(1)] }))
+        const { run, buildPayload } = await mutedStartThenUnmuted({ getStore })
+        await expect(run(false)).rejects.toThrow('db down')
+        await run(false)
+        expect(buildPayload).toHaveBeenLastCalledWith(true)
+      })
+
+      it('keeps the flag when every attempted send rejects', async () => {
+        const send = vi.fn(() => Promise.reject(new Error('gone')))
+        const { run, buildPayload } = await mutedStartThenUnmuted({ send })
+        await run(false)
+        expect(send).toHaveBeenCalled()
+        expect(buildPayload).toHaveBeenLastCalledWith(true)
+        await run(false)
+        expect(buildPayload).toHaveBeenLastCalledWith(true)
+      })
+
+      it('clears the flag when at least one send succeeds', async () => {
+        const store = makeStore({ u1: [makeSub(1), makeSub(2)] })
+        const send = vi
+          .fn()
+          .mockRejectedValueOnce(new Error('gone'))
+          .mockResolvedValue(undefined)
+        const { run, buildPayload } = await mutedStartThenUnmuted({
+          getStore: () => Promise.resolve(store),
+          send,
+        })
+        await run(false)
+        expect(send).toHaveBeenCalledTimes(2)
+        await run(false)
+        expect(buildPayload).toHaveBeenLastCalledWith(false)
+      })
+
+      it('clears the flag when nobody is eligible', async () => {
+        const { run, buildPayload } = await mutedStartThenUnmuted({})
+        await run(false, { isUserEligible: () => false })
+        await run(false)
+        expect(buildPayload).toHaveBeenLastCalledWith(false)
+      })
+
+      it('clears the flag when every endpoint is skipped by allowEndpoint', async () => {
+        const { run, buildPayload } = await mutedStartThenUnmuted({})
+        await run(false, { allowEndpoint: () => false })
+        await run(false)
+        expect(buildPayload).toHaveBeenLastCalledWith(false)
+      })
+    })
   })
 })

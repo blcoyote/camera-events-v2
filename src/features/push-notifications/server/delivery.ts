@@ -69,7 +69,8 @@ export function createDelivery(
   /**
    * Burst keys whose Alert was swallowed by Mute. The next unmuted delivery for
    * such a key is promoted to an Alert, since the user never got one for that
-   * Burst. Cleared by any unmuted delivery (promotion or a natural new Burst).
+   * Burst. Cleared once an unmuted delivery settles: at least one send succeeded, or none
+   * was attempted. Kept if the store read throws or every attempted send fails.
    */
   const swallowed = new Set<string>()
 
@@ -88,10 +89,11 @@ export function createDelivery(
       }
 
       const burstStart = burst ? burst.start || swallowed.has(burst.key) : false
-      if (burst) swallowed.delete(burst.key)
 
       const store = await deps.getStore()
       const payload = request.buildPayload(burstStart)
+      let attempted = 0
+      let succeeded = 0
 
       for (const userId of store.getAllSubscribedUserIds()) {
         if (!request.isUserEligible(userId, store)) continue
@@ -109,6 +111,7 @@ export function createDelivery(
             request.onEndpointSkipped?.(sub.endpoint)
             continue
           }
+          attempted++
           try {
             await deps.send(
               {
@@ -117,6 +120,7 @@ export function createDelivery(
               },
               payload,
             )
+            succeeded++
           } catch (err) {
             console.error(
               `[${logTag}] Failed to send to ${sub.endpoint}:`,
@@ -124,6 +128,12 @@ export function createDelivery(
             )
           }
         }
+      }
+
+      // Settled: someone got the Alert, or nobody was there to alert. Keep the
+      // flag only when every attempted send failed.
+      if (burst && (attempted === 0 || succeeded > 0)) {
+        swallowed.delete(burst.key)
       }
     },
   }
