@@ -44,7 +44,12 @@ batcher, reproduced by suppressing after it. Fixed first as ce-d44.
    that key is treated as `burstStart: true`. The entry is cleared only once that
    Alert is settled: a send succeeded, or nobody was eligible or reachable. If the
    store read throws or every attempted send fails, the entry stays and the next
-   flush is promoted again. A natural new Burst clears it too. A muted continuation records nothing, because that
+   flush is promoted again. A 404/410 endpoint is removed by `sendPushNotification`
+   (which reports `'expired'` rather than `'sent'`) and counts as neither
+   attempted nor sent, since nobody was there to alert. Deliveries that share a
+   burst key run one at a time, because `dispatchBatch` does not await earlier
+   notifications and two overlapping promoted deliveries would both send an Alert;
+   other keys and requests without a Burst are not serialized. A natural new Burst clears it too. A muted continuation records nothing, because that
    Burst's Alert was already delivered before the Mute, so Patches afterwards
    stay Patches. The promoted Alert is a normal Alert built from that flush's
    events only; it does not mention the Mute.

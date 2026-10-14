@@ -1,5 +1,5 @@
 import '@tanstack/react-start/server-only'
-import type { PushPayload, PushSubscriptionInfo } from './push'
+import type { PushPayload, PushSendOutcome, PushSubscriptionInfo } from './push'
 import type { PushStore, PushSubscriptionRow } from './push-store'
 import { isPushEnabled, sendPushNotification } from './push'
 import { getPushStore } from './push-store'
@@ -32,7 +32,7 @@ export interface DeliveryDeps {
   send: (
     subscription: PushSubscriptionInfo,
     payload: PushPayload,
-  ) => Promise<void>
+  ) => Promise<PushSendOutcome | void>
   now: () => number
 }
 
@@ -70,71 +70,94 @@ export function createDelivery(
    * Burst keys whose Alert was swallowed by Mute. The next unmuted delivery for
    * such a key is promoted to an Alert, since the user never got one for that
    * Burst. Cleared once an unmuted delivery settles: at least one send succeeded, or none
-   * was attempted. Kept if the store read throws or every attempted send fails.
+   * was attempted (expired 404/410 endpoints count as neither). Kept if the store read throws or every attempted send fails.
    */
   const swallowed = new Set<string>()
 
-  return {
-    async deliver(request) {
-      const { logTag, burst } = request
-      if (!deps.isPushEnabled()) return
+  /** Tail of the in-flight chain per burst key, so same-key deliveries run one at a time. */
+  const tails = new Map<string, Promise<void>>()
 
-      const now = deps.now()
-      if (await deps.isMuted(now)) {
-        if (burst?.start) swallowed.add(burst.key)
-        console.log(
-          `[${logTag}] ${request.description} suppressed — notifications are globally muted`,
-        )
-        return
-      }
+  async function run(request: DeliveryRequest): Promise<void> {
+    const { logTag, burst } = request
+    if (!deps.isPushEnabled()) return
 
-      const burstStart = burst ? burst.start || swallowed.has(burst.key) : false
+    const now = deps.now()
+    if (await deps.isMuted(now)) {
+      if (burst?.start) swallowed.add(burst.key)
+      console.log(
+        `[${logTag}] ${request.description} suppressed — notifications are globally muted`,
+      )
+      return
+    }
 
-      const store = await deps.getStore()
-      const payload = request.buildPayload(burstStart)
-      let attempted = 0
-      let succeeded = 0
+    const burstStart = burst ? burst.start || swallowed.has(burst.key) : false
 
-      for (const userId of store.getAllSubscribedUserIds()) {
-        if (!request.isUserEligible(userId, store)) continue
+    const store = await deps.getStore()
+    const payload = request.buildPayload(burstStart)
+    let attempted = 0
+    let succeeded = 0
 
-        const subscriptions = store.getSubscriptionsByUserId(userId)
-        const hosts = subscriptions.map((sub) => hostOf(sub.endpoint))
-        console.log(
-          `[${logTag}] Pushing to user ${userId} on ${subscriptions.length} device(s): ${hosts.join(', ')}`,
-        )
-        for (const sub of subscriptions) {
-          if (
-            request.allowEndpoint &&
-            !request.allowEndpoint(sub.endpoint, burstStart, now)
-          ) {
-            request.onEndpointSkipped?.(sub.endpoint)
-            continue
-          }
-          attempted++
-          try {
-            await deps.send(
-              {
-                endpoint: sub.endpoint,
-                keys: { p256dh: sub.p256dh, auth: sub.auth },
-              },
-              payload,
-            )
+    for (const userId of store.getAllSubscribedUserIds()) {
+      if (!request.isUserEligible(userId, store)) continue
+
+      const subscriptions = store.getSubscriptionsByUserId(userId)
+      const hosts = subscriptions.map((sub) => hostOf(sub.endpoint))
+      console.log(
+        `[${logTag}] Pushing to user ${userId} on ${subscriptions.length} device(s): ${hosts.join(', ')}`,
+      )
+      for (const sub of subscriptions) {
+        if (
+          request.allowEndpoint &&
+          !request.allowEndpoint(sub.endpoint, burstStart, now)
+        ) {
+          request.onEndpointSkipped?.(sub.endpoint)
+          continue
+        }
+        try {
+          const outcome = await deps.send(
+            {
+              endpoint: sub.endpoint,
+              keys: { p256dh: sub.p256dh, auth: sub.auth },
+            },
+            payload,
+          )
+          // An expired endpoint is gone: nobody was there to alert.
+          if (outcome !== 'expired') {
+            attempted++
             succeeded++
-          } catch (err) {
-            console.error(
-              `[${logTag}] Failed to send to ${sub.endpoint}:`,
-              err instanceof Error ? err.message : err,
-            )
           }
+        } catch (err) {
+          attempted++
+          console.error(
+            `[${logTag}] Failed to send to ${sub.endpoint}:`,
+            err instanceof Error ? err.message : err,
+          )
         }
       }
+    }
 
-      // Settled: someone got the Alert, or nobody was there to alert. Keep the
-      // flag only when every attempted send failed.
-      if (burst && (attempted === 0 || succeeded > 0)) {
-        swallowed.delete(burst.key)
-      }
+    // Settled: someone got the Alert, or nobody was there to alert. Keep the
+    // flag only when every attempted send failed.
+    if (burst && (attempted === 0 || succeeded > 0)) {
+      swallowed.delete(burst.key)
+    }
+  }
+
+  return {
+    deliver(request) {
+      const key = request.burst?.key
+      if (key === undefined) return run(request)
+      const result = (tails.get(key) ?? Promise.resolve()).then(() =>
+        run(request),
+      )
+      // Chain on a never-rejecting tail; the caller still gets `result` itself.
+      const tail = result
+        .catch(() => {})
+        .then(() => {
+          if (tails.get(key) === tail) tails.delete(key)
+        })
+      tails.set(key, tail)
+      return result
     },
   }
 }

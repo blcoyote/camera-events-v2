@@ -65,22 +65,26 @@ export function getVapidPublicKey(): string | null {
   return vapidPublicKey ?? null
 }
 
+/** 'expired': the endpoint was gone (404/410) and its subscription was removed. */
+export type PushSendOutcome = 'sent' | 'expired'
+
 export async function sendPushNotification(
   subscription: PushSubscriptionInfo,
   payload: PushPayload,
-): Promise<void> {
+): Promise<PushSendOutcome> {
   if (!_pushEnabled) {
     throw new Error('Push notifications are not configured')
   }
 
   try {
     await webPush.sendNotification(subscription, JSON.stringify(payload))
+    return 'sent'
   } catch (err: any) {
     if (err.statusCode === 410 || err.statusCode === 404) {
       // Subscription expired or invalid — clean up
       const store = await getPushStore()
       store.removeSubscriptionByEndpoint(subscription.endpoint)
-      return
+      return 'expired'
     }
     throw err
   }

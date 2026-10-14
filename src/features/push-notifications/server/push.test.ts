@@ -92,8 +92,9 @@ describe('push module', () => {
       }
       const payload = { title: 'Test', body: 'Hello', url: '/' }
 
-      await sendPushNotification(subscription, payload)
+      const outcome = await sendPushNotification(subscription, payload)
 
+      expect(outcome).toBe('sent')
       expect(sendMock).toHaveBeenCalledWith(
         subscription,
         JSON.stringify(payload),
@@ -114,7 +115,7 @@ describe('push module', () => {
 
       const { sendPushNotification } = await import('./push')
 
-      await sendPushNotification(
+      const outcome = await sendPushNotification(
         {
           endpoint: 'https://push.example.com/expired',
           keys: { p256dh: 'k', auth: 'a' },
@@ -122,6 +123,7 @@ describe('push module', () => {
         { title: 'Test', body: 'Hello', url: '/' },
       )
 
+      expect(outcome).toBe('expired')
       expect(mockRemove).toHaveBeenCalledWith(
         'https://push.example.com/expired',
       )

@@ -361,6 +361,54 @@ describe('createDelivery', () => {
         expect(buildPayload).toHaveBeenLastCalledWith(false)
       })
 
+      it('settles (clears) when the only send resolves expired', async () => {
+        const send = vi.fn(() => Promise.resolve('expired'))
+        const { run, buildPayload } = await mutedStartThenUnmuted({
+          send: send as never,
+        })
+        await run(false)
+        await run(false)
+        expect(buildPayload).toHaveBeenLastCalledWith(false)
+      })
+
+      it('keeps the flag when one send is expired and the other fails', async () => {
+        const store = makeStore({ u1: [makeSub(1), makeSub(2)] })
+        const send = vi
+          .fn()
+          .mockResolvedValueOnce('expired')
+          .mockRejectedValueOnce(new Error('transient'))
+        const { run, buildPayload } = await mutedStartThenUnmuted({
+          getStore: () => Promise.resolve(store),
+          send,
+        })
+        await run(false)
+        await run(false)
+        expect(buildPayload).toHaveBeenLastCalledWith(true)
+      })
+
+      it('clears the flag when one send is expired and the other is sent', async () => {
+        const store = makeStore({ u1: [makeSub(1), makeSub(2)] })
+        const send = vi
+          .fn()
+          .mockResolvedValueOnce('expired')
+          .mockResolvedValueOnce('sent')
+        const { run, buildPayload } = await mutedStartThenUnmuted({
+          getStore: () => Promise.resolve(store),
+          send,
+        })
+        await run(false)
+        await run(false)
+        expect(buildPayload).toHaveBeenLastCalledWith(false)
+      })
+
+      it('counts a send resolving undefined as sent', async () => {
+        const send = vi.fn(() => Promise.resolve(undefined))
+        const { run, buildPayload } = await mutedStartThenUnmuted({ send })
+        await run(false)
+        await run(false)
+        expect(buildPayload).toHaveBeenLastCalledWith(false)
+      })
+
       it('clears the flag when nobody is eligible', async () => {
         const { run, buildPayload } = await mutedStartThenUnmuted({})
         await run(false, { isUserEligible: () => false })
@@ -374,6 +422,123 @@ describe('createDelivery', () => {
         await run(false)
         expect(buildPayload).toHaveBeenLastCalledWith(false)
       })
+    })
+  })
+
+  describe('serialization per burst key', () => {
+    const tick = () => new Promise((r) => setTimeout(r, 0))
+
+    /** A `send` whose calls stay pending until the test settles them. */
+    function heldSend() {
+      const calls: Array<{
+        payload: PushPayload
+        resolve: (v?: 'sent' | 'expired') => void
+        reject: (e: Error) => void
+      }> = []
+      const send = vi.fn(
+        (_sub: PushSubscriptionInfo, payload: PushPayload) =>
+          new Promise<void>((resolve, reject) => {
+            calls.push({ payload, resolve: resolve as never, reject })
+          }),
+      )
+      return { send, calls }
+    }
+
+    function setup() {
+      let muted = false
+      const held = heldSend()
+      const deps = makeDeps({
+        isMuted: () => Promise.resolve(muted),
+        send: held.send,
+      })
+      const d = createDelivery(deps)
+      const run = (key: string | null, start: boolean) =>
+        d.deliver(
+          makeRequest(
+            key === null
+              ? { buildPayload: makePayload }
+              : { burst: { key, start }, buildPayload: makePayload },
+          ),
+        )
+      return {
+        d,
+        run,
+        held,
+        mute: async (key: string) => {
+          muted = true
+          await run(key, true)
+          muted = false
+        },
+      }
+    }
+
+    it('promotes only the first of two overlapping unmuted deliveries', async () => {
+      const { run, held, mute } = setup()
+      await mute('k')
+      const first = run('k', false)
+      const second = run('k', false)
+      await tick()
+      expect(held.calls).toHaveLength(1)
+      expect(held.calls[0].payload.event?.burstStart).toBe(true)
+      held.calls[0].resolve()
+      await first
+      await tick()
+      expect(held.calls).toHaveLength(2)
+      expect(held.calls[1].payload.event?.burstStart).toBe(false)
+      held.calls[1].resolve()
+      await second
+    })
+
+    it('promotes the second delivery when the first fails entirely', async () => {
+      const { run, held, mute } = setup()
+      await mute('k')
+      const first = run('k', false)
+      const second = run('k', false)
+      await tick()
+      held.calls[0].reject(new Error('down'))
+      await first
+      await tick()
+      expect(held.calls[1].payload.event?.burstStart).toBe(true)
+      held.calls[1].resolve()
+      await second
+    })
+
+    it('does not serialize different keys', async () => {
+      const { run, held } = setup()
+      const a = run('a', true)
+      const b = run('b', true)
+      await tick()
+      expect(held.calls).toHaveLength(2)
+      held.calls.forEach((c) => c.resolve())
+      await Promise.all([a, b])
+    })
+
+    it('does not serialize requests without burst', async () => {
+      const { run, held } = setup()
+      const a = run(null, false)
+      const b = run(null, false)
+      await tick()
+      expect(held.calls).toHaveLength(2)
+      held.calls.forEach((c) => c.resolve())
+      await Promise.all([a, b])
+    })
+
+    it('a rejection reaches its caller without wedging the next call', async () => {
+      const held = heldSend()
+      const getStore = vi
+        .fn()
+        .mockRejectedValueOnce(new Error('db down'))
+        .mockResolvedValue(makeStore({ u1: [makeSub(1)] }))
+      const d = createDelivery(makeDeps({ getStore, send: held.send }))
+      const run = () =>
+        d.deliver(makeRequest({ burst: { key: 'k', start: false } }))
+      const first = run()
+      const second = run()
+      await expect(first).rejects.toThrow('db down')
+      await tick()
+      expect(held.calls).toHaveLength(1)
+      held.calls[0].resolve()
+      await expect(second).resolves.toBeUndefined()
     })
   })
 })

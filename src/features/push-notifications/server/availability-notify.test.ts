@@ -149,7 +149,7 @@ describe('notifyUsersForCameraAvailability', () => {
       getSubscriptionsByUserId: () => subs,
     })
     getPushStoreMock.mockResolvedValue(store as never)
-    sendPushNotificationMock.mockResolvedValue(undefined)
+    sendPushNotificationMock.mockResolvedValue('sent')
 
     await notifyUsersForCameraAvailability('front_porch', 'offline')
 
@@ -192,7 +192,7 @@ describe('notifyUsersForCameraAvailability', () => {
       getSubscriptionsByUserId: (userId) => subsByUser[userId] ?? [],
     })
     getPushStoreMock.mockResolvedValue(store as never)
-    sendPushNotificationMock.mockResolvedValue(undefined)
+    sendPushNotificationMock.mockResolvedValue('sent')
 
     await notifyUsersForCameraAvailability('front_porch', 'online')
 
@@ -225,8 +225,8 @@ describe('notifyUsersForCameraAvailability', () => {
     getPushStoreMock.mockResolvedValue(store as never)
     sendPushNotificationMock
       .mockRejectedValueOnce(new Error('boom'))
-      .mockResolvedValueOnce(undefined)
-      .mockResolvedValueOnce(undefined)
+      .mockResolvedValueOnce('sent')
+      .mockResolvedValueOnce('sent')
 
     await expect(
       notifyUsersForCameraAvailability('front_porch', 'offline'),
@@ -261,7 +261,7 @@ describe('notifyUsersForCameraAvailability', () => {
         ],
       })
       getPushStoreMock.mockResolvedValue(store as never)
-      sendPushNotificationMock.mockResolvedValue(undefined)
+      sendPushNotificationMock.mockResolvedValue('sent')
 
       await notifyUsersForCameraAvailability('front_porch', 'offline')
 
@@ -281,7 +281,7 @@ describe('notifyUsersForCameraAvailability', () => {
         isCameraEnabledForUser: vi.fn(() => true),
       }
       getPushStoreMock.mockResolvedValue(store as never)
-      sendPushNotificationMock.mockResolvedValue(undefined)
+      sendPushNotificationMock.mockResolvedValue('sent')
       const delivery = createDelivery()
       const motion = {
         id: '1.2-abc',
