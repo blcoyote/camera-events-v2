@@ -7,7 +7,7 @@ created: 2026-08-18
 
 > Camera health is derived from the same MQTT connection already used for
 > motion events — `frigate/stats` (periodic per-camera `camera_fps`, debounced
-> to 2 consecutive zero readings) and `frigate/available` (Frigate's own LWT,
+> to `CAMERA_OFFLINE_THRESHOLD` consecutive zero readings, default 10 — originally 2) and `frigate/available` (Frigate's own LWT,
 > undebounced). No new connection, no server-side polling, no schema change.
 
 ## Context
@@ -43,7 +43,7 @@ connection that's open anyway.
   client**, alongside the existing two topics.
 - **A new `CameraAvailabilityTracker` class** (`camera-availability.ts`) owns
   per-camera debounce state, structurally parallel to `EventBatcher`: it takes
-  its config (`offlineThreshold`, default 2) as a constructor argument rather
+  its config (`offlineThreshold`, set from `CAMERA_OFFLINE_THRESHOLD`, default 10; originally 2) as a constructor argument rather
   than reading `process.env` itself, and knows nothing about MQTT — `mqtt.ts`
   owns topic parsing and env resolution, keeping the tracker a pure,
   independently-testable state machine.
