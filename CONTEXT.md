@@ -5,7 +5,7 @@ A companion app for browsing Frigate NVR events and getting push notifications a
 ## Language
 
 **Frigate**:
-The network video recorder that owns cameras, recordings and detection. This app reads from it and never writes to it.
+The network video recorder that owns cameras, recordings and detection. This app mostly reads from it; the one exception is Retention, where favoriting an Event tells Frigate to keep it.
 
 **Camera**:
 A video source configured in Frigate, identified by name.
@@ -21,6 +21,10 @@ _Avoid_: Detection (for the saved record)
 **Review**:
 Frigate's grouping of related events into one item for human review.
 
+**Retention**:
+Frigate keeping an Event beyond its normal expiry. Starts when an Event gets its first favorite and ends when its last favorite is removed.
+_Avoid_: Pinning, saving
+
 **Ghost event**:
 A detection whose Event is never saved, so a notification about it has nothing to open.
 
@@ -35,7 +39,7 @@ The notification that opens a burst. It makes the device sound or vibrate.
 _Avoid_: Push (for this specific concept)
 
 **Patch**:
-A silent update to the notification already on screen, carrying the running count for the current burst.
+An update to the notification already on screen, carrying the running count for the current burst. Quiet on Android and desktop; iOS ignores the silent flag, so patches there still alert and are paced instead.
 _Avoid_: Re-alert, follow-up notification
 
 **Preference**:
