@@ -1,18 +1,18 @@
 /**
- * Notification dispatcher for camera online/offline availability changes.
+ * Availability policy over Delivery for camera online/offline changes.
  *
  * Unlike `notifyUsersForCamera` (motion events), availability changes are rare,
- * important, state-change events rather than a rapid stream — so there is no
- * batching, throttling, or Apple-specific pacing here. Every enabled,
- * subscribed device gets every transition.
+ * important, state-change events rather than a rapid stream — so there is
+ * intentionally no Burst, pacing, or batching here. Every enabled, subscribed
+ * device gets every transition; Mute, fan-out and send-error handling are
+ * Delivery's job.
  */
 
 import '@tanstack/react-start/server-only'
-import { sendPushNotification, isPushEnabled } from './push'
 import type { PushPayload } from './push'
-import { getPushStore } from './push-store'
 import { formatCameraName } from './push-notify'
-import { areNotificationsMuted } from './notification-mute'
+import { createDelivery } from './delivery'
+import type { Delivery } from './delivery'
 
 export type CameraAvailabilityStatus = 'online' | 'offline'
 
@@ -44,6 +44,8 @@ export function buildAvailabilityPayload(
   }
 }
 
+const defaultDelivery = createDelivery()
+
 /**
  * Send a push notification for one camera's availability change to every
  * device of every user who has opted into camera availability alerts.
@@ -54,41 +56,13 @@ export function buildAvailabilityPayload(
 export async function notifyUsersForCameraAvailability(
   camera: string,
   status: CameraAvailabilityStatus,
+  options: { delivery?: Delivery } = {},
 ): Promise<void> {
-  if (!isPushEnabled()) return
-
-  if (await areNotificationsMuted()) {
-    console.log(
-      `[availability-notify] Camera "${camera}" ${status} suppressed — notifications are globally muted`,
-    )
-    return
-  }
-
-  const store = await getPushStore()
-  const userIds = store.getAllSubscribedUserIds()
-  const payload = buildAvailabilityPayload(camera, status)
-
-  for (const userId of userIds) {
-    if (!store.isCameraAvailabilityEnabledForUser(userId)) {
-      continue
-    }
-
-    const subscriptions = store.getSubscriptionsByUserId(userId)
-    for (const sub of subscriptions) {
-      try {
-        await sendPushNotification(
-          {
-            endpoint: sub.endpoint,
-            keys: { p256dh: sub.p256dh, auth: sub.auth },
-          },
-          payload,
-        )
-      } catch (err) {
-        console.error(
-          `[availability-notify] Failed to send to ${sub.endpoint}:`,
-          err instanceof Error ? err.message : err,
-        )
-      }
-    }
-  }
+  await (options.delivery ?? defaultDelivery).deliver({
+    logTag: 'availability-notify',
+    description: `Camera "${camera}" ${status}`,
+    isUserEligible: (userId, store) =>
+      store.isCameraAvailabilityEnabledForUser(userId),
+    buildPayload: () => buildAvailabilityPayload(camera, status),
+  })
 }

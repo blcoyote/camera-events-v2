@@ -7,13 +7,14 @@ import {
   cameraNotificationTag,
   notifyUsersForCamera,
   endpointHost,
-  _resetSwallowedAlerts,
 } from './push-notify'
 import type { FrigateEventInfo } from './event-batcher'
 import { isPushEnabled, sendPushNotification } from './push'
 import { SendThrottle } from './send-throttle'
 import { getPushStore } from './push-store'
 import { areNotificationsMuted } from './notification-mute'
+import { createDelivery } from './delivery'
+import type { Delivery } from './delivery'
 
 vi.mock('./push', () => ({
   isPushEnabled: vi.fn(),
@@ -269,7 +270,6 @@ describe('notifyUsersForCamera', () => {
     getPushStoreMock.mockReset()
     areNotificationsMutedMock.mockReset()
     areNotificationsMutedMock.mockResolvedValue(false)
-    _resetSwallowedAlerts()
     consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
     consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
   })
@@ -668,7 +668,7 @@ describe('notifyUsersForCamera', () => {
         'front_porch',
         [makeEvent()],
         { burstStart: true },
-        { now: 12_345 },
+        { delivery: createDelivery({ now: () => 12_345 }) },
       )
 
       expect(areNotificationsMutedMock).toHaveBeenCalledWith(12_345)
@@ -698,6 +698,12 @@ describe('notifyUsersForCamera', () => {
     const FCM = 'https://fcm.googleapis.com/fcm/send/device-b'
     const APPLE = 'https://web.push.apple.com/device-a'
 
+    let delivery: Delivery
+
+    beforeEach(() => {
+      delivery = createDelivery()
+    })
+
     function setup(endpoints: string[] = [FCM]) {
       isPushEnabledMock.mockReturnValue(true)
       getPushStoreMock.mockResolvedValue(
@@ -721,7 +727,7 @@ describe('notifyUsersForCamera', () => {
         camera,
         [makeEvent({ camera })],
         { burstStart },
-        options,
+        { ...options, delivery },
       )
     }
 

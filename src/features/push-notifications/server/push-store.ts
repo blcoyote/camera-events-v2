@@ -23,7 +23,7 @@ export function parseMuteUntil(value: unknown): number | null {
   return Number.isSafeInteger(parsed) && parsed >= 0 ? parsed : null
 }
 
-interface PushSubscriptionRow {
+export interface PushSubscriptionRow {
   id: number
   user_id: string
   endpoint: string

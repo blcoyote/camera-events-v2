@@ -65,12 +65,16 @@ Four properties hold this together:
    error is logged and treated as not muted for the same reason.
 3. **Expiry is never written.** The read path compares and returns; there is no
    sweep job, no flag to clear, and no write when a mute lapses.
-4. **Enforced at the dispatchers, not upstream.** `notifyUsersForCamera()` and
-   `notifyUsersForCameraAvailability()` each return early when muted. Everything
+4. **Enforced at dispatch, not upstream.** Since
+   [[decisions/2026-10-14-delivery-module]] the Mute gate lives once, in the
+   Delivery module that `notifyUsersForCamera()` and
+   `notifyUsersForCameraAvailability()` both call, and returns early when muted. Everything
    before them keeps running: MQTT stays subscribed, `frigate/events` still
    clears the Frigate cache, the `EventBatcher` still batches and still tracks
    burst boundaries, and `CameraAvailabilityTracker` still counts zero-fps
-   readings and still flips state. Only the send is dropped.
+   readings and still flips state. Only the send is dropped. A Burst Alert swallowed this way is remembered and
+   promoted on the first unmuted flush, so a Burst is never patched without having
+   alerted.
 
 **"Silent" means not sent.** Not `silent: true` on the payload — iOS re-alerts
 on those anyway ([[gotchas/ios-ignores-silent-and-renotify]]), so a silent-flag

@@ -7,6 +7,8 @@ import {
 import { isPushEnabled, sendPushNotification } from './push'
 import { getPushStore } from './push-store'
 import { areNotificationsMuted } from './notification-mute'
+import { createDelivery } from './delivery'
+import { notifyUsersForCamera } from './push-notify'
 
 vi.mock('./push', () => ({
   isPushEnabled: vi.fn(),
@@ -264,6 +266,62 @@ describe('notifyUsersForCameraAvailability', () => {
       await notifyUsersForCameraAvailability('front_porch', 'offline')
 
       expect(sendPushNotificationMock).toHaveBeenCalledTimes(1)
+    })
+
+    it('never lets an availability alert consume a swallowed motion Burst Alert on a shared Delivery', async () => {
+      isPushEnabledMock.mockReturnValue(true)
+      const store = {
+        ...makeStore({
+          getAllSubscribedUserIds: () => ['user-1'],
+          isCameraAvailabilityEnabledForUser: () => true,
+          getSubscriptionsByUserId: () => [
+            { endpoint: 'https://push.example/a', p256dh: 'p1', auth: 'a1' },
+          ],
+        }),
+        isCameraEnabledForUser: vi.fn(() => true),
+      }
+      getPushStoreMock.mockResolvedValue(store as never)
+      sendPushNotificationMock.mockResolvedValue(undefined)
+      const delivery = createDelivery()
+      const motion = {
+        id: '1.2-abc',
+        camera: 'front_porch',
+        label: 'person',
+        startTime: 1713182400,
+        hasSnapshot: true,
+        hasClip: true,
+      }
+
+      // Muted: the motion Burst Alert is swallowed.
+      areNotificationsMutedMock.mockResolvedValue(true)
+      await notifyUsersForCamera(
+        'front_porch',
+        [motion],
+        { burstStart: true },
+        { delivery },
+      )
+      expect(sendPushNotificationMock).not.toHaveBeenCalled()
+
+      // Unmuted: availability goes out unchanged and does not consume the promotion.
+      areNotificationsMutedMock.mockResolvedValue(false)
+      await notifyUsersForCameraAvailability('front_porch', 'offline', {
+        delivery,
+      })
+      expect(sendPushNotificationMock).toHaveBeenCalledTimes(1)
+      expect(sendPushNotificationMock.mock.calls[0][1]).toEqual(
+        buildAvailabilityPayload('front_porch', 'offline'),
+      )
+
+      // The next motion continuation flush is still promoted to an Alert.
+      await notifyUsersForCamera(
+        'front_porch',
+        [motion],
+        { burstStart: false },
+        { delivery },
+      )
+      expect(sendPushNotificationMock).toHaveBeenCalledTimes(2)
+      const motionPayload = sendPushNotificationMock.mock.calls[1][1]
+      expect(motionPayload.event?.burstStart).toBe(true)
     })
   })
 })
