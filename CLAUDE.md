@@ -451,3 +451,17 @@ gotchas, decision records, and the project glossary.
 - **No AI attestations or co-authoring anywhere.** Do not include `Co-Authored-By:` trailers, `Generated with Claude` footers, `Claude-Session:` links, or any other AI attribution in commit messages, PR titles, PR bodies, code comments, or any other artifact pushed to the repository. This applies to all AI tools and models — Claude, Copilot, GPT, etc.
 
 <!-- END BEADS INTEGRATION -->
+
+## Agent skills
+
+### Issue tracker
+
+Issues are tracked in beads (`bd`), not GitHub Issues. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Default five-label vocabulary, applied as `bd` labels. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: root `CONTEXT.md` + ADRs in `docs/memory/decisions/`. See `docs/agents/domain.md`.

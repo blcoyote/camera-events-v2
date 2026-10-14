@@ -90,3 +90,17 @@ bd close <id>         # Complete work
 - If push fails, resolve and retry until it succeeds
 
 <!-- END BEADS INTEGRATION -->
+
+## Agent skills
+
+### Issue tracker
+
+Issues are tracked in beads (`bd`), not GitHub Issues. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Default five-label vocabulary, applied as `bd` labels. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: root `CONTEXT.md` + ADRs in `docs/memory/decisions/`. See `docs/agents/domain.md`.
