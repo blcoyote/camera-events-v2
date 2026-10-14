@@ -114,6 +114,18 @@ const appleUpdateThrottle = new SendThrottle(
   resolveAppleUpdateIntervalMs(process.env),
 )
 
+/**
+ * Cameras whose Burst Alert was swallowed by Mute. The next unmuted flush for
+ * such a camera is promoted to an Alert, since the user never got one for that
+ * Burst. Cleared by any unmuted flush (promotion or a natural new Burst).
+ */
+const swallowedAlerts = new Set<string>()
+
+/** Clear swallowed-Alert state. Exported for testing only. */
+export function _resetSwallowedAlerts(): void {
+  swallowedAlerts.clear()
+}
+
 export interface NotifyOptions {
   /** Override the shared Apple update throttle (tests). */
   throttle?: SendThrottle
@@ -163,11 +175,15 @@ export async function notifyUsersForCamera(
   const now = options.now ?? Date.now()
 
   if (await areNotificationsMuted(now)) {
+    if (meta.burstStart) swallowedAlerts.add(camera)
     console.log(
       `[push-notify] Camera "${camera}": ${events.length} event(s) suppressed — notifications are globally muted`,
     )
     return
   }
+
+  const burstStart = meta.burstStart || swallowedAlerts.has(camera)
+  swallowedAlerts.delete(camera)
 
   const store = await getPushStore()
   const userIds = store.getAllSubscribedUserIds()
@@ -184,7 +200,7 @@ export async function notifyUsersForCamera(
       continue
     }
 
-    const payload = buildCameraPayload(camera, events, meta.burstStart)
+    const payload = buildCameraPayload(camera, events, burstStart)
 
     const subscriptions = store.getSubscriptionsByUserId(userId)
     const hosts = subscriptions.map((sub) => endpointHost(sub.endpoint))
@@ -193,13 +209,7 @@ export async function notifyUsersForCamera(
     )
     for (const sub of subscriptions) {
       if (
-        !shouldSendToEndpoint(
-          sub.endpoint,
-          camera,
-          meta.burstStart,
-          throttle,
-          now,
-        )
+        !shouldSendToEndpoint(sub.endpoint, camera, burstStart, throttle, now)
       ) {
         console.log(
           `[push-notify] Throttled update to ${endpointHost(sub.endpoint)} for camera "${camera}" — Apple endpoints are paced to avoid re-alerting`,
