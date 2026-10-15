@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -euo pipefail
 
 # Only run in Claude Code cloud sessions.
@@ -14,7 +14,7 @@ bun install
 # Beads: `bd` ships with the cloud environment. Route git hooks through
 # .beads/hooks so commits export issues to .beads/issues.jsonl; this must run
 # after `bun install`, whose husky `prepare` step points hooksPath elsewhere.
-if command -v bd >/dev/null 2>&1; then
+if command -v bd >/dev/null 2>&1 && git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   git config beads.role maintainer
   git config core.hooksPath .beads/hooks
   chmod 700 .beads
