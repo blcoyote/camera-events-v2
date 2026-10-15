@@ -84,7 +84,8 @@ describe('push module', () => {
         .mocked(webPush.sendNotification)
         .mockResolvedValue({} as any)
 
-      const { sendPushNotification } = await import('./push')
+      const { sendPushNotification, PUSH_SEND_TIMEOUT_MS } =
+        await import('./push')
 
       const subscription = {
         endpoint: 'https://push.example.com/sub1',
@@ -92,11 +93,13 @@ describe('push module', () => {
       }
       const payload = { title: 'Test', body: 'Hello', url: '/' }
 
-      await sendPushNotification(subscription, payload)
+      const outcome = await sendPushNotification(subscription, payload)
 
+      expect(outcome).toBe('sent')
       expect(sendMock).toHaveBeenCalledWith(
         subscription,
         JSON.stringify(payload),
+        { timeout: PUSH_SEND_TIMEOUT_MS },
       )
     })
 
@@ -114,7 +117,7 @@ describe('push module', () => {
 
       const { sendPushNotification } = await import('./push')
 
-      await sendPushNotification(
+      const outcome = await sendPushNotification(
         {
           endpoint: 'https://push.example.com/expired',
           keys: { p256dh: 'k', auth: 'a' },
@@ -122,9 +125,35 @@ describe('push module', () => {
         { title: 'Test', body: 'Hello', url: '/' },
       )
 
+      expect(outcome).toBe('expired')
       expect(mockRemove).toHaveBeenCalledWith(
         'https://push.example.com/expired',
       )
+    })
+
+    it('rejects without removing the subscription when the send times out', async () => {
+      const webPush = (await import('web-push')).default
+      const error = new Error('Request timed out')
+      vi.mocked(webPush.sendNotification).mockRejectedValue(error)
+
+      const { getPushStore } = await import('./push-store')
+      const mockRemove = vi.fn()
+      vi.mocked(getPushStore).mockReturnValue({
+        removeSubscriptionByEndpoint: mockRemove,
+      } as any)
+
+      const { sendPushNotification } = await import('./push')
+
+      await expect(
+        sendPushNotification(
+          {
+            endpoint: 'https://push.example.com/slow',
+            keys: { p256dh: 'k', auth: 'a' },
+          },
+          { title: 'Test', body: 'Hello', url: '/' },
+        ),
+      ).rejects.toBe(error)
+      expect(mockRemove).not.toHaveBeenCalled()
     })
 
     it('re-throws non-410 errors', async () => {

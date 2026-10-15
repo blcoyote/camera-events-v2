@@ -13,6 +13,8 @@ import { isPushEnabled, sendPushNotification } from './push'
 import { SendThrottle } from './send-throttle'
 import { getPushStore } from './push-store'
 import { areNotificationsMuted } from './notification-mute'
+import { createDelivery } from './delivery'
+import type { Delivery } from './delivery'
 
 vi.mock('./push', () => ({
   isPushEnabled: vi.fn(),
@@ -305,7 +307,7 @@ describe('notifyUsersForCamera', () => {
       getSubscriptionsByUserId: () => subs,
     })
     getPushStoreMock.mockResolvedValue(store as never)
-    sendPushNotificationMock.mockResolvedValue(undefined)
+    sendPushNotificationMock.mockResolvedValue('sent')
 
     const event = makeEvent()
     await notifyUsersForCamera('front_porch', [event], { burstStart: true })
@@ -342,7 +344,7 @@ describe('notifyUsersForCamera', () => {
       getSubscriptionsByUserId: () => subs,
     })
     getPushStoreMock.mockResolvedValue(store as never)
-    sendPushNotificationMock.mockResolvedValue(undefined)
+    sendPushNotificationMock.mockResolvedValue('sent')
 
     await notifyUsersForCamera('front_porch', [makeEvent()], {
       burstStart: true,
@@ -378,7 +380,7 @@ describe('notifyUsersForCamera', () => {
       getSubscriptionsByUserId: () => subs,
     })
     getPushStoreMock.mockResolvedValue(store as never)
-    sendPushNotificationMock.mockResolvedValue(undefined)
+    sendPushNotificationMock.mockResolvedValue('sent')
 
     const events = [
       makeEvent({ id: 'e1', label: 'person' }),
@@ -416,7 +418,7 @@ describe('notifyUsersForCamera', () => {
       getSubscriptionsByUserId: (userId) => subsByUser[userId] ?? [],
     })
     getPushStoreMock.mockResolvedValue(store as never)
-    sendPushNotificationMock.mockResolvedValue(undefined)
+    sendPushNotificationMock.mockResolvedValue('sent')
 
     await notifyUsersForCamera('front_porch', [makeEvent()], {
       burstStart: true,
@@ -451,7 +453,7 @@ describe('notifyUsersForCamera', () => {
       getSubscriptionsByUserId: (userId) => subsByUser[userId] ?? [],
     })
     getPushStoreMock.mockResolvedValue(store as never)
-    sendPushNotificationMock.mockResolvedValue(undefined)
+    sendPushNotificationMock.mockResolvedValue('sent')
 
     await notifyUsersForCamera('front_porch', [makeEvent()], {
       burstStart: true,
@@ -484,7 +486,7 @@ describe('notifyUsersForCamera', () => {
     getPushStoreMock.mockResolvedValue(store as never)
     sendPushNotificationMock
       .mockRejectedValueOnce(new Error('boom'))
-      .mockResolvedValueOnce(undefined)
+      .mockResolvedValueOnce('sent')
 
     await expect(
       notifyUsersForCamera('front_porch', [makeEvent()], { burstStart: true }),
@@ -507,7 +509,7 @@ describe('notifyUsersForCamera', () => {
         ],
       })
       getPushStoreMock.mockResolvedValue(store as never)
-      sendPushNotificationMock.mockResolvedValue(undefined)
+      sendPushNotificationMock.mockResolvedValue('sent')
 
       await notifyUsersForCamera('front_porch', [makeEvent()], {
         burstStart: false,
@@ -541,7 +543,7 @@ describe('notifyUsersForCamera', () => {
     it('sends burst starts to every device without throttling', async () => {
       isPushEnabledMock.mockReturnValue(true)
       getPushStoreMock.mockResolvedValue(storeWithBothDevices() as never)
-      sendPushNotificationMock.mockResolvedValue(undefined)
+      sendPushNotificationMock.mockResolvedValue('sent')
       const throttle = new SendThrottle(300_000)
 
       await notifyUsersForCamera(
@@ -557,7 +559,7 @@ describe('notifyUsersForCamera', () => {
     it('suppresses rapid updates to Apple devices but not to others', async () => {
       isPushEnabledMock.mockReturnValue(true)
       getPushStoreMock.mockResolvedValue(storeWithBothDevices() as never)
-      sendPushNotificationMock.mockResolvedValue(undefined)
+      sendPushNotificationMock.mockResolvedValue('sent')
       const throttle = new SendThrottle(300_000)
 
       await notifyUsersForCamera(
@@ -580,7 +582,7 @@ describe('notifyUsersForCamera', () => {
     it('lets an Apple device through again once the interval has elapsed', async () => {
       isPushEnabledMock.mockReturnValue(true)
       getPushStoreMock.mockResolvedValue(storeWithBothDevices() as never)
-      sendPushNotificationMock.mockResolvedValue(undefined)
+      sendPushNotificationMock.mockResolvedValue('sent')
       const throttle = new SendThrottle(300_000)
 
       await notifyUsersForCamera(
@@ -602,7 +604,7 @@ describe('notifyUsersForCamera', () => {
     it('makes a burst start reseed the Apple interval', async () => {
       isPushEnabledMock.mockReturnValue(true)
       getPushStoreMock.mockResolvedValue(storeWithBothDevices() as never)
-      sendPushNotificationMock.mockResolvedValue(undefined)
+      sendPushNotificationMock.mockResolvedValue('sent')
       const throttle = new SendThrottle(300_000)
 
       await notifyUsersForCamera(
@@ -625,7 +627,7 @@ describe('notifyUsersForCamera', () => {
     it('throttles each camera separately for the same device', async () => {
       isPushEnabledMock.mockReturnValue(true)
       getPushStoreMock.mockResolvedValue(storeWithBothDevices() as never)
-      sendPushNotificationMock.mockResolvedValue(undefined)
+      sendPushNotificationMock.mockResolvedValue('sent')
       const throttle = new SendThrottle(300_000)
 
       await notifyUsersForCamera(
@@ -666,7 +668,7 @@ describe('notifyUsersForCamera', () => {
         'front_porch',
         [makeEvent()],
         { burstStart: true },
-        { now: 12_345 },
+        { delivery: createDelivery({ now: () => 12_345 }) },
       )
 
       expect(areNotificationsMutedMock).toHaveBeenCalledWith(12_345)
@@ -682,13 +684,112 @@ describe('notifyUsersForCamera', () => {
         ],
       })
       getPushStoreMock.mockResolvedValue(store as never)
-      sendPushNotificationMock.mockResolvedValue(undefined)
+      sendPushNotificationMock.mockResolvedValue('sent')
 
       await notifyUsersForCamera('front_porch', [makeEvent()], {
         burstStart: true,
       })
 
       expect(sendPushNotificationMock).toHaveBeenCalledTimes(1)
+    })
+  })
+
+  describe('Burst Alert swallowed by Mute', () => {
+    const FCM = 'https://fcm.googleapis.com/fcm/send/device-b'
+    const APPLE = 'https://web.push.apple.com/device-a'
+
+    let delivery: Delivery
+
+    beforeEach(() => {
+      delivery = createDelivery()
+    })
+
+    function setup(endpoints: string[] = [FCM]) {
+      isPushEnabledMock.mockReturnValue(true)
+      getPushStoreMock.mockResolvedValue(
+        makeStore({
+          getAllSubscribedUserIds: () => ['user-1'],
+          getSubscriptionsByUserId: () =>
+            endpoints.map((endpoint) => ({ endpoint, p256dh: 'p', auth: 'a' })),
+        }) as never,
+      )
+      sendPushNotificationMock.mockResolvedValue('sent')
+    }
+
+    async function flush(
+      muted: boolean,
+      burstStart: boolean,
+      camera = 'front_porch',
+      options: { throttle?: SendThrottle; now?: number } = {},
+    ) {
+      areNotificationsMutedMock.mockResolvedValue(muted)
+      await notifyUsersForCamera(
+        camera,
+        [makeEvent({ camera })],
+        { burstStart },
+        { ...options, delivery },
+      )
+    }
+
+    function burstFlags() {
+      return sendPushNotificationMock.mock.calls.map(
+        (call) => call[1].event?.burstStart,
+      )
+    }
+
+    it('promotes the first unmuted continuation to an Alert after a muted burst start', async () => {
+      setup()
+      await flush(true, true)
+      expect(sendPushNotificationMock).not.toHaveBeenCalled()
+
+      await flush(false, false)
+
+      expect(burstFlags()).toEqual([true])
+    })
+
+    it('sends the following continuation as a normal Patch', async () => {
+      setup()
+      await flush(true, true)
+      await flush(false, false)
+      await flush(false, false)
+
+      expect(burstFlags()).toEqual([true, false])
+    })
+
+    it('does not promote after a muted continuation with no swallowed Alert', async () => {
+      setup()
+      await flush(true, false)
+      await flush(false, false)
+
+      expect(burstFlags()).toEqual([false])
+    })
+
+    it('clears the swallowed state when a natural burst start is sent', async () => {
+      setup()
+      await flush(true, true)
+      await flush(false, true)
+      await flush(false, false)
+
+      expect(burstFlags()).toEqual([true, false])
+    })
+
+    it('tracks swallowed Alerts per camera', async () => {
+      setup()
+      await flush(true, true, 'driveway')
+      await flush(false, false, 'front_porch')
+
+      expect(burstFlags()).toEqual([false])
+    })
+
+    it('does not throttle the promoted Alert on an Apple endpoint', async () => {
+      setup([APPLE])
+      const throttle = new SendThrottle(300_000)
+      await flush(false, false, 'front_porch', { throttle, now: 0 })
+      await flush(true, true, 'front_porch', { throttle, now: 10_000 })
+      await flush(false, false, 'front_porch', { throttle, now: 20_000 })
+
+      // t=0 update and the promoted Alert at t=20s both go out.
+      expect(burstFlags()).toEqual([false, true])
     })
   })
 })

@@ -10,12 +10,11 @@
 
 import '@tanstack/react-start/server-only'
 import type { FrigateEventInfo, FlushMeta } from './event-batcher'
-import { sendPushNotification, isPushEnabled } from './push'
 import type { PushPayload } from './push'
-import { getPushStore } from './push-store'
+import { createDelivery } from './delivery'
+import type { Delivery } from './delivery'
 import { SendThrottle, isAppleEndpoint } from './send-throttle'
 import { resolveAppleUpdateIntervalMs } from './env'
-import { areNotificationsMuted } from './notification-mute'
 
 /** Extract the host of a push endpoint for logging, or 'unknown' if unparseable. */
 export function endpointHost(endpoint: string): string {
@@ -114,11 +113,15 @@ const appleUpdateThrottle = new SendThrottle(
   resolveAppleUpdateIntervalMs(process.env),
 )
 
+const defaultDelivery = createDelivery()
+
 export interface NotifyOptions {
   /** Override the shared Apple update throttle (tests). */
   throttle?: SendThrottle
   /** Override the clock, in epoch milliseconds (tests). */
   now?: number
+  /** Override the Delivery (tests). */
+  delivery?: Delivery
 }
 
 /**
@@ -157,69 +160,34 @@ export async function notifyUsersForCamera(
   meta: FlushMeta,
   options: NotifyOptions = {},
 ): Promise<void> {
-  if (!isPushEnabled() || events.length === 0) return
+  if (events.length === 0) return
 
   const throttle = options.throttle ?? appleUpdateThrottle
-  const now = options.now ?? Date.now()
 
-  if (await areNotificationsMuted(now)) {
-    console.log(
-      `[push-notify] Camera "${camera}": ${events.length} event(s) suppressed — notifications are globally muted`,
-    )
-    return
-  }
-
-  const store = await getPushStore()
-  const userIds = store.getAllSubscribedUserIds()
-
-  console.log(
-    `[push-notify] Camera "${camera}": ${events.length} event(s) to dispatch across ${userIds.length} subscribed user(s)`,
-  )
-
-  for (const userId of userIds) {
-    if (!store.isCameraEnabledForUser(userId, camera)) {
+  await (options.delivery ?? defaultDelivery).deliver({
+    logTag: 'push-notify',
+    description: `Camera "${camera}": ${events.length} event(s)`,
+    burst: { key: camera, start: meta.burstStart },
+    isUserEligible: (userId, store) => {
+      if (store.isCameraEnabledForUser(userId, camera)) return true
       console.log(
         `[push-notify] User ${userId} has camera "${camera}" disabled — skipping`,
       )
-      continue
-    }
-
-    const payload = buildCameraPayload(camera, events, meta.burstStart)
-
-    const subscriptions = store.getSubscriptionsByUserId(userId)
-    const hosts = subscriptions.map((sub) => endpointHost(sub.endpoint))
-    console.log(
-      `[push-notify] Pushing to user ${userId} on ${subscriptions.length} device(s): ${hosts.join(', ')}`,
-    )
-    for (const sub of subscriptions) {
-      if (
-        !shouldSendToEndpoint(
-          sub.endpoint,
-          camera,
-          meta.burstStart,
-          throttle,
-          now,
-        )
-      ) {
-        console.log(
-          `[push-notify] Throttled update to ${endpointHost(sub.endpoint)} for camera "${camera}" — Apple endpoints are paced to avoid re-alerting`,
-        )
-        continue
-      }
-      try {
-        await sendPushNotification(
-          {
-            endpoint: sub.endpoint,
-            keys: { p256dh: sub.p256dh, auth: sub.auth },
-          },
-          payload,
-        )
-      } catch (err) {
-        console.error(
-          `[push-notify] Failed to send to ${sub.endpoint}:`,
-          err instanceof Error ? err.message : err,
-        )
-      }
-    }
-  }
+      return false
+    },
+    buildPayload: (burstStart) =>
+      buildCameraPayload(camera, events, burstStart),
+    allowEndpoint: (endpoint, burstStart, deliveryNow) =>
+      shouldSendToEndpoint(
+        endpoint,
+        camera,
+        burstStart,
+        throttle,
+        options.now ?? deliveryNow,
+      ),
+    onEndpointSkipped: (endpoint) =>
+      console.log(
+        `[push-notify] Throttled update to ${endpointHost(endpoint)} for camera "${camera}" — Apple endpoints are paced to avoid re-alerting`,
+      ),
+  })
 }

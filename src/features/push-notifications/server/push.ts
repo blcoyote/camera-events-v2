@@ -65,22 +65,31 @@ export function getVapidPublicKey(): string | null {
   return vapidPublicKey ?? null
 }
 
+/** Serialized per-camera deliveries must not wedge behind a hung push connection. */
+export const PUSH_SEND_TIMEOUT_MS = 10_000
+
+/** 'expired': the endpoint was gone (404/410) and its subscription was removed. */
+export type PushSendOutcome = 'sent' | 'expired'
+
 export async function sendPushNotification(
   subscription: PushSubscriptionInfo,
   payload: PushPayload,
-): Promise<void> {
+): Promise<PushSendOutcome> {
   if (!_pushEnabled) {
     throw new Error('Push notifications are not configured')
   }
 
   try {
-    await webPush.sendNotification(subscription, JSON.stringify(payload))
+    await webPush.sendNotification(subscription, JSON.stringify(payload), {
+      timeout: PUSH_SEND_TIMEOUT_MS,
+    })
+    return 'sent'
   } catch (err: any) {
     if (err.statusCode === 410 || err.statusCode === 404) {
       // Subscription expired or invalid — clean up
       const store = await getPushStore()
       store.removeSubscriptionByEndpoint(subscription.endpoint)
-      return
+      return 'expired'
     }
     throw err
   }

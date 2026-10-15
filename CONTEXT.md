@@ -50,6 +50,10 @@ _Avoid_: Opt-out, setting, subscription
 An admin-set, time-limited pause of all users' notifications. Overrides every Preference while active.
 _Avoid_: Preference (a Mute is not per-user)
 
+**Delivery**:
+Deciding who receives a notification (Mute, then each user's Preference) and sending it to their devices. If a Mute swallowed a burst's Alert, the first Delivery after the Mute lapses is promoted to an Alert, so a burst is never patched without having alerted.
+_Avoid_: Dispatch (that is the batcher-to-notifier callback in the MQTT code)
+
 ### Camera health
 
 **Offline**:

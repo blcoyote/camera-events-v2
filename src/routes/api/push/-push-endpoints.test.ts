@@ -277,7 +277,7 @@ describe('handleTest', () => {
 
   it('sends test notification to all user subscriptions', async () => {
     vi.mocked(isPushEnabled).mockReturnValue(true)
-    vi.mocked(sendPushNotification).mockResolvedValue(undefined)
+    vi.mocked(sendPushNotification).mockResolvedValue('sent')
     vi.mocked(getPushStore).mockReturnValue({
       getSubscriptionsByUserId: vi.fn(() => [
         { endpoint: 'https://push.example.com/1', p256dh: 'k1', auth: 'a1' },
@@ -306,7 +306,7 @@ describe('handleTest', () => {
 
   it('tags the test notification so it cannot replace a camera notification', async () => {
     vi.mocked(isPushEnabled).mockReturnValue(true)
-    vi.mocked(sendPushNotification).mockResolvedValue(undefined)
+    vi.mocked(sendPushNotification).mockResolvedValue('sent')
     vi.mocked(getPushStore).mockReturnValue({
       getSubscriptionsByUserId: vi.fn(() => [
         { endpoint: 'https://push.example.com/1', p256dh: 'k1', auth: 'a1' },
@@ -333,7 +333,7 @@ describe('handleTest', () => {
   it('counts only successful deliveries, not failed ones', async () => {
     vi.mocked(isPushEnabled).mockReturnValue(true)
     vi.mocked(sendPushNotification)
-      .mockResolvedValueOnce(undefined) // first succeeds
+      .mockResolvedValueOnce('sent') // first succeeds
       .mockRejectedValueOnce(new Error('Network error')) // second fails
     vi.mocked(getPushStore).mockReturnValue({
       getSubscriptionsByUserId: vi.fn(() => [
