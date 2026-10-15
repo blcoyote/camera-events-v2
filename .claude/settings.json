@@ -20,13 +20,16 @@
           {
             "command": "bd prime",
             "type": "command"
+          },
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/session-start.sh"
           }
         ],
         "matcher": ""
       }
     ],
-    "PreToolUse": [
-    ]
+    "PreToolUse": []
   },
   "permissions": {
     "allow": [

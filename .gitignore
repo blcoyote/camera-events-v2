@@ -27,6 +27,8 @@ public/sw.js
 .dolt/
 *.db
 .beads-credential-key
+.beads.gate.lock
+.beads/.auto-import-issues.jsonl
 
 # Obsidian memory vault: keep notes, ignore per-user UI/config state
 docs/memory/.obsidian/
