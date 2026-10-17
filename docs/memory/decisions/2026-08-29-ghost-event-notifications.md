@@ -29,7 +29,7 @@ Keep the push instant and unconditional. Make the **deep link** honest instead,
 in three layers:
 
 1. **Carry Frigate's own persistence predicate.** `parseFrigateEvent` now keeps
-   `after.has_snapshot` / `after.has_clip` on `FrigateEventInfo` as
+   `after.has_snapshot` / `after.has_clip` on `DetectionInfo` as
    `hasSnapshot` / `hasClip`. These are exactly what Frigate's `should_update_db`
    tests, and they cost nothing — they are already in the MQTT payload.
 
@@ -73,7 +73,7 @@ lands.
 - A push whose link 404s is worse than no link — it reads as a broken app.
 - The fix adds **zero** latency and drops **zero** notifications; only the URL
   and the 404 copy change.
-- `hasSnapshot`/`hasClip` are now on `FrigateEventInfo`, so any future consumer
+- `hasSnapshot`/`hasClip` are now on `DetectionInfo`, so any future consumer
   of the batcher can tell a persisted event from a speculative one.
 - Do not "fix" the pending state by making it wait longer. Past ~2 minutes the
   row genuinely is not coming, and pretending otherwise hides real deletions.

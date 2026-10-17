@@ -5,6 +5,11 @@ created: 2026-04-15
 
 # MQTT events drive push via a per-camera batcher, gated silently on VAPID config
 
+> [!warning] Superseded in part
+> Batching and flush: [[decisions/2026-08-02-alert-once-per-burst-then-patch]].
+> On-flush fan-out: [[decisions/2026-10-14-delivery-module]]. MQTT topics:
+> [[decisions/2026-08-18-camera-availability-detection]]. Kept as history.
+
 > Frigate MQTT events fan out to Web Push through one in-memory per-camera
 > batcher; missing VAPID keys disable push with no error, not a crash.
 
@@ -14,7 +19,7 @@ Push notification plumbing (subscriptions, VAPID, SQLite storage) already
 existed from an earlier slice. This decision covers wiring it to live Frigate
 activity: `startMqttSubscriber()` runs at server startup, connects to
 `MQTT_URL`, and subscribes to `frigate/events` and `frigate/reviews`. Every
-message on either topic clears the Frigate in-process cache — that's the
+message on either of those two topics clears the Frigate in-process cache — that's the
 cache-invalidation mechanism, independent of push. Only `frigate/events`
 messages feed the push path.
 

@@ -11,7 +11,7 @@
 
 import '@tanstack/react-start/server-only'
 
-export interface FrigateEventInfo {
+export interface DetectionInfo {
   id: string
   camera: string
   label: string
@@ -42,12 +42,12 @@ export interface FlushMeta {
 
 type FlushCallback = (
   camera: string,
-  events: FrigateEventInfo[],
+  events: DetectionInfo[],
   meta: FlushMeta,
 ) => void
 
 export class EventBatcher {
-  private buffers = new Map<string, FrigateEventInfo[]>()
+  private buffers = new Map<string, DetectionInfo[]>()
   private timers = new Map<string, ReturnType<typeof setTimeout>>()
   private lastEventAt = new Map<string, number>()
   private readonly windowMs: number
@@ -64,7 +64,7 @@ export class EventBatcher {
     this.burstGapMs = burstGapMs
   }
 
-  add(event: FrigateEventInfo): void {
+  add(event: DetectionInfo): void {
     const { camera } = event
 
     const now = Date.now()

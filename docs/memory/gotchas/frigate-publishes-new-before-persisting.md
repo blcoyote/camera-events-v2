@@ -7,7 +7,7 @@ created: 2026-08-29
 
 > The MQTT message that triggers our push arrives **before** the event row
 > exists — and for some objects the row is never written at all. Deep-linking
-> straight to `/camera-events/{id}` is how "ghost event" notifications happen.
+> straight to `/camera-events/{id}` is how "ghost detection" notifications happen.
 
 ## What bites
 

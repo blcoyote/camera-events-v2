@@ -20,7 +20,7 @@ foreign keys.
 
 That was fine while the app had exactly one permission tier. Adding an admin
 role broke the assumption: a role cannot live in the session cookie alone,
-because the cookie is client-held, expires on a 7-day TTL and is reissued on
+because the cookie is client-held, expires on a fixed-lifetime TTL and is reissued on
 every login, leaving nowhere to record something an operator can inspect or
 change.
 

@@ -166,7 +166,7 @@ sendPushNotification()       ← existing web-push wrapper
 }
 ```
 
-Extracted to `FrigateEventInfo`: `{ id, camera, label, startTime }`.
+Extracted to `DetectionInfo`: `{ id, camera, label, startTime }`.
 
 ### Interfaces
 

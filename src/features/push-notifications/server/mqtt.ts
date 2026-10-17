@@ -3,7 +3,7 @@ import mqtt from 'mqtt'
 import type { MqttClient } from 'mqtt'
 import { clearFrigateCache } from '#/features/shared/server/frigate/cache'
 import { EventBatcher } from './event-batcher'
-import type { FrigateEventInfo, FlushMeta } from './event-batcher'
+import type { DetectionInfo, FlushMeta } from './event-batcher'
 import { notifyUsersForCamera } from './push-notify'
 import {
   CameraAvailabilityTracker,
@@ -43,12 +43,12 @@ const offlineThreshold = resolveOfflineThreshold(process.env)
  */
 export function dispatchBatch(
   camera: string,
-  events: FrigateEventInfo[],
+  events: DetectionInfo[],
   meta: FlushMeta,
 ): void {
   const kind = meta.burstStart ? 'new burst' : 'continuation'
   console.log(
-    `[mqtt] Flushing batch for camera "${camera}" — ${events.length} event(s), ${kind}, dispatching push notifications`,
+    `[mqtt] Flushing batch for camera "${camera}" — ${events.length} detection(s), ${kind}, dispatching push notifications`,
   )
   notifyUsersForCamera(camera, events, meta).catch((err) => {
     console.error('[mqtt] Push notification dispatch failed:', err)
@@ -87,10 +87,10 @@ export function _resetAvailabilityTracker(): void {
 }
 
 /**
- * Parse a Frigate MQTT event payload into a FrigateEventInfo, or null
+ * Parse a Frigate MQTT event payload into a DetectionInfo, or null
  * if the message should be ignored (not a "new" event, or malformed).
  */
-export function parseFrigateEvent(payload: Buffer): FrigateEventInfo | null {
+export function parseFrigateEvent(payload: Buffer): DetectionInfo | null {
   try {
     const msg = JSON.parse(payload.toString())
     if (msg.type !== 'new') return null
@@ -139,7 +139,7 @@ export function onFrigateMessage(topic: string, payload: Buffer): void {
     const event = parseFrigateEvent(payload)
     if (event) {
       console.log(
-        `[mqtt] New event: ${event.label} on ${event.camera} (${event.id})`,
+        `[mqtt] New detection: ${event.label} on ${event.camera} (${event.id})`,
       )
       eventBatcher.add(event)
     } else {

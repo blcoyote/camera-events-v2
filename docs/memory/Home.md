@@ -15,7 +15,7 @@ this vault is meant to be used.
 ## 🧭 Start here
 
 - [[architecture/system-overview]] — how the pieces fit together
-- [[glossary]] — domain & project terms
+- [[glossary]] — tooling terms; domain terms in [CONTEXT.md](../CONTEXT.md)
 
 ## 🏛️ Architecture
 
@@ -42,8 +42,9 @@ this vault is meant to be used.
 - [[decisions/2026-08-29-ghost-event-notifications]] — gate the notification deep link on Frigate's own persistence flags, not the push
 - [[decisions/2026-09-21-users-table-and-admin-flag]] — users table keyed by Google `sub`; `is_admin` fails closed, seeded one-way from `ADMIN_EMAILS`
 - [[decisions/2026-10-13-app-owned-session-cookie]] — sessions sealed by the app via `iron-webcrypto`, byte-compatible with the old h3 cookies; absolute expiry, rotation at sign-in, no cookie for anonymous visitors
-- [[decisions/2026-09-21-admin-global-notification-mute]] — admin silences all push for 10 minutes; deadline in SQLite, enforced at dispatch
+- [[decisions/2026-09-21-admin-global-notification-mute]] — admin silences all push for a chosen duration (10 minutes to 6 hours); deadline in SQLite, enforced at dispatch
 - [[decisions/2026-10-14-delivery-module]] — one Delivery module owns Mute, fan-out and send; a Burst Alert swallowed by Mute is promoted on the first unmuted flush
+- [[decisions/2026-10-17-single-glossary-and-vocabulary]] — CONTEXT.md is the only domain glossary; Ghost, Alert, Availability, Device, Favorite and Patch-count vocabulary settled
 
 ## ⚠️ Gotchas
 

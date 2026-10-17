@@ -56,7 +56,8 @@ batcher, reproduced by suppressing after it. Fixed first as ce-d44.
    and waited behind a slow send is judged against the Mute at the time it runs. That
    window is at most the send timeout and the result is a notification for motion
    seconds old, so capturing the decision at arrival was rejected as more complexity
-   than the race is worth. A natural new Burst clears it too. A muted continuation records nothing, because that
+   than the race is worth. The flag clears when a delivery for that key settles; if every attempted send fails it stays.
+   A muted continuation records nothing, because that
    Burst's Alert was already delivered before the Mute, so Patches afterwards
    stay Patches. The promoted Alert is a normal Alert built from that flush's
    events only; it does not mention the Mute.

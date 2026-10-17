@@ -1,10 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { EventBatcher } from './event-batcher'
-import type { FrigateEventInfo } from './event-batcher'
+import type { DetectionInfo } from './event-batcher'
 
-function makeEvent(
-  overrides: Partial<FrigateEventInfo> = {},
-): FrigateEventInfo {
+function makeEvent(overrides: Partial<DetectionInfo> = {}): DetectionInfo {
   return {
     id: '1234.5678-abc',
     camera: 'front_porch',

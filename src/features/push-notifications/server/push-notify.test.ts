@@ -8,7 +8,7 @@ import {
   notifyUsersForCamera,
   endpointHost,
 } from './push-notify'
-import type { FrigateEventInfo } from './event-batcher'
+import type { DetectionInfo } from './event-batcher'
 import { isPushEnabled, sendPushNotification } from './push'
 import { SendThrottle } from './send-throttle'
 import { getPushStore } from './push-store'
@@ -29,9 +29,7 @@ vi.mock('./notification-mute', () => ({
   areNotificationsMuted: vi.fn(),
 }))
 
-function makeEvent(
-  overrides: Partial<FrigateEventInfo> = {},
-): FrigateEventInfo {
+function makeEvent(overrides: Partial<DetectionInfo> = {}): DetectionInfo {
   return {
     id: '1713182400.123-abc',
     camera: 'front_porch',

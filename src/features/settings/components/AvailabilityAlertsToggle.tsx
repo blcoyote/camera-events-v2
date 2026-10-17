@@ -9,7 +9,7 @@ export function AvailabilityAlertsToggle({
     <div className="flex items-center justify-between gap-4 border-t border-(--chip-line) pt-5">
       <div>
         <p className="text-sm font-medium text-(--sea-ink)">
-          Camera Offline Alerts
+          Camera Offline Notifications
         </p>
         <p className="mt-0.5 text-xs text-(--sea-ink-soft)">
           Get notified when a camera stops sending video or comes back online.
@@ -19,7 +19,7 @@ export function AvailabilityAlertsToggle({
         type="button"
         role="switch"
         aria-checked={enabled}
-        aria-label="Camera offline alerts"
+        aria-label="Camera offline notifications"
         onClick={() => onToggle(!enabled)}
         className="relative inline-flex min-h-11 shrink-0 cursor-pointer items-center px-1"
       >
