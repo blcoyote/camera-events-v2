@@ -34,7 +34,7 @@ topics are subscribed:
   is nonzero again.
 
 Camera availability alerts are gated by a single **global, opt-in** preference
-per user (`Camera Offline Alerts` in Settings → Notifications), defaulting to
+per user (`Camera Offline Notifications` in Settings → Notifications), defaulting to
 **off**. This is independent of the existing per-camera motion-event opt-out
 list — a user can silence a noisy camera's motion pushes while still wanting to
 know if it dies, or vice versa.
@@ -50,12 +50,12 @@ Feature: Camera offline/online push notifications
     And the MQTT subscriber is connected to the broker
 
   Scenario: Alerts are off by default
-    Given the user has never touched the "Camera Offline Alerts" toggle
+    Given the user has never touched the "Camera Offline Notifications" toggle
     When a camera goes offline
     Then the user receives no push notification
 
   Scenario: User opts in and a camera goes offline
-    Given the user has enabled "Camera Offline Alerts" in Settings
+    Given the user has enabled "Camera Offline Notifications" in Settings
     When Frigate publishes 2 consecutive frigate/stats readings reporting
       camera_fps: 0 for camera "front_porch"
     Then the user receives a push notification
@@ -64,7 +64,7 @@ Feature: Camera offline/online push notifications
     And the notification is tagged "camera-availability-front_porch"
 
   Scenario: A single zero reading does not alert
-    Given the user has enabled "Camera Offline Alerts"
+    Given the user has enabled "Camera Offline Notifications"
     When Frigate publishes exactly 1 frigate/stats reading with camera_fps: 0
       for "front_porch", followed by a reading with camera_fps > 0
     Then the user receives no push notification
@@ -94,7 +94,7 @@ Feature: Camera offline/online push notifications
   Scenario: Per-camera motion mute is independent of availability alerts
     Given the user has disabled push notifications for camera "front_porch"
       (the existing per-camera motion opt-out)
-    And the user has enabled "Camera Offline Alerts" (the global toggle)
+    And the user has enabled "Camera Offline Notifications" (the global toggle)
     When "front_porch" goes offline
     Then the user still receives the offline alert
     # The two preferences are unrelated; muting motion events for a camera
@@ -157,7 +157,7 @@ exactly, just for a single global boolean instead of a per-camera list.
 
 ### Settings UI
 
-A single toggle switch, `Camera Offline Alerts`, rendered in the Notifications
+A single toggle switch, `Camera Offline Notifications`, rendered in the Notifications
 section between the subscribe/test controls and the per-camera list — it's a
 feature-level gate, not a per-camera setting, so it doesn't belong inside
 `CameraPreferences`.

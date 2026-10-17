@@ -17,8 +17,8 @@ import type { Delivery } from './delivery'
 export type CameraAvailabilityStatus = 'online' | 'offline'
 
 /**
- * Notification tag for a camera's availability alert — distinct from the
- * motion-event tag (`camera-<name>`) so an offline alert and a motion alert
+ * Notification tag for a camera's availability notification — distinct from the
+ * motion-event tag (`camera-<name>`) so an offline notification and a motion notification
  * for the same camera never clobber each other.
  */
 export function cameraAvailabilityNotificationTag(camera: string): string {
@@ -48,7 +48,7 @@ const defaultDelivery = createDelivery()
 
 /**
  * Send a push notification for one camera's availability change to every
- * device of every user who has opted into camera availability alerts.
+ * device of every user who has opted into camera availability notifications.
  *
  * This preference is global and opt-in (default off), unrelated to the
  * per-camera motion-event opt-out preference.
