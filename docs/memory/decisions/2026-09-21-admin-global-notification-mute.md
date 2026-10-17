@@ -49,7 +49,7 @@ Four properties hold this together:
    obvious fit for a single-process Bun server, and it fails in the one case
    that matters: a deploy or crash-restart inside the window un-mutes silently
    and lets the alert storm through, at the moment nobody is looking.
-2. **Fail-closed on read, in the safe direction, in two layers.**
+2. **Fails open on read (safe direction is deliver), in two layers.**
    `parseMuteUntil()` in `push-store.ts` accepts only a non-negative safe
    integer, so a missing row, an empty string, or garbage like `"1e100"`
    (finite but not a safe integer) reads as **not muted**. `isMuteActive()` in
@@ -123,10 +123,10 @@ Notification_ button stays live during a window. It is a one-device,
 user-initiated check of that device's own plumbing, and someone debugging a
 broken subscription mid-mute should not be told, misleadingly, that push is
 dead. The property actually being enforced is narrower and more useful: no
-_event_ reaches a user unbidden. Anyone adding a third automatic dispatcher must
-add the `areNotificationsMuted()` guard to it — the guard lives at each call
-site, not inside `sendPushNotification()`, and that is a conscious trade of
-one-line duplication for not silencing deliberate sends.
+_event_ reaches a user unbidden. A third notification kind adds a Delivery policy and
+inherits the Mute gate from [[decisions/2026-10-14-delivery-module]]. Only a
+direct `sendPushNotification()` caller, like `handleTest`, bypasses Mute, by
+staying outside Delivery; that keeps deliberate sends from being silenced.
 
 **Nothing is lost, only delayed-and-dropped.** Events that occur during a window
 are still recorded by Frigate, still visible in the app the moment anyone opens

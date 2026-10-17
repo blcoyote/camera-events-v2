@@ -72,7 +72,7 @@ bun run knip         # Unused-code report
 | `camera-details`     | `src/features/camera-details/`     | Event detail page, snapshot lightbox, event snapshot, info card, blob download hook, clip/snapshot/thumbnail proxies |
 | `camera-events`      | `src/features/camera-events/`      | Event list page, filter pills, events loading skeleton, mock data                                                    |
 | `cameras`            | `src/features/cameras/`            | Camera grid page, sortable tiles, camera order persistence, snapshot proxy                                           |
-| `favorites`          | `src/features/favorites/`          | Saved-events list page; server logic lives in shared/server/favorites/                                               |
+| `favorites`          | `src/features/favorites/`          | Favorited events list page; server logic lives in shared/server/favorites/                                           |
 | `home`               | `src/features/home/`               | Home/landing page component                                                                                          |
 | `push-notifications` | `src/features/push-notifications/` | MQTT subscriber, event batcher, push dispatcher, SQLite push store                                                   |
 | `settings`           | `src/features/settings/`           | Settings page, notification preferences UI, `usePushSubscription` hook                                               |
