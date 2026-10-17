@@ -180,7 +180,7 @@ feature-level gate, not a per-camera setting, so it doesn't belong inside
   flush, Apple pacing — exists to tame a _stream_ of motion events. An
   availability transition is a single, rare, binary fact with nothing to
   batch or throttle; forcing it through that pipeline would mean inventing
-  fake `FrigateEventInfo`/`event` fields with no natural meaning (what "label"
+  fake `DetectionInfo`/`event` fields with no natural meaning (what "label"
   does a camera going offline have?).
 
 ## Known Limitations

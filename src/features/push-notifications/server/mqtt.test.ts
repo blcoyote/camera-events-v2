@@ -2,7 +2,7 @@ import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
 import { clearFrigateCache } from '#/features/shared/server/frigate/cache'
 import { notifyUsersForCamera } from './push-notify'
 import { notifyUsersForCameraAvailability } from './availability-notify'
-import type { FrigateEventInfo } from './event-batcher'
+import type { DetectionInfo } from './event-batcher'
 
 vi.mock('mqtt', () => {
   const mockClient = {
@@ -72,7 +72,7 @@ describe('onFrigateMessage', () => {
     expect(frigateCache.size).toBe(0)
   })
 
-  it('logs "New event" when a valid new event is received', async () => {
+  it('logs "New detection" when a valid new detection is received', async () => {
     const { onFrigateMessage } = await import('./mqtt')
     const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
 
@@ -92,7 +92,9 @@ describe('onFrigateMessage', () => {
     )
 
     expect(
-      logSpy.mock.calls.some((call) => String(call[0]).includes('New event')),
+      logSpy.mock.calls.some((call) =>
+        String(call[0]).includes('New detection'),
+      ),
     ).toBe(true)
 
     logSpy.mockRestore()
@@ -250,7 +252,7 @@ describe('dispatchBatch', () => {
     const { dispatchBatch } = await import('./mqtt')
     const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
 
-    const events: FrigateEventInfo[] = [
+    const events: DetectionInfo[] = [
       {
         id: '1',
         camera: 'front_porch',
@@ -275,7 +277,7 @@ describe('dispatchBatch', () => {
       logSpy.mock.calls.some(
         (call) =>
           String(call[0]).includes('front_porch') &&
-          String(call[0]).includes('2'),
+          String(call[0]).includes('2 detection(s)'),
       ),
     ).toBe(true)
     expect(notifyMock).toHaveBeenCalledWith('front_porch', events, {
@@ -289,7 +291,7 @@ describe('dispatchBatch', () => {
     const { dispatchBatch } = await import('./mqtt')
     const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
 
-    const events: FrigateEventInfo[] = [
+    const events: DetectionInfo[] = [
       {
         id: '3',
         camera: 'driveway',

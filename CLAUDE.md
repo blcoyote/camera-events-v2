@@ -305,9 +305,7 @@ afterEach(() => {
 **Factory helpers** — use a `make*` helper to create default test fixtures, then spread overrides:
 
 ```ts
-function makeEvent(
-  overrides: Partial<FrigateEventInfo> = {},
-): FrigateEventInfo {
+function makeEvent(overrides: Partial<DetectionInfo> = {}): DetectionInfo {
   return {
     id: '1234.5678-abc',
     camera: 'front_porch',

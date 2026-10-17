@@ -65,7 +65,7 @@ connection that's open anyway.
   raison d'être (burst detection, leading-edge flush, Apple-endpoint pacing)
   solves a problem (a _stream_ of events needing throttling) that doesn't
   exist here. Forcing this through `EventBatcher` would mean inventing a fake
-  `FrigateEventInfo` (what `label` does an offline camera have?) for no gain.
+  `DetectionInfo` (what `label` does an offline camera have?) for no gain.
 - **One global, opt-in preference**, default off, stored in the existing
   `push_notification_preferences` table as `category = 'camera_availability'`,
   `resource_id = 'global'` — a fixed non-null sentinel, deliberately not

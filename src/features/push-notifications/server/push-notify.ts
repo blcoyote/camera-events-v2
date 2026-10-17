@@ -9,7 +9,7 @@
  */
 
 import '@tanstack/react-start/server-only'
-import type { FrigateEventInfo, FlushMeta } from './event-batcher'
+import type { DetectionInfo, FlushMeta } from './event-batcher'
 import type { PushPayload } from './push'
 import { createDelivery } from './delivery'
 import type { Delivery } from './delivery'
@@ -68,7 +68,7 @@ export function cameraNotificationTag(camera: string): string {
  * false positive, never at all. Deep-linking to one of those yields a 404
  * “event doesn't exist” page, so those pushes point at the events list instead.
  */
-export function isDeepLinkable(event: FrigateEventInfo): boolean {
+export function isDeepLinkable(event: DetectionInfo): boolean {
   return event.hasSnapshot || event.hasClip
 }
 
@@ -81,7 +81,7 @@ export function isDeepLinkable(event: FrigateEventInfo): boolean {
  */
 export function buildCameraPayload(
   camera: string,
-  events: FrigateEventInfo[],
+  events: DetectionInfo[],
   burstStart: boolean,
 ): PushPayload {
   const labels = [...new Set(events.map((e) => formatLabel(e.label)))]
@@ -156,7 +156,7 @@ function shouldSendToEndpoint(
  */
 export async function notifyUsersForCamera(
   camera: string,
-  events: FrigateEventInfo[],
+  events: DetectionInfo[],
   meta: FlushMeta,
   options: NotifyOptions = {},
 ): Promise<void> {
