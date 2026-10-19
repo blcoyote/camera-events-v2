@@ -12,17 +12,6 @@ export type StoredSession<T> = {
   data: Partial<T>
 }
 
-/**
- * `lib.dom`'s `Crypto`/`SubtleCrypto` types are structurally incompatible
- * with iron-webcrypto's own `_Crypto` interface in newer TypeScript lib
- * versions (generic `Uint8Array<ArrayBufferLike>` vs. plain `BufferSource`).
- * The runtime object is the same `globalThis.crypto` either way — this cast
- * only works around the type mismatch, it changes no behavior.
- */
-const ironCrypto = globalThis.crypto as unknown as Parameters<
-  typeof Iron.seal
->[0]
-
 function ironOptions(maxAgeSeconds: number) {
   return { ...Iron.defaults, ttl: maxAgeSeconds * 1000 }
 }
@@ -52,7 +41,7 @@ export async function sealStoredSession<T>(
   password: string,
   maxAgeSeconds: number,
 ): Promise<string> {
-  return Iron.seal(ironCrypto, session, password, ironOptions(maxAgeSeconds))
+  return Iron.seal(session, password, ironOptions(maxAgeSeconds))
 }
 
 /**
@@ -68,12 +57,7 @@ export async function unsealStoredSession<T>(
 ): Promise<StoredSession<T> | null> {
   let result: unknown
   try {
-    result = await Iron.unseal(
-      ironCrypto,
-      sealed,
-      password,
-      ironOptions(maxAgeSeconds),
-    )
+    result = await Iron.unseal(sealed, password, ironOptions(maxAgeSeconds))
   } catch {
     return null
   }
