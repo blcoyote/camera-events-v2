@@ -17,11 +17,11 @@ jobs:
     outputs:
       run_tests: ${{ steps.filter.outputs.run_tests }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Detect JS/TS file changes
         id: filter
-        uses: dorny/paths-filter@v3
+        uses: dorny/paths-filter@v4
         with:
           filters: |
             run_tests:
@@ -35,7 +35,7 @@ jobs:
     if: needs.changes.outputs.run_tests == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: oven-sh/setup-bun@v2
         with:
@@ -58,7 +58,7 @@ jobs:
     if: needs.changes.outputs.run_tests == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: oven-sh/setup-bun@v2
         with:
@@ -76,7 +76,7 @@ jobs:
   docker_build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Build Docker image
         run: docker build .
