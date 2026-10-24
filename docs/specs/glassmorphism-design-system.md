@@ -191,26 +191,28 @@ until the sweep removes their uses.
 
 ## Legacy → new mapping (call-site sweep)
 
-| Legacy                                                    | New                                                                                                                                                           |
-| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `text-(--sea-ink)`                                        | `text-foreground`                                                                                                                                             |
-| `text-(--sea-ink-soft)`                                   | `text-fg-2` (copy) · `text-muted-foreground` (hints, captions, meta)                                                                                          |
-| `text-(--lagoon-deep)`, `text-(--kicker)`                 | `text-brand-strong`                                                                                                                                           |
-| `text-(--lagoon)` / icon accents                          | `text-brand`                                                                                                                                                  |
-| `text-(--palm)` / success copy                            | `text-success-text` (dots/icons: `text-success` / `bg-success`)                                                                                               |
-| `border-(--line)` inside a pane                           | `border-border-soft`                                                                                                                                          |
-| `border-(--line)` / `border-(--chip-line)` on a pane edge | `border-border`                                                                                                                                               |
-| `bg-(--surface)`, `bg-(--chip-bg)`, `bg-(--header-bg)`    | `glass` (blurred pane) or `bg-card`                                                                                                                           |
-| `bg-(--surface-strong)`, `hover:bg-(--link-bg-hover)`     | `bg-surface-hover` / `hover:bg-surface-hover`                                                                                                                 |
-| active chip (`--accent-emphasis-*`, `--accent-muted-*`)   | shadcn `Toggle` / `Button` pressed state (`bg-primary text-primary-foreground`)                                                                               |
-| `bg-(--bg-base)`                                          | `bg-background`                                                                                                                                               |
-| `island-shell` / `island-shell-sm`                        | `glass rounded-card` (`sm:glass sm:rounded-card`)                                                                                                             |
-| `island-kicker`                                           | `eyebrow`                                                                                                                                                     |
-| `display-title`                                           | `font-semibold tracking-tight leading-display`                                                                                                                |
-| corner-glow `<div>`s using `--hero-*`                     | delete (the body backdrop replaces them)                                                                                                                      |
-| `shadow-(--shadow-*)`                                     | `shadow-raised`                                                                                                                                               |
-| hand-rolled buttons                                       | `<Button variant=…>` from `#/features/shared/components/ui/button`                                                                                            |
-| text sizes                                                | page h1 `text-4xl`, card/dialog title `text-2xl`, lead `text-lg`, body `text-base`, labels `text-sm`, captions/badges `text-xs` (all weight 600 for headings) |
+| Legacy                                                                    | New                                                                                                                                                                                        |
+| ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `text-(--sea-ink)`                                                        | `text-foreground`                                                                                                                                                                          |
+| `text-(--sea-ink-soft)`                                                   | `text-fg-2` (copy) · `text-muted-foreground` (hints, captions, meta)                                                                                                                       |
+| `text-(--lagoon-deep)`, `text-(--kicker)`                                 | `text-brand-strong`                                                                                                                                                                        |
+| `text-(--lagoon)` / icon accents                                          | `text-brand`                                                                                                                                                                               |
+| `text-(--palm)` / success copy                                            | `text-success-text` (dots/icons: `text-success` / `bg-success`)                                                                                                                            |
+| `border-(--line)` inside a pane                                           | `border-border-soft`                                                                                                                                                                       |
+| `border-(--line)` / `border-(--chip-line)` on a pane edge                 | `border-border`                                                                                                                                                                            |
+| `bg-(--surface)`, `bg-(--chip-bg)`, `bg-(--header-bg)`                    | `glass` (blurred pane) or `bg-card`                                                                                                                                                        |
+| `bg-(--surface-strong)`, `hover:bg-(--link-bg-hover)`                     | `bg-surface-hover` / `hover:bg-surface-hover`                                                                                                                                              |
+| active chip (`--accent-emphasis-*`, `--accent-muted-*`)                   | shadcn `Toggle` / `Button` pressed state (`bg-primary text-primary-foreground`)                                                                                                            |
+| `bg-(--bg-base)`                                                          | `bg-background`                                                                                                                                                                            |
+| `island-shell` / `island-shell-sm`                                        | `glass rounded-card` (`sm:glass sm:rounded-card`)                                                                                                                                          |
+| `island-kicker`                                                           | `eyebrow`                                                                                                                                                                                  |
+| `display-title`                                                           | `font-semibold tracking-tight leading-display`                                                                                                                                             |
+| raw Tailwind palette colours (`red-*`, `green-*`, `emerald-*`, `amber-*`) | DS signal tokens: text `text-danger-text`/`text-success-text`/`text-warn-text`; borders/icons `border-danger`, `text-success`…; tinted fills `bg-danger/10`, `bg-success/10`, `bg-warn/10` |
+| any `dark:` variant                                                       | delete (light only; Tailwind `dark:` follows the OS setting and would fire on dark-mode phones)                                                                                            |
+| corner-glow `<div>`s using `--hero-*`                                     | delete (the body backdrop replaces them)                                                                                                                                                   |
+| `shadow-(--shadow-*)`                                                     | `shadow-raised`                                                                                                                                                                            |
+| hand-rolled buttons                                                       | `<Button variant=…>` from `#/features/shared/components/ui/button`                                                                                                                         |
+| text sizes                                                                | page h1 `text-4xl`, card/dialog title `text-2xl`, lead `text-lg`, body `text-base`, labels `text-sm`, captions/badges `text-xs` (all weight 600 for headings)                              |
 
 Text over photos (event thumbnails, live snapshots, lightbox) stays white on the
 existing dark gradient; glass badges on photos are fine.
@@ -307,7 +309,7 @@ set `theme_color` and `background_color` to `#eef6ff`.
 2. Grep guard test (`src/styles.legacy-tokens.test.ts`): no file under `src/` contains
    `--sea-`, `--lagoon`, `--palm`, `--sand`, `--foam`, `--chip-`, `--kicker`,
    `--hero-`, `--accent-emphasis`, `--accent-muted`, `island-shell`, `island-kicker`,
-   `display-title`, `data-palette`, `Fraunces` or `Manrope`.
+   `display-title`, `data-palette`, `dark:`, `Fraunces` or `Manrope`.
 3. No `useTheme`/`usePalette`/`ThemeToggle`/`THEME_INIT_SCRIPT` remain.
 4. All interactive controls show the DS focus halo and keep a touch target of at least 44px.
 5. Device QA passes (task 16): iOS Safari standalone, Android Chrome installed PWA,
