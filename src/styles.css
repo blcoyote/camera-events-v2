@@ -40,8 +40,12 @@
   --gl-danger-text: #c81e3a;
   --gl-danger-fill: #c81e3a;
   --gl-overlay: rgba(16, 32, 51, 0.4);
+  --gl-surface-solid: rgba(255, 255, 255, 0.94);
+  --gl-blob-1: rgba(79, 140, 255, 0.45);
+  --gl-blob-2: rgba(24, 86, 255, 0.28);
   /* elevation, blur, motion */
   --gl-elev-raised: 0 24px 80px rgba(79, 140, 255, 0.18);
+  --gl-elev-raised-hover: 0 28px 88px rgba(79, 140, 255, 0.26);
   --gl-elev-ring: 0 0 0 1px rgba(255, 255, 255, 0.64);
   --gl-focus-ring: 0 0 0 4px rgba(79, 140, 255, 0.28);
   --gl-blur-glass: 20px;
@@ -138,7 +142,7 @@
   @supports not (
     (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))
   ) {
-    background: rgba(255, 255, 255, 0.94);
+    background: var(--gl-surface-solid);
   }
 }
 
@@ -151,7 +155,7 @@
   @supports not (
     (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))
   ) {
-    background: rgba(255, 255, 255, 0.94);
+    background: var(--gl-surface-solid);
   }
 }
 
@@ -164,7 +168,7 @@
   @supports not (
     (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))
   ) {
-    background: rgba(255, 255, 255, 0.94);
+    background: var(--gl-surface-solid);
   }
 }
 
@@ -210,12 +214,12 @@
     background:
       radial-gradient(
         60vmax 45vmax at 12% 8%,
-        rgba(79, 140, 255, 0.45),
+        var(--gl-blob-1),
         transparent 70%
       ),
       radial-gradient(
         55vmax 50vmax at 92% 85%,
-        rgba(24, 86, 255, 0.28),
+        var(--gl-blob-2),
         transparent 70%
       );
   }
@@ -354,7 +358,7 @@
 
   .event-card:hover {
     transform: translateY(-3px);
-    box-shadow: 0 28px 88px rgba(79, 140, 255, 0.26);
+    box-shadow: var(--gl-elev-raised-hover);
   }
 
   .event-card:focus-visible {
