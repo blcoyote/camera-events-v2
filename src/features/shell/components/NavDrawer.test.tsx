@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { render, screen, fireEvent, cleanup } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import type { ReactNode } from 'react'
 import { NavDrawer } from './NavDrawer'
 
@@ -29,7 +30,6 @@ vi.mock('@tanstack/react-router', () => ({
 describe('NavDrawer', () => {
   afterEach(() => {
     cleanup()
-    document.body.classList.remove('overflow-hidden')
   })
 
   it('renders nothing when isOpen is false', () => {
@@ -44,9 +44,8 @@ describe('NavDrawer', () => {
 
   it('has aria-modal="true" and aria-label="Navigation"', () => {
     render(<NavDrawer isOpen={true} onClose={vi.fn()} />)
-    const dialog = screen.getByRole('dialog')
+    const dialog = screen.getByRole('dialog', { name: 'Navigation' })
     expect(dialog.getAttribute('aria-modal')).toBe('true')
-    expect(dialog.getAttribute('aria-label')).toBe('Navigation')
   })
 
   it('renders all four nav links when open', () => {
@@ -73,9 +72,9 @@ describe('NavDrawer', () => {
     ).toBe('/settings')
   })
 
-  it('frosts the drawer panel with a backdrop blur', () => {
+  it('frosts the drawer panel with the glass-strong (backdrop blur) utility', () => {
     render(<NavDrawer isOpen={true} onClose={vi.fn()} />)
-    expect(screen.getByRole('dialog').className).toContain('backdrop-blur')
+    expect(screen.getByRole('dialog').className).toContain('glass-strong')
   })
 
   it('does not blur the overlay backdrop', () => {
@@ -85,10 +84,10 @@ describe('NavDrawer', () => {
     )
   })
 
-  it('calls onClose when backdrop is clicked', () => {
+  it('calls onClose when backdrop is clicked', async () => {
     const onClose = vi.fn()
     render(<NavDrawer isOpen={true} onClose={onClose} />)
-    fireEvent.click(screen.getByTestId('nav-drawer-backdrop'))
+    await userEvent.click(screen.getByTestId('nav-drawer-backdrop'))
     expect(onClose).toHaveBeenCalledOnce()
   })
 
@@ -106,6 +105,25 @@ describe('NavDrawer', () => {
     expect(onClose).toHaveBeenCalledOnce()
   })
 
+  it('focuses the close button when opened', () => {
+    render(<NavDrawer isOpen={true} onClose={vi.fn()} />)
+    expect(document.activeElement).toBe(
+      screen.getByLabelText('Close navigation'),
+    )
+  })
+
+  it('exposes a "Drawer navigation" landmark', () => {
+    render(<NavDrawer isOpen={true} onClose={vi.fn()} />)
+    expect(
+      screen.getByRole('navigation', { name: 'Drawer navigation' }),
+    ).toBeTruthy()
+  })
+
+  it('applies the id prop to the dialog', () => {
+    render(<NavDrawer isOpen={true} onClose={vi.fn()} id="drawer-x" />)
+    expect(screen.getByRole('dialog').id).toBe('drawer-x')
+  })
+
   it('calls onClose when a nav link is clicked', () => {
     const onClose = vi.fn()
     render(<NavDrawer isOpen={true} onClose={onClose} />)
@@ -113,15 +131,15 @@ describe('NavDrawer', () => {
     expect(onClose).toHaveBeenCalledOnce()
   })
 
-  it('adds overflow-hidden to document.body when open', () => {
+  it('locks body scroll when open (Radix data-scroll-locked)', () => {
     render(<NavDrawer isOpen={true} onClose={vi.fn()} />)
-    expect(document.body.classList.contains('overflow-hidden')).toBe(true)
+    expect(document.body.hasAttribute('data-scroll-locked')).toBe(true)
   })
 
-  it('removes overflow-hidden from document.body when closed', () => {
+  it('releases the body scroll lock when closed', () => {
     const { rerender } = render(<NavDrawer isOpen={true} onClose={vi.fn()} />)
-    expect(document.body.classList.contains('overflow-hidden')).toBe(true)
+    expect(document.body.hasAttribute('data-scroll-locked')).toBe(true)
     rerender(<NavDrawer isOpen={false} onClose={vi.fn()} />)
-    expect(document.body.classList.contains('overflow-hidden')).toBe(false)
+    expect(document.body.hasAttribute('data-scroll-locked')).toBe(false)
   })
 })

@@ -1,8 +1,14 @@
-import { createPortal } from 'react-dom'
-import { useEffect, useRef } from 'react'
+import { useRef } from 'react'
 import { Link } from '@tanstack/react-router'
 import { X, Camera, Bell, Heart, Settings } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
+
+import { Button } from '#/features/shared/components/ui/button'
+import {
+  Sheet,
+  SheetContent,
+  SheetTitle,
+} from '#/features/shared/components/ui/sheet'
 
 interface NavDrawerProps {
   isOpen: boolean
@@ -24,68 +30,46 @@ const DRAWER_NAV_LINKS: DrawerNavLink[] = [
 ]
 
 const linkBase =
-  'flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-semibold text-(--sea-ink-soft) transition-colors hover:bg-(--surface-strong) hover:text-(--sea-ink)'
+  'flex min-h-11 items-center gap-3 rounded-input px-3 py-3 text-sm font-semibold text-fg-2 transition-colors duration-180 ease-standard hover:bg-surface-hover hover:text-foreground'
 
-const linkActive =
-  'flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-semibold bg-(--surface-strong) text-(--sea-ink) transition-colors'
+const linkActive = 'bg-surface-hover text-foreground'
 
 export function NavDrawer({ isOpen, onClose, id }: NavDrawerProps) {
   const closeButtonRef = useRef<HTMLButtonElement>(null)
 
-  // Body scroll lock
-  useEffect(() => {
-    if (!isOpen) return
-    document.body.classList.add('overflow-hidden')
-    return () => document.body.classList.remove('overflow-hidden')
-  }, [isOpen])
-
-  // Escape key handler
-  useEffect(() => {
-    if (!isOpen) return
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
-    }
-    document.addEventListener('keydown', handleKeyDown)
-    return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [isOpen, onClose])
-
-  // Focus close button when drawer opens
-  useEffect(() => {
-    if (isOpen) {
-      closeButtonRef.current?.focus()
-    }
-  }, [isOpen])
-
-  if (!isOpen) return null
-
-  return createPortal(
-    <>
-      {/* Backdrop */}
-      <div
-        data-testid="nav-drawer-backdrop"
-        className="fixed inset-0 z-[60] bg-black/40"
-        aria-hidden="true"
-        onClick={onClose}
-      />
-
-      {/* Drawer panel */}
-      <div
+  return (
+    <Sheet
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) onClose()
+      }}
+    >
+      <SheetContent
+        side="left"
         id={id}
-        role="dialog"
+        showCloseButton={false}
         aria-modal="true"
-        aria-label="Navigation"
-        className="nav-drawer-panel fixed inset-y-0 left-0 z-[70] flex w-72 flex-col bg-(--surface) pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] shadow-xl backdrop-blur-lg"
+        aria-describedby={undefined}
+        overlayProps={{ 'data-testid': 'nav-drawer-backdrop' }}
+        onOpenAutoFocus={(e) => {
+          e.preventDefault()
+          closeButtonRef.current?.focus()
+        }}
+        className="gap-0"
       >
+        <SheetTitle className="sr-only">Navigation</SheetTitle>
+
         {/* Drawer header */}
-        <div className="flex items-center justify-end border-b border-(--line) px-4 py-3">
-          <button
+        <div className="flex items-center justify-end border-b border-border-soft px-4 py-3">
+          <Button
             ref={closeButtonRef}
+            variant="ghost"
+            size="icon"
             onClick={onClose}
             aria-label="Close navigation"
-            className="flex h-9 w-9 items-center justify-center rounded-full text-(--sea-ink-soft) transition-colors hover:bg-(--surface-strong) hover:text-(--sea-ink)"
           >
-            <X size={20} aria-hidden="true" />
-          </button>
+            <X className="size-5" aria-hidden />
+          </Button>
         </div>
 
         {/* Drawer nav links */}
@@ -97,17 +81,16 @@ export function NavDrawer({ isOpen, onClose, id }: NavDrawerProps) {
               onClick={onClose}
               className={linkBase}
               activeProps={{
-                className: linkActive,
+                className: `${linkBase} ${linkActive}`,
                 'aria-current': 'page' as const,
               }}
             >
-              <Icon size={20} aria-hidden="true" />
+              <Icon className="size-5" aria-hidden />
               {label}
             </Link>
           ))}
         </nav>
-      </div>
-    </>,
-    document.body,
+      </SheetContent>
+    </Sheet>
   )
 }

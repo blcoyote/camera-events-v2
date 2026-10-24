@@ -52,4 +52,16 @@ describe('Sheet', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Close' }))
     expect(fn).toHaveBeenCalledWith(false)
   })
+  it('forwards overlayProps to the overlay', () => {
+    render(
+      <Sheet open>
+        <SheetContent overlayProps={{ 'data-testid': 'ov' }}>
+          <SheetTitle>T</SheetTitle>
+        </SheetContent>
+      </Sheet>,
+    )
+    expect(screen.getByTestId('ov').getAttribute('data-slot')).toBe(
+      'sheet-overlay',
+    )
+  })
 })
