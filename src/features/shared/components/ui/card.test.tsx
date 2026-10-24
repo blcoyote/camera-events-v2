@@ -31,4 +31,11 @@ describe('CardTitle', () => {
     render(<CardTitle>Hello</CardTitle>)
     expect(screen.getByText('Hello').className).toContain('text-2xl')
   })
+  it('renders a level-2 heading without an explicit role attribute', () => {
+    render(<CardTitle>Hello</CardTitle>)
+    const heading = screen.getByRole('heading', { level: 2 })
+    expect(heading.tagName).toBe('H2')
+    expect(heading.hasAttribute('role')).toBe(false)
+    expect(heading.textContent).toBe('Hello')
+  })
 })

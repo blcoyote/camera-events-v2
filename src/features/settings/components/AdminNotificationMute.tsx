@@ -107,9 +107,7 @@ export function AdminNotificationMute() {
   return (
     <Card className="mt-6">
       <CardHeader>
-        <CardTitle role="heading" aria-level={2}>
-          Admin
-        </CardTitle>
+        <CardTitle>Admin</CardTitle>
       </CardHeader>
       <p className="text-sm text-fg-2">
         Silence motion and camera-offline notifications for every user for the

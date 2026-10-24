@@ -45,9 +45,7 @@ export function SettingsPage() {
 
       <Card className="mt-6">
         <CardHeader>
-          <CardTitle role="heading" aria-level={2}>
-            Camera Events
-          </CardTitle>
+          <CardTitle>Camera Events</CardTitle>
         </CardHeader>
 
         <div className="flex flex-col gap-3">
@@ -89,9 +87,7 @@ export function SettingsPage() {
 
       <Card className="mt-6">
         <CardHeader>
-          <CardTitle role="heading" aria-level={2}>
-            Live View
-          </CardTitle>
+          <CardTitle>Live View</CardTitle>
         </CardHeader>
 
         <div className="flex flex-col gap-3">

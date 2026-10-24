@@ -20,9 +20,7 @@ export function AppearanceSettings({ className }: { className?: string }) {
   return (
     <Card className={cn(className)}>
       <CardHeader>
-        <CardTitle role="heading" aria-level={2}>
-          Appearance
-        </CardTitle>
+        <CardTitle>Appearance</CardTitle>
       </CardHeader>
 
       <div role="group" aria-label="Theme" className="flex flex-wrap gap-2">
