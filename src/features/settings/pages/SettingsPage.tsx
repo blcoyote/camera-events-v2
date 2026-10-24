@@ -17,6 +17,7 @@ import {
 } from '#/features/shared/components/ui/card'
 import { NotificationSettings } from '../components/NotificationSettings'
 import { AdminNotificationMute } from '../components/AdminNotificationMute'
+import { AppearanceSettings } from '../components/AppearanceSettings'
 
 export function getSettingsContent(): { heading: string; description: string } {
   return {
@@ -39,6 +40,8 @@ export function SettingsPage() {
           {content.heading}
         </h1>
       </Card>
+
+      <AppearanceSettings className="mt-6" />
 
       <Card className="mt-6">
         <CardHeader>
