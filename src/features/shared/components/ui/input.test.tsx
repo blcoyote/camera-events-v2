@@ -13,7 +13,7 @@ describe('Input', () => {
   it('forwards value and onChange', () => {
     const onChange = vi.fn()
     render(<Input aria-label="n" value="abc" onChange={onChange} />)
-    const el = screen.getByLabelText('n')
+    const el = screen.getByLabelText<HTMLInputElement>('n')
     expect(el.value).toBe('abc')
     fireEvent.change(el, { target: { value: 'abcd' } })
     expect(onChange).toHaveBeenCalledOnce()

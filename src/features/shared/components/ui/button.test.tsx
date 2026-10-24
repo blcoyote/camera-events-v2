@@ -12,7 +12,7 @@ describe('Button', () => {
   })
   it('loading disables, sets aria-busy and renders a spinner', () => {
     render(<Button loading>Go</Button>)
-    const btn = screen.getByRole('button')
+    const btn = screen.getByRole<HTMLButtonElement>('button')
     expect(btn.disabled).toBe(true)
     expect(btn.getAttribute('aria-busy')).toBe('true')
     const spinner = btn.querySelector('span.animate-spin')
