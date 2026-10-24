@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Heart, AlertCircle } from 'lucide-react'
+import { Button } from '#/features/shared/components/ui/button'
 import { Alert } from '#/features/shared/components/ui/alert'
 
 export interface FavoriteButtonProps {
@@ -32,8 +33,10 @@ export function FavoriteButton({
 
   return (
     <div className="relative flex items-center">
-      <button
+      <Button
         type="button"
+        variant="ghost"
+        size="icon"
         aria-label={
           pending
             ? 'Saving…'
@@ -48,14 +51,14 @@ export function FavoriteButton({
           e.preventDefault()
           onToggle()
         }}
-        className="flex items-center justify-center rounded-full p-2.5 text-fg-2 transition hover:text-danger disabled:opacity-50 disabled:cursor-not-allowed"
+        className="text-fg-2 hover:bg-transparent hover:text-danger"
       >
         <Heart
           size={20}
           aria-hidden="true"
           className={favorited ? 'fill-danger text-danger' : ''}
         />
-      </button>
+      </Button>
 
       {visibleError && (
         <Alert
