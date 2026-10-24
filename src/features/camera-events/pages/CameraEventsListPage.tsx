@@ -4,6 +4,7 @@ import type { FrigateEvent } from '#/features/shared/server/frigate/types'
 import { formatLabelName } from '#/features/shared/utils/eventFormatting'
 import { FilterPill } from '../components/FilterPill'
 import { EventCard } from '#/features/shared/components/EventCard'
+import { Button } from '#/features/shared/components/ui/button'
 
 // ─── Pure functions (exported for testing) ───
 
@@ -68,11 +69,9 @@ export function CameraEventsListPage({
   return (
     <main id="main-content" className="page-wrap px-4 pb-8 pt-6 sm:pt-14">
       {/* Hero header */}
-      <section className="island-shell rise-in relative overflow-hidden rounded-4xl px-5 py-6 sm:px-8 sm:py-8">
-        <div className="pointer-events-none absolute -left-20 -top-24 h-56 w-56 rounded-full bg-[radial-gradient(circle,var(--hero-a),transparent_66%)]" />
-        <div className="pointer-events-none absolute -bottom-20 -right-20 h-56 w-56 rounded-full bg-[radial-gradient(circle,var(--hero-b),transparent_66%)]" />
-        <p className="island-kicker mb-1">Camera Events</p>
-        <h1 className="display-title mb-0 max-w-3xl text-2xl leading-tight font-bold tracking-tight text-(--sea-ink) sm:text-4xl">
+      <section className="glass rise-in relative overflow-hidden rounded-card px-5 py-6 sm:px-8 sm:py-8">
+        <p className="eyebrow mb-1">Camera Events</p>
+        <h1 className="mb-0 max-w-3xl text-3xl leading-display font-semibold tracking-tight sm:text-4xl">
           Recent Events
         </h1>
       </section>
@@ -81,7 +80,7 @@ export function CameraEventsListPage({
       {state.kind === 'error' && (
         <div
           role="alert"
-          className="mx-auto mt-8 max-w-3xl rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800"
+          className="mx-auto mt-8 max-w-3xl rounded-card border border-danger/40 bg-danger/10 px-4 py-3 text-sm text-danger-text"
         >
           {state.message}
         </div>
@@ -90,10 +89,10 @@ export function CameraEventsListPage({
       {/* Empty state */}
       {state.kind === 'empty' && (
         <div className="mt-12 text-center">
-          <p className="text-lg font-medium text-(--sea-ink)">
+          <p className="text-lg font-medium text-foreground">
             No events recorded
           </p>
-          <p className="mt-1 text-sm text-(--sea-ink-soft)">
+          <p className="mt-1 text-sm text-fg-2">
             Events will appear here when your cameras detect activity.
           </p>
         </div>
@@ -154,7 +153,7 @@ export function CameraEventsListPage({
 
           {/* Results count */}
           <p
-            className="mt-4 text-xs font-medium text-(--sea-ink-soft)"
+            className="mt-4 text-xs font-medium text-muted-foreground"
             aria-live="polite"
           >
             {filtered.length} {filtered.length === 1 ? 'event' : 'events'}
@@ -178,19 +177,20 @@ export function CameraEventsListPage({
             </section>
           ) : (
             <div className="mt-8 text-center">
-              <p className="text-sm text-(--sea-ink-soft)">
+              <p className="text-sm text-fg-2">
                 No events match the selected filters.
               </p>
-              <button
-                type="button"
+              <Button
+                variant="link"
+                size="sm"
                 onClick={() => {
                   setLabelFilter(null)
                   setCameraFilter(null)
                 }}
-                className="mt-2 min-h-11 text-sm font-medium text-(--lagoon-deep) hover:text-(--sea-ink)"
+                className="mt-2"
               >
                 Clear filters
-              </button>
+              </Button>
             </div>
           )}
         </>

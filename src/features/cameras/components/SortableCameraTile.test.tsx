@@ -1,6 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import React from 'react'
 import { SortableCameraTile } from './SortableCameraTile'
+import { Button } from '#/features/shared/components/ui/button'
 
 // Stub useSortable so the component can be called outside DndContext
 vi.mock('@dnd-kit/sortable', () => ({
@@ -102,10 +103,26 @@ describe('SortableCameraTile', () => {
     expect(style).toMatchObject({ WebkitTouchCallout: 'none' })
   })
 
-  it('drag handle button has a focus-visible class', () => {
+  it('drag handle is the shared Button primitive, which supplies the focus ring', () => {
     const output = getOutput({ name: 'front', isEditing: true, imgSrc: '/img' })
-    const json = JSON.stringify(output)
-    expect(json).toContain('focus-visible')
+    function findHandle(
+      node: unknown,
+    ): React.ReactElement<{ 'aria-label'?: string }> | null {
+      if (!node || typeof node !== 'object') return null
+      const el = node as React.ReactElement<{
+        'aria-label'?: string
+        children?: unknown
+      }>
+      if (el.props['aria-label'] === 'Reorder front') return el
+      const children = el.props.children
+      for (const child of Array.isArray(children) ? children : [children]) {
+        const found = findHandle(child)
+        if (found) return found
+      }
+      return null
+    }
+    const handle = findHandle(output)
+    expect(handle?.type).toBe(Button)
   })
 
   it('links to the live view page for the camera when not editing', () => {

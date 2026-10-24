@@ -2,6 +2,7 @@ import type { CSSProperties } from 'react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { MediaCard } from '#/features/shared/components/MediaCard'
+import { Button } from '#/features/shared/components/ui/button'
 
 interface SortableCameraTileProps {
   name: string
@@ -54,12 +55,13 @@ export function SortableCameraTile({
         }
       >
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-(--sea-ink)">{name}</h2>
+          <h2 className="text-sm font-semibold text-foreground">{name}</h2>
           {isEditing && (
-            <button
-              type="button"
+            <Button
+              variant="ghost"
+              size="icon"
               aria-label={`Reorder ${name}`}
-              className="ml-2 cursor-grab rounded p-1 text-(--sea-ink-soft) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--sea-ink) active:cursor-grabbing"
+              className="ml-2 size-9 cursor-grab text-fg-2 active:cursor-grabbing"
               {...attributes}
               {...listeners}
             >
@@ -77,7 +79,7 @@ export function SortableCameraTile({
                   strokeLinecap="round"
                 />
               </svg>
-            </button>
+            </Button>
           )}
         </div>
       </MediaCard>
