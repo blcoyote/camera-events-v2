@@ -88,7 +88,7 @@ describe('AvatarMenu', () => {
     expect(trigger.querySelector('img')).toBeNull()
   })
 
-  it('renders avatar image when avatarUrl is non-empty', () => {
+  it('shows initials instead of an image while the avatar has not loaded', () => {
     render(
       <AvatarMenu
         avatarUrl="https://example.com/me.png"
@@ -98,9 +98,44 @@ describe('AvatarMenu', () => {
     )
 
     const trigger = screen.getByRole('button', { name: 'Account menu' })
+    expect(trigger).toHaveTextContent('AB')
+    expect(trigger.querySelector('img')).toBeNull()
+  })
+
+  it('renders avatar image with no-referrer once it loads', async () => {
+    // jsdom never loads images, so stub window.Image to fire `load` the way
+    // a browser would. Radix Avatar only mounts the <img> after that event.
+    class LoadingImage extends EventTarget {
+      complete = false
+      naturalWidth = 0
+      set src(_value: string) {
+        queueMicrotask(() => {
+          this.complete = true
+          this.naturalWidth = 1
+          this.dispatchEvent(new Event('load'))
+        })
+      }
+    }
+    const originalWindowImage = window.Image
+    window.Image = LoadingImage as unknown as typeof Image
+
+    render(
+      <AvatarMenu
+        avatarUrl="https://example.com/me.png"
+        initials="AB"
+        signOutAction="/api/auth/logout"
+      />,
+    )
+
+    const trigger = screen.getByRole('button', { name: 'Account menu' })
+    await waitFor(() => {
+      expect(trigger.querySelector('img')).not.toBeNull()
+    })
     const img = trigger.querySelector('img')
-    expect(img).not.toBeNull()
     expect(img).toHaveAttribute('src', 'https://example.com/me.png')
+    expect(img).toHaveAttribute('referrerpolicy', 'no-referrer')
+    expect(img).toHaveAttribute('alt', '')
+    window.Image = originalWindowImage
   })
 
   it('opens the menu when the trigger is clicked', async () => {
