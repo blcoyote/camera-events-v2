@@ -36,8 +36,22 @@ describe('glass fallback surface token', () => {
     expect(count(css, 'rgba(255, 255, 255, 0.94)')).toBe(1)
   })
 
-  it('uses the token in the no-backdrop-filter fallback of glass, glass-flat and glass-strong', () => {
-    expect(count(css, 'background: var(--gl-surface-solid);')).toBe(3)
+  it('uses the token in the no-backdrop-filter fallback of glass, glass-flat, glass-strong and glass-header', () => {
+    expect(count(css, 'background: var(--gl-surface-solid);')).toBe(4)
+  })
+})
+
+describe('header glass surface token', () => {
+  it('defines a more transparent --gl-surface-header than --gl-surface in :root', () => {
+    expect(rootBlock()).toContain(
+      '--gl-surface-header: rgba(255, 255, 255, 0.5);',
+    )
+  })
+
+  it('glass-header utility reads the header token', () => {
+    expect(css).toMatch(
+      /@utility glass-header\s*\{[\s\S]*?background: var\(--gl-surface-header\);/,
+    )
   })
 })
 
@@ -260,6 +274,7 @@ const DARK_VALUES: [string, string][] = [
   ['--gl-surface-warm', 'rgba(18, 30, 52, 0.55)'],
   ['--gl-surface-hover', 'rgba(30, 46, 76, 0.82)'],
   ['--gl-surface-solid', 'rgba(22, 34, 58, 0.96)'],
+  ['--gl-surface-header', 'rgba(22, 34, 58, 0.42)'],
   ['--gl-fg', '#e6eefc'],
   ['--gl-fg-2', '#b6c4dc'],
   ['--gl-muted', '#8c9dba'],

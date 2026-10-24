@@ -41,6 +41,7 @@
   --gl-danger-fill: #c81e3a;
   --gl-overlay: rgba(16, 32, 51, 0.4);
   --gl-surface-solid: rgba(255, 255, 255, 0.94);
+  --gl-surface-header: rgba(255, 255, 255, 0.5);
   --gl-blob-1: rgba(79, 140, 255, 0.45);
   --gl-blob-2: rgba(24, 86, 255, 0.28);
   /* elevation, blur, motion */
@@ -63,6 +64,7 @@
   --gl-surface-warm: rgba(18, 30, 52, 0.55);
   --gl-surface-hover: rgba(30, 46, 76, 0.82);
   --gl-surface-solid: rgba(22, 34, 58, 0.96);
+  --gl-surface-header: rgba(22, 34, 58, 0.42);
   --gl-fg: #e6eefc;
   --gl-fg-2: #b6c4dc;
   --gl-muted: #8c9dba;
@@ -191,6 +193,21 @@
   background: var(--gl-surface-hover);
   -webkit-backdrop-filter: blur(var(--gl-blur-glass-strong)) saturate(140%);
   backdrop-filter: blur(var(--gl-blur-glass-strong)) saturate(140%);
+  border: 1px solid var(--gl-border);
+  box-shadow: var(--gl-elev-raised);
+  @supports not (
+    (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))
+  ) {
+    background: var(--gl-surface-solid);
+  }
+}
+
+/* Sticky app header: same recipe as `glass` but more transparent so content
+   scrolling underneath shows through the blur. */
+@utility glass-header {
+  background: var(--gl-surface-header);
+  -webkit-backdrop-filter: blur(var(--gl-blur-glass)) saturate(140%);
+  backdrop-filter: blur(var(--gl-blur-glass)) saturate(140%);
   border: 1px solid var(--gl-border);
   box-shadow: var(--gl-elev-raised);
   @supports not (
