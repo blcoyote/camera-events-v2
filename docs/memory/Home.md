@@ -46,6 +46,7 @@ this vault is meant to be used.
 - [[decisions/2026-10-14-delivery-module]] — one Delivery module owns Mute, fan-out and send; a Burst Alert swallowed by Mute is promoted on the first unmuted flush
 - [[decisions/2026-10-17-single-glossary-and-vocabulary]] — CONTEXT.md is the only domain glossary; Ghost, Alert, Availability, Device, Favorite and Patch-count vocabulary settled
 - [[decisions/2026-10-24-glassmorphism-shadcn-design-system]] — Glassmorphism tokens (`--gl-*`) → shadcn semantic vars → Tailwind; light only, Radix overlays, iOS status bar `default`
+- [[decisions/2026-10-24-glassmorphism-dark-mode]] — dark mode via `:root.dark` over `--gl-*` primitives; navy `#0b1424`, light/dark/auto toggle in header + Settings
 
 ## ⚠️ Gotchas
 
