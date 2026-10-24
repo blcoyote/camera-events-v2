@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { Button } from '#/features/shared/components/ui/button'
 import { Card } from '#/features/shared/components/ui/card'
+import { Progress } from '#/features/shared/components/ui/progress'
 import { Camera, Clock, MapPin, Film, Image } from 'lucide-react'
 import type { FrigateResult } from '#/features/shared/server/frigate/config'
 import type { FrigateEvent } from '#/features/shared/server/frigate/types'
@@ -398,21 +399,11 @@ export function CameraEventDetailPage({
               Detection confidence
             </h2>
             <div className="flex items-center gap-3">
-              <div
-                className="h-2 flex-1 overflow-hidden rounded-full bg-border"
-                role="progressbar"
-                aria-valuenow={Math.round(event.data.top_score * 100)}
-                aria-valuemin={0}
-                aria-valuemax={100}
+              <Progress
+                className="flex-1"
+                value={Math.round(event.data.top_score * 100)}
                 aria-label="Detection confidence"
-              >
-                <div
-                  className="h-full rounded-full bg-primary transition-all"
-                  style={{
-                    width: `${Math.round(event.data.top_score * 100)}%`,
-                  }}
-                />
-              </div>
+              />
               <span className="text-sm font-semibold text-foreground">
                 {Math.round(event.data.top_score * 100)}%
               </span>
