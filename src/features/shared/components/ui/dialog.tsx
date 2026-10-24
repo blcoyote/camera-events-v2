@@ -46,17 +46,28 @@ function DialogContent({
   className,
   children,
   showCloseButton = true,
+  variant = 'default',
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   showCloseButton?: boolean
+  /**
+   * `bare` is an unstyled full-viewport surface (no glass card, no dimming
+   * overlay) for content that draws its own backdrop, e.g. the lightbox. The
+   * overlay is still rendered (transparent) because Radix attaches its scroll
+   * lock to it.
+   */
+  variant?: 'default' | 'bare'
 }) {
+  const bare = variant === 'bare'
   return (
     <DialogPortal>
-      <DialogOverlay />
+      <DialogOverlay className={bare ? 'bg-transparent' : undefined} />
       <DialogPrimitive.Content
         data-slot="dialog-content"
         className={cn(
-          'glass-strong fixed top-1/2 left-1/2 z-[70] grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-hero p-8 duration-280 ease-standard sm:max-w-lg data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95',
+          bare
+            ? 'fixed inset-0 z-[70] outline-none'
+            : 'glass-strong fixed top-1/2 left-1/2 z-[70] grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-hero p-8 duration-280 ease-standard sm:max-w-lg data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95',
           className,
         )}
         {...props}

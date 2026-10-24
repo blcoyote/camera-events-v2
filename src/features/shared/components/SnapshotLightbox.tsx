@@ -1,6 +1,13 @@
 import { useCallback, useRef } from 'react'
-import { useModalFocusTrap } from '#/features/shared/hooks/useModalFocusTrap'
+import { XIcon } from 'lucide-react'
 import { useImageGestures } from '#/features/shared/hooks/useImageGestures'
+import { Button } from '#/features/shared/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from '#/features/shared/components/ui/dialog'
 
 interface SnapshotLightboxProps {
   src: string
@@ -15,6 +22,53 @@ export function SnapshotLightbox({
   open,
   onClose,
 }: SnapshotLightboxProps) {
+  // Radix only restores focus to a <Dialog.Trigger>; this dialog is controlled
+  // by its parent, so remember the opener ourselves and hand focus back on close.
+  const openerRef = useRef<HTMLElement | null>(null)
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        if (!next) onClose()
+      }}
+    >
+      <DialogContent
+        variant="bare"
+        showCloseButton={false}
+        onOpenAutoFocus={() => {
+          openerRef.current =
+            document.activeElement instanceof HTMLElement
+              ? document.activeElement
+              : null
+        }}
+        onCloseAutoFocus={(e) => {
+          e.preventDefault()
+          openerRef.current?.focus()
+          openerRef.current = null
+        }}
+      >
+        <DialogTitle className="sr-only">{alt}</DialogTitle>
+        <DialogDescription className="sr-only">
+          Pinch to zoom, drag to pan, swipe down or press Escape to close.
+        </DialogDescription>
+        <LightboxViewer src={src} alt={alt} onClose={onClose} />
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+/**
+ * Rendered inside DialogContent so it mounts together with the image: Radix
+ * portals its content one commit after `open` flips, so calling
+ * `useImageGestures` in the parent would run its listener-attaching effect
+ * while `imgRef.current` is still null and never re-run.
+ */
+function LightboxViewer({
+  src,
+  alt,
+  onClose,
+}: Pick<SnapshotLightboxProps, 'src' | 'alt' | 'onClose'>) {
   const imgRef = useRef<HTMLImageElement>(null)
 
   const onCloseRef = useRef(onClose)
@@ -22,7 +76,7 @@ export function SnapshotLightbox({
   const dismiss = useCallback(() => onCloseRef.current(), [])
 
   const { transform, dismissY, gestureMode, resetTransform } = useImageGestures(
-    { imgRef, active: open, onDismiss: dismiss },
+    { imgRef, active: true, onDismiss: dismiss },
   )
 
   const handleClose = useCallback(() => {
@@ -30,45 +84,26 @@ export function SnapshotLightbox({
     onCloseRef.current()
   }, [resetTransform])
 
-  const { dialogRef, closeRef } = useModalFocusTrap(open, handleClose)
-
-  if (!open) return null
-
   const dismissOpacity = Math.max(0.3, 1 - dismissY / 300)
 
   return (
     <div
-      ref={dialogRef}
-      role="dialog"
-      aria-modal="true"
-      aria-label="Snapshot viewer"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/90"
+      className="absolute inset-0 flex items-center justify-center bg-black/90"
       style={{ opacity: dismissOpacity, transition: 'opacity 150ms ease' }}
       onClick={(e) => {
-        if (e.target === dialogRef.current) handleClose()
+        if (e.target === e.currentTarget) handleClose()
       }}
     >
-      <button
-        ref={closeRef}
+      <Button
         type="button"
+        variant="ghost"
+        size="icon"
         onClick={handleClose}
         aria-label="Close snapshot viewer"
-        className="absolute right-3 top-[calc(0.75rem+env(safe-area-inset-top))] z-10 flex h-11 w-11 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-sm transition hover:bg-white/30"
+        className="absolute right-3 top-[calc(0.75rem+env(safe-area-inset-top))] z-10 h-11 w-11 bg-white/20 text-white backdrop-blur-sm hover:bg-white/30"
       >
-        <svg
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <line x1="18" y1="6" x2="6" y2="18" />
-          <line x1="6" y1="6" x2="18" y2="18" />
-        </svg>
-      </button>
+        <XIcon className="size-5" aria-hidden="true" />
+      </Button>
       <img
         ref={imgRef}
         src={src}

@@ -37,4 +37,22 @@ describe('Dialog', () => {
     renderDialog(undefined, false)
     expect(screen.queryByRole('button', { name: 'Close' })).toBeNull()
   })
+  describe('variant="bare"', () => {
+    it('drops the glass card styling and fills the viewport', () => {
+      render(
+        <Dialog open>
+          <DialogContent variant="bare" showCloseButton={false}>
+            <DialogTitle>Bare</DialogTitle>
+          </DialogContent>
+        </Dialog>,
+      )
+      const dialog = screen.getByRole('dialog', { name: 'Bare' })
+      expect(dialog.className).not.toContain('glass-strong')
+      expect(dialog.className).toContain('inset-0')
+    })
+    it('keeps the default variant glass styling', () => {
+      renderDialog()
+      expect(screen.getByRole('dialog').className).toContain('glass-strong')
+    })
+  })
 })
