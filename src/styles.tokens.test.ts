@@ -79,3 +79,171 @@ describe('event-card hover elevation token', () => {
     expect(rootBlock()).toContain('0 28px 88px rgba(79, 140, 255, 0.26)')
   })
 })
+
+// ---------------------------------------------------------------------------
+// Guard: colour literals may only live inside :root / :root.dark blocks.
+// ---------------------------------------------------------------------------
+
+const COLOUR_DEFINITION_SELECTOR = /^:root(\.dark)?$/
+
+function blankKeepingNewlines(text: string): string {
+  return text.replace(/[^\n]/g, '')
+}
+
+/**
+ * Removes CSS comments and the bodies of every top-level `:root {…}` and
+ * `:root.dark {…}` block (brace-matched). Newlines are preserved so line
+ * numbers in the result match the source.
+ */
+function stripColourDefinitionBlocks(source: string): string {
+  const noComments = source.replace(/\/\*[\s\S]*?\*\//g, blankKeepingNewlines)
+  let out = ''
+  let depth = 0
+  let selectorStart = 0
+  for (let i = 0; i < noComments.length; i++) {
+    const ch = noComments[i]
+    if (ch === '{') {
+      if (
+        depth === 0 &&
+        COLOUR_DEFINITION_SELECTOR.test(
+          noComments.slice(selectorStart, i).trim(),
+        )
+      ) {
+        let level = 1
+        let j = i + 1
+        while (j < noComments.length && level > 0) {
+          if (noComments[j] === '{') level++
+          else if (noComments[j] === '}') level--
+          j++
+        }
+        out +=
+          noComments.slice(selectorStart, i) +
+          blankKeepingNewlines(noComments.slice(i, j))
+        i = j - 1
+        selectorStart = j
+        continue
+      }
+      depth++
+    } else if (ch === '}') {
+      depth = Math.max(0, depth - 1)
+      if (depth === 0) {
+        out += noComments.slice(selectorStart, i + 1)
+        selectorStart = i + 1
+      }
+    } else if (ch === ';' && depth === 0) {
+      out += noComments.slice(selectorStart, i + 1)
+      selectorStart = i + 1
+    }
+  }
+  return out + noComments.slice(selectorStart)
+}
+
+/**
+ * Finds colour literals (`rgb(`, `rgba(`, `#hex`) left after stripping the
+ * definition blocks. Any text in `allowed` is removed from a line before it is
+ * scanned.
+ */
+function findColourLiterals(
+  source: string,
+  allowed: string[] = [],
+): { line: number; literal: string }[] {
+  const found: { line: number; literal: string }[] = []
+  stripColourDefinitionBlocks(source)
+    .split('\n')
+    .forEach((rawLine, index) => {
+      const line = allowed.reduce((acc, a) => acc.split(a).join(''), rawLine)
+      for (const m of line.matchAll(/rgba?\(|#[0-9a-fA-F]{3,8}\b/g)) {
+        found.push({ line: index + 1, literal: m[0] })
+      }
+    })
+  return found
+}
+
+describe('stripColourDefinitionBlocks', () => {
+  it('blanks the body of a :root block but keeps its line count', () => {
+    const src = ':root {\n  --a: #fff;\n}\n.x { color: red; }'
+    const out = stripColourDefinitionBlocks(src)
+    expect(out).not.toContain('#fff')
+    expect(out).toContain('.x { color: red; }')
+    expect(out.split('\n')).toHaveLength(src.split('\n').length)
+  })
+
+  it('strips every :root block and :root.dark blocks', () => {
+    const src =
+      ':root {\n--a: #111;\n}\n:root.dark {\n--a: #222;\n}\n:root {\n--b: rgb(1, 2, 3);\n}'
+    const out = stripColourDefinitionBlocks(src)
+    expect(out).not.toMatch(/#111|#222|rgb\(/)
+  })
+
+  it('handles nested braces inside a :root block', () => {
+    const src =
+      ':root {\n  --a: { x: 1 };\n  --b: #abc;\n}\n.y { color: #def; }'
+    const out = stripColourDefinitionBlocks(src)
+    expect(out).not.toContain('#abc')
+    expect(out).toContain('#def')
+  })
+
+  it('removes CSS comments', () => {
+    const out = stripColourDefinitionBlocks('/* #abc123 */\n.x { top: 0; }')
+    expect(out).not.toContain('#abc123')
+  })
+
+  it('does not strip :root appearing inside a longer selector or nested at-rule block', () => {
+    const src = '@layer base {\n  html:root-ish { color: #123; }\n}'
+    expect(stripColourDefinitionBlocks(src)).toContain('#123')
+  })
+})
+
+describe('findColourLiterals', () => {
+  it('ignores literals inside :root', () => {
+    expect(findColourLiterals(':root {\n  --a: #fff;\n}')).toEqual([])
+  })
+
+  it('reports literals outside :root with 1-based line numbers', () => {
+    const src =
+      ':root {\n  --a: #fff;\n}\n.x {\n  color: #abcdef;\n  background: rgba(1, 2, 3, 0.5);\n  border-color: rgb(0 0 0);\n}'
+    expect(findColourLiterals(src)).toEqual([
+      { line: 5, literal: '#abcdef' },
+      { line: 6, literal: 'rgba(' },
+      { line: 7, literal: 'rgb(' },
+    ])
+  })
+
+  it('does not flag hex-like text inside a comment', () => {
+    expect(findColourLiterals('/* #abc */\n.x { top: 0; }')).toEqual([])
+  })
+})
+
+describe('styles.css colour-literal guard', () => {
+  // Black image scrims / scanlines, intentionally not themeable.
+  const ALLOWED = [
+    'rgba(0, 0, 0, 0.035)',
+    'rgba(0, 0, 0, 0.55)',
+    'rgba(0, 0, 0, 0.15)',
+  ]
+
+  function violations(source: string): string[] {
+    return findColourLiterals(source, ALLOWED).map(
+      ({ line, literal }) => `line ${line}: ${literal}`,
+    )
+  }
+
+  it('flags a stray literal in an inline stylesheet (guard self-check)', () => {
+    const src = ':root {\n  --a: #fff;\n}\n.x {\n  color: #123456;\n}'
+    expect(violations(src)).toEqual(['line 5: #123456'])
+  })
+
+  it('allows the black scrim values outside :root', () => {
+    const src = '.x {\n  background: rgba(0, 0, 0, 0.55);\n}'
+    expect(violations(src)).toEqual([])
+  })
+
+  it('flags a non-allow-listed rgba outside :root', () => {
+    const src = '.x {\n  background: rgba(0, 0, 0, 0.9);\n}'
+    expect(violations(src)).toEqual(['line 2: rgba('])
+  })
+
+  it('has no colour literals outside :root blocks in src/styles.css', () => {
+    expect(violations(css), 'stray colour literals').toEqual([])
+  })
+})
