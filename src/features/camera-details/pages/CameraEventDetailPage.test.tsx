@@ -222,6 +222,15 @@ describe('CameraEventDetailPage', () => {
       >
       expect(props.onToggle).toBe(mockToggle)
     })
+
+    it('renders the detection confidence progressbar with the rounded score', () => {
+      render(<CameraEventDetailPage result={successResult()} />)
+      const bar = screen.getByRole('progressbar', {
+        name: 'Detection confidence',
+      })
+      expect(bar.getAttribute('aria-valuenow')).toBe('90')
+      expect(screen.getByText('90%')).toBeTruthy()
+    })
   })
 
   describe('error result', () => {

@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import { render, screen, cleanup, fireEvent } from '@testing-library/react'
+import { render, screen, cleanup } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import '@testing-library/jest-dom/vitest'
 import React from 'react'
 import { SettingsPage, getSettingsContent } from './SettingsPage'
@@ -78,29 +79,44 @@ describe('SettingsPage', () => {
 
   it('renders the event limit slider with the value from the hook', () => {
     render(<SettingsPage />)
-    const slider = screen.getByLabelText('Number of events to display')
-    expect(slider).toBeInTheDocument()
-    expect(slider).toHaveAttribute('value', '100')
+    const slider = screen.getByRole('slider', {
+      name: 'Number of events to display',
+    })
+    expect(slider).toHaveAttribute('aria-valuenow', '100')
+    expect(slider).toHaveAttribute('aria-valuemin', '25')
+    expect(slider).toHaveAttribute('aria-valuemax', '500')
+    expect(slider).toHaveAccessibleDescription(/Controls how many events/)
   })
 
-  it('calls setEventLimit with the new numeric value when the slider changes', () => {
+  it('calls setEventLimit with the stepped value on ArrowRight', async () => {
+    const user = userEvent.setup()
     render(<SettingsPage />)
-    const slider = screen.getByLabelText('Number of events to display')
-    fireEvent.change(slider, { target: { value: '200' } })
-    expect(mockSetEventLimit).toHaveBeenCalledWith(200)
+    screen.getByRole('slider', { name: 'Number of events to display' }).focus()
+    await user.keyboard('{ArrowRight}')
+    expect(mockSetEventLimit).toHaveBeenCalledWith(125)
   })
 
   it('renders the live view refresh slider with the value from the hook', () => {
     render(<SettingsPage />)
-    const slider = screen.getByLabelText('Refresh interval')
-    expect(slider).toBeInTheDocument()
-    expect(slider).toHaveAttribute('value', '2')
+    const slider = screen.getByRole('slider', { name: 'Refresh interval' })
+    expect(slider).toHaveAttribute('aria-valuenow', '2')
+    expect(slider).toHaveAccessibleDescription(/live camera snapshot/)
   })
 
-  it('calls setLiveViewRefreshSeconds with the new numeric value when the slider changes', () => {
+  it('calls setLiveViewRefreshSeconds with the stepped value on ArrowRight', async () => {
+    const user = userEvent.setup()
     render(<SettingsPage />)
-    const slider = screen.getByLabelText('Refresh interval')
-    fireEvent.change(slider, { target: { value: '7' } })
-    expect(mockSetLiveViewRefreshSeconds).toHaveBeenCalledWith(7)
+    screen.getByRole('slider', { name: 'Refresh interval' }).focus()
+    await user.keyboard('{ArrowRight}')
+    expect(mockSetLiveViewRefreshSeconds).toHaveBeenCalledWith(3)
+  })
+
+  it('shows the current values in the live value badges', () => {
+    render(<SettingsPage />)
+    expect(screen.getByText('100 events')).toHaveAttribute(
+      'aria-live',
+      'polite',
+    )
+    expect(screen.getByText('2s')).toHaveAttribute('aria-live', 'polite')
   })
 })

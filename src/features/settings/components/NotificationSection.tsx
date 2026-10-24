@@ -12,9 +12,7 @@ export function NotificationSection({
   return (
     <Card className="mt-6">
       <CardHeader>
-        <CardTitle role="heading" aria-level={2}>
-          Notifications
-        </CardTitle>
+        <CardTitle>Notifications</CardTitle>
       </CardHeader>
       {children}
     </Card>

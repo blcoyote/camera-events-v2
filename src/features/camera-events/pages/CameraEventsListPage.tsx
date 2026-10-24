@@ -5,6 +5,7 @@ import { formatLabelName } from '#/features/shared/utils/eventFormatting'
 import { FilterPill } from '../components/FilterPill'
 import { EventCard } from '#/features/shared/components/EventCard'
 import { Button } from '#/features/shared/components/ui/button'
+import { Alert } from '#/features/shared/components/ui/alert'
 
 // ─── Pure functions (exported for testing) ───
 
@@ -78,12 +79,9 @@ export function CameraEventsListPage({
 
       {/* Error state */}
       {state.kind === 'error' && (
-        <div
-          role="alert"
-          className="mx-auto mt-8 max-w-3xl rounded-card border border-danger/40 bg-surface-hover px-4 py-3 text-sm text-danger-text"
-        >
+        <Alert variant="destructive" className="mx-auto mt-8 max-w-3xl">
           {state.message}
-        </div>
+        </Alert>
       )}
 
       {/* Empty state */}

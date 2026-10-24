@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
+import { X } from 'lucide-react'
+import { Alert } from '#/features/shared/components/ui/alert'
 import { Button } from '#/features/shared/components/ui/button'
 
 type AlertType = 'error' | 'success'
@@ -66,15 +68,11 @@ export default function AlertBanner({
   const isError = message.type === 'error'
 
   return (
-    <div
+    <Alert
       ref={bannerRef}
-      role="alert"
+      variant={isError ? 'destructive' : 'success'}
       tabIndex={-1}
-      className={`mx-auto mb-4 flex max-w-3xl items-center justify-between gap-3 rounded-card border px-4 py-3 text-sm backdrop-blur-glass ${
-        isError
-          ? 'border-danger/40 bg-surface-hover text-danger-text'
-          : 'border-success/40 bg-surface-hover text-success-text'
-      }`}
+      className="mx-auto mb-4 flex max-w-3xl items-center justify-between gap-3"
     >
       <span>{message.text}</span>
       <Button
@@ -83,16 +81,8 @@ export default function AlertBanner({
         aria-label="Dismiss message"
         onClick={() => setDismissed(true)}
       >
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 16 16"
-          fill="currentColor"
-          aria-hidden="true"
-        >
-          <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z" />
-        </svg>
+        <X className="size-4" aria-hidden="true" />
       </Button>
-    </div>
+    </Alert>
   )
 }

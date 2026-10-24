@@ -1,6 +1,11 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link } from '@tanstack/react-router'
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from '#/features/shared/components/ui/avatar'
 import { Badge } from '#/features/shared/components/ui/badge'
 import {
   DropdownMenu,
@@ -62,21 +67,22 @@ export function AvatarMenu({
           aria-label={isAdmin ? 'Account menu (Admin)' : 'Account menu'}
           className="glass flex size-11 items-center justify-center overflow-hidden rounded-full shadow-none outline-none focus-visible:shadow-focus"
         >
-          {avatarUrl ? (
-            <img
-              src={avatarUrl}
-              alt=""
-              className="size-full object-cover"
-              referrerPolicy="no-referrer"
-            />
-          ) : (
-            <span
+          <Avatar className="size-full">
+            {avatarUrl ? (
+              <AvatarImage
+                src={avatarUrl}
+                alt=""
+                className="size-full object-cover"
+                referrerPolicy="no-referrer"
+              />
+            ) : null}
+            <AvatarFallback
               aria-hidden="true"
               className="text-sm font-semibold text-brand-strong"
             >
               {initials}
-            </span>
-          )}
+            </AvatarFallback>
+          </Avatar>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" aria-label="Account">
           <form method="post" action={signOutAction} onSubmit={handleSignOut}>

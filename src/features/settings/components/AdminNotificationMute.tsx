@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Button } from '#/features/shared/components/ui/button'
+import { Label } from '#/features/shared/components/ui/label'
+import { NativeSelect } from '#/features/shared/components/ui/native-select'
 import {
   Card,
   CardHeader,
@@ -107,9 +109,7 @@ export function AdminNotificationMute() {
   return (
     <Card className="mt-6">
       <CardHeader>
-        <CardTitle role="heading" aria-level={2}>
-          Admin
-        </CardTitle>
+        <CardTitle>Admin</CardTitle>
       </CardHeader>
       <p className="text-sm text-fg-2">
         Silence motion and camera-offline notifications for every user for the
@@ -118,24 +118,18 @@ export function AdminNotificationMute() {
       </p>
       <div className="flex flex-wrap items-end gap-3">
         <div className="flex min-w-48 flex-col gap-1.5">
-          <label
-            htmlFor="admin-mute-duration"
-            className="text-sm font-medium text-foreground"
-          >
-            Mute duration
-          </label>
-          <select
+          <Label htmlFor="admin-mute-duration">Mute duration</Label>
+          <NativeSelect
             id="admin-mute-duration"
             value={durationMs}
             onChange={(e) => setDurationMs(Number(e.target.value))}
-            className="min-h-11 w-full rounded-input border border-border bg-surface-warm px-4 py-3 text-base text-foreground outline-none focus-visible:border-brand focus-visible:shadow-focus"
           >
             {MUTE_DURATION_OPTIONS.map((option) => (
               <option key={option.ms} value={option.ms}>
                 {option.label}
               </option>
             ))}
-          </select>
+          </NativeSelect>
         </div>
         <Button
           variant="secondary"

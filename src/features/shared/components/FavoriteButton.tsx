@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Heart, AlertCircle } from 'lucide-react'
+import { Button } from '#/features/shared/components/ui/button'
+import { Alert } from '#/features/shared/components/ui/alert'
 
 export interface FavoriteButtonProps {
   eventId: string
@@ -30,9 +32,23 @@ export function FavoriteButton({
   }, [error])
 
   return (
-    <div className="relative flex items-center">
-      <button
+    <div
+      className="relative flex items-center"
+      // Button is pointer-events-none while disabled, so taps land here and
+      // would otherwise reach an enclosing link.
+      onClick={
+        pending
+          ? (e) => {
+              e.stopPropagation()
+              e.preventDefault()
+            }
+          : undefined
+      }
+    >
+      <Button
         type="button"
+        variant="ghost"
+        size="icon"
         aria-label={
           pending
             ? 'Saving…'
@@ -47,24 +63,24 @@ export function FavoriteButton({
           e.preventDefault()
           onToggle()
         }}
-        className="flex items-center justify-center rounded-full p-2.5 text-fg-2 transition hover:text-danger disabled:opacity-50 disabled:cursor-not-allowed"
+        className="text-fg-2 hover:bg-transparent hover:text-danger"
       >
         <Heart
           size={20}
           aria-hidden="true"
           className={favorited ? 'fill-danger text-danger' : ''}
         />
-      </button>
+      </Button>
 
       {visibleError && (
-        <div
-          role="alert"
+        <Alert
+          variant="destructive"
           aria-live="assertive"
-          className="glass absolute bottom-full right-0 mb-1 flex items-center gap-1 whitespace-nowrap rounded-md px-2 py-1 text-xs text-danger-text"
+          className="absolute bottom-full right-0 mb-1 flex items-center gap-1 whitespace-nowrap rounded-md px-2 py-1 text-xs"
         >
           <AlertCircle size={12} aria-hidden="true" />
           {visibleError}
-        </div>
+        </Alert>
       )}
     </div>
   )
