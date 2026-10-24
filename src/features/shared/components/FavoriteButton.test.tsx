@@ -56,6 +56,46 @@ describe('FavoriteButton', () => {
       const btn = screen.getByRole('button', { name: 'Saving…' })
       expect(btn).toBeDisabled()
     })
+
+    it('swallows taps that land on the wrapper while pending so an enclosing link is not activated', () => {
+      // Button is pointer-events-none when disabled, so the tap hits the wrapper.
+      const onParentClick = vi.fn()
+      render(
+        <a href="/event" onClick={onParentClick}>
+          <FavoriteButton
+            eventId={EVENT_ID}
+            favorited={false}
+            pending={true}
+            error={null}
+            onToggle={vi.fn()}
+          />
+        </a>,
+      )
+      const wrapper = screen.getByRole('button', { name: 'Saving…' })
+        .parentElement as HTMLElement
+      const notPrevented = fireEvent.click(wrapper)
+      expect(notPrevented).toBe(false)
+      expect(onParentClick).not.toHaveBeenCalled()
+    })
+
+    it('lets wrapper taps through when not pending', () => {
+      const onParentClick = vi.fn()
+      render(
+        <a href="/event" onClick={onParentClick}>
+          <FavoriteButton
+            eventId={EVENT_ID}
+            favorited={false}
+            pending={false}
+            error={null}
+            onToggle={vi.fn()}
+          />
+        </a>,
+      )
+      const wrapper = screen.getByRole('button', { name: /favorite/i })
+        .parentElement as HTMLElement
+      fireEvent.click(wrapper)
+      expect(onParentClick).toHaveBeenCalledOnce()
+    })
   })
 
   describe('click behavior', () => {

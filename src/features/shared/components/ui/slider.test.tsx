@@ -14,6 +14,13 @@ describe('Slider', () => {
     expect(thumb.getAttribute('aria-valuemax')).toBe('10')
   })
 
+  it('gives the thumb a contrasting semantic border so it is visible on glass at min', () => {
+    render(<Slider aria-label="n" value={[1]} min={1} max={10} step={1} />)
+    const cls = screen.getByRole('slider').className
+    expect(cls).toContain('border-primary')
+    expect(cls).not.toContain('border-border')
+  })
+
   it('calls onValueChange with the stepped value on ArrowRight', () => {
     const fn = vi.fn()
     render(

@@ -53,7 +53,7 @@ function Slider({
           aria-label={ariaLabel}
           aria-labelledby={ariaLabelledby}
           aria-describedby={ariaDescribedby}
-          className="relative block size-5 shrink-0 rounded-full border border-border bg-white shadow-raised outline-none transition duration-180 ease-standard focus-visible:shadow-focus disabled:pointer-events-none before:absolute before:-inset-3 before:content-['']"
+          className="relative block size-5 shrink-0 rounded-full border border-primary bg-white shadow-raised outline-none transition duration-180 ease-standard focus-visible:shadow-focus disabled:pointer-events-none before:absolute before:-inset-3 before:content-['']"
         />
       ))}
     </SliderPrimitive.Root>

@@ -32,7 +32,19 @@ export function FavoriteButton({
   }, [error])
 
   return (
-    <div className="relative flex items-center">
+    <div
+      className="relative flex items-center"
+      // Button is pointer-events-none while disabled, so taps land here and
+      // would otherwise reach an enclosing link.
+      onClick={
+        pending
+          ? (e) => {
+              e.stopPropagation()
+              e.preventDefault()
+            }
+          : undefined
+      }
+    >
       <Button
         type="button"
         variant="ghost"
