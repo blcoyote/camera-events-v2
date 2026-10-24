@@ -10,7 +10,7 @@ created: 2026-10-24
 > class on `<html>` that overrides the `--gl-*` primitives, with a
 > light/dark/auto toggle in the header and in Settings.
 
-**Status:** planned 2026-10-24 (bd epic ce-5hb). Spec:
+**Status:** implemented 2026-10-24; device QA pending (bd ce-5hb.9). Spec:
 `docs/specs/glassmorphism-dark-mode.md`. Supersedes the "light only" part of
 [[decisions/2026-10-24-glassmorphism-shadcn-design-system]].
 
@@ -55,4 +55,16 @@ design system has no dark tokens, so the values are ours.
 
 - Adding a colour to `styles.css`? Put it in both `:root` and `:root.dark`.
 - iOS standalone status bar follows the system, not the app toggle. See
-  [[gotchas/ios-status-bar-ignores-app-theme]] (added with ce-5hb.7).
+  [[gotchas/ios-status-bar-ignores-app-theme]].
+
+## Implementation notes (deviations from the plan)
+
+- The init script sits right after `<HeadContent />`, not first in `<head>`:
+  the `theme-color` meta it updates is emitted by `HeadContent`.
+- The Settings control is a `role="group"` of `aria-pressed` toggle buttons,
+  not a radiogroup: radios would need arrow-key roving focus.
+- The `dark:` guard in `src/styles.legacy-tokens.test.ts` now matches only
+  Tailwind variants glued to a class (`dark:bg-x`), so `{ dark: '#0b1424' }`
+  colour maps are allowed.
+- `src/styles.tokens.test.ts` fails on any colour literal outside the `:root` /
+  `:root.dark` blocks (photo scrims allow-listed).

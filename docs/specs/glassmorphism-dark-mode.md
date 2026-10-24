@@ -1,6 +1,6 @@
 # Glassmorphism dark mode
 
-**Status:** planned 2026-10-24. Epic: bd `ce-5hb`. Decision record:
+**Status:** implemented 2026-10-24; device QA pending (bd ce-5hb.9). Epic: bd `ce-5hb`. Decision record:
 `docs/memory/decisions/2026-10-24-glassmorphism-dark-mode.md`. Builds on
 `docs/specs/glassmorphism-design-system.md` (light only).
 
