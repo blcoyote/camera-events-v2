@@ -72,8 +72,8 @@ export default function AlertBanner({
       tabIndex={-1}
       className={`mx-auto mb-4 flex max-w-3xl items-center justify-between gap-3 rounded-card border px-4 py-3 text-sm backdrop-blur-glass ${
         isError
-          ? 'border-danger/40 bg-danger/10 text-danger-text'
-          : 'border-success/40 bg-success/10 text-success-text'
+          ? 'border-danger/40 bg-surface-hover text-danger-text'
+          : 'border-success/40 bg-surface-hover text-success-text'
       }`}
     >
       <span>{message.text}</span>

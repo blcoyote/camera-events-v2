@@ -80,7 +80,7 @@ export function CameraEventsListPage({
       {state.kind === 'error' && (
         <div
           role="alert"
-          className="mx-auto mt-8 max-w-3xl rounded-card border border-danger/40 bg-danger/10 px-4 py-3 text-sm text-danger-text"
+          className="mx-auto mt-8 max-w-3xl rounded-card border border-danger/40 bg-surface-hover px-4 py-3 text-sm text-danger-text"
         >
           {state.message}
         </div>

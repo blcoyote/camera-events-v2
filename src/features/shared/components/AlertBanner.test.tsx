@@ -76,6 +76,13 @@ describe('AlertBanner component', () => {
     expect(alert).toHaveTextContent('You have been signed out.')
   })
 
+  it('success banner uses the near-opaque bg-surface-hover fill', () => {
+    render(<AlertBanner status="logged_out" />)
+    const alert = screen.getByRole('alert')
+    expect(alert).toHaveClass('bg-surface-hover')
+    expect(alert.className).not.toMatch(/bg-success\/10/)
+  })
+
   it('renders nothing when given an unknown error code', () => {
     const { container } = render(<AlertBanner error="not_a_real_error" />)
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()

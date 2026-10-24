@@ -1,3 +1,4 @@
+import { cn } from '#/features/shared/utils/cn'
 import { Toggle } from '#/features/shared/components/ui/toggle'
 
 export function FilterPill({
@@ -19,7 +20,9 @@ export function FilterPill({
     >
       {label}
       {count !== undefined && (
-        <span className="text-xs opacity-60">{count}</span>
+        <span className={cn('text-xs', !active && 'text-muted-foreground')}>
+          {count}
+        </span>
       )}
     </Toggle>
   )

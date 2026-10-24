@@ -71,9 +71,6 @@ export default function Header() {
 
   function closeDrawer() {
     setIsDrawerOpen(false)
-    if (openedByKeyboard.current) {
-      hamburgerRef.current?.focus()
-    }
   }
 
   return (
@@ -157,6 +154,12 @@ export default function Header() {
           isOpen={isDrawerOpen}
           onClose={closeDrawer}
           id="nav-drawer"
+          onCloseAutoFocus={(e) => {
+            if (openedByKeyboard.current) {
+              e.preventDefault()
+              hamburgerRef.current?.focus()
+            }
+          }}
         />
       )}
     </header>

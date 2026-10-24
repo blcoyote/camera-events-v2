@@ -1,7 +1,14 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import { render, screen, fireEvent, cleanup } from '@testing-library/react'
+import {
+  render,
+  screen,
+  fireEvent,
+  cleanup,
+  waitFor,
+} from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { NavDrawer } from './NavDrawer'
 
@@ -141,5 +148,40 @@ describe('NavDrawer', () => {
     expect(document.body.hasAttribute('data-scroll-locked')).toBe(true)
     rerender(<NavDrawer isOpen={false} onClose={vi.fn()} />)
     expect(document.body.hasAttribute('data-scroll-locked')).toBe(false)
+  })
+
+  it('onCloseAutoFocus can restore focus to the opener after keyboard close', async () => {
+    const user = userEvent.setup()
+    const onCloseAutoFocus = vi.fn()
+
+    function Harness() {
+      const [open, setOpen] = useState(false)
+      const openerRef = useRef<HTMLButtonElement>(null)
+      return (
+        <>
+          <button ref={openerRef} onClick={() => setOpen(true)}>
+            Open
+          </button>
+          <NavDrawer
+            isOpen={open}
+            onClose={() => setOpen(false)}
+            onCloseAutoFocus={(e) => {
+              onCloseAutoFocus()
+              e.preventDefault()
+              openerRef.current?.focus()
+            }}
+          />
+        </>
+      )
+    }
+
+    render(<Harness />)
+    const opener = screen.getByRole('button', { name: 'Open' })
+    opener.focus()
+    await user.keyboard('{Enter}')
+    await screen.findByRole('dialog')
+    await user.keyboard('{Escape}')
+    await waitFor(() => expect(document.activeElement).toBe(opener))
+    expect(onCloseAutoFocus).toHaveBeenCalledOnce()
   })
 })

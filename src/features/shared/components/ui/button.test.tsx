@@ -23,6 +23,12 @@ describe('Button', () => {
     render(<Button variant="secondary">Go</Button>)
     expect(screen.getByRole('button').className.split(' ')).toContain('glass')
   })
+  it('size=icon keeps its 44px target in flex rows (shrink-0)', () => {
+    render(<Button size="icon">x</Button>)
+    expect(screen.getByRole('button').className.split(' ')).toContain(
+      'shrink-0',
+    )
+  })
   it('asChild renders the child element', () => {
     render(
       <Button asChild>

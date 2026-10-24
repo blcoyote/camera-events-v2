@@ -14,6 +14,7 @@ interface NavDrawerProps {
   isOpen: boolean
   onClose: () => void
   id?: string
+  onCloseAutoFocus?: (event: Event) => void
 }
 
 interface DrawerNavLink {
@@ -34,7 +35,12 @@ const linkBase =
 
 const linkActive = 'bg-surface-hover text-foreground'
 
-export function NavDrawer({ isOpen, onClose, id }: NavDrawerProps) {
+export function NavDrawer({
+  isOpen,
+  onClose,
+  id,
+  onCloseAutoFocus,
+}: NavDrawerProps) {
   const closeButtonRef = useRef<HTMLButtonElement>(null)
 
   return (
@@ -55,6 +61,7 @@ export function NavDrawer({ isOpen, onClose, id }: NavDrawerProps) {
           e.preventDefault()
           closeButtonRef.current?.focus()
         }}
+        onCloseAutoFocus={onCloseAutoFocus}
         className="gap-0"
       >
         <SheetTitle className="sr-only">Navigation</SheetTitle>
