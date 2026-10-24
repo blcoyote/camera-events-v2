@@ -21,7 +21,7 @@ this vault is meant to be used.
 
 - [[architecture/system-overview]]
 - [[architecture/push-pipeline]]
-- [[architecture/theming]] — Glassmorphism token layers (`--gl-*` → shadcn → Tailwind), light only; how a dark theme would slot in
+- [[architecture/theming]] — Glassmorphism token layers (`--gl-*` → shadcn → Tailwind), light/dark/auto via `.dark` + `:root.dark`, `useTheme` store, no-flash init script
 - [[architecture/frigate-http-api]] — full API surface; what we use vs. untapped
 
 ## 🧠 Decisions
@@ -46,6 +46,7 @@ this vault is meant to be used.
 - [[decisions/2026-10-14-delivery-module]] — one Delivery module owns Mute, fan-out and send; a Burst Alert swallowed by Mute is promoted on the first unmuted flush
 - [[decisions/2026-10-17-single-glossary-and-vocabulary]] — CONTEXT.md is the only domain glossary; Ghost, Alert, Availability, Device, Favorite and Patch-count vocabulary settled
 - [[decisions/2026-10-24-glassmorphism-shadcn-design-system]] — Glassmorphism tokens (`--gl-*`) → shadcn semantic vars → Tailwind; light only, Radix overlays, iOS status bar `default`
+- [[decisions/2026-10-24-glassmorphism-dark-mode]] — dark mode via `:root.dark` over `--gl-*` primitives; navy `#0b1424`, light/dark/auto toggle in header + Settings
 
 ## ⚠️ Gotchas
 
@@ -57,6 +58,7 @@ this vault is meant to be used.
 - [[gotchas/frigate-publishes-new-before-persisting]] — the `"new"` MQTT message
   arrives before (and sometimes instead of) the event row
 - [[gotchas/unlayered-css-beats-tailwind-utilities]] — an unlayered rule in `src/styles.css` beats every utility; element rules go in `@layer base`
+- [[gotchas/ios-status-bar-ignores-app-theme]] — iOS standalone status bar follows the system appearance, not the app's light/dark toggle; accepted
 
 ## 🧪 Conventions
 

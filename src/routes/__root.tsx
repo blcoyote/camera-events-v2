@@ -10,8 +10,11 @@ import { ServiceWorkerRegistration } from '#/features/shell/components/ServiceWo
 import { getCurrentUserFn } from '#/features/auth/server/auth'
 import type { SessionData } from '#/features/shared/server/session'
 import { NotFound } from './-not-found'
+import { buildThemeInitScript } from '#/features/shared/hooks/themeMode'
 
 import appCss from '../styles.css?url'
+
+const THEME_INIT_SCRIPT = buildThemeInitScript()
 
 interface RouterContext {
   user: SessionData | null
@@ -87,9 +90,10 @@ export const Route = createRootRouteWithContext<RouterContext>()({
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <HeadContent />
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
       </head>
       <body className="bg-background font-sans text-foreground antialiased wrap-anywhere selection:bg-brand/15">
         <a

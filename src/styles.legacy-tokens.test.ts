@@ -51,6 +51,10 @@ const forbiddenLiterals = [
   'Manrope',
 ]
 
+// A Tailwind variant is `dark:` glued to a class (`dark:bg-x`); a
+// `dark: value` object key (theme colour maps) is fine.
+const TAILWIND_DARK_VARIANT = /\bdark:[^\s'"]/
+
 describe('legacy design tokens', () => {
   it.each(forbiddenLiterals)('no source file contains %s', (needle) => {
     const offenders = findOffendingFiles((contents) =>
@@ -61,8 +65,17 @@ describe('legacy design tokens', () => {
     )
   })
 
+  it('the dark: matcher flags variants but not object keys', () => {
+    expect(TAILWIND_DARK_VARIANT.test('className="dark:bg-card"')).toBe(true)
+    expect(TAILWIND_DARK_VARIANT.test("{ light: '#fff', dark: '#000' }")).toBe(
+      false,
+    )
+  })
+
   it('no source file contains a Tailwind dark: variant', () => {
-    const offenders = findOffendingFiles((contents) => /\bdark:/.test(contents))
+    const offenders = findOffendingFiles((contents) =>
+      TAILWIND_DARK_VARIANT.test(contents),
+    )
     expect(
       offenders,
       `"dark:" variant found in: ${offenders.join(', ')}`,

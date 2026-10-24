@@ -29,6 +29,8 @@
   --gl-accent-active: #3f72d1;
   --gl-accent-strong: #1856ff;
   --gl-accent-strong-hover: #1448e0;
+  --gl-accent-fill: #1856ff;
+  --gl-accent-fill-hover: #1448e0;
   --gl-accent-on: #ffffff;
   --gl-success: #22c55e;
   --gl-warn: #f59e0b;
@@ -36,8 +38,14 @@
   --gl-success-text: #15803d;
   --gl-warn-text: #b45309;
   --gl-danger-text: #c81e3a;
+  --gl-danger-fill: #c81e3a;
+  --gl-overlay: rgba(16, 32, 51, 0.4);
+  --gl-surface-solid: rgba(255, 255, 255, 0.94);
+  --gl-blob-1: rgba(79, 140, 255, 0.45);
+  --gl-blob-2: rgba(24, 86, 255, 0.28);
   /* elevation, blur, motion */
   --gl-elev-raised: 0 24px 80px rgba(79, 140, 255, 0.18);
+  --gl-elev-raised-hover: 0 28px 88px rgba(79, 140, 255, 0.26);
   --gl-elev-ring: 0 0 0 1px rgba(255, 255, 255, 0.64);
   --gl-focus-ring: 0 0 0 4px rgba(79, 140, 255, 0.28);
   --gl-blur-glass: 20px;
@@ -45,6 +53,34 @@
   --gl-motion-fast: 180ms;
   --gl-motion-base: 280ms;
   --gl-ease-standard: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ─ Layer 1 dark overrides: applied when <html> has the `dark` class ─ */
+:root.dark {
+  color-scheme: dark;
+  --gl-bg: #0b1424;
+  --gl-surface: rgba(22, 34, 58, 0.62);
+  --gl-surface-warm: rgba(18, 30, 52, 0.55);
+  --gl-surface-hover: rgba(30, 46, 76, 0.82);
+  --gl-surface-solid: rgba(22, 34, 58, 0.96);
+  --gl-fg: #e6eefc;
+  --gl-fg-2: #b6c4dc;
+  --gl-muted: #8c9dba;
+  --gl-border: rgba(255, 255, 255, 0.1);
+  --gl-border-soft: rgba(255, 255, 255, 0.06);
+  --gl-accent-strong: #8ab4ff;
+  --gl-accent-strong-hover: #a9c7ff;
+  --gl-success-text: #4ade80;
+  --gl-warn-text: #fbbf24;
+  --gl-danger-text: #fb7185;
+  --gl-danger-fill: #dc2626;
+  --gl-overlay: rgba(2, 6, 14, 0.6);
+  --gl-blob-1: rgba(79, 140, 255, 0.22);
+  --gl-blob-2: rgba(24, 86, 255, 0.14);
+  --gl-elev-raised: 0 24px 80px rgba(0, 0, 0, 0.45);
+  --gl-elev-raised-hover: 0 28px 88px rgba(0, 0, 0, 0.55);
+  --gl-elev-ring: 0 0 0 1px rgba(255, 255, 255, 0.1);
+  --gl-focus-ring: 0 0 0 4px rgba(138, 180, 255, 0.45);
 }
 
 /* ─ Layer 2: shadcn semantic variables ─ */
@@ -55,7 +91,7 @@
   --card-foreground: var(--gl-fg);
   --popover: var(--gl-surface-hover);
   --popover-foreground: var(--gl-fg);
-  --primary: var(--gl-accent-strong);
+  --primary: var(--gl-accent-fill);
   --primary-foreground: var(--gl-accent-on);
   --secondary: var(--gl-surface);
   --secondary-foreground: var(--gl-fg);
@@ -63,7 +99,7 @@
   --muted-foreground: var(--gl-muted);
   --accent: var(--gl-surface-warm);
   --accent-foreground: var(--gl-fg);
-  --destructive: var(--gl-danger-text);
+  --destructive: var(--gl-danger-fill);
   --border: var(--gl-border);
   --input: var(--gl-border);
   --ring: var(--gl-accent);
@@ -94,7 +130,7 @@
   --color-fg-2: var(--gl-fg-2);
   --color-brand: var(--gl-accent);
   --color-brand-strong: var(--gl-accent-strong);
-  --color-brand-strong-hover: var(--gl-accent-strong-hover);
+  --color-primary-hover: var(--gl-accent-fill-hover);
   --color-surface-warm: var(--gl-surface-warm);
   --color-surface-hover: var(--gl-surface-hover);
   --color-border-soft: var(--gl-border-soft);
@@ -104,6 +140,7 @@
   --color-warn-text: var(--gl-warn-text);
   --color-danger: var(--gl-danger);
   --color-danger-text: var(--gl-danger-text);
+  --color-overlay: var(--gl-overlay);
 
   --font-sans: Inter, system-ui, sans-serif;
   --font-mono: 'SF Mono', ui-monospace, Menlo, monospace;
@@ -133,7 +170,7 @@
   @supports not (
     (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))
   ) {
-    background: rgba(255, 255, 255, 0.94);
+    background: var(--gl-surface-solid);
   }
 }
 
@@ -146,7 +183,7 @@
   @supports not (
     (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))
   ) {
-    background: rgba(255, 255, 255, 0.94);
+    background: var(--gl-surface-solid);
   }
 }
 
@@ -159,7 +196,7 @@
   @supports not (
     (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))
   ) {
-    background: rgba(255, 255, 255, 0.94);
+    background: var(--gl-surface-solid);
   }
 }
 
@@ -205,12 +242,12 @@
     background:
       radial-gradient(
         60vmax 45vmax at 12% 8%,
-        rgba(79, 140, 255, 0.45),
+        var(--gl-blob-1),
         transparent 70%
       ),
       radial-gradient(
         55vmax 50vmax at 92% 85%,
-        rgba(24, 86, 255, 0.28),
+        var(--gl-blob-2),
         transparent 70%
       );
   }
@@ -349,7 +386,7 @@
 
   .event-card:hover {
     transform: translateY(-3px);
-    box-shadow: 0 28px 88px rgba(79, 140, 255, 0.26);
+    box-shadow: var(--gl-elev-raised-hover);
   }
 
   .event-card:focus-visible {

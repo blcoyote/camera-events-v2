@@ -30,6 +30,8 @@ README). Live system: https://claude.ai/artifact/9Pjkhbzu3Y5e8hCJrQqS91.
 | D6  | Hand-built overlays            | **Swap to Radix now**: NavDrawer → shadcn `Sheet`, AvatarMenu → `DropdownMenu`, SnapshotLightbox → `Dialog`.                                                                                       |
 | D7  | Delivery                       | **One PR, stacked commits**, one commit per task, on one branch. Every commit must build, test green and render coherently (hence the temporary legacy-alias layer, below).                        |
 
+> Dark mode was added later: see `docs/specs/glassmorphism-dark-mode.md`.
+
 Further decisions made in planning (not owner-level; recorded so implementers
 don't re-derive them):
 
