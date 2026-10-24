@@ -21,7 +21,7 @@ this vault is meant to be used.
 
 - [[architecture/system-overview]]
 - [[architecture/push-pipeline]]
-- [[architecture/theming]] — token-driven; how to add swappable color themes
+- [[architecture/theming]] — Glassmorphism token layers (`--gl-*` → shadcn → Tailwind), light only; how a dark theme would slot in
 - [[architecture/frigate-http-api]] — full API surface; what we use vs. untapped
 
 ## 🧠 Decisions
