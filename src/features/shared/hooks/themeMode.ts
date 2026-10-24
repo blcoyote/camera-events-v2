@@ -59,3 +59,31 @@ export function applyResolvedTheme(
   const meta = doc.querySelector('meta[name="theme-color"]')
   if (meta) meta.setAttribute('content', THEME_COLORS[resolved])
 }
+
+/**
+ * Builds the blocking inline script that applies the stored theme before first
+ * paint. It runs before any module code, so it is self-contained ES5 that only
+ * touches window globals, and mirrors parseThemeMode / resolveThemeMode /
+ * applyResolvedTheme. Any failure is swallowed so it can never break the page.
+ */
+export function buildThemeInitScript(): string {
+  // Escape '<' so an interpolated value can never form '</script' in the page.
+  const json = (value: unknown) =>
+    JSON.stringify(value).replace(/</g, '\\u003c')
+  return (
+    '(function(){try{' +
+    'var m=localStorage.getItem(' +
+    json(THEME_STORAGE_KEY) +
+    ");if(m!=='light'&&m!=='dark'&&m!=='auto')m='auto';" +
+    "var d=m==='dark'||(m==='auto'&&matchMedia('(prefers-color-scheme: dark)').matches);" +
+    "var r=d?'dark':'light';" +
+    'var h=document.documentElement;' +
+    "h.classList.remove('light','dark');h.classList.add(r);h.style.colorScheme=r;" +
+    'var c=' +
+    json(THEME_COLORS) +
+    ';' +
+    'var t=document.querySelector(\'meta[name="theme-color"]\');' +
+    "if(t)t.setAttribute('content',c[r])" +
+    '}catch(e){}})();'
+  )
+}
