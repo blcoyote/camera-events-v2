@@ -129,7 +129,7 @@ Measured against bare `#0b1424`, against the brightest blob-tinted backdrop
   and applies. Header and Settings share the module store.
 - `src/routes/__root.tsx`: `THEME_INIT_SCRIPT` built from `THEME_STORAGE_KEY`
   and `THEME_COLORS` with `JSON.stringify` (constants only, no user input),
-  injected in `<head>` before the stylesheet. Wrapped in try/catch. The
+  injected in `<head>` right after `<HeadContent />` (which emits the `theme-color` meta it updates; `<body>` is not parsed yet, so it still runs before first paint). Wrapped in try/catch. The
   `theme-color` meta default stays `#eef6ff`.
 
 ## UI

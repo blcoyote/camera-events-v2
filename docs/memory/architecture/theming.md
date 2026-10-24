@@ -77,8 +77,8 @@ cycleTheme }`. On mount it reads storage, then applies the resolved theme.
   mode can throw) and applies the theme. The header toggle and Settings share
   this store, so one change updates both.
 - **Blocking init script in `src/routes/__root.tsx`**: the
-  script from `buildThemeInitScript()` is injected in `<head>` before the
-  stylesheet. It sets the `light` / `dark` class, `colorScheme` and the
+  script from `buildThemeInitScript()` is injected in `<head>` right after
+  `<HeadContent />`, which emits the `theme-color` meta it updates. It sets the `light` / `dark` class, `colorScheme` and the
   `theme-color` meta before first paint, so a reload in dark never flashes
   light. It is ES5 that only touches `window` globals, and it is wrapped in
   try/catch so it cannot break the page. `<html>` gets `suppressHydrationWarning`,
