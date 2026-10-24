@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { Button } from '#/features/shared/components/ui/button'
 import { resyncExistingPushSubscription } from '#/features/shared/utils/pushResync'
 
 export function ServiceWorkerRegistration() {
@@ -127,26 +128,23 @@ export function ServiceWorkerRegistration() {
   return (
     <div
       role="alert"
-      className="fixed bottom-[calc(1rem+env(safe-area-inset-bottom))] left-4 right-4 z-50 mx-auto max-w-md animate-[slideUp_300ms_ease-out] rounded-2xl border border-(--line) bg-(--surface-strong) px-5 py-4 shadow-[0_8px_32px_rgba(30,90,72,0.18)] backdrop-blur-lg sm:left-auto"
+      className="glass fixed bottom-[calc(1rem+env(safe-area-inset-bottom))] left-4 right-4 z-50 mx-auto max-w-md animate-[slideUp_280ms_ease-out] rounded-card px-5 py-4 sm:left-auto"
     >
-      <p className="text-sm font-medium text-(--sea-ink)">
+      <p className="text-sm font-medium text-foreground">
         A new version is available.
       </p>
       <div className="mt-3 flex gap-2">
-        <button
-          type="button"
-          onClick={handleUpdate}
-          className="inline-flex min-h-11 items-center rounded-full border border-(--accent-emphasis-border) bg-(--accent-emphasis-bg) px-4 py-2 text-sm font-semibold text-(--lagoon-deep) transition hover:-translate-y-0.5 hover:bg-(--accent-emphasis-hover-bg)"
-        >
+        <Button type="button" size="sm" onClick={handleUpdate}>
           Update now
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
+          variant="secondary"
+          size="sm"
           onClick={handleDismiss}
-          className="inline-flex min-h-11 items-center rounded-full border border-(--chip-line) bg-(--chip-bg) px-4 py-2 text-sm font-semibold text-(--sea-ink-soft) transition hover:text-(--sea-ink)"
         >
           Later
-        </button>
+        </Button>
       </div>
     </div>
   )

@@ -5,6 +5,7 @@ import { AvatarMenu } from './AvatarMenu'
 import { NavDrawer } from './NavDrawer'
 import { useStandaloneAuth } from '#/features/auth/hooks/useStandaloneAuth'
 import { useSessionRefresh } from '#/features/auth/hooks/useSessionRefresh'
+import { Button } from '#/features/shared/components/ui/button'
 import type { SessionData } from '#/features/shared/server/session'
 
 interface NavLink {
@@ -76,16 +77,18 @@ export default function Header() {
   }
 
   return (
-    <header className="sticky top-0 z-50 border-b border-(--line) bg-(--header-bg) pt-[env(safe-area-inset-top)] backdrop-blur-lg">
+    <header className="glass sticky top-0 z-50 border-b border-border pt-[env(safe-area-inset-top)]">
       <nav
         aria-label="Site navigation"
         className="page-wrap flex items-center gap-x-2 py-1.5 sm:gap-x-3 sm:py-2"
       >
         {/* Hamburger button — mobile only, left-anchored */}
         {state.navLinks.length > 0 && (
-          <button
+          <Button
             ref={hamburgerRef}
-            className="-ml-2 flex h-11 w-11 items-center justify-center rounded-full text-(--sea-ink-soft) transition-colors hover:bg-(--surface-strong) hover:text-(--sea-ink) sm:hidden"
+            variant="ghost"
+            size="icon"
+            className="-ml-2 sm:hidden"
             aria-label="Open navigation"
             aria-expanded={isDrawerOpen}
             aria-controls="nav-drawer"
@@ -93,7 +96,7 @@ export default function Header() {
             onClick={openDrawer}
           >
             <Menu size={22} aria-hidden="true" />
-          </button>
+          </Button>
         )}
 
         {/* Desktop nav links — hidden on mobile */}
@@ -134,13 +137,11 @@ export default function Header() {
 
         <div className="ml-auto flex items-center gap-2">
           {state.showSignIn ? (
-            <a
-              href={state.signInHref}
-              onClick={onSignIn}
-              className="inline-flex min-h-11 items-center rounded-full border border-(--accent-muted-border) bg-(--accent-muted-bg) px-4 py-2 text-sm font-semibold text-(--lagoon-deep) no-underline transition hover:-translate-y-0.5 hover:bg-(--accent-muted-hover-bg)"
-            >
-              Sign in with Google
-            </a>
+            <Button asChild size="sm">
+              <a href={state.signInHref} onClick={onSignIn}>
+                Sign in with Google
+              </a>
+            </Button>
           ) : (
             <AvatarMenu
               avatarUrl={state.avatarUrl ?? ''}
