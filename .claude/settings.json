@@ -1,6 +1,16 @@
 {
   "enabledPlugins": {
-    "agentic-dev-team@bfinster": true
+    "agentic-dev-team@bfinster": true,
+    "mattpocock-skills@claude-plugins-official": true
+  },
+  "extraKnownMarketplaces": {
+    "claude-plugins-official": {
+      "source": {
+        "source": "github",
+        "repo": "anthropics/claude-plugins-official"
+      },
+      "autoUpdate": true
+    }
   },
   "hooks": {
     "PreCompact": [
