@@ -13,10 +13,9 @@
     "@tailwindcss/typography",
     "@tanstack/react-router-ssr-query",
     "@tanstack/router-plugin",
-    "class-variance-authority",
-    "radix-ui",
     "tw-animate-css",
     "tailwindcss"
   ],
+  "ignore": ["src/features/shared/components/ui/**"],
   "ignoreBinaries": ["only-allow"]
 }
