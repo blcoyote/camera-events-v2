@@ -32,6 +32,16 @@ describe('DropdownMenu', () => {
     expect(screen.getByRole('menu')).not.toBeNull()
     expect(screen.getAllByRole('menuitem')).toHaveLength(2)
   })
+  it('items set their own text colour so link items do not inherit link blue', async () => {
+    const user = userEvent.setup()
+    renderMenu()
+    await user.click(screen.getByRole('button', { name: 'Account' }))
+    for (const item of screen.getAllByRole('menuitem')) {
+      expect(item.className).toContain('text-foreground')
+      expect(item.className).toContain('no-underline')
+    }
+  })
+
   it('ArrowDown moves focus between items', async () => {
     const user = userEvent.setup()
     renderMenu()

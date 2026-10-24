@@ -5,7 +5,7 @@ import { CheckIcon, ChevronRightIcon, CircleIcon } from 'lucide-react'
 import { cn } from '#/features/shared/utils/cn'
 
 const itemBase =
-  'relative flex min-h-11 cursor-default items-center gap-2 rounded-input px-3 py-2.5 text-sm outline-none select-none focus:bg-surface-warm data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:shrink-0'
+  'relative flex min-h-11 cursor-default items-center gap-2 rounded-input px-3 py-2.5 text-sm text-foreground no-underline outline-none select-none focus:bg-surface-warm data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:shrink-0'
 
 function DropdownMenu(
   props: React.ComponentProps<typeof DropdownMenuPrimitive.Root>,
