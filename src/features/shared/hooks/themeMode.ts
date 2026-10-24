@@ -40,3 +40,22 @@ export function nextThemeMode(mode: ThemeMode): ThemeMode {
       return 'light'
   }
 }
+
+/**
+ * Applies a resolved theme to the document: swaps the `light`/`dark` class on
+ * <html>, sets `color-scheme`, and syncs `<meta name="theme-color">` when present.
+ * The `document` default is only evaluated at call time, so importing this
+ * module on the server is safe.
+ */
+export function applyResolvedTheme(
+  resolved: ResolvedTheme,
+  doc: Document = document,
+): void {
+  const root = doc.documentElement
+  root.classList.remove('light', 'dark')
+  root.classList.add(resolved)
+  root.style.colorScheme = resolved
+
+  const meta = doc.querySelector('meta[name="theme-color"]')
+  if (meta) meta.setAttribute('content', THEME_COLORS[resolved])
+}
