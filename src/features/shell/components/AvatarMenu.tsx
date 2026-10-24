@@ -1,5 +1,13 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
+import type { FormEvent } from 'react'
 import { Link } from '@tanstack/react-router'
+import { Badge } from '#/features/shared/components/ui/badge'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '#/features/shared/components/ui/dropdown-menu'
 
 export function AvatarMenu({
   avatarUrl,
@@ -10,16 +18,7 @@ export function AvatarMenu({
   initials: string
   signOutAction: string
 }) {
-  const [open, setOpen] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
-  const containerRef = useRef<HTMLDivElement>(null)
-  const buttonRef = useRef<HTMLButtonElement>(null)
-  const menuItemRefs = useRef<Array<HTMLButtonElement | HTMLAnchorElement>>([])
-
-  const close = useCallback(() => {
-    setOpen(false)
-    buttonRef.current?.focus()
-  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -45,131 +44,64 @@ export function AvatarMenu({
     }
   }, [])
 
-  useEffect(() => {
-    if (!open) return
-    menuItemRefs.current[0]?.focus()
-
-    function handleClickOutside(e: MouseEvent) {
-      if (
-        containerRef.current &&
-        !containerRef.current.contains(e.target as Node)
-      ) {
-        close()
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
-    }
-  }, [open, close])
-
-  function handleMenuKeyDown(e: React.KeyboardEvent) {
-    switch (e.key) {
-      case 'Escape':
-        e.preventDefault()
-        close()
-        break
-      case 'ArrowDown':
-      case 'ArrowUp':
-      case 'Home':
-      case 'End':
-        e.preventDefault()
-        {
-          const currentIndex = menuItemRefs.current.findIndex(
-            (item) => item === document.activeElement,
-          )
-          const lastIndex = menuItemRefs.current.length - 1
-          const targetIndex =
-            e.key === 'Home'
-              ? 0
-              : e.key === 'End'
-                ? lastIndex
-                : (currentIndex +
-                    (e.key === 'ArrowDown' ? 1 : -1) +
-                    menuItemRefs.current.length) %
-                  menuItemRefs.current.length
-          menuItemRefs.current[targetIndex]?.focus()
-        }
-        break
-      case 'Tab':
-        close()
-        break
-    }
+  async function handleSignOut(e: FormEvent<HTMLFormElement>) {
+    // The form posts natively without JS; with JS we POST via fetch and then
+    // hard-navigate home (unchanged behaviour).
+    e.preventDefault()
+    await fetch(signOutAction, {
+      method: 'POST',
+      credentials: 'include',
+    })
+    window.location.assign('/')
   }
 
   return (
-    <div ref={containerRef} className="relative">
-      <button
-        ref={buttonRef}
-        type="button"
-        onClick={() => setOpen((prev) => !prev)}
-        aria-expanded={open}
-        aria-haspopup="true"
-        aria-label={isAdmin ? 'Account menu (Admin)' : 'Account menu'}
-        className="relative flex h-11 w-11 items-center justify-center rounded-full border border-(--line) bg-(--surface) text-sm font-semibold text-(--sea-ink) transition hover:border-(--lagoon-deep)"
-      >
-        <span className="flex h-full w-full items-center justify-center overflow-hidden rounded-full">
+    <div className="relative">
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          aria-label={isAdmin ? 'Account menu (Admin)' : 'Account menu'}
+          className="glass flex size-11 items-center justify-center overflow-hidden rounded-full shadow-none outline-none focus-visible:shadow-focus"
+        >
           {avatarUrl ? (
             <img
               src={avatarUrl}
               alt=""
-              className="h-full w-full object-cover"
+              className="size-full object-cover"
               referrerPolicy="no-referrer"
             />
           ) : (
-            <span aria-hidden="true">{initials}</span>
+            <span
+              aria-hidden="true"
+              className="text-sm font-semibold text-brand-strong"
+            >
+              {initials}
+            </span>
           )}
-        </span>
-        {isAdmin && (
-          <span
-            aria-hidden="true"
-            data-testid="admin-badge"
-            title="Admin"
-            className="absolute -right-0.5 -bottom-0.5 min-w-4 rounded-full border-2 border-(--surface) bg-(--lagoon-deep) px-1 text-[9px] leading-[14px] font-bold text-white"
-          >
-            A
-          </span>
-        )}
-      </button>
-
-      {open && (
-        <div
-          role="menu"
-          aria-label="Account"
-          onKeyDown={handleMenuKeyDown}
-          className="absolute right-0 top-full z-50 mt-2 min-w-40 overflow-hidden rounded-xl border border-(--line) bg-(--surface-strong) shadow-[0_8px_24px_rgba(30,90,72,0.12)]"
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" aria-label="Account">
+          <form method="post" action={signOutAction} onSubmit={handleSignOut}>
+            <DropdownMenuItem asChild>
+              <button type="submit" className="w-full text-left">
+                Sign out
+              </button>
+            </DropdownMenuItem>
+          </form>
+          <DropdownMenuItem asChild>
+            <Link to="/settings">Settings</Link>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      {isAdmin && (
+        <Badge
+          tone="accent"
+          dot={false}
+          aria-hidden="true"
+          data-testid="admin-badge"
+          title="Admin"
+          className="pointer-events-none absolute -right-0.5 -bottom-0.5 px-1.5 py-0.5"
         >
-          <button
-            ref={(element) => {
-              if (element) menuItemRefs.current[0] = element
-            }}
-            type="button"
-            role="menuitem"
-            tabIndex={-1}
-            onClick={async () => {
-              await fetch(signOutAction, {
-                method: 'POST',
-                credentials: 'include',
-              })
-              window.location.assign('/')
-            }}
-            className="w-full min-h-11 px-4 py-3 text-left text-sm font-medium text-(--sea-ink) transition hover:bg-(--link-bg-hover)"
-          >
-            Sign out
-          </button>
-          <Link
-            ref={(element) => {
-              if (element) menuItemRefs.current[1] = element
-            }}
-            to="/settings"
-            role="menuitem"
-            tabIndex={-1}
-            onClick={close}
-            className="block w-full min-h-11 px-4 py-3 text-left text-sm font-medium text-(--sea-ink) transition hover:bg-(--link-bg-hover)"
-          >
-            Settings
-          </Link>
-        </div>
+          A
+        </Badge>
       )}
     </div>
   )

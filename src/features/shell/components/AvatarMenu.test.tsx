@@ -5,9 +5,9 @@ import {
   screen,
   cleanup,
   fireEvent,
-  act,
   waitFor,
 } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import type { ComponentProps, ReactNode } from 'react'
 import '@testing-library/jest-dom/vitest'
 import { AvatarMenu } from './AvatarMenu'
@@ -103,7 +103,8 @@ describe('AvatarMenu', () => {
     expect(img).toHaveAttribute('src', 'https://example.com/me.png')
   })
 
-  it('opens the menu when the trigger is clicked', () => {
+  it('opens the menu when the trigger is clicked', async () => {
+    const user = userEvent.setup()
     render(
       <AvatarMenu
         avatarUrl=""
@@ -113,13 +114,14 @@ describe('AvatarMenu', () => {
     )
 
     const trigger = screen.getByRole('button', { name: 'Account menu' })
-    fireEvent.click(trigger)
+    await user.click(trigger)
 
     expect(trigger).toHaveAttribute('aria-expanded', 'true')
     expect(screen.getByRole('menu')).toBeInTheDocument()
   })
 
-  it('includes a link to the settings page when open', () => {
+  it('includes a link to the settings page when open', async () => {
+    const user = userEvent.setup()
     render(
       <AvatarMenu
         avatarUrl=""
@@ -128,7 +130,7 @@ describe('AvatarMenu', () => {
       />,
     )
 
-    fireEvent.click(screen.getByRole('button', { name: 'Account menu' }))
+    await user.click(screen.getByRole('button', { name: 'Account menu' }))
 
     expect(screen.getByRole('menuitem', { name: 'Settings' })).toHaveAttribute(
       'href',
@@ -136,7 +138,8 @@ describe('AvatarMenu', () => {
     )
   })
 
-  it('moves focus between menu items with arrow keys', () => {
+  it('moves focus between menu items with arrow keys', async () => {
+    const user = userEvent.setup()
     render(
       <AvatarMenu
         avatarUrl=""
@@ -145,20 +148,21 @@ describe('AvatarMenu', () => {
       />,
     )
 
-    fireEvent.click(screen.getByRole('button', { name: 'Account menu' }))
+    screen.getByRole('button', { name: 'Account menu' }).focus()
+    await user.keyboard('{Enter}')
 
-    const menu = screen.getByRole('menu')
     const signOutItem = screen.getByRole('menuitem', { name: 'Sign out' })
     const settingsItem = screen.getByRole('menuitem', { name: 'Settings' })
 
     expect(document.activeElement).toBe(signOutItem)
-    fireEvent.keyDown(menu, { key: 'ArrowDown' })
+    await user.keyboard('{ArrowDown}')
     expect(document.activeElement).toBe(settingsItem)
-    fireEvent.keyDown(menu, { key: 'ArrowUp' })
+    await user.keyboard('{ArrowUp}')
     expect(document.activeElement).toBe(signOutItem)
   })
 
-  it('closes the menu when navigating to settings', () => {
+  it('closes the menu when navigating to settings', async () => {
+    const user = userEvent.setup()
     render(
       <AvatarMenu
         avatarUrl=""
@@ -167,13 +171,14 @@ describe('AvatarMenu', () => {
       />,
     )
 
-    fireEvent.click(screen.getByRole('button', { name: 'Account menu' }))
-    fireEvent.click(screen.getByRole('menuitem', { name: 'Settings' }))
+    await user.click(screen.getByRole('button', { name: 'Account menu' }))
+    await user.click(screen.getByRole('menuitem', { name: 'Settings' }))
 
     expect(screen.queryByRole('menu')).not.toBeInTheDocument()
   })
 
-  it('closes the menu on Escape key', () => {
+  it('closes the menu on Escape key', async () => {
+    const user = userEvent.setup()
     render(
       <AvatarMenu
         avatarUrl=""
@@ -183,15 +188,15 @@ describe('AvatarMenu', () => {
     )
 
     const trigger = screen.getByRole('button', { name: 'Account menu' })
-    fireEvent.click(trigger)
+    await user.click(trigger)
 
-    const menu = screen.getByRole('menu')
-    fireEvent.keyDown(menu, { key: 'Escape' })
+    await user.keyboard('{Escape}')
 
     expect(screen.queryByRole('menu')).not.toBeInTheDocument()
   })
 
-  it('closes the menu on outside click (mousedown on body)', () => {
+  it('returns focus to the trigger when Escape closes the menu', async () => {
+    const user = userEvent.setup()
     render(
       <AvatarMenu
         avatarUrl=""
@@ -201,15 +206,35 @@ describe('AvatarMenu', () => {
     )
 
     const trigger = screen.getByRole('button', { name: 'Account menu' })
-    fireEvent.click(trigger)
+    await user.click(trigger)
+    await user.keyboard('{Escape}')
+
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument()
+    expect(document.activeElement).toBe(trigger)
+  })
+
+  it('closes the menu on outside pointer press', async () => {
+    const user = userEvent.setup()
+    render(
+      <AvatarMenu
+        avatarUrl=""
+        initials="AB"
+        signOutAction="/api/auth/logout"
+      />,
+    )
+
+    const trigger = screen.getByRole('button', { name: 'Account menu' })
+    await user.click(trigger)
     expect(screen.getByRole('menu')).toBeInTheDocument()
 
+    fireEvent.pointerDown(document.body)
     fireEvent.mouseDown(document.body)
 
     expect(screen.queryByRole('menu')).not.toBeInTheDocument()
   })
 
   it('calls fetch and redirects on sign-out click', async () => {
+    const user = userEvent.setup()
     render(
       <AvatarMenu
         avatarUrl=""
@@ -219,19 +244,82 @@ describe('AvatarMenu', () => {
     )
 
     const trigger = screen.getByRole('button', { name: 'Account menu' })
-    fireEvent.click(trigger)
+    await user.click(trigger)
 
     const signOutBtn = screen.getByRole('menuitem', { name: 'Sign out' })
 
-    await act(async () => {
-      fireEvent.click(signOutBtn)
-    })
+    await user.click(signOutBtn)
 
+    await waitFor(() => {
+      expect(assignMock).toHaveBeenCalledWith('/')
+    })
     expect(globalThis.fetch).toHaveBeenCalledWith('/api/auth/logout', {
       method: 'POST',
       credentials: 'include',
     })
-    expect(assignMock).toHaveBeenCalledWith('/')
+  })
+
+  it('signs out when Enter is pressed on the focused Sign out item', async () => {
+    const user = userEvent.setup()
+    render(
+      <AvatarMenu
+        avatarUrl=""
+        initials="AB"
+        signOutAction="/api/auth/logout"
+      />,
+    )
+
+    screen.getByRole('button', { name: 'Account menu' }).focus()
+    await user.keyboard('{Enter}')
+    expect(document.activeElement).toBe(
+      screen.getByRole('menuitem', { name: 'Sign out' }),
+    )
+    await user.keyboard('{Enter}')
+
+    await waitFor(() => {
+      expect(assignMock).toHaveBeenCalledWith('/')
+    })
+    expect(globalThis.fetch).toHaveBeenCalledWith('/api/auth/logout', {
+      method: 'POST',
+      credentials: 'include',
+    })
+  })
+
+  it('renders Sign out as the submit button of a POST form to signOutAction', async () => {
+    const user = userEvent.setup()
+    render(
+      <AvatarMenu
+        avatarUrl=""
+        initials="AB"
+        signOutAction="/api/auth/logout"
+      />,
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Account menu' }))
+
+    const item = screen.getByRole('menuitem', { name: 'Sign out' })
+    const form = item.closest('form')
+    expect(form).not.toBeNull()
+    expect(form).toHaveAttribute('method', 'post')
+    expect(form).toHaveAttribute('action', '/api/auth/logout')
+    expect(item).toHaveAttribute('type', 'submit')
+  })
+
+  it('lists menu items in order: Sign out, then Settings', async () => {
+    const user = userEvent.setup()
+    render(
+      <AvatarMenu
+        avatarUrl=""
+        initials="AB"
+        signOutAction="/api/auth/logout"
+      />,
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Account menu' }))
+
+    expect(screen.getAllByRole('menuitem').map((el) => el.textContent)).toEqual(
+      ['Sign out', 'Settings'],
+    )
   })
 
   it('checks admin status on mount', () => {
