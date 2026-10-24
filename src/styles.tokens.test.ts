@@ -247,3 +247,92 @@ describe('styles.css colour-literal guard', () => {
     expect(violations(css), 'stray colour literals').toEqual([])
   })
 })
+
+// ---------------------------------------------------------------------------
+// Dark theme: :root.dark overrides (docs/specs/glassmorphism-dark-mode.md,
+// table "Dark values (`:root.dark`)"). Rows marked "unchanged" are omitted.
+// ---------------------------------------------------------------------------
+
+const DARK_VALUES: [string, string][] = [
+  ['color-scheme', 'dark'],
+  ['--gl-bg', '#0b1424'],
+  ['--gl-surface', 'rgba(22, 34, 58, 0.62)'],
+  ['--gl-surface-warm', 'rgba(18, 30, 52, 0.55)'],
+  ['--gl-surface-hover', 'rgba(30, 46, 76, 0.82)'],
+  ['--gl-surface-solid', 'rgba(22, 34, 58, 0.96)'],
+  ['--gl-fg', '#e6eefc'],
+  ['--gl-fg-2', '#b6c4dc'],
+  ['--gl-muted', '#8c9dba'],
+  ['--gl-border', 'rgba(255, 255, 255, 0.1)'],
+  ['--gl-border-soft', 'rgba(255, 255, 255, 0.06)'],
+  ['--gl-accent-strong', '#8ab4ff'],
+  ['--gl-accent-strong-hover', '#a9c7ff'],
+  ['--gl-success-text', '#4ade80'],
+  ['--gl-warn-text', '#fbbf24'],
+  ['--gl-danger-text', '#fb7185'],
+  ['--gl-danger-fill', '#dc2626'],
+  ['--gl-overlay', 'rgba(2, 6, 14, 0.6)'],
+  ['--gl-blob-1', 'rgba(79, 140, 255, 0.22)'],
+  ['--gl-blob-2', 'rgba(24, 86, 255, 0.14)'],
+  ['--gl-elev-raised', '0 24px 80px rgba(0, 0, 0, 0.45)'],
+  ['--gl-elev-raised-hover', '0 28px 88px rgba(0, 0, 0, 0.55)'],
+  ['--gl-elev-ring', '0 0 0 1px rgba(255, 255, 255, 0.1)'],
+  ['--gl-focus-ring', '0 0 0 4px rgba(138, 180, 255, 0.45)'],
+]
+
+/** Declarations of the top-level block with the given selector, as a map. */
+function declarationsOf(selector: string): Map<string, string> {
+  const start = css.indexOf(`\n${selector} {`)
+  const open = start === -1 ? css.indexOf(`${selector} {`) : start + 1
+  if (open === -1) return new Map()
+  const body = css.slice(open, css.indexOf('\n}', open))
+  const decls = new Map<string, string>()
+  for (const m of body.matchAll(
+    /^\s*(--[\w-]+|color-scheme)\s*:\s*(.+?);\s*$/gm,
+  )) {
+    decls.set(m[1], m[2])
+  }
+  return decls
+}
+
+describe('dark token block (:root.dark)', () => {
+  const dark = declarationsOf(':root.dark')
+
+  it('is declared in src/styles.css', () => {
+    expect(css).toContain(':root.dark {')
+  })
+
+  it('sits directly after the layer-1 :root block', () => {
+    const rootEnd = css.indexOf('\n}', css.indexOf(':root {')) + 2
+    const darkStart = css.indexOf(':root.dark {')
+    expect(darkStart).toBeGreaterThan(rootEnd)
+    const between = css
+      .slice(rootEnd, darkStart)
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+    expect(between.trim()).toBe('')
+  })
+
+  it.each(DARK_VALUES)('sets %s to its dark value', (name, value) => {
+    expect(dark.get(name)).toBe(value)
+  })
+
+  it('declares no properties beyond the spec table', () => {
+    const expected = new Set(DARK_VALUES.map(([name]) => name))
+    expect([...dark.keys()].filter((name) => !expected.has(name))).toEqual([])
+  })
+
+  it('every non-unchanged spec property is also declared in :root', () => {
+    const root = declarationsOf(':root')
+    const missing = DARK_VALUES.map(([name]) => name).filter(
+      (name) => !root.has(name),
+    )
+    expect(missing).toEqual([])
+  })
+
+  it('every non-unchanged spec property is declared in :root.dark', () => {
+    const missing = DARK_VALUES.map(([name]) => name).filter(
+      (name) => !dark.has(name),
+    )
+    expect(missing).toEqual([])
+  })
+})

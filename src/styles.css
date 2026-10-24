@@ -55,6 +55,34 @@
   --gl-ease-standard: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+/* ─ Layer 1 dark overrides: applied when <html> has the `dark` class ─ */
+:root.dark {
+  color-scheme: dark;
+  --gl-bg: #0b1424;
+  --gl-surface: rgba(22, 34, 58, 0.62);
+  --gl-surface-warm: rgba(18, 30, 52, 0.55);
+  --gl-surface-hover: rgba(30, 46, 76, 0.82);
+  --gl-surface-solid: rgba(22, 34, 58, 0.96);
+  --gl-fg: #e6eefc;
+  --gl-fg-2: #b6c4dc;
+  --gl-muted: #8c9dba;
+  --gl-border: rgba(255, 255, 255, 0.1);
+  --gl-border-soft: rgba(255, 255, 255, 0.06);
+  --gl-accent-strong: #8ab4ff;
+  --gl-accent-strong-hover: #a9c7ff;
+  --gl-success-text: #4ade80;
+  --gl-warn-text: #fbbf24;
+  --gl-danger-text: #fb7185;
+  --gl-danger-fill: #dc2626;
+  --gl-overlay: rgba(2, 6, 14, 0.6);
+  --gl-blob-1: rgba(79, 140, 255, 0.22);
+  --gl-blob-2: rgba(24, 86, 255, 0.14);
+  --gl-elev-raised: 0 24px 80px rgba(0, 0, 0, 0.45);
+  --gl-elev-raised-hover: 0 28px 88px rgba(0, 0, 0, 0.55);
+  --gl-elev-ring: 0 0 0 1px rgba(255, 255, 255, 0.1);
+  --gl-focus-ring: 0 0 0 4px rgba(138, 180, 255, 0.45);
+}
+
 /* ─ Layer 2: shadcn semantic variables ─ */
 :root {
   --background: var(--gl-bg);
