@@ -29,6 +29,8 @@
   --gl-accent-active: #3f72d1;
   --gl-accent-strong: #1856ff;
   --gl-accent-strong-hover: #1448e0;
+  --gl-accent-fill: #1856ff;
+  --gl-accent-fill-hover: #1448e0;
   --gl-accent-on: #ffffff;
   --gl-success: #22c55e;
   --gl-warn: #f59e0b;
@@ -55,7 +57,7 @@
   --card-foreground: var(--gl-fg);
   --popover: var(--gl-surface-hover);
   --popover-foreground: var(--gl-fg);
-  --primary: var(--gl-accent-strong);
+  --primary: var(--gl-accent-fill);
   --primary-foreground: var(--gl-accent-on);
   --secondary: var(--gl-surface);
   --secondary-foreground: var(--gl-fg);
@@ -94,7 +96,7 @@
   --color-fg-2: var(--gl-fg-2);
   --color-brand: var(--gl-accent);
   --color-brand-strong: var(--gl-accent-strong);
-  --color-brand-strong-hover: var(--gl-accent-strong-hover);
+  --color-primary-hover: var(--gl-accent-fill-hover);
   --color-surface-warm: var(--gl-surface-warm);
   --color-surface-hover: var(--gl-surface-hover);
   --color-border-soft: var(--gl-border-soft);

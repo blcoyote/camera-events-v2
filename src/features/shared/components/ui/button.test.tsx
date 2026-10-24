@@ -23,6 +23,12 @@ describe('Button', () => {
     render(<Button variant="secondary">Go</Button>)
     expect(screen.getByRole('button').className.split(' ')).toContain('glass')
   })
+  it('default variant hovers to the primary-hover fill', () => {
+    render(<Button>Go</Button>)
+    expect(screen.getByRole('button').className.split(' ')).toContain(
+      'hover:bg-primary-hover',
+    )
+  })
   it('size=icon keeps its 44px target in flex rows (shrink-0)', () => {
     render(<Button size="icon">x</Button>)
     expect(screen.getByRole('button').className.split(' ')).toContain(
