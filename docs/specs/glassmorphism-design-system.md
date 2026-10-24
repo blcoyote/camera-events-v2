@@ -1,5 +1,7 @@
 # Spec: Glassmorphism Design System Swap (shadcn/ui)
 
+Status: implemented (2026-10-24); see the ADR for deviations.
+
 ## Intent Description
 
 Replace the app's visual identity (the "Ocean/Sunset/Slate" sea-ink/lagoon palette,
@@ -279,7 +281,7 @@ Tests may change only how they find elements; every assertion must keep its stre
   Escape and focus effects are deleted (Radix owns them). The `data-testid`
   `nav-drawer-backdrop` moves onto `SheetOverlay`.
 - **AvatarMenu → DropdownMenu**: keeps the trigger's accessible name, the admin
-  badge fetch, the menu items and their order, the sign-out `<form action>` POST,
+  badge fetch, the menu items and their order, sign-out (a `<form method=post action>` whose submit handler keeps the existing `fetch(POST)` + redirect),
   keyboard navigation and Escape returning focus to the trigger. The hand-written
   click-outside and roving-focus code is deleted.
 - **SnapshotLightbox → Dialog**: keeps `src/alt/open/onClose`, pinch-zoom,

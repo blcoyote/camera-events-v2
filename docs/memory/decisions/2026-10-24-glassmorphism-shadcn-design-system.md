@@ -10,9 +10,8 @@ created: 2026-10-24
 > `#eef6ff`). shadcn/ui is adopted as the component layer, themed through its
 > semantic CSS variables.
 
-**Status:** accepted, implementation pending (spec:
-`docs/specs/glassmorphism-design-system.md`). Update this note if the
-implementation deviates.
+**Status:** implemented 2026-10-24; device QA pending (bd ce-cqt.16). Spec:
+`docs/specs/glassmorphism-design-system.md`.
 
 ## Context
 
@@ -54,6 +53,18 @@ vars and a palette × mode theming system that a blocking FOUC script applied.
 - Restyling the overlays now and swapping to Radix later: the owner chose to swap
   now. The risk is that the lightbox gestures conflict with Radix's scroll lock,
   so that task has an explicit escalation rule.
+
+## Implementation notes and deviations
+
+- shadcn CLI could not reach ui.shadcn.com from the cloud container; primitives were hand-written in new-york style on the unified `radix-ui` package.
+- Base/element CSS must be layered: unlayered `a { color }` beat Tailwind utilities and blanked `<Button asChild><a>` labels; element rules moved to `@layer base`, kept component classes (`.event-card`, `.nav-link`, …) to `@layer components`.
+- AvatarMenu sign-out keeps its `fetch(POST)` + redirect inside a real `<form method=post>`; the admin indicator stays the compact "A" badge (`Badge tone=accent dot={false}`).
+- SnapshotLightbox: `useImageGestures` moved into a child rendered inside `DialogContent` (Radix portals mount content a commit later, so the hook saw a null ref); focus is restored manually on close because the dialog is parent-controlled (no `Dialog.Trigger`). Radix's RemoveScroll sets `allowPinchZoom` and the image's own non-passive handlers run first, so gestures are not cancelled — confirm on device.
+- `dialog.tsx` gained `variant="bare"`; `sheet.tsx` `SheetContent` gained `overlayProps`.
+- The event detail page has no single primary Button: downloads are whole InfoCard tiles. Mobile edge-to-edge layout kept (`sm:glass`).
+- Native `<select>` / range inputs restyled, not replaced; switches are shadcn `Switch`.
+- knip: `ignoreIssues` for `src/features/shared/components/ui/**` exports/types (library API surface); `tw-animate-css` stays in `ignoreDependencies` (imported from CSS only).
+- Overlay dim is 40% ink (`bg-(--gl-fg)/40`), not the spec's 30%.
 
 ## Why it matters
 

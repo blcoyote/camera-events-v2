@@ -56,6 +56,7 @@ this vault is meant to be used.
   trusting the issue-tracking workflow
 - [[gotchas/frigate-publishes-new-before-persisting]] — the `"new"` MQTT message
   arrives before (and sometimes instead of) the event row
+- [[gotchas/unlayered-css-beats-tailwind-utilities]] — an unlayered rule in `src/styles.css` beats every utility; element rules go in `@layer base`
 
 ## 🧪 Conventions
 

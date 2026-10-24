@@ -46,10 +46,12 @@ bun run knip         # Unused-code report
 
 ## Tailwind CSS
 
-- Always use Tailwind CSS canonical class names instead of arbitrary value syntax when a built-in utility exists. For example, use `text-(--sea-ink)` instead of `text-[var(--sea-ink)]`, `min-h-11` instead of `min-h-[44px]`, `rounded-4xl` instead of `rounded-[2rem]`, `shrink-0` instead of `flex-shrink-0`.
-- Design tokens are defined in `src/styles.css` under `@theme` and `:root`. The palette uses CSS custom properties: `--sea-ink`, `--sea-ink-soft`, `--lagoon`, `--lagoon-deep`, `--palm`, `--sand`, `--foam`, `--surface`, `--surface-strong`, `--line`, `--bg-base`, `--header-bg`, etc. Dark mode swaps are applied via `[data-theme='dark']` and `@media (prefers-color-scheme: dark)`.
-- Fonts: `Manrope` (body, sans-serif), `Fraunces` (display headings).
-- The theme is stored in `localStorage` under the key `'theme'` (`'light'`, `'dark'`, or `'auto'`). A blocking inline script in `__root.tsx` sets the `data-theme` attribute and class before paint to prevent FOUC.
+- Always use Tailwind CSS canonical class names instead of arbitrary value syntax when a built-in utility exists. For example, use `text-foreground` instead of `text-[var(--gl-fg)]`, `min-h-11` instead of `min-h-[44px]`, `rounded-4xl` instead of `rounded-[2rem]`, `shrink-0` instead of `flex-shrink-0`.
+- The design system is **Glassmorphism** (light only). Source: `docs/design-system/glassmorphism/`. Spec: `docs/specs/glassmorphism-design-system.md`. Decision: `docs/memory/decisions/2026-10-24-glassmorphism-shadcn-design-system.md`.
+- Tokens are layered: `--gl-*` primitives in `src/styles.css` `:root` → shadcn semantic vars (`--background`, `--primary`, …) → Tailwind `@theme inline`. Use the semantic utilities: `bg-background`, `bg-card`, `text-foreground`, `text-fg-2`, `text-muted-foreground`, `text-brand`, `text-brand-strong`, `bg-surface-warm`, `bg-surface-hover`, `border-border`, `border-border-soft`, `success|warn|danger` with their `-text` partners, `glass`, `glass-flat`, `glass-strong`, `eyebrow`, `rounded-input|card|hero`, `shadow-raised`, `leading-display`. Never use raw hex, raw Tailwind colour scale values (`red-500`, `emerald-600`, …), or `dark:` variants. The guard test `src/styles.legacy-tokens.test.ts` bans legacy token names.
+- Font is Inter (`font-sans`).
+- Element rules live in `@layer base` and kept component classes in `@layer components`. Never add unlayered rules to `src/styles.css`: they override every utility (see `docs/memory/gotchas/unlayered-css-beats-tailwind-utilities.md`).
+- **UI components:** shadcn/ui primitives live in `src/features/shared/components/ui/` (Button, Card, Input, Badge, Switch, Toggle, Sheet, DropdownMenu, Dialog). `cn()` is in `src/features/shared/utils/cn.ts`, and `components.json` is at the root. The shadcn CLI may not reach its registry from cloud containers; if so, hand-write the source from shadcn's new-york style using the unified `radix-ui` package. Radix tests need `@testing-library/user-event`; `src/test-setup.ts` holds the jsdom polyfills.
 
 ## Route Generation
 
@@ -66,18 +68,18 @@ bun run knip         # Unused-code report
 
 ### Feature Map
 
-| Feature              | Location                           | What it owns                                                                                                         |
-| -------------------- | ---------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| `auth`               | `src/features/auth/`               | Google OAuth flow, session helpers, `useStandaloneAuth` hook                                                         |
-| `camera-details`     | `src/features/camera-details/`     | Event detail page, snapshot lightbox, event snapshot, info card, blob download hook, clip/snapshot/thumbnail proxies |
-| `camera-events`      | `src/features/camera-events/`      | Event list page, filter pills, events loading skeleton, mock data                                                    |
-| `cameras`            | `src/features/cameras/`            | Camera grid page, sortable tiles, camera order persistence, snapshot proxy                                           |
-| `favorites`          | `src/features/favorites/`          | Favorited events list page; server logic lives in shared/server/favorites/                                           |
-| `home`               | `src/features/home/`               | Home/landing page component                                                                                          |
-| `push-notifications` | `src/features/push-notifications/` | MQTT subscriber, event batcher, push dispatcher, SQLite push store                                                   |
-| `settings`           | `src/features/settings/`           | Settings page, notification preferences UI, `usePushSubscription` hook                                               |
-| `shared`             | `src/features/shared/`             | Frigate API client + cache + types + validation, session, SQLite driver, shared components + hooks                   |
-| `shell`              | `src/features/shell/`              | App header, theme toggle, service worker registration                                                                |
+| Feature              | Location                           | What it owns                                                                                                                               |
+| -------------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `auth`               | `src/features/auth/`               | Google OAuth flow, session helpers, `useStandaloneAuth` hook                                                                               |
+| `camera-details`     | `src/features/camera-details/`     | Event detail page, snapshot lightbox, event snapshot, info card, blob download hook, clip/snapshot/thumbnail proxies                       |
+| `camera-events`      | `src/features/camera-events/`      | Event list page, filter pills, events loading skeleton, mock data                                                                          |
+| `cameras`            | `src/features/cameras/`            | Camera grid page, sortable tiles, camera order persistence, snapshot proxy                                                                 |
+| `favorites`          | `src/features/favorites/`          | Favorited events list page; server logic lives in shared/server/favorites/                                                                 |
+| `home`               | `src/features/home/`               | Home/landing page component                                                                                                                |
+| `push-notifications` | `src/features/push-notifications/` | MQTT subscriber, event batcher, push dispatcher, SQLite push store                                                                         |
+| `settings`           | `src/features/settings/`           | Settings page, notification preferences UI, `usePushSubscription` hook                                                                     |
+| `shared`             | `src/features/shared/`             | Frigate API client + cache + types + validation, session, SQLite driver, shared components + hooks, shadcn/ui primitives (`components/ui`) |
+| `shell`              | `src/features/shell/`              | App header, service worker registration                                                                                                    |
 
 ## Route Structure
 
@@ -366,7 +368,7 @@ Generate VAPID keys with: `npx web-push generate-vapid-keys`
 
 ## Design Docs
 
-Feature design documents live in `docs/specs/`. Each significant feature has a spec documenting problem statement, approach, alternatives, and trade-offs. Review the relevant spec before modifying a feature. Current specs include: `camera-availability-notifications`, `cameras-page`, `cross-platform-pwa-fixes`, `event-clip-snapshot-download`, `event-count-setting`, `event-request-cache`, `feature-sliced-architecture`, `focus-refetch`, `frigate-api-client`, `google-sso-login`, `mqtt-cache-invalidation`, `mqtt-push-notifications`, `pull-to-refresh`, `rearrange-cameras-on-feed`, `web-push-notifications`, and more.
+Feature design documents live in `docs/specs/`. Each significant feature has a spec documenting problem statement, approach, alternatives, and trade-offs. Review the relevant spec before modifying a feature. Current specs include: `camera-availability-notifications`, `cameras-page`, `cross-platform-pwa-fixes`, `event-clip-snapshot-download`, `event-count-setting`, `event-request-cache`, `feature-sliced-architecture`, `focus-refetch`, `frigate-api-client`, `glassmorphism-design-system`, `google-sso-login`, `mqtt-cache-invalidation`, `mqtt-push-notifications`, `pull-to-refresh`, `rearrange-cameras-on-feed`, `web-push-notifications`, and more.
 
 <!-- BEGIN BEADS INTEGRATION v:1 profile:minimal hash:7510c1e2 -->
 
