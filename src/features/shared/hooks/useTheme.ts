@@ -88,6 +88,22 @@ export function useTheme(): {
     applyResolvedTheme(resolveThemeMode(currentMode, dark))
   }, [])
 
+  useEffect(() => {
+    if (mode !== 'auto') return
+    const mql = window.matchMedia(DARK_QUERY)
+    const onChange = (e: { matches: boolean }) => {
+      setPrefersDark(e.matches)
+      applyResolvedTheme(e.matches ? 'dark' : 'light')
+    }
+    if (typeof mql.addEventListener === 'function') {
+      mql.addEventListener('change', onChange)
+      return () => mql.removeEventListener('change', onChange)
+    }
+    // Older iOS Safari only supports the legacy MediaQueryList API.
+    mql.addListener(onChange)
+    return () => mql.removeListener(onChange)
+  }, [mode])
+
   const setTheme = useCallback((next: ThemeMode) => setThemeStore(next), [])
   const cycleTheme = useCallback(
     () => setThemeStore(nextThemeMode(currentMode)),

@@ -4,12 +4,45 @@ import { act, renderHook } from '@testing-library/react'
 import { THEME_STORAGE_KEY } from './themeMode'
 import { __resetThemeStoreForTests, useTheme } from './useTheme'
 
-function stubMatchMedia(matches: boolean) {
-  window.matchMedia = vi.fn().mockReturnValue({
-    matches,
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
-  })
+type ChangeHandler = (e: { matches: boolean }) => void
+
+interface MediaStub {
+  addEventListener: ReturnType<typeof vi.fn>
+  removeEventListener: ReturnType<typeof vi.fn>
+  addListener?: ReturnType<typeof vi.fn>
+  removeListener?: ReturnType<typeof vi.fn>
+  fire: (matches: boolean) => void
+}
+
+function stubMatchMedia(matches: boolean, opts: { legacy?: boolean } = {}) {
+  let handler: ChangeHandler | undefined
+  const capture = (_type: unknown, h?: ChangeHandler) => {
+    handler = h
+  }
+  const capturePlain = (h: ChangeHandler) => {
+    handler = h
+  }
+  const stub: MediaStub = {
+    addEventListener: vi.fn(capture),
+    removeEventListener: vi.fn(() => {
+      handler = undefined
+    }),
+    fire: (m) => handler?.({ matches: m }),
+  }
+  const mql: Record<string, unknown> = { matches }
+  if (opts.legacy) {
+    stub.addListener = vi.fn(capturePlain)
+    stub.removeListener = vi.fn(() => {
+      handler = undefined
+    })
+    mql.addListener = stub.addListener
+    mql.removeListener = stub.removeListener
+  } else {
+    mql.addEventListener = stub.addEventListener
+    mql.removeEventListener = stub.removeEventListener
+  }
+  window.matchMedia = vi.fn().mockReturnValue(mql)
+  return stub
 }
 
 describe('useTheme', () => {
@@ -95,5 +128,66 @@ describe('useTheme', () => {
     act(() => result.current.setTheme('dark'))
     expect(result.current.mode).toBe('dark')
     expect(document.documentElement.classList.contains('dark')).toBe(true)
+  })
+
+  describe('live system changes', () => {
+    it('in auto, a dark change event adds the dark class and updates resolved', () => {
+      const media = stubMatchMedia(false)
+      const { result } = renderHook(() => useTheme())
+      expect(result.current.resolved).toBe('light')
+      act(() => media.fire(true))
+      expect(result.current.resolved).toBe('dark')
+      expect(document.documentElement.classList.contains('dark')).toBe(true)
+      act(() => media.fire(false))
+      expect(result.current.resolved).toBe('light')
+      expect(document.documentElement.classList.contains('dark')).toBe(false)
+    })
+
+    it('in light mode, leaves no change listener registered', () => {
+      localStorage.setItem(THEME_STORAGE_KEY, 'light')
+      const media = stubMatchMedia(false)
+      renderHook(() => useTheme())
+      // The pre-hydration render is always auto, so a listener may be added
+      // briefly; it must be removed again once the stored mode loads.
+      expect(media.removeEventListener).toHaveBeenCalledTimes(
+        media.addEventListener.mock.calls.length,
+      )
+      media.fire(true)
+      expect(document.documentElement.classList.contains('dark')).toBe(false)
+    })
+
+    it('removes the listener when mode leaves auto', () => {
+      const media = stubMatchMedia(false)
+      const { result } = renderHook(() => useTheme())
+      expect(media.addEventListener).toHaveBeenCalledWith(
+        'change',
+        expect.any(Function),
+      )
+      act(() => result.current.setTheme('dark'))
+      expect(media.removeEventListener).toHaveBeenCalledWith(
+        'change',
+        expect.any(Function),
+      )
+    })
+
+    it('removes the listener on unmount', () => {
+      const media = stubMatchMedia(false)
+      const { unmount } = renderHook(() => useTheme())
+      unmount()
+      expect(media.removeEventListener).toHaveBeenCalledWith(
+        'change',
+        expect.any(Function),
+      )
+    })
+
+    it('falls back to legacy addListener/removeListener when addEventListener is absent', () => {
+      const media = stubMatchMedia(false, { legacy: true })
+      const { result, unmount } = renderHook(() => useTheme())
+      expect(media.addListener).toHaveBeenCalledWith(expect.any(Function))
+      act(() => media.fire(true))
+      expect(result.current.resolved).toBe('dark')
+      unmount()
+      expect(media.removeListener).toHaveBeenCalledWith(expect.any(Function))
+    })
   })
 })
