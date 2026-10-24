@@ -16,6 +16,6 @@
     "tw-animate-css",
     "tailwindcss"
   ],
-  "ignore": ["src/features/shared/components/ui/**"],
+  "ignoreIssues": { "src/features/shared/components/ui/**": ["exports", "types"] },
   "ignoreBinaries": ["only-allow"]
 }
