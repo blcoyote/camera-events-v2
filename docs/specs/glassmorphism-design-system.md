@@ -49,7 +49,7 @@ don't re-derive them):
   `#ef4444` fails 4.5:1.
 - **Global focus = the DS halo** (`box-shadow: var(--gl-focus-ring)`, no outline).
 - Orphaned `localStorage` keys `theme` / `palette` are left alone (harmless).
-- App icons are **not** re-tinted in this effort (follow-up issue).
+- App icons were re-tinted in a follow-up (`ce-0wx`): white glyph on `#1856ff`; regenerate with `bun scripts/generate-icons.ts`.
 
 ## Scope
 
@@ -58,7 +58,7 @@ references a legacy token or legacy CSS class, theme-machinery removal,
 `__root.tsx` head meta, `public/manifest.json`, CLAUDE.md/AGENTS.md styling
 sections, ADR.
 
-**Out of scope:** dark theme; icon re-tint; layout/IA changes; behaviour changes
+**Out of scope:** dark theme; layout/IA changes; behaviour changes
 other than the Radix overlay swaps; Storybook.
 
 ## Token architecture (`src/styles.css`)
@@ -343,7 +343,7 @@ so they update only class-pinning assertions and must keep everything green.
 | 15 (`ce-cqt.15`) | Docs: CLAUDE.md, AGENTS.md, Home.md                          | Haiku                     | 14         |
 | 16 (`ce-cqt.16`) | Device QA + final review + PR                                | Opus + owner              | 15         |
 
-Task details live in the matching bd issues (epic `ce-cqt`; `bd ready` shows the next unblocked task). Follow-ups: `ce-0wx` (icon re-tint), `ce-5hb` (dark theme).
+Task details live in the matching bd issues (epic `ce-cqt`; `bd ready` shows the next unblocked task). Follow-ups: `ce-0wx` (icon re-tint, done), `ce-5hb` (dark theme).
 Each is written to be self-contained against this spec.
 
 ## Alternatives considered
