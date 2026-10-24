@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Heart, AlertCircle } from 'lucide-react'
+import { Alert } from '#/features/shared/components/ui/alert'
 
 export interface FavoriteButtonProps {
   eventId: string
@@ -57,14 +58,14 @@ export function FavoriteButton({
       </button>
 
       {visibleError && (
-        <div
-          role="alert"
+        <Alert
+          variant="destructive"
           aria-live="assertive"
-          className="glass absolute bottom-full right-0 mb-1 flex items-center gap-1 whitespace-nowrap rounded-md px-2 py-1 text-xs text-danger-text"
+          className="absolute bottom-full right-0 mb-1 flex items-center gap-1 whitespace-nowrap rounded-md px-2 py-1 text-xs"
         >
           <AlertCircle size={12} aria-hidden="true" />
           {visibleError}
-        </div>
+        </Alert>
       )}
     </div>
   )
