@@ -37,6 +37,12 @@ describe('Dialog', () => {
     renderDialog(undefined, false)
     expect(screen.queryByRole('button', { name: 'Close' })).toBeNull()
   })
+  it('paints the default overlay with the bg-overlay token', () => {
+    renderDialog()
+    const overlay = document.querySelector('[data-slot="dialog-overlay"]')
+    expect(overlay).not.toBeNull()
+    expect(overlay?.className).toContain('bg-overlay')
+  })
   describe('variant="bare"', () => {
     it('drops the glass card styling and fills the viewport', () => {
       render(

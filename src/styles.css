@@ -39,6 +39,7 @@
   --gl-warn-text: #b45309;
   --gl-danger-text: #c81e3a;
   --gl-danger-fill: #c81e3a;
+  --gl-overlay: rgba(16, 32, 51, 0.4);
   /* elevation, blur, motion */
   --gl-elev-raised: 0 24px 80px rgba(79, 140, 255, 0.18);
   --gl-elev-ring: 0 0 0 1px rgba(255, 255, 255, 0.64);
@@ -107,6 +108,7 @@
   --color-warn-text: var(--gl-warn-text);
   --color-danger: var(--gl-danger);
   --color-danger-text: var(--gl-danger-text);
+  --color-overlay: var(--gl-overlay);
 
   --font-sans: Inter, system-ui, sans-serif;
   --font-mono: 'SF Mono', ui-monospace, Menlo, monospace;

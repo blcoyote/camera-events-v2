@@ -36,6 +36,11 @@ describe('Sheet', () => {
     renderSheet()
     expect(document.querySelector('[data-slot="sheet-overlay"]')).not.toBeNull()
   })
+  it('paints the overlay with the bg-overlay token', () => {
+    renderSheet()
+    const overlay = document.querySelector('[data-slot="sheet-overlay"]')
+    expect(overlay?.className).toContain('bg-overlay')
+  })
   it('applies slide-in-from-left for side=left', () => {
     renderSheet({ side: 'left' })
     expect(screen.getByRole('dialog').className).toContain('slide-in-from-left')
