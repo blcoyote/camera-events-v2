@@ -38,6 +38,7 @@
   --gl-success-text: #15803d;
   --gl-warn-text: #b45309;
   --gl-danger-text: #c81e3a;
+  --gl-danger-fill: #c81e3a;
   /* elevation, blur, motion */
   --gl-elev-raised: 0 24px 80px rgba(79, 140, 255, 0.18);
   --gl-elev-ring: 0 0 0 1px rgba(255, 255, 255, 0.64);
@@ -65,7 +66,7 @@
   --muted-foreground: var(--gl-muted);
   --accent: var(--gl-surface-warm);
   --accent-foreground: var(--gl-fg);
-  --destructive: var(--gl-danger-text);
+  --destructive: var(--gl-danger-fill);
   --border: var(--gl-border);
   --input: var(--gl-border);
   --ring: var(--gl-accent);
