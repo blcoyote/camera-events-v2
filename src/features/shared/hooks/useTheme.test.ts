@@ -143,6 +143,17 @@ describe('useTheme', () => {
       expect(document.documentElement.classList.contains('dark')).toBe(false)
     })
 
+    it('refreshes resolved when re-entering auto after the system changed', () => {
+      const { result } = renderHook(() => useTheme())
+      act(() => result.current.setTheme('light'))
+      expect(result.current.resolved).toBe('light')
+      // System flips to dark while in light mode (no listener registered).
+      stubMatchMedia(true)
+      act(() => result.current.setTheme('auto'))
+      expect(document.documentElement.classList.contains('dark')).toBe(true)
+      expect(result.current.resolved).toBe('dark')
+    })
+
     it('in light mode, leaves no change listener registered', () => {
       localStorage.setItem(THEME_STORAGE_KEY, 'light')
       const media = stubMatchMedia(false)

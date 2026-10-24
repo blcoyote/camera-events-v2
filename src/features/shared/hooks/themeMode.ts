@@ -64,7 +64,7 @@ export function applyResolvedTheme(
  * Builds the blocking inline script that applies the stored theme before first
  * paint. It runs before any module code, so it is self-contained ES5 that only
  * touches window globals, and mirrors parseThemeMode / resolveThemeMode /
- * applyResolvedTheme. Any failure is swallowed so it can never break the page.
+ * applyResolvedTheme. Blocked storage falls back to 'auto'; any other failure is swallowed so it can never break the page.
  */
 export function buildThemeInitScript(): string {
   // Escape '<' so an interpolated value can never form '</script' in the page.
@@ -72,9 +72,10 @@ export function buildThemeInitScript(): string {
     JSON.stringify(value).replace(/</g, '\\u003c')
   return (
     '(function(){try{' +
-    'var m=localStorage.getItem(' +
+    'var m;try{m=localStorage.getItem(' +
     json(THEME_STORAGE_KEY) +
-    ");if(m!=='light'&&m!=='dark'&&m!=='auto')m='auto';" +
+    ')}catch(e){}' +
+    "if(m!=='light'&&m!=='dark'&&m!=='auto')m='auto';" +
     "var d=m==='dark'||(m==='auto'&&matchMedia('(prefers-color-scheme: dark)').matches);" +
     "var r=d?'dark':'light';" +
     'var h=document.documentElement;' +

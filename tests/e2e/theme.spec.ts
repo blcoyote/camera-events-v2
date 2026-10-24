@@ -42,29 +42,22 @@ test('stored dark theme is applied before first paint (no light flash)', async (
   await context.addInitScript(() => {
     localStorage.setItem('theme', 'dark')
   })
-  await page.addInitScript(() => {
-    document.addEventListener('DOMContentLoaded', () => {
-      ;(window as unknown as Record<string, unknown>).__themeAtDcl = {
-        className: document.documentElement.className,
-        themeColor:
-          document
-            .querySelector('meta[name="theme-color"]')
-            ?.getAttribute('content') ?? null,
-      }
-    })
-  })
-
-  await page.goto('/')
-
-  const atDcl = await page.evaluate(
-    () =>
-      (window as unknown as Record<string, unknown>).__themeAtDcl as {
-        className: string
-        themeColor: string | null
-      },
+  // Block every script request so no client JS (hydration, useTheme) can run:
+  // only the inline init script, which is not a network request, may apply
+  // the theme.
+  await page.route('**/*', (route) =>
+    route.request().resourceType() === 'script'
+      ? route.abort()
+      : route.continue(),
   )
-  expect(atDcl.className).toContain('dark')
-  expect(atDcl.themeColor).toBe(DARK_COLOR)
+
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
+
+  expect(await rootClass(page)).toContain('dark')
+  expect(
+    await page.evaluate(() => document.documentElement.style.colorScheme),
+  ).toBe('dark')
+  expect(await themeColor(page)).toBe(DARK_COLOR)
 })
 
 test('system dark preference yields dark when no theme is stored', async ({

@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import {
   THEME_COLORS,
   THEME_STORAGE_KEY,
@@ -208,6 +208,35 @@ describe('buildThemeInitScript', () => {
       throw new Error('boom')
     }
     expect(() => runScript()).not.toThrow()
+  })
+
+  describe('when localStorage.getItem throws', () => {
+    beforeEach(() => {
+      vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+        throw new Error('denied')
+      })
+    })
+
+    afterEach(() => {
+      vi.restoreAllMocks()
+    })
+
+    it('still applies dark when the system prefers dark', () => {
+      stubMatchMedia(true)
+      const meta = addMeta()
+      runScript()
+      expect(document.documentElement.classList.contains('dark')).toBe(true)
+      expect(document.documentElement.style.colorScheme).toBe('dark')
+      expect(meta.content).toBe('#0b1424')
+    })
+
+    it('applies light when the system does not prefer dark', () => {
+      stubMatchMedia(false)
+      const meta = addMeta()
+      runScript()
+      expect(document.documentElement.classList.contains('light')).toBe(true)
+      expect(meta.content).toBe('#eef6ff')
+    })
   })
 
   it('does not throw when the theme-color meta is missing', () => {

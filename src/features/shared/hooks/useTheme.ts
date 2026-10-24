@@ -91,6 +91,8 @@ export function useTheme(): {
   useEffect(() => {
     if (mode !== 'auto') return
     const mql = window.matchMedia(DARK_QUERY)
+    // The system may have changed while no listener was registered.
+    setPrefersDark(mql.matches)
     const onChange = (e: { matches: boolean }) => {
       setPrefersDark(e.matches)
       applyResolvedTheme(e.matches ? 'dark' : 'light')
