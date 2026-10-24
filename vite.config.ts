@@ -53,6 +53,7 @@ export default defineConfig({
           name: 'unit',
           include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
           exclude: ['src/**/*.stories.*'],
+          setupFiles: ['./src/test-setup.ts'],
         },
       },
     ],
