@@ -1,244 +1,177 @@
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Manrope:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 @import 'tailwindcss';
+@import 'tw-animate-css';
 @plugin "@tailwindcss/typography";
 
-@theme {
-  --font-sans: 'Manrope', ui-sans-serif, system-ui, sans-serif;
-}
-
 /*
- * Theming model — two orthogonal axes:
- *   • Mode: `.light` / `.dark` class on <html> (always the *resolved* value, set
- *     by the FOUC script + useTheme, even in auto mode). Dark tokens are defined
- *     once under `:root.dark` — no duplication, and explicit toggling works
- *     because it keys off the class, not `prefers-color-scheme`.
- *     (NB: `light-dark()` is avoided on purpose — Tailwind v4's Lightning CSS
- *     polyfills it to a `prefers-color-scheme`-only form that ignores the
- *     `color-scheme` property our toggle sets, which would break explicit modes.)
- *   • Palette: `[data-palette]` attribute. Each palette overrides only the base
- *     brand/surface tokens; the derived + elevation layer below is shared.
+ * Glassmorphism token layers (light only; a dark theme would override the
+ * layer-2 vars):
+ *   1. `--gl-*` DS primitives (exact values from the design system tokens).
+ *   2. shadcn semantic vars (`--background`, `--card`, ...) aliasing layer 1.
+ *   3. Tailwind `@theme inline` mapping layer 2 (+ DS extras) to utilities.
  */
+
+/* ─ Layer 1: DS primitives ─ */
 :root {
   color-scheme: light;
-
-  /* ─ Ocean palette (default) — base brand + surface tokens (light) ─ */
-  --sea-ink: #173a40;
-  --sea-ink-soft: #416166;
-  --lagoon: #4fb8b2;
-  --lagoon-deep: #328f97;
-  --palm: #2f6a4a;
-  --sand: #e7f0e8;
-  --foam: #f3faf5;
-  --surface: rgba(255, 255, 255, 0.74);
-  --surface-strong: rgba(255, 255, 255, 0.9);
-  --line: rgba(23, 58, 64, 0.14);
-  --inset-glint: rgba(255, 255, 255, 0.82);
-  --kicker: rgba(47, 106, 74, 0.9);
-  --bg-base: #e7f3ec;
-  --bg-mix: white;
-  --header-bg: rgba(251, 255, 248, 0.84);
-  --chip-bg: rgba(255, 255, 255, 0.8);
-  --chip-line: rgba(47, 106, 74, 0.18);
-  --link-bg-hover: rgba(255, 255, 255, 0.9);
-  --link-hover: #246f76;
-
-  /* ─ Derived semantic tokens — defined once; follow palette + mode because they
-     reference the base tokens above (custom-property substitution is lazy). ─ */
-  --accent-emphasis-bg: color-mix(in srgb, var(--lagoon) 18%, transparent);
-  --accent-emphasis-border: color-mix(
-    in srgb,
-    var(--lagoon-deep) 40%,
-    transparent
-  );
-  --accent-muted-bg: color-mix(in srgb, var(--lagoon) 14%, transparent);
-  --accent-muted-border: color-mix(
-    in srgb,
-    var(--lagoon-deep) 30%,
-    transparent
-  );
-  --accent-hover-bg: color-mix(in srgb, var(--lagoon) 8%, transparent);
-  /* Hover fills for already-accented buttons (deeper than their resting fill). */
-  --accent-muted-hover-bg: color-mix(in srgb, var(--lagoon) 24%, transparent);
-  --accent-emphasis-hover-bg: color-mix(
-    in srgb,
-    var(--lagoon) 28%,
-    transparent
-  );
-  --selection-bg: color-mix(in srgb, var(--lagoon) 24%, transparent);
-  --link-underline: color-mix(in srgb, var(--lagoon-deep) 40%, transparent);
-  --nav-underline-tip: color-mix(in srgb, var(--lagoon) 30%, white);
-
-  /* Hero radial glows for page backgrounds + the page corner-glow divs.
-     --hero-a/--hero-b vary by mode (lighter alpha in dark, overridden under
-     :root.dark); --hero-c does not (it only tracks --lagoon, so no dark
-     override is needed). In ocean these equal the original body-background
-     literals; the corner-glow divs — formerly slightly lighter at 0.32/0.18 —
-     are intentionally unified onto --hero-a/--hero-b. */
-  --hero-a: color-mix(in srgb, var(--lagoon) 36%, transparent);
-  --hero-b: color-mix(in srgb, var(--palm) 20%, transparent);
-  --hero-c: color-mix(in srgb, var(--lagoon) 10%, transparent);
-
-  /* body::before texture glows. The overall ::before opacity stays constant; the
-     dark-mode dimming is folded into these alphas (half of the light alpha). */
-  --bg-glint: rgba(255, 255, 255, 0.8);
-  --bg-glow-lagoon: color-mix(in srgb, var(--lagoon) 20%, transparent);
-  --bg-glow-palm: color-mix(in srgb, var(--palm) 14%, transparent);
-
-  /* Elevation. Normalised to 4 layers so the dark-only ambient glow layer is just
-     transparent in light — keeps the light/dark shadows structurally identical. */
-  --shadow-island:
-    0 1px 0 var(--inset-glint) inset, 0 0 40px transparent,
-    0 22px 44px rgba(30, 90, 72, 0.1), 0 6px 18px rgba(23, 58, 64, 0.08);
-  --shadow-card:
-    0 1px 0 var(--inset-glint) inset, 0 0 24px transparent,
-    0 12px 28px rgba(30, 90, 72, 0.08), 0 3px 10px rgba(23, 58, 64, 0.05);
-  --shadow-card-hover:
-    0 1px 0 var(--inset-glint) inset, 0 0 32px transparent,
-    0 22px 44px rgba(30, 90, 72, 0.14), 0 6px 16px rgba(23, 58, 64, 0.08);
+  /* colour */
+  --gl-bg: #eef6ff;
+  --gl-surface: rgba(255, 255, 255, 0.74);
+  --gl-surface-warm: rgba(238, 246, 255, 0.72);
+  --gl-surface-hover: rgba(255, 255, 255, 0.9);
+  --gl-fg: #102033;
+  --gl-fg-2: #34465f;
+  --gl-muted: #60708a;
+  --gl-border: rgba(255, 255, 255, 0.64);
+  --gl-border-soft: rgba(255, 255, 255, 0.38);
+  --gl-accent: #4f8cff;
+  --gl-accent-hover: #467de4;
+  --gl-accent-active: #3f72d1;
+  --gl-accent-strong: #1856ff;
+  --gl-accent-strong-hover: #1448e0;
+  --gl-accent-on: #ffffff;
+  --gl-success: #22c55e;
+  --gl-warn: #f59e0b;
+  --gl-danger: #ef4444;
+  --gl-success-text: #15803d;
+  --gl-warn-text: #b45309;
+  --gl-danger-text: #c81e3a;
+  /* elevation, blur, motion */
+  --gl-elev-raised: 0 24px 80px rgba(79, 140, 255, 0.18);
+  --gl-elev-ring: 0 0 0 1px rgba(255, 255, 255, 0.64);
+  --gl-focus-ring: 0 0 0 4px rgba(79, 140, 255, 0.28);
+  --gl-blur-glass: 20px;
+  --gl-blur-glass-strong: 32px;
+  --gl-motion-fast: 180ms;
+  --gl-motion-base: 280ms;
+  --gl-ease-standard: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* ─ Dark mode — base + mode-varying token overrides (one definition each) ─ */
-:root.dark {
-  color-scheme: dark;
-
-  --sea-ink: #e8e6e3;
-  --sea-ink-soft: #908d88;
-  --lagoon: #60d7cf;
-  --lagoon-deep: #8de5db;
-  --palm: #6ec89a;
-  --sand: #171615;
-  --foam: #131212;
-  --surface: rgba(26, 24, 23, 0.72);
-  --surface-strong: rgba(28, 26, 25, 0.88);
-  --line: rgba(255, 255, 255, 0.08);
-  --inset-glint: rgba(255, 255, 255, 0.05);
-  --kicker: #b8efe5;
-  --bg-base: #0e0e0e;
-  --bg-mix: var(--bg-base);
-  --header-bg: rgba(14, 14, 14, 0.82);
-  --chip-bg: rgba(30, 28, 27, 0.85);
-  --chip-line: rgba(255, 255, 255, 0.1);
-  --link-bg-hover: rgba(255, 255, 255, 0.06);
-  --link-hover: #8de5db;
-
-  --hero-a: color-mix(in srgb, var(--lagoon) 10%, transparent);
-  --hero-b: color-mix(in srgb, var(--palm) 6%, transparent);
-  /* --hero-c is not overridden: it already tracks --lagoon and its alpha (10%)
-     is the same in both modes. */
-
-  --bg-glint: rgba(255, 255, 255, 0.4);
-  --bg-glow-lagoon: color-mix(in srgb, var(--lagoon) 10%, transparent);
-  --bg-glow-palm: color-mix(in srgb, var(--palm) 7%, transparent);
-
-  --shadow-island:
-    0 1px 0 var(--inset-glint) inset,
-    0 0 40px color-mix(in srgb, var(--lagoon) 6%, transparent),
-    0 22px 44px rgba(0, 0, 0, 0.35), 0 6px 18px rgba(0, 0, 0, 0.2);
-  --shadow-card:
-    0 1px 0 var(--inset-glint) inset,
-    0 0 24px color-mix(in srgb, var(--lagoon) 5%, transparent),
-    0 12px 28px rgba(0, 0, 0, 0.3), 0 3px 10px rgba(0, 0, 0, 0.18);
-  --shadow-card-hover:
-    0 1px 0 var(--inset-glint) inset,
-    0 0 32px color-mix(in srgb, var(--lagoon) 10%, transparent),
-    0 22px 44px rgba(0, 0, 0, 0.4), 0 6px 16px rgba(0, 0, 0, 0.2);
+/* ─ Layer 2: shadcn semantic variables ─ */
+:root {
+  --background: var(--gl-bg);
+  --foreground: var(--gl-fg);
+  --card: var(--gl-surface);
+  --card-foreground: var(--gl-fg);
+  --popover: var(--gl-surface-hover);
+  --popover-foreground: var(--gl-fg);
+  --primary: var(--gl-accent-strong);
+  --primary-foreground: var(--gl-accent-on);
+  --secondary: var(--gl-surface);
+  --secondary-foreground: var(--gl-fg);
+  --muted: var(--gl-surface-warm);
+  --muted-foreground: var(--gl-muted);
+  --accent: var(--gl-surface-warm);
+  --accent-foreground: var(--gl-fg);
+  --destructive: var(--gl-danger-text);
+  --border: var(--gl-border);
+  --input: var(--gl-border);
+  --ring: var(--gl-accent);
+  --radius: 24px;
 }
 
-/* ─ Sunset palette — warm ambers & coral ─ */
-:root[data-palette='sunset'] {
-  --sea-ink: #43281a;
-  --sea-ink-soft: #7a5a48;
-  --lagoon: #e0833f;
-  --lagoon-deep: #c25e2a;
-  --palm: #c2553f;
-  --sand: #f5e9dd;
-  --foam: #fdf6ef;
-  --surface: rgba(255, 255, 255, 0.74);
-  --surface-strong: rgba(255, 255, 255, 0.9);
-  --line: rgba(67, 40, 26, 0.14);
-  --inset-glint: rgba(255, 255, 255, 0.82);
-  --kicker: rgba(194, 94, 42, 0.9);
-  --bg-base: #f7ece1;
-  --bg-mix: white;
-  --header-bg: rgba(255, 250, 245, 0.84);
-  --chip-bg: rgba(255, 255, 255, 0.8);
-  --chip-line: rgba(194, 94, 42, 0.18);
-  --link-bg-hover: rgba(255, 255, 255, 0.9);
-  --link-hover: #b04e1f;
+/* ─ Layer 3: Tailwind theme ─ */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-fg-2: var(--gl-fg-2);
+  --color-brand: var(--gl-accent);
+  --color-brand-strong: var(--gl-accent-strong);
+  --color-brand-strong-hover: var(--gl-accent-strong-hover);
+  --color-surface-warm: var(--gl-surface-warm);
+  --color-surface-hover: var(--gl-surface-hover);
+  --color-border-soft: var(--gl-border-soft);
+  --color-success: var(--gl-success);
+  --color-success-text: var(--gl-success-text);
+  --color-warn: var(--gl-warn);
+  --color-warn-text: var(--gl-warn-text);
+  --color-danger: var(--gl-danger);
+  --color-danger-text: var(--gl-danger-text);
+
+  --font-sans: Inter, system-ui, sans-serif;
+  --font-mono: 'SF Mono', ui-monospace, Menlo, monospace;
+
+  --radius-input: 16px;
+  --radius-card: 24px;
+  --radius-hero: 36px;
+
+  --shadow-raised: var(--gl-elev-raised);
+  --shadow-ring: var(--gl-elev-ring);
+  --shadow-focus: var(--gl-focus-ring);
+
+  --blur-glass: 20px;
+  --blur-glass-strong: 32px;
+
+  --ease-standard: var(--gl-ease-standard);
+  --leading-display: 1.04;
 }
 
-:root[data-palette='sunset'].dark {
-  --sea-ink: #efe7e0;
-  --sea-ink-soft: #a8978c;
-  --lagoon: #f0a868;
-  --lagoon-deep: #f6c89a;
-  --palm: #e89a82;
-  --sand: #1a1512;
-  --foam: #141008;
-  --surface: rgba(28, 22, 18, 0.72);
-  --surface-strong: rgba(30, 24, 20, 0.88);
-  --line: rgba(255, 255, 255, 0.08);
-  --inset-glint: rgba(255, 255, 255, 0.05);
-  --kicker: #f6c89a;
-  --bg-base: #0f0c0a;
-  --bg-mix: var(--bg-base);
-  --header-bg: rgba(16, 12, 10, 0.82);
-  --chip-bg: rgba(34, 26, 22, 0.85);
-  --chip-line: rgba(255, 255, 255, 0.1);
-  --link-bg-hover: rgba(255, 255, 255, 0.06);
-  --link-hover: #f6c89a;
+/* ─ Utilities ─ */
+@utility glass {
+  background: var(--gl-surface);
+  -webkit-backdrop-filter: blur(var(--gl-blur-glass)) saturate(140%);
+  backdrop-filter: blur(var(--gl-blur-glass)) saturate(140%);
+  border: 1px solid var(--gl-border);
+  box-shadow: var(--gl-elev-raised);
+  @supports not (
+    (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))
+  ) {
+    background: rgba(255, 255, 255, 0.94);
+  }
 }
 
-/* ─ Slate palette — cool blue-greys ─ */
-:root[data-palette='slate'] {
-  --sea-ink: #1f2933;
-  --sea-ink-soft: #51606e;
-  --lagoon: #5b7a99;
-  --lagoon-deep: #3f5b75;
-  --palm: #4f7a8a;
-  --sand: #e8edf2;
-  --foam: #f4f7fa;
-  --surface: rgba(255, 255, 255, 0.74);
-  --surface-strong: rgba(255, 255, 255, 0.9);
-  --line: rgba(31, 41, 51, 0.14);
-  --inset-glint: rgba(255, 255, 255, 0.82);
-  --kicker: rgba(63, 91, 117, 0.9);
-  --bg-base: #e9eef3;
-  --bg-mix: white;
-  --header-bg: rgba(248, 250, 252, 0.84);
-  --chip-bg: rgba(255, 255, 255, 0.8);
-  --chip-line: rgba(63, 91, 117, 0.18);
-  --link-bg-hover: rgba(255, 255, 255, 0.9);
-  --link-hover: #34536b;
+@utility glass-flat {
+  background: var(--gl-surface-warm);
+  -webkit-backdrop-filter: blur(var(--gl-blur-glass)) saturate(140%);
+  backdrop-filter: blur(var(--gl-blur-glass)) saturate(140%);
+  border: 1px solid var(--gl-border-soft);
+  box-shadow: none;
+  @supports not (
+    (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))
+  ) {
+    background: rgba(255, 255, 255, 0.94);
+  }
 }
 
-:root[data-palette='slate'].dark {
-  --sea-ink: #e6e9ed;
-  --sea-ink-soft: #97a3b0;
-  --lagoon: #8fb0d0;
-  --lagoon-deep: #b3cce4;
-  --palm: #9ec6d4;
-  --sand: #15181c;
-  --foam: #101316;
-  --surface: rgba(22, 26, 30, 0.72);
-  --surface-strong: rgba(24, 28, 33, 0.88);
-  --line: rgba(255, 255, 255, 0.08);
-  --inset-glint: rgba(255, 255, 255, 0.05);
-  --kicker: #b3cce4;
-  --bg-base: #0d0f12;
-  --bg-mix: var(--bg-base);
-  --header-bg: rgba(13, 15, 18, 0.82);
-  --chip-bg: rgba(26, 30, 35, 0.85);
-  --chip-line: rgba(255, 255, 255, 0.1);
-  --link-bg-hover: rgba(255, 255, 255, 0.06);
-  --link-hover: #b3cce4;
+@utility glass-strong {
+  background: var(--gl-surface-hover);
+  -webkit-backdrop-filter: blur(var(--gl-blur-glass-strong)) saturate(140%);
+  backdrop-filter: blur(var(--gl-blur-glass-strong)) saturate(140%);
+  border: 1px solid var(--gl-border);
+  box-shadow: var(--gl-elev-raised);
+  @supports not (
+    (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))
+  ) {
+    background: rgba(255, 255, 255, 0.94);
+  }
 }
 
-*:focus-visible {
-  outline: 2px solid var(--lagoon);
-  outline-offset: 2px;
+@utility eyebrow {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--gl-accent-strong);
 }
 
+/* ─ Base ─ */
 * {
   box-sizing: border-box;
 }
@@ -253,19 +186,10 @@ body {
   margin: 0;
   padding-bottom: env(safe-area-inset-bottom);
   overscroll-behavior-y: contain;
-  color: var(--sea-ink);
+  color: var(--foreground);
+  background-color: var(--background);
   font-family: var(--font-sans);
-  background-color: var(--bg-base);
-  background:
-    radial-gradient(1100px 620px at -8% -10%, var(--hero-a), transparent 58%),
-    radial-gradient(1050px 620px at 112% -12%, var(--hero-b), transparent 62%),
-    radial-gradient(720px 380px at 50% 115%, var(--hero-c), transparent 68%),
-    linear-gradient(
-      180deg,
-      color-mix(in oklab, var(--sand) 68%, var(--bg-mix)) 0%,
-      var(--foam) 44%,
-      var(--bg-base) 100%
-    );
+  line-height: 1.55;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -277,42 +201,40 @@ body::before {
   inset: 0;
   pointer-events: none;
   z-index: -1;
-  opacity: 0.28;
   background:
-    radial-gradient(circle at 20% 15%, var(--bg-glint), transparent 34%),
-    radial-gradient(circle at 78% 26%, var(--bg-glow-lagoon), transparent 42%),
-    radial-gradient(circle at 42% 82%, var(--bg-glow-palm), transparent 36%);
+    radial-gradient(
+      60vmax 45vmax at 12% 8%,
+      rgba(79, 140, 255, 0.45),
+      transparent 70%
+    ),
+    radial-gradient(
+      55vmax 50vmax at 92% 85%,
+      rgba(24, 86, 255, 0.28),
+      transparent 70%
+    );
 }
 
-body::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: -1;
-  opacity: 0.14;
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
-  background-size: 28px 28px;
-  mask-image: radial-gradient(circle at 50% 30%, black, transparent 78%);
+*:focus-visible {
+  outline: none;
+  box-shadow: var(--gl-focus-ring);
 }
 
 a {
-  color: var(--lagoon-deep);
-  text-decoration-color: var(--link-underline);
+  color: var(--gl-accent-strong);
+  text-decoration-color: color-mix(in srgb, var(--gl-accent) 40%, transparent);
   text-decoration-thickness: 1px;
   text-underline-offset: 2px;
 }
 
 a:hover {
-  color: var(--link-hover);
+  color: var(--gl-accent-strong-hover);
 }
 
 code {
   font-size: 0.9em;
-  border: 1px solid var(--line);
-  background: color-mix(in oklab, var(--surface-strong) 82%, white 18%);
+  font-family: var(--font-mono);
+  border: 1px solid var(--gl-border-soft);
+  background: var(--gl-surface-warm);
   border-radius: 7px;
   padding: 2px 7px;
 }
@@ -327,47 +249,30 @@ pre code {
 }
 
 .page-wrap {
-  width: min(1080px, calc(100% - 2rem));
+  width: min(1180px, calc(100% - 32px));
   margin-inline: auto;
 }
 
-.display-title {
-  font-family: 'Fraunces', Georgia, serif;
-}
-
-.island-shell {
-  border: 1px solid var(--line);
-  background: linear-gradient(165deg, var(--surface-strong), var(--surface));
-  box-shadow: var(--shadow-island);
-  backdrop-filter: blur(4px);
-}
-
 @media (min-width: 640px) {
-  .island-shell-sm {
-    border: 1px solid var(--line);
-    background: linear-gradient(165deg, var(--surface-strong), var(--surface));
-    box-shadow: var(--shadow-island);
-    backdrop-filter: blur(4px);
+  .page-wrap {
+    width: min(1180px, calc(100% - 48px));
+  }
+}
+
+@media (min-width: 1024px) {
+  .page-wrap {
+    width: min(1180px, calc(100% - 72px));
   }
 }
 
 button,
-.island-shell,
-.island-shell-sm,
 a {
   transition:
-    background-color 180ms ease,
-    color 180ms ease,
-    border-color 180ms ease,
-    transform 180ms ease;
-}
-
-.island-kicker {
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  font-weight: 700;
-  font-size: 0.69rem;
-  color: var(--kicker);
+    background-color 180ms var(--gl-ease-standard),
+    color 180ms var(--gl-ease-standard),
+    border-color 180ms var(--gl-ease-standard),
+    box-shadow 180ms var(--gl-ease-standard),
+    transform 180ms var(--gl-ease-standard);
 }
 
 .nav-link {
@@ -377,7 +282,7 @@ a {
   min-height: 44px;
   padding: 0.5rem 0.25rem;
   text-decoration: none;
-  color: var(--sea-ink-soft);
+  color: var(--gl-fg-2);
 }
 
 .nav-link::after {
@@ -389,13 +294,13 @@ a {
   height: 2px;
   transform: scaleX(0);
   transform-origin: left;
-  background: linear-gradient(90deg, var(--lagoon), var(--nav-underline-tip));
-  transition: transform 170ms ease;
+  background: var(--gl-accent);
+  transition: transform 180ms var(--gl-ease-standard);
 }
 
 .nav-link:hover,
 .nav-link.is-active {
-  color: var(--sea-ink);
+  color: var(--gl-fg);
 }
 
 .nav-link:hover::after,
@@ -404,7 +309,7 @@ a {
 }
 
 .rise-in {
-  animation: rise-in 700ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: rise-in 700ms var(--gl-ease-standard) both;
 }
 
 @keyframes rise-in {
@@ -423,25 +328,26 @@ a {
 .event-card {
   position: relative;
   overflow: hidden;
-  border-radius: 1rem;
-  border: 1px solid var(--line);
-  background: linear-gradient(165deg, var(--surface-strong), var(--surface));
-  box-shadow: var(--shadow-card);
+  border-radius: 24px;
+  background: var(--gl-surface);
+  -webkit-backdrop-filter: blur(var(--gl-blur-glass)) saturate(140%);
+  backdrop-filter: blur(var(--gl-blur-glass)) saturate(140%);
+  border: 1px solid var(--gl-border);
+  box-shadow: var(--gl-elev-raised);
   transition:
-    transform 220ms ease,
-    box-shadow 220ms ease,
-    border-color 220ms ease;
+    transform 180ms var(--gl-ease-standard),
+    box-shadow 180ms var(--gl-ease-standard),
+    border-color 180ms var(--gl-ease-standard);
 }
 
 .event-card:hover {
   transform: translateY(-3px);
-  border-color: color-mix(in oklab, var(--lagoon-deep) 40%, var(--line));
-  box-shadow: var(--shadow-card-hover);
+  box-shadow: 0 28px 88px rgba(79, 140, 255, 0.26);
 }
 
 .event-card:focus-visible {
-  outline: 2px solid var(--lagoon);
-  outline-offset: 2px;
+  outline: none;
+  box-shadow: var(--gl-focus-ring);
 }
 
 .event-thumb {
@@ -462,7 +368,7 @@ a {
   );
   pointer-events: none;
   opacity: 0.6;
-  transition: opacity 300ms ease;
+  transition: opacity 280ms var(--gl-ease-standard);
 }
 
 .event-card:hover .event-thumb::after {
@@ -479,7 +385,7 @@ a {
 }
 
 .event-card-enter {
-  animation: event-rise 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: event-rise 520ms var(--gl-ease-standard) both;
   animation-delay: calc(var(--i, 0) * 45ms);
 }
 
@@ -497,9 +403,9 @@ a {
 .skeleton-shimmer {
   background: linear-gradient(
     90deg,
-    var(--surface) 0%,
-    var(--surface-strong) 50%,
-    var(--surface) 100%
+    var(--gl-surface) 0%,
+    var(--gl-surface-hover) 50%,
+    var(--gl-surface) 100%
   );
   background-size: 200% 100%;
   animation: shimmer 1.6s ease-in-out infinite;
@@ -550,7 +456,7 @@ a {
 
 .nav-drawer-panel {
   will-change: transform;
-  animation: slideInFromLeft 0.25s ease-out;
+  animation: slideInFromLeft 280ms var(--gl-ease-standard);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -563,3 +469,95 @@ a {
     scroll-behavior: auto !important;
   }
 }
+
+/* LEGACY ALIASES — delete in cleanup task (ce-cqt.14) */
+:root {
+  --sea-ink: var(--gl-fg);
+  --sea-ink-soft: var(--gl-fg-2);
+  --lagoon: var(--gl-accent);
+  --lagoon-deep: var(--gl-accent-strong);
+  --palm: var(--gl-success-text);
+  --sand: var(--gl-bg);
+  --foam: var(--gl-bg);
+  --bg-base: var(--gl-bg);
+  --bg-mix: var(--gl-bg);
+  --surface: var(--gl-surface);
+  --surface-strong: var(--gl-surface-hover);
+  --link-bg-hover: var(--gl-surface-hover);
+  --surface-raised: var(--gl-surface-hover);
+  --line: var(--gl-border-soft);
+  --chip-bg: var(--gl-surface);
+  --header-bg: var(--gl-surface);
+  --chip-line: var(--gl-border);
+  --kicker: var(--gl-accent-strong);
+  --link-hover: var(--gl-accent-strong);
+  --inset-glint: var(--gl-border);
+  --accent-emphasis-bg: color-mix(in srgb, var(--gl-accent) 14%, transparent);
+  --accent-muted-bg: color-mix(in srgb, var(--gl-accent) 14%, transparent);
+  --accent-hover-bg: color-mix(in srgb, var(--gl-accent) 14%, transparent);
+  --selection-bg: color-mix(in srgb, var(--gl-accent) 14%, transparent);
+  --accent-muted-hover-bg: color-mix(
+    in srgb,
+    var(--gl-accent) 24%,
+    transparent
+  );
+  --accent-emphasis-hover-bg: color-mix(
+    in srgb,
+    var(--gl-accent) 24%,
+    transparent
+  );
+  --accent-emphasis-border: color-mix(
+    in srgb,
+    var(--gl-accent) 40%,
+    transparent
+  );
+  --accent-muted-border: color-mix(in srgb, var(--gl-accent) 40%, transparent);
+  --link-underline: color-mix(in srgb, var(--gl-accent) 40%, transparent);
+  --nav-underline-tip: var(--gl-accent);
+  --hero-a: transparent;
+  --hero-b: transparent;
+  --hero-c: transparent;
+  --bg-glint: transparent;
+  --bg-glow-lagoon: transparent;
+  --bg-glow-palm: transparent;
+  --shadow-island: var(--gl-elev-raised);
+  --shadow-card: var(--gl-elev-raised);
+  --shadow-card-hover: var(--gl-elev-raised);
+  --sea-accent: var(--gl-accent);
+}
+
+.island-shell {
+  background: var(--gl-surface);
+  -webkit-backdrop-filter: blur(var(--gl-blur-glass)) saturate(140%);
+  backdrop-filter: blur(var(--gl-blur-glass)) saturate(140%);
+  border: 1px solid var(--gl-border);
+  box-shadow: var(--gl-elev-raised);
+  border-radius: 24px;
+}
+
+@media (min-width: 640px) {
+  .island-shell-sm {
+    background: var(--gl-surface);
+    -webkit-backdrop-filter: blur(var(--gl-blur-glass)) saturate(140%);
+    backdrop-filter: blur(var(--gl-blur-glass)) saturate(140%);
+    border: 1px solid var(--gl-border);
+    box-shadow: var(--gl-elev-raised);
+    border-radius: 24px;
+  }
+}
+
+.island-kicker {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--gl-accent-strong);
+}
+
+.display-title {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.04;
+}
+/* END LEGACY ALIASES */
