@@ -83,3 +83,15 @@ The source specifies no icon set. Use a single-weight outline set at 1.5–2px s
 ## Components
 
 `Button`, `GlassCard`, `Input`, `Badge` — React components on `window.Glass`, styled by `components/bundle.css` with only tokens. Plain HTML can use the same classes (`gl-btn gl-btn--primary`, `gl-card`, `gl-field`, `gl-badge`).
+
+## Dark mode (app addendum, not upstream)
+
+The app adds a dark version of this system. It is not part of the Open Design source. Values are in the top-level `dark` object of `tokens.json` and in the `:root.dark` block of `src/styles.css`.
+
+- **Background:** deep navy `#0b1424`, not pure black.
+- **Glass panes:** translucent navy `rgba(22, 34, 58, 0.62)`, with a faint white hairline `rgba(255, 255, 255, 0.1)`. Backdrop blobs are about half the light alpha.
+- **Text:** `fg` `#e6eefc`, `fg-2` `#b6c4dc`, `muted` `#8c9dba`.
+- **Accent:** filled primary stays `#1856ff` with white text. Accent text lightens to `#8ab4ff`, and its hover to `#a9c7ff`.
+- **Status:** text lightens to `#4ade80` (success), `#fbbf24` (warn) and `#fb7185` (danger). The destructive fill is `#dc2626`.
+
+Dark mode is switched by a `dark` class on `<html>`, which the `:root.dark` block keys on. The class is set before first paint, so the page never flashes light.
