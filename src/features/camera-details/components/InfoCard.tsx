@@ -18,15 +18,15 @@ export function InfoCard({
 
   const inner = (
     <>
-      <dt className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-(--sea-ink-soft)">
+      <dt className="flex items-center gap-1.5 eyebrow text-muted-foreground">
         <Icon className="h-3.5 w-3.5" />
         {label}
       </dt>
-      <dd className="mt-0.5 flex items-center gap-1.5 text-sm font-medium text-(--sea-ink) sm:mt-1 sm:text-base">
+      <dd className="mt-0.5 flex items-center gap-1.5 text-sm font-medium text-foreground sm:mt-1 sm:text-base">
         {value}
         {downloadUrl && (
           <Download
-            className="h-3 w-3 text-(--lagoon-deep) sm:h-3.5 sm:w-3.5"
+            className="h-3 w-3 text-brand-strong sm:h-3.5 sm:w-3.5"
             aria-hidden="true"
           />
         )}
@@ -36,7 +36,7 @@ export function InfoCard({
 
   if (downloadUrl) {
     return (
-      <div className="sm:rounded-xl sm:border sm:border-(--line) sm:bg-(--surface) sm:transition sm:hover:border-(--lagoon-deep) sm:hover:bg-(--accent-hover-bg)">
+      <div className="sm:glass-flat sm:rounded-input sm:transition sm:hover:border-border sm:hover:bg-surface-hover">
         <button
           type="button"
           onClick={() => download(downloadUrl)}
@@ -51,7 +51,7 @@ export function InfoCard({
   }
 
   return (
-    <div className="px-3 py-2.5 sm:rounded-xl sm:border sm:border-(--line) sm:bg-(--surface) sm:p-4">
+    <div className="px-3 py-2.5 sm:glass-flat sm:rounded-input sm:p-4">
       {inner}
     </div>
   )

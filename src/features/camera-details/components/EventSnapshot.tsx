@@ -22,7 +22,7 @@ export function EventSnapshot({
       type="button"
       onClick={onZoom}
       aria-label={`${altText} — tap to view fullscreen`}
-      className="relative block w-full cursor-zoom-in overflow-hidden border border-(--line) bg-(--surface) sm:rounded-2xl"
+      className="relative block w-full cursor-zoom-in overflow-hidden border border-border-soft bg-card sm:rounded-card"
     >
       <img
         src={src}

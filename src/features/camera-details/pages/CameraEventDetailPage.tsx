@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from '@tanstack/react-router'
+import { Button } from '#/features/shared/components/ui/button'
+import { Card } from '#/features/shared/components/ui/card'
 import { Camera, Clock, MapPin, Film, Image } from 'lucide-react'
 import type { FrigateResult } from '#/features/shared/server/frigate/config'
 import type { FrigateEvent } from '#/features/shared/server/frigate/types'
@@ -205,31 +207,24 @@ export function CameraEventDetailPage({
   if (state.kind === 'pending') {
     return (
       <main id="main-content" className="page-wrap px-4 py-6 sm:py-12">
-        <section className="island-shell rise-in rounded-4xl px-5 py-6 text-center sm:px-8 sm:py-8">
-          <p className="island-kicker mb-1">Camera Events</p>
-          <h1 className="display-title mb-3 text-2xl font-bold text-(--sea-ink) sm:text-4xl">
+        <Card className="rise-in block px-5 py-6 text-center sm:px-8 sm:py-8">
+          <p className="eyebrow mb-1">Camera Events</p>
+          <h1 className="mb-3 text-3xl font-semibold tracking-tight leading-display text-foreground sm:text-4xl">
             Still being saved
           </h1>
-          <p className="mx-auto mb-6 max-w-md text-base text-(--sea-ink-soft) sm:text-lg">
+          <p className="mx-auto mb-6 max-w-md text-base text-fg-2 sm:text-lg">
             Frigate is still writing this event to disk. It should appear in a
             moment — this page is checking automatically.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-3">
-            <button
-              type="button"
-              onClick={onRetry}
-              className="inline-flex min-h-11 items-center rounded-full border border-(--accent-muted-border) bg-(--accent-muted-bg) px-5 py-2.5 text-sm font-semibold text-(--lagoon-deep) transition hover:-translate-y-0.5 hover:bg-(--accent-muted-hover-bg)"
-            >
-              Check again
-            </button>
-            <Link
-              to="/camera-events"
-              className="inline-flex min-h-11 items-center rounded-full px-5 py-2.5 text-sm font-semibold text-(--sea-ink-soft) no-underline transition hover:text-(--sea-ink)"
-            >
-              Back to Camera Events
-            </Link>
+            <Button onClick={onRetry}>Check again</Button>
+            <Button asChild variant="ghost">
+              <Link to="/camera-events" className="no-underline">
+                Back to Camera Events
+              </Link>
+            </Button>
           </div>
-        </section>
+        </Card>
       </main>
     )
   }
@@ -237,21 +232,20 @@ export function CameraEventDetailPage({
   if (state.kind === 'error') {
     return (
       <main id="main-content" className="page-wrap px-4 py-6 sm:py-12">
-        <section className="island-shell rise-in rounded-4xl px-5 py-6 text-center sm:px-8 sm:py-8">
-          <p className="island-kicker mb-1">Camera Events</p>
-          <h1 className="display-title mb-3 text-2xl font-bold text-(--sea-ink) sm:text-4xl">
+        <Card className="rise-in block px-5 py-6 text-center sm:px-8 sm:py-8">
+          <p className="eyebrow mb-1">Camera Events</p>
+          <h1 className="mb-3 text-3xl font-semibold tracking-tight leading-display text-foreground sm:text-4xl">
             Event not found
           </h1>
-          <p className="mx-auto mb-6 max-w-md text-base text-(--sea-ink-soft) sm:text-lg">
+          <p className="mx-auto mb-6 max-w-md text-base text-fg-2 sm:text-lg">
             {state.message}
           </p>
-          <Link
-            to="/camera-events"
-            className="inline-flex min-h-11 items-center rounded-full border border-(--accent-muted-border) bg-(--accent-muted-bg) px-5 py-2.5 text-sm font-semibold text-(--lagoon-deep) no-underline transition hover:-translate-y-0.5 hover:bg-(--accent-muted-hover-bg)"
-          >
-            Back to Camera Events
-          </Link>
-        </section>
+          <Button asChild>
+            <Link to="/camera-events" className="no-underline">
+              Back to Camera Events
+            </Link>
+          </Button>
+        </Card>
       </main>
     )
   }
@@ -267,19 +261,16 @@ export function CameraEventDetailPage({
       <div className="mb-6">
         <Link
           to="/camera-events"
-          className="inline-flex min-h-11 items-center py-2 text-sm font-medium text-(--lagoon-deep) no-underline transition hover:text-(--sea-ink)"
+          className="inline-flex min-h-11 items-center py-2 text-sm font-medium text-brand-strong no-underline transition hover:text-foreground"
         >
           &larr; Back to Camera Events
         </Link>
       </div>
 
-      <section className="rise-in relative overflow-hidden island-shell-sm sm:rounded-4xl sm:px-8 sm:py-8">
-        <div className="pointer-events-none absolute -left-20 -top-24 hidden h-56 w-56 rounded-full bg-[radial-gradient(circle,var(--hero-a),transparent_66%)] sm:block" />
-        <div className="pointer-events-none absolute -bottom-20 -right-20 hidden h-56 w-56 rounded-full bg-[radial-gradient(circle,var(--hero-b),transparent_66%)] sm:block" />
+      <section className="rise-in relative overflow-hidden sm:glass sm:rounded-card sm:px-8 sm:py-8">
+        <p className="eyebrow mb-1">{formatCameraName(event.camera)}</p>
 
-        <p className="island-kicker mb-1">{formatCameraName(event.camera)}</p>
-
-        <h1 className="display-title mb-2 flex max-w-3xl items-center gap-3 text-2xl leading-tight font-bold tracking-tight text-(--sea-ink) sm:text-4xl">
+        <h1 className="mb-2 flex max-w-3xl items-center gap-3 text-3xl font-semibold tracking-tight leading-display text-foreground sm:text-4xl">
           <span
             className="inline-block h-3.5 w-3.5 shrink-0 rounded-full"
             style={{ backgroundColor: dotColor }}
@@ -287,14 +278,14 @@ export function CameraEventDetailPage({
           />
           {formatLabelName(event.label)}
           {event.sub_label && (
-            <span className="text-xl font-normal text-(--sea-ink-soft) sm:text-2xl">
+            <span className="text-xl font-normal text-fg-2 sm:text-2xl">
               — {event.sub_label}
             </span>
           )}
         </h1>
 
         <div className="mb-6 flex items-center gap-3">
-          <p className="text-sm text-(--sea-ink-soft)">
+          <p className="text-sm text-muted-foreground">
             {formatRelativeTime(event.start_time)} ·{' '}
             {formatTimestamp(event.start_time)}
           </p>
@@ -322,7 +313,7 @@ export function CameraEventDetailPage({
 
         {event.has_clip && (
           <details
-            className="-mx-4 mb-6 overflow-hidden border-y border-(--line) bg-(--surface) sm:mx-0 sm:mb-8 sm:rounded-2xl sm:border"
+            className="-mx-4 mb-6 overflow-hidden border-y border-border-soft bg-card sm:mx-0 sm:mb-8 sm:rounded-card sm:border"
             onToggle={(e) => {
               if (e.currentTarget.open) {
                 setClipAccordionOpened(true)
@@ -338,12 +329,12 @@ export function CameraEventDetailPage({
               }
             }}
           >
-            <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 px-7 py-3 text-sm font-semibold text-(--lagoon-deep) transition hover:bg-(--accent-hover-bg) sm:px-4">
+            <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 px-7 py-3 text-sm font-semibold text-brand-strong transition hover:bg-surface-hover sm:px-4">
               <Film className="h-4 w-4" aria-hidden="true" />
               Watch clip
             </summary>
             {clipAccordionOpened && (
-              <div className="border-t border-(--line)">
+              <div className="border-t border-border-soft">
                 <EventClipPlayer
                   eventId={event.id}
                   camera={event.camera}
@@ -359,7 +350,7 @@ export function CameraEventDetailPage({
           </details>
         )}
 
-        <dl className="mt-4 grid grid-cols-1 gap-0 divide-y divide-(--line) sm:mt-6 sm:grid-cols-2 sm:gap-4 sm:divide-y-0 lg:grid-cols-3">
+        <dl className="mt-4 grid grid-cols-1 gap-0 divide-y divide-border-soft sm:mt-6 sm:grid-cols-2 sm:gap-4 sm:divide-y-0 lg:grid-cols-3">
           <InfoCard
             icon={Camera}
             label="Camera"
@@ -402,13 +393,13 @@ export function CameraEventDetailPage({
         </dl>
 
         {event.data.score > 0 && (
-          <div className="mt-4 border-t border-(--line) pt-4 sm:mt-6 sm:rounded-xl sm:border sm:bg-(--surface) sm:p-4 sm:pt-4">
-            <h2 className="mb-2 text-xs font-semibold uppercase tracking-wider text-(--sea-ink-soft)">
+          <div className="mt-4 border-t border-border-soft pt-4 sm:glass-flat sm:mt-6 sm:rounded-input sm:p-4 sm:pt-4">
+            <h2 className="eyebrow mb-2 text-muted-foreground">
               Detection confidence
             </h2>
             <div className="flex items-center gap-3">
               <div
-                className="h-2 flex-1 overflow-hidden rounded-full bg-(--line)"
+                className="h-2 flex-1 overflow-hidden rounded-full bg-border"
                 role="progressbar"
                 aria-valuenow={Math.round(event.data.top_score * 100)}
                 aria-valuemin={0}
@@ -416,13 +407,13 @@ export function CameraEventDetailPage({
                 aria-label="Detection confidence"
               >
                 <div
-                  className="h-full rounded-full bg-(--lagoon-deep) transition-all"
+                  className="h-full rounded-full bg-primary transition-all"
                   style={{
                     width: `${Math.round(event.data.top_score * 100)}%`,
                   }}
                 />
               </div>
-              <span className="text-sm font-semibold text-(--sea-ink)">
+              <span className="text-sm font-semibold text-foreground">
                 {Math.round(event.data.top_score * 100)}%
               </span>
             </div>

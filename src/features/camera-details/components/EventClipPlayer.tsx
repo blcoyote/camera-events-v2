@@ -25,7 +25,7 @@ export function EventClipPlayer({
   )}`
 
   return (
-    <div className="relative aspect-video w-full overflow-hidden bg-black sm:rounded-2xl">
+    <div className="relative aspect-video w-full overflow-hidden bg-black sm:rounded-card">
       {status === 'idle' ? (
         <video
           src={`/api/events/${eventId}/clip`}
@@ -42,7 +42,7 @@ export function EventClipPlayer({
       ) : (
         <div
           role="status"
-          className="flex h-full w-full items-center justify-center px-4 text-center text-sm text-(--foam)"
+          className="flex h-full w-full items-center justify-center px-4 text-center text-sm text-white"
         >
           Couldn't load clip
         </div>
