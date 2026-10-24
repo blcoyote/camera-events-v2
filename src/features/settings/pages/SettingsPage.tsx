@@ -10,6 +10,7 @@ import {
   MAX_LIVE_VIEW_REFRESH_SECONDS,
   LIVE_VIEW_REFRESH_STEP,
 } from '#/features/shared/hooks/useLiveViewRefreshInterval'
+import { Slider } from '#/features/shared/components/ui/slider'
 import {
   Card,
   CardHeader,
@@ -50,26 +51,21 @@ export function SettingsPage() {
 
         <div className="flex flex-col gap-3">
           <label
-            htmlFor="event-limit-slider"
+            id="event-limit-label"
             className="text-sm font-medium text-foreground"
           >
             Number of events to display
           </label>
           <div className="flex items-center gap-4">
-            <input
-              id="event-limit-slider"
-              type="range"
+            <Slider
               min={MIN_EVENT_LIMIT}
               max={MAX_EVENT_LIMIT}
               step={EVENT_LIMIT_STEP}
-              value={eventLimit}
-              onChange={(e) => setEventLimit(Number(e.target.value))}
-              aria-label="Number of events to display"
+              value={[eventLimit]}
+              onValueChange={([n]) => setEventLimit(n)}
+              aria-labelledby="event-limit-label"
               aria-describedby="event-limit-desc"
-              aria-valuemin={MIN_EVENT_LIMIT}
-              aria-valuemax={MAX_EVENT_LIMIT}
-              aria-valuenow={eventLimit}
-              className="min-h-11 w-full flex-1 cursor-pointer accent-brand-strong"
+              className="flex-1"
             />
             <span
               className="min-w-16 rounded-input border border-border bg-surface-warm px-3 py-1.5 text-center text-sm font-medium text-foreground tabular-nums"
@@ -92,28 +88,21 @@ export function SettingsPage() {
 
         <div className="flex flex-col gap-3">
           <label
-            htmlFor="live-view-refresh-slider"
+            id="live-view-refresh-label"
             className="text-sm font-medium text-foreground"
           >
             Refresh interval
           </label>
           <div className="flex items-center gap-4">
-            <input
-              id="live-view-refresh-slider"
-              type="range"
+            <Slider
               min={MIN_LIVE_VIEW_REFRESH_SECONDS}
               max={MAX_LIVE_VIEW_REFRESH_SECONDS}
               step={LIVE_VIEW_REFRESH_STEP}
-              value={liveViewRefreshSeconds}
-              onChange={(e) =>
-                setLiveViewRefreshSeconds(Number(e.target.value))
-              }
-              aria-label="Refresh interval"
+              value={[liveViewRefreshSeconds]}
+              onValueChange={([n]) => setLiveViewRefreshSeconds(n)}
+              aria-labelledby="live-view-refresh-label"
               aria-describedby="live-view-refresh-desc"
-              aria-valuemin={MIN_LIVE_VIEW_REFRESH_SECONDS}
-              aria-valuemax={MAX_LIVE_VIEW_REFRESH_SECONDS}
-              aria-valuenow={liveViewRefreshSeconds}
-              className="min-h-11 w-full flex-1 cursor-pointer accent-brand-strong"
+              className="flex-1"
             />
             <span
               className="min-w-16 rounded-input border border-border bg-surface-warm px-3 py-1.5 text-center text-sm font-medium text-foreground tabular-nums"

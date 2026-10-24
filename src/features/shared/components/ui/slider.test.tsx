@@ -47,4 +47,16 @@ describe('Slider', () => {
     fireEvent.keyDown(screen.getByRole('slider'), { key: 'ArrowRight' })
     expect(screen.getByRole('slider').getAttribute('aria-valuenow')).toBe('10')
   })
+
+  it('names the thumb from aria-labelledby and describes it from aria-describedby', () => {
+    render(
+      <>
+        <span id="l">Volume</span>
+        <span id="d">Help text</span>
+        <Slider aria-labelledby="l" aria-describedby="d" value={[5]} max={10} />
+      </>,
+    )
+    const thumb = screen.getByRole('slider', { name: 'Volume' })
+    expect(thumb.getAttribute('aria-describedby')).toBe('d')
+  })
 })
