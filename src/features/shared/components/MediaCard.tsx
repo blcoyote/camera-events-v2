@@ -27,8 +27,7 @@ export function MediaCard({
       ? ({ '--i': Math.min(index, 11) } as CSSProperties)
       : undefined
 
-  const cardClass =
-    'event-card event-card-enter glass rounded-card group block no-underline'
+  const cardClass = 'event-card event-card-enter group block no-underline'
   const thumbClass = `relative aspect-video overflow-hidden${scanLines ? ' event-thumb' : ''}`
 
   const inner = (

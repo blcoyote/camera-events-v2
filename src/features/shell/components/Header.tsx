@@ -137,7 +137,7 @@ export default function Header() {
 
         <div className="ml-auto flex items-center gap-2">
           {state.showSignIn ? (
-            <Button asChild size="sm">
+            <Button asChild variant="secondary" size="sm">
               <a href={state.signInHref} onClick={onSignIn}>
                 Sign in with Google
               </a>
