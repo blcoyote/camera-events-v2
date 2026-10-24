@@ -2,20 +2,22 @@
   "$schema": "https://unpkg.com/knip@6/schema.json",
   "entry": [
     "src/routes/**/*.{ts,tsx}",
-    "src/router.tsx",
-    "src/server.ts",
     "src/sw.ts",
     "src/sw-push-handlers.ts",
     "vite-plugin-sw.ts"
   ],
-  "project": ["src/**/*.{ts,tsx}"],
-  "ignoreDependencies": [
-    "@tailwindcss/typography",
-    "@tanstack/react-router-ssr-query",
-    "@tanstack/router-plugin",
-    "tw-animate-css",
-    "tailwindcss"
+  "project": [
+    "src/**/*.{ts,tsx}",
+    "src/**/*.css"
   ],
-  "ignoreIssues": { "src/features/shared/components/ui/**": ["exports", "types"] },
-  "ignoreBinaries": ["only-allow"]
+  "ignoreIssues": {
+    "src/features/shared/components/ui/**": [
+      "exports",
+      "types"
+    ]
+  },
+  "ignoreDependencies": [
+    "@tanstack/react-router-ssr-query",
+    "@tanstack/router-plugin"
+  ]
 }

@@ -6,7 +6,7 @@ import { dirname } from 'node:path'
 
 const DEFAULT_DB_PATH = 'data/camera-events.db'
 
-export interface UserRow {
+interface UserRow {
   sub: string
   email: string
   first_name: string | null
