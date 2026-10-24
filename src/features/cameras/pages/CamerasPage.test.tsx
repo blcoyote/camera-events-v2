@@ -102,20 +102,22 @@ describe('CamerasPage', () => {
     // Button is present
     expect(json).toContain('Reorder cameras on this device')
     // Simulate the click by finding onClick in the element tree
-    function findEditButton(
-      node: unknown,
-    ): React.ReactElement<{ onClick: () => void }> | null {
+    function findEditButton(node: unknown): React.ReactElement<{
+      onPressedChange: (pressed: boolean) => void
+    }> | null {
       if (!node || typeof node !== 'object') return null
       const el = node as React.ReactElement<{
         children?: unknown
-        onClick?: () => void
+        onPressedChange?: (pressed: boolean) => void
         title?: string
       }>
       if (
         el.props.title === 'Reorder cameras on this device' &&
-        typeof el.props.onClick === 'function'
+        typeof el.props.onPressedChange === 'function'
       ) {
-        return el as React.ReactElement<{ onClick: () => void }>
+        return el as React.ReactElement<{
+          onPressedChange: (pressed: boolean) => void
+        }>
       }
       const children = el.props.children
       if (Array.isArray(children)) {
@@ -130,7 +132,7 @@ describe('CamerasPage', () => {
     }
     const btn = findEditButton(output)
     expect(btn).not.toBeNull()
-    btn?.props.onClick()
+    btn?.props.onPressedChange(true)
     expect(onEditingChange).toHaveBeenCalledWith(true)
   })
 

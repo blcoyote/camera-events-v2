@@ -13,7 +13,9 @@
     "@tailwindcss/typography",
     "@tanstack/react-router-ssr-query",
     "@tanstack/router-plugin",
+    "tw-animate-css",
     "tailwindcss"
   ],
+  "ignoreIssues": { "src/features/shared/components/ui/**": ["exports", "types"] },
   "ignoreBinaries": ["only-allow"]
 }

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { Button } from '#/features/shared/components/ui/button'
 
 type AlertType = 'error' | 'success'
 
@@ -69,18 +70,18 @@ export default function AlertBanner({
       ref={bannerRef}
       role="alert"
       tabIndex={-1}
-      className={`mx-auto mb-4 flex max-w-3xl items-center justify-between gap-3 rounded-xl border px-4 py-3 text-sm ${
+      className={`mx-auto mb-4 flex max-w-3xl items-center justify-between gap-3 rounded-card border px-4 py-3 text-sm backdrop-blur-glass ${
         isError
-          ? 'border-red-300 bg-red-50 text-red-800 dark:border-red-700 dark:bg-red-950 dark:text-red-200'
-          : 'border-green-300 bg-green-50 text-green-800 dark:border-green-700 dark:bg-green-950 dark:text-green-200'
+          ? 'border-danger/40 bg-surface-hover text-danger-text'
+          : 'border-success/40 bg-surface-hover text-success-text'
       }`}
     >
       <span>{message.text}</span>
-      <button
-        type="button"
+      <Button
+        variant="ghost"
+        size="icon"
         aria-label="Dismiss message"
         onClick={() => setDismissed(true)}
-        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg transition hover:opacity-100"
       >
         <svg
           width="16"
@@ -91,7 +92,7 @@ export default function AlertBanner({
         >
           <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z" />
         </svg>
-      </button>
+      </Button>
     </div>
   )
 }

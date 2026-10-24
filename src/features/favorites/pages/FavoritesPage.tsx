@@ -1,30 +1,28 @@
 import { Link } from '@tanstack/react-router'
 import type { FrigateEvent } from '#/features/shared/server/frigate/types'
 import { EventCard } from '#/features/shared/components/EventCard'
+import { Button } from '#/features/shared/components/ui/button'
 
 export function FavoritesPage({ events }: { events: FrigateEvent[] }) {
   if (events.length === 0) {
     return (
       <main id="main-content" className="page-wrap px-4 pb-8 pt-6 sm:pt-14">
-        <section className="island-shell rise-in relative overflow-hidden rounded-4xl px-5 py-6 sm:px-8 sm:py-8">
-          <p className="island-kicker mb-1">Favorites</p>
-          <h1 className="display-title mb-0 max-w-3xl text-2xl leading-tight font-bold tracking-tight text-(--sea-ink) sm:text-4xl">
+        <section className="glass rise-in relative overflow-hidden rounded-card px-5 py-6 sm:px-8 sm:py-8">
+          <p className="eyebrow mb-1">Favorites</p>
+          <h1 className="mb-0 max-w-3xl text-3xl leading-display font-semibold tracking-tight sm:text-4xl">
             Your Favorites
           </h1>
         </section>
         <div className="mt-12 text-center">
-          <p className="text-lg font-medium text-(--sea-ink)">
+          <p className="text-lg font-medium text-foreground">
             No favorites yet
           </p>
-          <p className="mt-1 text-sm text-(--sea-ink-soft)">
+          <p className="mt-1 text-sm text-fg-2">
             Tap the heart on any event to save it here
           </p>
-          <Link
-            to="/camera-events"
-            className="mt-4 inline-flex min-h-11 items-center rounded-full bg-(--lagoon) px-5 py-2 text-sm font-medium text-white hover:bg-(--lagoon-deep)"
-          >
-            Browse events
-          </Link>
+          <Button asChild className="mt-4">
+            <Link to="/camera-events">Browse events</Link>
+          </Button>
         </div>
       </main>
     )
@@ -32,9 +30,9 @@ export function FavoritesPage({ events }: { events: FrigateEvent[] }) {
 
   return (
     <main id="main-content" className="page-wrap px-4 pb-8 pt-6 sm:pt-14">
-      <section className="island-shell rise-in relative overflow-hidden rounded-4xl px-5 py-6 sm:px-8 sm:py-8">
-        <p className="island-kicker mb-1">Favorites</p>
-        <h1 className="display-title mb-0 max-w-3xl text-2xl leading-tight font-bold tracking-tight text-(--sea-ink) sm:text-4xl">
+      <section className="glass rise-in relative overflow-hidden rounded-card px-5 py-6 sm:px-8 sm:py-8">
+        <p className="eyebrow mb-1">Favorites</p>
+        <h1 className="mb-0 max-w-3xl text-3xl leading-display font-semibold tracking-tight sm:text-4xl">
           Your Favorites
         </h1>
       </section>

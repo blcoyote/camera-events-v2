@@ -21,6 +21,24 @@ describe('FilterPill', () => {
     expect(screen.getByText('7')).toBeInTheDocument()
   })
 
+  it('active count has no opacity-60 and no muted colour (inherits)', () => {
+    render(
+      <FilterPill label="People" active={true} onClick={() => {}} count={7} />,
+    )
+    const count = screen.getByText('7')
+    expect(count).not.toHaveClass('opacity-60')
+    expect(count).not.toHaveClass('text-muted-foreground')
+  })
+
+  it('inactive count uses text-muted-foreground and no opacity-60', () => {
+    render(
+      <FilterPill label="People" active={false} onClick={() => {}} count={7} />,
+    )
+    const count = screen.getByText('7')
+    expect(count).toHaveClass('text-muted-foreground')
+    expect(count).not.toHaveClass('opacity-60')
+  })
+
   it('does not render count badge when count is undefined', () => {
     const { container } = render(
       <FilterPill label="People" active={false} onClick={() => {}} />,

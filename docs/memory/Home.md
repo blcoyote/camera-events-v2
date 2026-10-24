@@ -21,7 +21,7 @@ this vault is meant to be used.
 
 - [[architecture/system-overview]]
 - [[architecture/push-pipeline]]
-- [[architecture/theming]] — token-driven; how to add swappable color themes
+- [[architecture/theming]] — Glassmorphism token layers (`--gl-*` → shadcn → Tailwind), light only; how a dark theme would slot in
 - [[architecture/frigate-http-api]] — full API surface; what we use vs. untapped
 
 ## 🧠 Decisions
@@ -45,6 +45,7 @@ this vault is meant to be used.
 - [[decisions/2026-09-21-admin-global-notification-mute]] — admin silences all push for a chosen duration (10 minutes to 6 hours); deadline in SQLite, enforced at dispatch
 - [[decisions/2026-10-14-delivery-module]] — one Delivery module owns Mute, fan-out and send; a Burst Alert swallowed by Mute is promoted on the first unmuted flush
 - [[decisions/2026-10-17-single-glossary-and-vocabulary]] — CONTEXT.md is the only domain glossary; Ghost, Alert, Availability, Device, Favorite and Patch-count vocabulary settled
+- [[decisions/2026-10-24-glassmorphism-shadcn-design-system]] — Glassmorphism tokens (`--gl-*`) → shadcn semantic vars → Tailwind; light only, Radix overlays, iOS status bar `default`
 
 ## ⚠️ Gotchas
 
@@ -55,6 +56,7 @@ this vault is meant to be used.
   trusting the issue-tracking workflow
 - [[gotchas/frigate-publishes-new-before-persisting]] — the `"new"` MQTT message
   arrives before (and sometimes instead of) the event row
+- [[gotchas/unlayered-css-beats-tailwind-utilities]] — an unlayered rule in `src/styles.css` beats every utility; element rules go in `@layer base`
 
 ## 🧪 Conventions
 

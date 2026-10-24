@@ -47,12 +47,12 @@ export function FavoriteButton({
           e.preventDefault()
           onToggle()
         }}
-        className="flex items-center justify-center rounded-full p-2.5 text-(--sea-ink-soft) transition hover:text-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
+        className="flex items-center justify-center rounded-full p-2.5 text-fg-2 transition hover:text-danger disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <Heart
           size={20}
           aria-hidden="true"
-          className={favorited ? 'fill-red-500 text-red-500' : ''}
+          className={favorited ? 'fill-danger text-danger' : ''}
         />
       </button>
 
@@ -60,7 +60,7 @@ export function FavoriteButton({
         <div
           role="alert"
           aria-live="assertive"
-          className="absolute bottom-full right-0 mb-1 flex items-center gap-1 whitespace-nowrap rounded-md bg-(--surface-strong) px-2 py-1 text-xs text-red-600 shadow-sm"
+          className="glass absolute bottom-full right-0 mb-1 flex items-center gap-1 whitespace-nowrap rounded-md px-2 py-1 text-xs text-danger-text"
         >
           <AlertCircle size={12} aria-hidden="true" />
           {visibleError}

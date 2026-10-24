@@ -9,18 +9,9 @@ import Header from '#/features/shell/components/Header'
 import { ServiceWorkerRegistration } from '#/features/shell/components/ServiceWorkerRegistration'
 import { getCurrentUserFn } from '#/features/auth/server/auth'
 import type { SessionData } from '#/features/shared/server/session'
-import { THEME_COLOR_MAP, PALETTES } from '#/features/shared/hooks/themeColor'
-import { serializeForScript } from '#/features/shared/utils/serializeForScript'
 import { NotFound } from './-not-found'
 
 import appCss from '../styles.css?url'
-
-// Blocking inline script: applies theme (mode) + palette before first paint to
-// prevent FOUC. The palette list and theme-color map are interpolated from
-// PALETTES / THEME_COLOR_MAP so there is a single source of truth (no hand-kept
-// duplicate). Mode is applied via the `.dark`/`.light` class; the resolved class
-// is what styles.css keys off (no `data-theme` attribute is needed).
-const THEME_INIT_SCRIPT = `(function(){try{var stored=window.localStorage.getItem('theme');var mode=(stored==='light'||stored==='dark'||stored==='auto')?stored:'auto';var sp=window.localStorage.getItem('palette');var palettes=${serializeForScript(PALETTES)};var palette=palettes.indexOf(sp)>=0?sp:'ocean';var prefersDark=window.matchMedia('(prefers-color-scheme: dark)').matches;var resolved=mode==='auto'?(prefersDark?'dark':'light'):mode;var root=document.documentElement;root.classList.remove('light','dark');root.classList.add(resolved);if(palette==='ocean'){root.removeAttribute('data-palette')}else{root.setAttribute('data-palette',palette)}root.style.colorScheme=resolved;var colors=${serializeForScript(THEME_COLOR_MAP)};var tc=document.querySelector('meta[name="theme-color"]');if(tc){tc.setAttribute('content',(colors[palette]||colors.ocean)[resolved])}}catch(e){}})();`
 
 interface RouterContext {
   user: SessionData | null
@@ -46,7 +37,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       },
       {
         name: 'theme-color',
-        content: '#173a40',
+        content: '#eef6ff',
       },
       {
         name: 'mobile-web-app-capable',
@@ -58,7 +49,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       },
       {
         name: 'apple-mobile-web-app-status-bar-style',
-        content: 'black-translucent',
+        content: 'default',
       },
       {
         name: 'apple-mobile-web-app-title',
@@ -96,15 +87,14 @@ export const Route = createRootRouteWithContext<RouterContext>()({
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en">
       <head>
-        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <HeadContent />
       </head>
-      <body className="font-sans antialiased wrap-anywhere selection:bg-(--selection-bg)">
+      <body className="bg-background font-sans text-foreground antialiased wrap-anywhere selection:bg-brand/15">
         <a
           href="#main-content"
-          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-100 focus:rounded-lg focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-gray-900 focus:shadow-lg"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-100 focus:rounded-card focus:bg-card focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-foreground focus:shadow-raised"
         >
           Skip to main content
         </a>

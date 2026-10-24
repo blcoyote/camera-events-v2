@@ -31,7 +31,7 @@ export function PullToRefreshIndicator({
       }}
     >
       <div
-        className="flex items-center justify-center rounded-full border border-(--line) bg-(--surface-strong)"
+        className="glass flex items-center justify-center rounded-full"
         style={{
           width: INDICATOR_SIZE,
           height: INDICATOR_SIZE,
@@ -53,7 +53,7 @@ export function PullToRefreshIndicator({
             stroke="currentColor"
             strokeWidth="2.5"
             strokeLinecap="round"
-            className="animate-spin text-(--lagoon-deep)"
+            className="animate-spin text-brand"
           >
             <path d="M21 12a9 9 0 1 1-6.219-8.56" />
           </svg>
@@ -67,7 +67,7 @@ export function PullToRefreshIndicator({
             strokeWidth="2.5"
             strokeLinecap="round"
             strokeLinejoin="round"
-            className="text-(--palm)"
+            className="text-success"
           >
             <polyline points="20 6 9 17 4 12" />
           </svg>
@@ -81,7 +81,7 @@ export function PullToRefreshIndicator({
             strokeWidth="2.5"
             strokeLinecap="round"
             strokeLinejoin="round"
-            className="text-(--sea-ink-soft)"
+            className="text-brand"
             style={{
               transform: pastThreshold ? 'rotate(180deg)' : 'rotate(0deg)',
               transition: 'transform 200ms ease',

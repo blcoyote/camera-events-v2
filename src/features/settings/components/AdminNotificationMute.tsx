@@ -1,4 +1,10 @@
 import { useEffect, useState } from 'react'
+import { Button } from '#/features/shared/components/ui/button'
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+} from '#/features/shared/components/ui/card'
 import { getAdminMuteView, formatRemaining } from '../utils/adminMuteState'
 import {
   MUTE_DURATION_OPTIONS,
@@ -99,18 +105,22 @@ export function AdminNotificationMute() {
       : `Silence all notifications for ${muteDurationLabel(durationMs)}`
 
   return (
-    <section className="island-shell mt-6 rounded-4xl px-6 py-8 sm:px-10 sm:py-10">
-      <h2 className="mb-6 text-lg font-semibold text-(--sea-ink)">Admin</h2>
-      <p className="mb-4 text-sm text-(--sea-ink-soft)">
+    <Card className="mt-6">
+      <CardHeader>
+        <CardTitle role="heading" aria-level={2}>
+          Admin
+        </CardTitle>
+      </CardHeader>
+      <p className="text-sm text-fg-2">
         Silence motion and camera-offline notifications for every user for the
         selected duration, or choose Off to resume notifications immediately.
         Events are still recorded — this only pauses push alerts.
       </p>
       <div className="flex flex-wrap items-end gap-3">
-        <div className="flex flex-col gap-1.5">
+        <div className="flex min-w-48 flex-col gap-1.5">
           <label
             htmlFor="admin-mute-duration"
-            className="text-sm font-medium text-(--sea-ink)"
+            className="text-sm font-medium text-foreground"
           >
             Mute duration
           </label>
@@ -118,7 +128,7 @@ export function AdminNotificationMute() {
             id="admin-mute-duration"
             value={durationMs}
             onChange={(e) => setDurationMs(Number(e.target.value))}
-            className="min-h-11 rounded-lg border border-(--chip-line) bg-(--chip-bg) px-3 py-2 text-sm text-(--sea-ink)"
+            className="min-h-11 w-full rounded-input border border-border bg-surface-warm px-4 py-3 text-base text-foreground outline-none focus-visible:border-brand focus-visible:shadow-focus"
           >
             {MUTE_DURATION_OPTIONS.map((option) => (
               <option key={option.ms} value={option.ms}>
@@ -127,26 +137,24 @@ export function AdminNotificationMute() {
             ))}
           </select>
         </div>
-        <button
-          type="button"
+        <Button
+          variant="secondary"
+          size="sm"
           onClick={handleSubmit}
           disabled={isSubmitting}
-          className="min-h-11 w-fit rounded-full border border-(--accent-muted-border) bg-(--accent-muted-bg) px-5 py-2.5 text-sm font-semibold text-(--lagoon-deep) transition hover:bg-(--accent-muted-hover-bg) disabled:opacity-50"
         >
           {buttonLabel}
-        </button>
+        </Button>
       </div>
       <div aria-live="polite" className="mt-3 min-h-5">
         {isMuted && (
-          <p className="text-sm text-(--sea-ink-soft)">
+          <p className="text-sm text-muted-foreground">
             All notifications silenced — {formatRemaining(view.remainingMs)}{' '}
             remaining
           </p>
         )}
-        {error && (
-          <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
-        )}
+        {error && <p className="text-sm text-danger-text">{error}</p>}
       </div>
-    </section>
+    </Card>
   )
 }

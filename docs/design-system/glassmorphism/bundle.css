@@ -1,0 +1,248 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* Glassmorphism — component styles. Tokens only. */
+.gl-root,
+body {
+  font-family: var(--font-body);
+  color: var(--fg);
+}
+
+.gl-backdrop {
+  background:
+    radial-gradient(
+      260px 200px at 18% 30%,
+      rgba(79, 140, 255, 0.45),
+      rgba(79, 140, 255, 0) 70%
+    ),
+    radial-gradient(
+      240px 220px at 82% 70%,
+      rgba(24, 86, 255, 0.28),
+      rgba(24, 86, 255, 0) 70%
+    ),
+    var(--bg);
+  padding: var(--space-6);
+}
+
+/* Button */
+.gl-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  font: 500 16px/1 var(--font-body);
+  padding: var(--space-3) var(--space-5);
+  border-radius: var(--radius-pill);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition:
+    background var(--motion-fast) var(--ease-standard),
+    box-shadow var(--motion-fast) var(--ease-standard),
+    transform var(--motion-fast) var(--ease-standard);
+}
+.gl-btn--sm {
+  font-size: 14px;
+  padding: var(--space-2) var(--space-4);
+}
+.gl-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+.gl-btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+.gl-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.gl-btn--primary {
+  background: var(--accent-strong);
+  color: var(--accent-on);
+  box-shadow: var(--elev-raised);
+}
+.gl-btn--primary:hover:not(:disabled) {
+  background: #1448e0;
+}
+.gl-btn--secondary {
+  background: var(--surface);
+  color: var(--fg);
+  border-color: var(--border);
+  backdrop-filter: blur(var(--blur-glass));
+  -webkit-backdrop-filter: blur(var(--blur-glass));
+}
+.gl-btn--secondary:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.9);
+}
+.gl-btn--ghost {
+  background: transparent;
+  color: var(--accent-strong);
+}
+.gl-btn--ghost:hover:not(:disabled) {
+  background: var(--surface-warm);
+}
+.gl-spinner {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  animation: gl-spin 700ms linear infinite;
+}
+@keyframes gl-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Card */
+.gl-card {
+  background: var(--surface);
+  backdrop-filter: blur(var(--blur-glass)) saturate(140%);
+  -webkit-backdrop-filter: blur(var(--blur-glass)) saturate(140%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--elev-raised);
+  padding: var(--space-6);
+  color: var(--fg);
+}
+.gl-card--flat {
+  background: var(--surface-warm);
+  border-color: var(--border-soft);
+  box-shadow: var(--elev-flat);
+  border-radius: var(--radius-sm);
+  padding: var(--space-4);
+}
+.gl-card--lg {
+  border-radius: var(--radius-lg);
+  padding: var(--space-8);
+}
+.gl-card__eyebrow {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--accent-strong);
+  margin: 0 0 var(--space-2);
+}
+.gl-card__title {
+  font: 600 24px/1.2 var(--font-display);
+  margin: 0 0 var(--space-2);
+}
+.gl-card__body {
+  font-size: 16px;
+  line-height: 1.55;
+  color: var(--fg-2);
+  margin: 0;
+}
+.gl-card__actions {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-6);
+  flex-wrap: wrap;
+}
+
+/* Input */
+.gl-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.gl-field__label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--fg);
+}
+.gl-field__input {
+  font: 400 16px/1.55 var(--font-body);
+  color: var(--fg);
+  padding: var(--space-3) var(--space-4);
+  background: var(--surface-warm);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  transition:
+    box-shadow var(--motion-fast) var(--ease-standard),
+    border-color var(--motion-fast) var(--ease-standard);
+}
+.gl-field__input::placeholder {
+  color: var(--muted);
+}
+.gl-field__input:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: var(--focus-ring);
+}
+.gl-field__input:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.gl-field__hint {
+  font-size: 12px;
+  color: var(--muted);
+}
+.gl-field--error .gl-field__input {
+  border-color: var(--danger);
+}
+.gl-field--error .gl-field__hint {
+  color: var(--danger-text);
+}
+
+/* Badge */
+.gl-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font: 500 12px/1 var(--font-body);
+  padding: 6px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--fg-2);
+}
+.gl-badge__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--muted);
+}
+.gl-badge--accent {
+  color: var(--accent-strong);
+}
+.gl-badge--accent .gl-badge__dot {
+  background: var(--accent);
+}
+.gl-badge--success {
+  color: var(--success-text);
+}
+.gl-badge--success .gl-badge__dot {
+  background: var(--success);
+}
+.gl-badge--warn {
+  color: var(--warn-text);
+}
+.gl-badge--warn .gl-badge__dot {
+  background: var(--warn);
+}
+.gl-badge--danger {
+  color: var(--danger-text);
+}
+.gl-badge--danger .gl-badge__dot {
+  background: var(--danger);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gl-btn,
+  .gl-field__input {
+    transition: none;
+  }
+  .gl-spinner {
+    animation-duration: 2s;
+  }
+}
+@supports not (
+  (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))
+) {
+  .gl-card,
+  .gl-btn--secondary,
+  .gl-badge {
+    background: rgba(255, 255, 255, 0.94);
+  }
+}

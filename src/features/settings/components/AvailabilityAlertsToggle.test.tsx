@@ -20,4 +20,22 @@ describe('AvailabilityAlertsToggle', () => {
     fireEvent.click(screen.getByRole('switch'))
     expect(onToggle).toHaveBeenCalledWith(true)
   })
+
+  it('reflects enabled state via aria-checked', () => {
+    const { rerender } = render(
+      <AvailabilityAlertsToggle enabled={false} onToggle={vi.fn()} />,
+    )
+    expect(screen.getByRole('switch').getAttribute('aria-checked')).toBe(
+      'false',
+    )
+    rerender(<AvailabilityAlertsToggle enabled onToggle={vi.fn()} />)
+    expect(screen.getByRole('switch').getAttribute('aria-checked')).toBe('true')
+  })
+
+  it('calls onToggle(false) when enabled', () => {
+    const onToggle = vi.fn()
+    render(<AvailabilityAlertsToggle enabled onToggle={onToggle} />)
+    fireEvent.click(screen.getByRole('switch'))
+    expect(onToggle).toHaveBeenCalledWith(false)
+  })
 })

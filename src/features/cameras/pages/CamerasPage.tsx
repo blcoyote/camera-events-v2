@@ -2,6 +2,8 @@ import type { FrigateResult } from '#/features/shared/server/frigate/config'
 import { useCameraOrder } from '#/features/cameras/hooks/useCameraOrder'
 import { SortableCamerasGrid } from '#/features/cameras/components/SortableCamerasGrid'
 import { Check, Pencil } from 'lucide-react'
+import { Button } from '#/features/shared/components/ui/button'
+import { Toggle } from '#/features/shared/components/ui/toggle'
 
 type CamerasState =
   | { kind: 'cameras'; cameras: string[] }
@@ -43,34 +45,31 @@ export function CamerasPage({
 
   return (
     <main id="main-content" className="page-wrap px-4 pb-8 pt-6 sm:pt-14">
-      <section className="island-shell rise-in relative overflow-hidden rounded-4xl px-5 py-6 sm:px-8 sm:py-8">
-        <div className="pointer-events-none absolute -left-20 -top-24 h-56 w-56 rounded-full bg-[radial-gradient(circle,var(--hero-a),transparent_66%)]" />
-        <div className="pointer-events-none absolute -bottom-20 -right-20 h-56 w-56 rounded-full bg-[radial-gradient(circle,var(--hero-b),transparent_66%)]" />
+      <section className="glass rise-in relative overflow-hidden rounded-card px-5 py-6 sm:px-8 sm:py-8">
         <div className="flex items-center justify-between gap-4">
           <div>
-            <p className="island-kicker mb-1">Cameras</p>
-            <h1 className="display-title mb-0 max-w-3xl text-2xl leading-tight font-bold tracking-tight text-(--sea-ink) sm:text-4xl">
+            <p className="eyebrow mb-1">Cameras</p>
+            <h1 className="mb-0 max-w-3xl text-3xl leading-display font-semibold tracking-tight sm:text-4xl">
               Latest snapshots
             </h1>
           </div>
           {hasCameras && (
             <div className="flex shrink-0 flex-col items-end gap-1">
-              <button
-                type="button"
+              <Toggle
                 aria-label={
                   isEditing ? 'Done reordering cameras' : 'Reorder cameras'
                 }
-                aria-pressed={isEditing}
+                pressed={isEditing}
+                onPressedChange={onEditingChange}
                 title="Reorder cameras on this device"
-                onClick={() => onEditingChange(!isEditing)}
-                className="flex size-9 items-center justify-center rounded-lg border border-(--sea-ink-soft)/30 text-sm font-medium text-(--sea-ink) transition-colors hover:bg-(--surface-raised)"
+                className="size-11 px-0"
               >
                 {isEditing ? (
                   <Check size={16} aria-hidden="true" />
                 ) : (
                   <Pencil size={16} aria-hidden="true" />
                 )}
-              </button>
+              </Toggle>
             </div>
           )}
         </div>
@@ -79,32 +78,31 @@ export function CamerasPage({
       {saveError && (
         <div
           role="alert"
-          className="mx-auto mt-4 max-w-3xl rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-100"
+          className="mx-auto mt-4 max-w-3xl rounded-card border border-warn/40 bg-surface-hover px-4 py-3 text-sm text-warn-text"
         >
           <div className="flex items-center justify-between gap-4">
             <span>{saveError}</span>
-            <button
-              type="button"
+            <Button
+              variant="link"
+              size="sm"
               onClick={dismissError}
-              className="shrink-0 font-medium underline"
+              className="shrink-0"
               aria-label="Dismiss storage error"
             >
               Dismiss
-            </button>
+            </Button>
           </div>
         </div>
       )}
 
       {state.kind === 'empty' && (
-        <p className="mt-8 text-center text-(--sea-ink-soft)">
-          No cameras found
-        </p>
+        <p className="mt-8 text-center text-fg-2">No cameras found</p>
       )}
 
       {state.kind === 'error' && (
         <div
           role="alert"
-          className="mx-auto mt-8 max-w-3xl rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-700 dark:bg-red-950 dark:text-red-200"
+          className="mx-auto mt-8 max-w-3xl rounded-card border border-danger/40 bg-surface-hover px-4 py-3 text-sm text-danger-text"
         >
           {state.message}
         </div>

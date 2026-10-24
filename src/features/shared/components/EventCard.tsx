@@ -52,7 +52,7 @@ export function EventCard({
           <div className="absolute right-3 top-3 flex items-center gap-1.5">
             {isRecent && (
               <span
-                className="live-pulse h-2.5 w-2.5 rounded-full bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.6)]"
+                className="live-pulse h-2.5 w-2.5 rounded-full bg-danger ring-2 ring-danger/30"
                 role="img"
                 aria-label="Recent event"
               />
@@ -72,12 +72,12 @@ export function EventCard({
     >
       <div className="flex items-center justify-between gap-2">
         <div className="flex min-w-0 flex-1 items-center gap-2">
-          <p className="truncate text-sm font-semibold text-(--sea-ink)">
+          <p className="truncate text-sm font-semibold text-foreground">
             {event.camera}
           </p>
           <time
             dateTime={new Date(event.start_time * 1000).toISOString()}
-            className="shrink-0 text-xs text-(--sea-ink-soft)"
+            className="shrink-0 text-xs text-muted-foreground"
             suppressHydrationWarning
           >
             {formatRelativeTime(event.start_time)}
@@ -92,7 +92,7 @@ export function EventCard({
         />
       </div>
       {event.zones.length > 0 && (
-        <p className="mt-1 truncate text-xs text-(--sea-ink-soft)">
+        <p className="mt-1 truncate text-xs text-muted-foreground">
           {event.zones.join(' · ')}
         </p>
       )}
