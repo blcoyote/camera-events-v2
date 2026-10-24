@@ -10,10 +10,6 @@ import {
   MAX_LIVE_VIEW_REFRESH_SECONDS,
   LIVE_VIEW_REFRESH_STEP,
 } from '#/features/shared/hooks/useLiveViewRefreshInterval'
-import { useTheme } from '#/features/shared/hooks/useTheme'
-import type { ThemeMode } from '#/features/shared/hooks/useTheme'
-import { usePalette } from '#/features/shared/hooks/usePalette'
-import type { Palette } from '#/features/shared/hooks/usePalette'
 import { NotificationSettings } from '../components/NotificationSettings'
 import { AdminNotificationMute } from '../components/AdminNotificationMute'
 
@@ -24,32 +20,11 @@ export function getSettingsContent(): { heading: string; description: string } {
   }
 }
 
-const themeOptions: { value: ThemeMode; label: string }[] = [
-  { value: 'light', label: 'Light' },
-  { value: 'dark', label: 'Dark' },
-  { value: 'auto', label: 'System' },
-]
-
-const paletteOptions: { value: Palette; label: string }[] = [
-  { value: 'ocean', label: 'Ocean' },
-  { value: 'sunset', label: 'Sunset' },
-  { value: 'slate', label: 'Slate' },
-]
-
-const pillClass = (active: boolean) =>
-  `inline-flex min-h-11 items-center rounded-full border px-4 py-2 text-sm font-semibold transition hover:-translate-y-0.5 ${
-    active
-      ? 'border-(--accent-emphasis-border) bg-(--accent-emphasis-bg) text-(--lagoon-deep)'
-      : 'border-(--chip-line) bg-(--chip-bg) text-(--sea-ink-soft) hover:text-(--sea-ink)'
-  }`
-
 export function SettingsPage() {
   const content = getSettingsContent()
   const [eventLimit, setEventLimit] = useEventLimit()
   const [liveViewRefreshSeconds, setLiveViewRefreshSeconds] =
     useLiveViewRefreshInterval()
-  const { mode, setTheme } = useTheme()
-  const { palette, setPalette } = usePalette()
 
   return (
     <main id="main-content" className="page-wrap px-4 pb-8 pt-6 sm:pt-14">
@@ -60,49 +35,6 @@ export function SettingsPage() {
         <h1 className="display-title mb-0 max-w-3xl text-2xl leading-tight font-bold tracking-tight text-(--sea-ink) sm:text-4xl">
           {content.heading}
         </h1>
-      </section>
-
-      <section className="island-shell mt-6 rounded-4xl px-6 py-8 sm:px-10 sm:py-10">
-        <h2 className="mb-6 text-lg font-semibold text-(--sea-ink)">
-          Appearance
-        </h2>
-        <fieldset>
-          <legend className="text-sm font-medium text-(--sea-ink)">
-            Theme
-          </legend>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {themeOptions.map((opt) => (
-              <button
-                key={opt.value}
-                type="button"
-                onClick={() => setTheme(opt.value)}
-                aria-pressed={mode === opt.value}
-                className={pillClass(mode === opt.value)}
-              >
-                {opt.label}
-              </button>
-            ))}
-          </div>
-        </fieldset>
-
-        <fieldset className="mt-6">
-          <legend className="text-sm font-medium text-(--sea-ink)">
-            Color palette
-          </legend>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {paletteOptions.map((opt) => (
-              <button
-                key={opt.value}
-                type="button"
-                onClick={() => setPalette(opt.value)}
-                aria-pressed={palette === opt.value}
-                className={pillClass(palette === opt.value)}
-              >
-                {opt.label}
-              </button>
-            ))}
-          </div>
-        </fieldset>
       </section>
 
       <section className="island-shell mt-6 rounded-4xl px-6 py-8 sm:px-10 sm:py-10">

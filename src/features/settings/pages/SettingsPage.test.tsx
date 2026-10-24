@@ -5,24 +5,9 @@ import '@testing-library/jest-dom/vitest'
 import React from 'react'
 import { SettingsPage, getSettingsContent } from './SettingsPage'
 
-const mockSetTheme = vi.fn()
-const mockSetPalette = vi.fn()
 const mockSetEventLimit = vi.fn()
 const mockSetLiveViewRefreshSeconds = vi.fn()
 
-vi.mock('#/features/shared/hooks/useTheme', () => ({
-  useTheme: vi.fn(() => ({
-    mode: 'light',
-    setTheme: mockSetTheme,
-    cycleTheme: vi.fn(),
-  })),
-}))
-vi.mock('#/features/shared/hooks/usePalette', () => ({
-  usePalette: vi.fn(() => ({
-    palette: 'ocean',
-    setPalette: mockSetPalette,
-  })),
-}))
 vi.mock('#/features/shared/hooks/useEventLimit', () => ({
   useEventLimit: vi.fn(() => [100, mockSetEventLimit]),
   MIN_EVENT_LIMIT: 25,
@@ -42,8 +27,6 @@ vi.mock('./NotificationSettings', () => ({
 
 afterEach(() => {
   cleanup()
-  mockSetTheme.mockReset()
-  mockSetPalette.mockReset()
   mockSetEventLimit.mockReset()
   mockSetLiveViewRefreshSeconds.mockReset()
 })
@@ -65,58 +48,14 @@ describe('SettingsPage', () => {
     ).toBeInTheDocument()
   })
 
-  it('renders Light, Dark, and System theme buttons', () => {
+  it('does not render Theme or Palette controls', () => {
     render(<SettingsPage />)
-    expect(screen.getByRole('button', { name: 'Light' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Dark' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'System' })).toBeInTheDocument()
-  })
-
-  it('marks the Light button as aria-pressed="true" when mode is light', () => {
-    render(<SettingsPage />)
-    expect(screen.getByRole('button', { name: 'Light' })).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    )
-  })
-
-  it('marks the Dark button as aria-pressed="false" when mode is light', () => {
-    render(<SettingsPage />)
-    expect(screen.getByRole('button', { name: 'Dark' })).toHaveAttribute(
-      'aria-pressed',
-      'false',
-    )
-  })
-
-  it('calls setTheme("dark") when the Dark button is clicked', () => {
-    render(<SettingsPage />)
-    fireEvent.click(screen.getByRole('button', { name: 'Dark' }))
-    expect(mockSetTheme).toHaveBeenCalledWith('dark')
-  })
-
-  it('renders Ocean, Sunset, and Slate palette buttons', () => {
-    render(<SettingsPage />)
-    expect(screen.getByRole('button', { name: 'Ocean' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Sunset' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Slate' })).toBeInTheDocument()
-  })
-
-  it('marks the Ocean palette button as aria-pressed="true" when palette is ocean', () => {
-    render(<SettingsPage />)
-    expect(screen.getByRole('button', { name: 'Ocean' })).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    )
-    expect(screen.getByRole('button', { name: 'Sunset' })).toHaveAttribute(
-      'aria-pressed',
-      'false',
-    )
-  })
-
-  it('calls setPalette("sunset") when the Sunset button is clicked', () => {
-    render(<SettingsPage />)
-    fireEvent.click(screen.getByRole('button', { name: 'Sunset' }))
-    expect(mockSetPalette).toHaveBeenCalledWith('sunset')
+    expect(screen.queryByText(/^theme$/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/palette/i)).not.toBeInTheDocument()
+    expect(screen.queryByText('Appearance')).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: 'Dark' }),
+    ).not.toBeInTheDocument()
   })
 
   it('renders the event limit slider with the value from the hook', () => {

@@ -1,7 +1,6 @@
 import { useState, useRef } from 'react'
 import { Link, useRouteContext } from '@tanstack/react-router'
 import { Menu } from 'lucide-react'
-import ThemeToggle from './ThemeToggle'
 import { AvatarMenu } from './AvatarMenu'
 import { NavDrawer } from './NavDrawer'
 import { useStandaloneAuth } from '#/features/auth/hooks/useStandaloneAuth'
@@ -134,10 +133,6 @@ export default function Header() {
         )}
 
         <div className="ml-auto flex items-center gap-2">
-          <div className="sm:flex">
-            <ThemeToggle />
-          </div>
-
           {state.showSignIn ? (
             <a
               href={state.signInHref}
