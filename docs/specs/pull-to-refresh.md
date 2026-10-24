@@ -12,9 +12,10 @@ The app currently has no pull-to-refresh capability. Data is fetched server-side
 
 iOS Safari (both in-browser and standalone PWA) has a native pull-to-refresh that performs a full page reload. This competes with any custom pull-to-refresh gesture.
 
-- `overscroll-behavior-y: contain` on `<html>` or `<body>` does **not** suppress the native pull-to-refresh on iOS Safari (it works on Chrome/Android/desktop only).
-- The reliable cross-platform approach: intercept `touchmove` events and call `preventDefault()` when the custom gesture is active (user is pulling down from `scrollTop === 0`). This suppresses the native iOS refresh without breaking normal scrolling.
-- Set `overscroll-behavior-y: contain` on `<body>` as well — it handles Chrome/Android/desktop natively and is a no-op on iOS.
+- Safari 16+ supports `overscroll-behavior`, but for the page scroller it reads the property from the root element (`<html>`) only. A rule on `<body>` is ignored by Safari; Chrome also accepts it on `<body>`, which is why the original `body { overscroll-behavior-y: contain }` fixed Android but not iOS.
+- `contain` stops scroll chaining but keeps the rubber-band bounce; `none` removes the bounce and the native pull-to-refresh.
+- The hook's `touchmove` `preventDefault()` cannot suppress the iOS gesture on its own: it waits ~5px to lock the swipe direction, and iOS ignores `preventDefault()` once the first `touchmove` of a gesture went uncancelled. The result was a double refresh — our indicator plus Safari's bounce dragging the sticky header down.
+- **Current approach (iOS 16+ only):** `html { overscroll-behavior-y: none; }` in `src/styles.css`. This applies to every page, so the native pull-to-refresh and the bounce are gone app-wide, including at the bottom of lists and on pages without our gesture. The hook's touch handling is left unchanged. iOS < 16 is not supported for this behaviour. See `docs/memory/gotchas/ios-overscroll-behavior-on-html.md`.
 
 ### PWA standalone mode
 
@@ -211,7 +212,7 @@ The `router.invalidate()` call re-runs the route loader, which fetches fresh dat
 
 **File:** `src/styles.css`
 
-Add `overscroll-behavior-y: contain` to `body` to suppress native pull-to-refresh on Chrome/Android. This is a no-op on iOS Safari.
+Add `overscroll-behavior-y: none` to `html` to suppress the native pull-to-refresh and rubber-band bounce on iOS Safari 16+, Android Chrome and desktop. It must be on `html`, not `body` — Safari ignores it on `body`.
 
 ### Dependencies
 
@@ -228,7 +229,7 @@ No new npm packages. The implementation uses:
 - Browser-only globals (`window`, `navigator`, `document`, `TouchEvent`) must only be accessed in `useEffect` or event handlers
 - Touch event listeners must use `{ passive: false }` to allow `preventDefault()`
 - The gesture must not interfere with horizontal scrolling (filter bar scroll) or other touch interactions
-- `overscroll-behavior-y: contain` must not break any existing scroll behavior
+- `overscroll-behavior-y: none` must not break any existing scroll behavior (it removes the bounce app-wide by design)
 - The feature must not add any new npm dependencies
 
 ## Acceptance Criteria
@@ -240,7 +241,7 @@ No new npm packages. The implementation uses:
 | AC-3  | Cache bypass                      | After pull-to-refresh, server fetches directly from Frigate (cache cleared); verified by checking response freshness |
 | AC-4  | iOS Safari standalone             | Custom gesture works in iOS standalone PWA; native pull-to-refresh is suppressed                                     |
 | AC-5  | iOS Safari in-browser             | Custom gesture works in iOS Safari browser; native pull-to-refresh is suppressed                                     |
-| AC-6  | Android Chrome                    | Custom gesture works; native Chrome pull-to-refresh is suppressed via `overscroll-behavior-y: contain`               |
+| AC-6  | Android Chrome                    | Custom gesture works; native Chrome pull-to-refresh is suppressed via `html { overscroll-behavior-y: none }`         |
 | AC-7  | Cancel before threshold           | Releasing before threshold resets the indicator; no data fetch occurs                                                |
 | AC-8  | Not at scroll top                 | Pulling down when scrolled partway down scrolls normally; no refresh triggered                                       |
 | AC-9  | Visual indicator                  | Indicator shows pull progress, rotates arrow at threshold, shows spinner during fetch                                |
