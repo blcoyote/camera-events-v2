@@ -59,6 +59,7 @@ this vault is meant to be used.
   arrives before (and sometimes instead of) the event row
 - [[gotchas/unlayered-css-beats-tailwind-utilities]] — an unlayered rule in `src/styles.css` beats every utility; element rules go in `@layer base`
 - [[gotchas/ios-status-bar-ignores-app-theme]] — iOS standalone status bar follows the system appearance, not the app's light/dark toggle; accepted
+- [[gotchas/ios-overscroll-behavior-on-html]] — Safari only honours `overscroll-behavior` on `html`; `none` there stops the native pull-to-refresh and bounce
 
 ## 🧪 Conventions
 

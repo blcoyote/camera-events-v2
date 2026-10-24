@@ -220,10 +220,16 @@
     min-height: 100%;
   }
 
+  /* Suppresses the native pull-to-refresh and rubber-band so only our
+     usePullToRefresh gesture runs. Must be on html: Safari reads the page
+     scroller's overscroll-behavior from the root element, not body. */
+  html {
+    overscroll-behavior-y: none;
+  }
+
   body {
     margin: 0;
     padding-bottom: env(safe-area-inset-bottom);
-    overscroll-behavior-y: contain;
     color: var(--foreground);
     background-color: var(--background);
     font-family: var(--font-sans);
