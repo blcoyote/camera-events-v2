@@ -141,9 +141,10 @@ size="icon">` with lucide `SunIcon` / `MoonIcon` / `SunMoonIcon` for
   avatar, shown for signed-in and signed-out users. Until mounted it renders
   the auto icon (server snapshot) so SSR markup matches.
 - `src/features/settings/components/AppearanceSettings.tsx`: a `Card` titled
-  **Appearance** with a `role="radiogroup"` `aria-label="Theme"` of three
-  `Toggle`s (Light / Dark / System), `pressed` = current mode, `role="radio"`
-  and `aria-checked`. Rendered in `SettingsPage.tsx` right after the hero card.
+  **Appearance** with a `role="group"` `aria-label="Theme"` of three
+  `Toggle`s (Light / Dark / System), `pressed` (`aria-pressed`) = current mode.
+  Toggle buttons rather than radios: radios would need arrow-key roving focus.
+  Rendered in `SettingsPage.tsx` right after the hero card.
 
 ## Platform notes
 

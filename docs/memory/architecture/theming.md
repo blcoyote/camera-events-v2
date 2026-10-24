@@ -125,9 +125,10 @@ Photo overlays (`bg-black/50 text-white` and the like) are mode-independent.
   the server snapshot.
 - **Settings `AppearanceSettings`**
   (`src/features/settings/components/AppearanceSettings.tsx`):
-  a card titled **Appearance** with a `role="radiogroup"` labelled `Theme`. It
-  holds three toggles (Light / Dark / System). Each is `role="radio"` with
-  `aria-checked`, and its pressed state matches the current mode. It is rendered
+  a card titled **Appearance** with a `role="group"` labelled `Theme`. It
+  holds three toggle buttons (Light / Dark / System); `aria-pressed` marks the
+  current mode. Toggle buttons, not radios, because the radio pattern would
+  need arrow-key roving focus. It is rendered
   in `SettingsPage.tsx` below the hero card.
 
 ## Theme colour and platform
