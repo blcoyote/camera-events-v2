@@ -173,20 +173,36 @@ size="icon">` with lucide `SunIcon` / `MoonIcon` / `SunMoonIcon` for
 
 ## Tasks
 
-Model column: **S** = Sonnet subagent, **H** = Haiku subagent, **Owner** =
-human. Every chunk is TDD (red → green → refactor) and must pass
-`bun run test`, `bun run lint`, `bun x tsc --noEmit` before handing back.
+Model: **S** = Sonnet subagent, **H** = Haiku subagent, **Owner** = human.
+Each leaf task is one subagent run: a few named files, exact values, tests
+first, and the gates `bun run test`, `bun run lint`, `bun x tsc --noEmit`.
+Full instructions live in each bd issue (`bd show <id>`). Tasks `.1`, `.3`,
+`.4`, `.7` and `.8` are containers, closed when their subtasks are.
 
-| Task     | Model | Depends on | Scope                                                                                         |
-| -------- | ----- | ---------- | --------------------------------------------------------------------------------------------- |
-| ce-5hb.1 | S     |            | Token role split in `styles.css` + Button/Dialog/Sheet rewires + literal-placement guard test |
-| ce-5hb.2 | H     | .1         | `:root.dark` block with the exact values above + parity test                                  |
-| ce-5hb.3 | S     |            | `themeMode.ts` + `useTheme.ts` (store, persistence, auto listener, theme-color)               |
-| ce-5hb.4 | S     | .3         | Blocking init script in `__root.tsx` + `suppressHydrationWarning`                             |
-| ce-5hb.5 | H     | .3         | Header `ThemeToggle`                                                                          |
-| ce-5hb.6 | H     | .3         | Settings `AppearanceSettings` segmented control                                               |
-| ce-5hb.7 | H     | .1, .2     | Docs: DS dark addendum, tokens.json, theming note, iOS gotcha, CLAUDE.md/AGENTS.md wording    |
-| ce-5hb.8 | S     | .2, .4–.6  | e2e no-flash + persistence test; dark visual QA sweep with screenshots; fix token-level gaps  |
-| ce-5hb.9 | Owner | .8         | Device QA on iOS and Android                                                                  |
+| Task       | Model | After     | Scope                                                                     |
+| ---------- | ----- | --------- | ------------------------------------------------------------------------- |
+| ce-5hb.1.1 | H     |           | `--gl-accent-fill(-hover)`, `primary-hover`, Button hover                 |
+| ce-5hb.1.2 | H     | .1.1      | `--gl-danger-fill` → `--destructive`; creates `src/styles.tokens.test.ts` |
+| ce-5hb.1.3 | H     | .1.2      | `--gl-overlay` + `bg-overlay` in Dialog and Sheet                         |
+| ce-5hb.1.4 | H     | .1.3      | Glass fallbacks, backdrop blobs, event-card hover shadow tokens           |
+| ce-5hb.1.5 | S     | .1.4      | Guard test: colour literals only inside `:root` blocks                    |
+| ce-5hb.2   | H     | .1        | `:root.dark` block with the dark values + parity test                     |
+| ce-5hb.3.1 | H     |           | `themeMode.ts` pure helpers                                               |
+| ce-5hb.3.2 | H     | .3.1      | `applyResolvedTheme` DOM helper                                           |
+| ce-5hb.3.3 | S     | .3.2      | `useTheme` store: shared state + persistence                              |
+| ce-5hb.3.4 | S     | .3.3      | `useTheme`: follow live system changes in auto                            |
+| ce-5hb.4.1 | S     | .3        | `buildThemeInitScript()` pure builder                                     |
+| ce-5hb.4.2 | H     | .4.1      | Inject the script in `__root.tsx`, `suppressHydrationWarning`             |
+| ce-5hb.5   | H     | .3        | Header `ThemeToggle`                                                      |
+| ce-5hb.6   | H     | .3        | Settings `AppearanceSettings`                                             |
+| ce-5hb.7.1 | H     | .1, .2    | `tokens.json` + DS README dark addendum                                   |
+| ce-5hb.7.2 | H     | .1, .2    | Vault: theming note + iOS status bar gotcha                               |
+| ce-5hb.7.3 | H     | .1, .2    | CLAUDE.md / AGENTS.md / light spec wording                                |
+| ce-5hb.8.1 | S     | .2, .4–.6 | e2e: no flash, toggle cycles and persists                                 |
+| ce-5hb.8.2 | S     | .8.1      | Dark visual QA sweep with screenshots                                     |
+| ce-5hb.9   | Owner | .8        | Device QA on iOS and Android                                              |
 
-.1 and .3 can run in parallel; .5 and .6 can run in parallel.
+Parallel lanes: `.1.x` (CSS) and `.3.x` (runtime) start together. After
+`.3`: `.4.x`, `.5` and `.6` run in parallel. `.7.x` run in parallel once
+the tokens land. The `.1.x` chain is sequential because every step edits
+`src/styles.css`.
