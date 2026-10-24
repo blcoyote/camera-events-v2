@@ -75,7 +75,7 @@ export default function Header() {
   }
 
   return (
-    <header className="glass sticky top-0 z-50 border-b border-border pt-[env(safe-area-inset-top)]">
+    <header className="glass-header sticky top-0 z-50 border-b border-border pt-[env(safe-area-inset-top)]">
       <nav
         aria-label="Site navigation"
         className="page-wrap flex items-center gap-x-2 py-1.5 sm:gap-x-3 sm:py-2"
