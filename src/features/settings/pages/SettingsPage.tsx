@@ -10,6 +10,11 @@ import {
   MAX_LIVE_VIEW_REFRESH_SECONDS,
   LIVE_VIEW_REFRESH_STEP,
 } from '#/features/shared/hooks/useLiveViewRefreshInterval'
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+} from '#/features/shared/components/ui/card'
 import { NotificationSettings } from '../components/NotificationSettings'
 import { AdminNotificationMute } from '../components/AdminNotificationMute'
 
@@ -28,24 +33,24 @@ export function SettingsPage() {
 
   return (
     <main id="main-content" className="page-wrap px-4 pb-8 pt-6 sm:pt-14">
-      <section className="island-shell rise-in relative overflow-hidden rounded-4xl px-5 py-6 sm:px-8 sm:py-8">
-        <div className="pointer-events-none absolute -left-20 -top-24 h-56 w-56 rounded-full bg-[radial-gradient(circle,var(--hero-a),transparent_66%)]" />
-        <div className="pointer-events-none absolute -bottom-20 -right-20 h-56 w-56 rounded-full bg-[radial-gradient(circle,var(--hero-b),transparent_66%)]" />
-        <p className="island-kicker mb-1">Account</p>
-        <h1 className="display-title mb-0 max-w-3xl text-2xl leading-tight font-bold tracking-tight text-(--sea-ink) sm:text-4xl">
+      <Card variant="hero" className="rise-in">
+        <p className="eyebrow mb-1">Account</p>
+        <h1 className="mb-0 max-w-3xl text-3xl font-semibold tracking-tight leading-display text-foreground sm:text-4xl">
           {content.heading}
         </h1>
-      </section>
+      </Card>
 
-      <section className="island-shell mt-6 rounded-4xl px-6 py-8 sm:px-10 sm:py-10">
-        <h2 className="mb-6 text-lg font-semibold text-(--sea-ink)">
-          Camera Events
-        </h2>
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle role="heading" aria-level={2}>
+            Camera Events
+          </CardTitle>
+        </CardHeader>
 
         <div className="flex flex-col gap-3">
           <label
             htmlFor="event-limit-slider"
-            className="text-sm font-medium text-(--sea-ink)"
+            className="text-sm font-medium text-foreground"
           >
             Number of events to display
           </label>
@@ -63,31 +68,33 @@ export function SettingsPage() {
               aria-valuemin={MIN_EVENT_LIMIT}
               aria-valuemax={MAX_EVENT_LIMIT}
               aria-valuenow={eventLimit}
-              className="h-2 flex-1 cursor-pointer appearance-none rounded-full bg-(--chip-line) accent-(--sea-accent)"
+              className="min-h-11 w-full flex-1 cursor-pointer accent-brand-strong"
             />
             <span
-              className="min-w-16 rounded-lg border border-(--chip-line) bg-(--chip-bg) px-3 py-1.5 text-center text-sm font-medium text-(--sea-ink) tabular-nums"
+              className="min-w-16 rounded-input border border-border bg-surface-warm px-3 py-1.5 text-center text-sm font-medium text-foreground tabular-nums"
               aria-live="polite"
             >
               {eventLimit} events
             </span>
           </div>
-          <p id="event-limit-desc" className="text-xs text-(--sea-ink-soft)">
+          <p id="event-limit-desc" className="text-xs text-muted-foreground">
             Controls how many events are loaded on the Camera Events page.
             Range: {MIN_EVENT_LIMIT}–{MAX_EVENT_LIMIT}.
           </p>
         </div>
-      </section>
+      </Card>
 
-      <section className="island-shell mt-6 rounded-4xl px-6 py-8 sm:px-10 sm:py-10">
-        <h2 className="mb-6 text-lg font-semibold text-(--sea-ink)">
-          Live View
-        </h2>
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle role="heading" aria-level={2}>
+            Live View
+          </CardTitle>
+        </CardHeader>
 
         <div className="flex flex-col gap-3">
           <label
             htmlFor="live-view-refresh-slider"
-            className="text-sm font-medium text-(--sea-ink)"
+            className="text-sm font-medium text-foreground"
           >
             Refresh interval
           </label>
@@ -107,10 +114,10 @@ export function SettingsPage() {
               aria-valuemin={MIN_LIVE_VIEW_REFRESH_SECONDS}
               aria-valuemax={MAX_LIVE_VIEW_REFRESH_SECONDS}
               aria-valuenow={liveViewRefreshSeconds}
-              className="h-2 flex-1 cursor-pointer appearance-none rounded-full bg-(--chip-line) accent-(--sea-accent)"
+              className="min-h-11 w-full flex-1 cursor-pointer accent-brand-strong"
             />
             <span
-              className="min-w-16 rounded-lg border border-(--chip-line) bg-(--chip-bg) px-3 py-1.5 text-center text-sm font-medium text-(--sea-ink) tabular-nums"
+              className="min-w-16 rounded-input border border-border bg-surface-warm px-3 py-1.5 text-center text-sm font-medium text-foreground tabular-nums"
               aria-live="polite"
             >
               {liveViewRefreshSeconds}s
@@ -118,14 +125,14 @@ export function SettingsPage() {
           </div>
           <p
             id="live-view-refresh-desc"
-            className="text-xs text-(--sea-ink-soft)"
+            className="text-xs text-muted-foreground"
           >
             How often the live camera snapshot refreshes. Range:{' '}
             {MIN_LIVE_VIEW_REFRESH_SECONDS}–{MAX_LIVE_VIEW_REFRESH_SECONDS}{' '}
             seconds.
           </p>
         </div>
-      </section>
+      </Card>
       <NotificationSettings />
       <AdminNotificationMute />
     </main>

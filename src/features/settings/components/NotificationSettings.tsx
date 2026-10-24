@@ -3,6 +3,7 @@ import { usePushSubscription } from '../hooks/usePushSubscription'
 import { NotificationSection } from './NotificationSection'
 import { CameraPreferences } from './CameraPreferences'
 import type { CameraPref } from './CameraPreferences'
+import { Button } from '#/features/shared/components/ui/button'
 import { AvailabilityAlertsToggle } from './AvailabilityAlertsToggle'
 
 export function NotificationSettings() {
@@ -81,7 +82,7 @@ export function NotificationSettings() {
   if (!isSupported) {
     return (
       <NotificationSection>
-        <p className="text-sm text-(--sea-ink-soft)">
+        <p className="text-sm text-muted-foreground">
           Push notifications are not supported in this browser.
         </p>
       </NotificationSection>
@@ -92,7 +93,7 @@ export function NotificationSettings() {
   if (!isPushEnabled) {
     return (
       <NotificationSection>
-        <p className="text-sm text-(--sea-ink-soft)">
+        <p className="text-sm text-muted-foreground">
           Push notifications are not available on this server.
         </p>
       </NotificationSection>
@@ -103,10 +104,10 @@ export function NotificationSettings() {
   if (permissionState === 'denied' && !isSubscribed) {
     return (
       <NotificationSection>
-        <p className="text-sm text-(--sea-ink-soft)">
+        <p className="text-sm text-muted-foreground">
           Notifications are blocked in your browser settings.
         </p>
-        <p className="mt-2 text-xs text-(--sea-ink-soft)">
+        <p className="mt-2 text-xs text-muted-foreground">
           To unblock: in <strong>Chrome</strong>, click the lock icon in the
           address bar &gt; Site settings &gt; Notifications &gt; Allow. In{' '}
           <strong>Safari</strong>, go to Settings &gt; Websites &gt;
@@ -189,30 +190,25 @@ export function NotificationSettings() {
           <>
             <div className="flex items-center gap-3">
               <span
-                className="inline-block h-2.5 w-2.5 rounded-full bg-emerald-500"
+                className="inline-block h-2.5 w-2.5 rounded-full bg-success"
                 aria-hidden="true"
               />
-              <span className="text-sm font-medium text-(--sea-ink)">
+              <span className="text-sm font-medium text-foreground">
                 Notifications are enabled
               </span>
             </div>
             <div className="flex flex-wrap items-center gap-3">
-              <button
-                type="button"
+              <Button
+                variant="secondary"
+                size="sm"
                 onClick={handleUnsubscribe}
                 disabled={isLoading}
-                className="min-h-11 rounded-full border border-(--chip-line) bg-(--chip-bg) px-4 py-2 text-sm font-medium text-(--sea-ink) transition hover:bg-(--chip-bg)/80 disabled:opacity-50"
               >
                 {isLoading ? 'Working...' : 'Disable Notifications'}
-              </button>
-              <button
-                type="button"
-                onClick={handleSendTest}
-                disabled={isLoading}
-                className="min-h-11 rounded-full border border-(--accent-muted-border) bg-(--accent-muted-bg) px-4 py-2 text-sm font-semibold text-(--lagoon-deep) transition hover:bg-(--accent-muted-hover-bg) disabled:opacity-50"
-              >
+              </Button>
+              <Button size="sm" onClick={handleSendTest} disabled={isLoading}>
                 {isLoading ? 'Sending...' : 'Send Test Notification'}
-              </button>
+              </Button>
             </div>
             <AvailabilityAlertsToggle
               enabled={availabilityEnabled}
@@ -228,29 +224,24 @@ export function NotificationSettings() {
           </>
         ) : (
           <>
-            <p className="text-sm text-(--sea-ink-soft)">
+            <p className="text-sm text-muted-foreground">
               Enable push notifications to receive alerts on this device.
             </p>
-            <button
-              type="button"
+            <Button
+              className="w-fit"
               onClick={handleSubscribe}
               disabled={isLoading}
-              className="min-h-11 w-fit rounded-full border border-(--accent-muted-border) bg-(--accent-muted-bg) px-5 py-2.5 text-sm font-semibold text-(--lagoon-deep) transition hover:bg-(--accent-muted-hover-bg) disabled:opacity-50"
             >
               {isLoading ? 'Working...' : 'Enable Notifications'}
-            </button>
+            </Button>
           </>
         )}
 
         {/* Status messages */}
         <div aria-live="polite" className="min-h-5">
-          {error && (
-            <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
-          )}
+          {error && <p className="text-sm text-danger-text">{error}</p>}
           {testResult && !error && (
-            <p className="text-sm text-emerald-600 dark:text-emerald-400">
-              {testResult}
-            </p>
+            <p className="text-sm text-success-text">{testResult}</p>
           )}
         </div>
       </div>

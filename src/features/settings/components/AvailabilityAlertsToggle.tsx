@@ -1,3 +1,6 @@
+import { Card } from '#/features/shared/components/ui/card'
+import { Switch } from '#/features/shared/components/ui/switch'
+
 export function AvailabilityAlertsToggle({
   enabled,
   onToggle,
@@ -6,36 +9,20 @@ export function AvailabilityAlertsToggle({
   onToggle: (enabled: boolean) => void
 }) {
   return (
-    <div className="flex items-center justify-between gap-4 border-t border-(--chip-line) pt-5">
+    <Card variant="flat" className="flex items-center justify-between gap-4">
       <div>
-        <p className="text-sm font-medium text-(--sea-ink)">
+        <p className="text-sm font-medium text-foreground">
           Camera Offline Notifications
         </p>
-        <p className="mt-0.5 text-xs text-(--sea-ink-soft)">
+        <p className="mt-0.5 text-xs text-muted-foreground">
           Get notified when a camera stops sending video or comes back online.
         </p>
       </div>
-      <button
-        type="button"
-        role="switch"
-        aria-checked={enabled}
+      <Switch
         aria-label="Camera offline notifications"
-        onClick={() => onToggle(!enabled)}
-        className="relative inline-flex min-h-11 shrink-0 cursor-pointer items-center px-1"
-      >
-        <span
-          className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors ${
-            enabled ? 'bg-emerald-500' : 'bg-(--chip-line)'
-          }`}
-        >
-          <span
-            aria-hidden="true"
-            className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow ring-0 transition-transform ${
-              enabled ? 'translate-x-5' : 'translate-x-0'
-            }`}
-          />
-        </span>
-      </button>
-    </div>
+        checked={enabled}
+        onCheckedChange={onToggle}
+      />
+    </Card>
   )
 }

@@ -1,3 +1,6 @@
+import { Card } from '#/features/shared/components/ui/card'
+import { Switch } from '#/features/shared/components/ui/switch'
+
 export interface CameraPref {
   name: string
   enabled: boolean
@@ -17,11 +20,11 @@ export function CameraPreferences({
   onToggle: (camera: string, enabled: boolean) => void
 }) {
   return (
-    <div className="mt-2 border-t border-(--chip-line) pt-5">
-      <h3 className="mb-3 text-sm font-semibold text-(--sea-ink)">
+    <Card variant="flat" className="mt-2">
+      <h3 className="mb-3 text-sm font-semibold text-foreground">
         Camera Notifications
       </h3>
-      <p className="mb-4 text-xs text-(--sea-ink-soft)">
+      <p className="mb-4 text-xs text-muted-foreground">
         Choose which cameras send you push notifications.
       </p>
       {loading ? (
@@ -30,34 +33,18 @@ export function CameraPreferences({
         <ul className="flex flex-col gap-3">
           {cameras.map((cam) => (
             <li key={cam.name} className="flex items-center justify-between">
-              <span className="text-sm text-(--sea-ink)">
+              <span className="text-sm text-foreground">
                 {formatCameraName(cam.name)}
               </span>
-              <button
-                type="button"
-                role="switch"
-                aria-checked={cam.enabled}
+              <Switch
                 aria-label={`Notifications for ${formatCameraName(cam.name)}`}
-                onClick={() => onToggle(cam.name, !cam.enabled)}
-                className="relative inline-flex min-h-11 shrink-0 cursor-pointer items-center px-1"
-              >
-                <span
-                  className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors ${
-                    cam.enabled ? 'bg-emerald-500' : 'bg-(--chip-line)'
-                  }`}
-                >
-                  <span
-                    aria-hidden="true"
-                    className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow ring-0 transition-transform ${
-                      cam.enabled ? 'translate-x-5' : 'translate-x-0'
-                    }`}
-                  />
-                </span>
-              </button>
+                checked={cam.enabled}
+                onCheckedChange={(checked) => onToggle(cam.name, checked)}
+              />
             </li>
           ))}
         </ul>
       )}
-    </div>
+    </Card>
   )
 }
