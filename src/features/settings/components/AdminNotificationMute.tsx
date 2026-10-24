@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Button } from '#/features/shared/components/ui/button'
+import { Label } from '#/features/shared/components/ui/label'
 import {
   Card,
   CardHeader,
@@ -116,12 +117,7 @@ export function AdminNotificationMute() {
       </p>
       <div className="flex flex-wrap items-end gap-3">
         <div className="flex min-w-48 flex-col gap-1.5">
-          <label
-            htmlFor="admin-mute-duration"
-            className="text-sm font-medium text-foreground"
-          >
-            Mute duration
-          </label>
+          <Label htmlFor="admin-mute-duration">Mute duration</Label>
           <select
             id="admin-mute-duration"
             value={durationMs}

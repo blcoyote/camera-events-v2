@@ -10,6 +10,7 @@ import {
   MAX_LIVE_VIEW_REFRESH_SECONDS,
   LIVE_VIEW_REFRESH_STEP,
 } from '#/features/shared/hooks/useLiveViewRefreshInterval'
+import { Label } from '#/features/shared/components/ui/label'
 import { Slider } from '#/features/shared/components/ui/slider'
 import {
   Card,
@@ -50,12 +51,7 @@ export function SettingsPage() {
         </CardHeader>
 
         <div className="flex flex-col gap-3">
-          <label
-            id="event-limit-label"
-            className="text-sm font-medium text-foreground"
-          >
-            Number of events to display
-          </label>
+          <Label id="event-limit-label">Number of events to display</Label>
           <div className="flex items-center gap-4">
             <Slider
               min={MIN_EVENT_LIMIT}
@@ -87,12 +83,7 @@ export function SettingsPage() {
         </CardHeader>
 
         <div className="flex flex-col gap-3">
-          <label
-            id="live-view-refresh-label"
-            className="text-sm font-medium text-foreground"
-          >
-            Refresh interval
-          </label>
+          <Label id="live-view-refresh-label">Refresh interval</Label>
           <div className="flex items-center gap-4">
             <Slider
               min={MIN_LIVE_VIEW_REFRESH_SECONDS}
