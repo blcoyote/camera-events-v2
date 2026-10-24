@@ -5,7 +5,7 @@ export function EventThumbnail({ eventId }: { eventId: string }) {
 
   if (failed) {
     return (
-      <div className="flex aspect-video items-center justify-center bg-(--surface) text-(--sea-ink-soft)">
+      <div className="flex aspect-video items-center justify-center bg-card text-muted-foreground">
         <svg
           width="32"
           height="32"

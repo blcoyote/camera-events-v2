@@ -1,7 +1,7 @@
 export function SkeletonCard({ index }: { index: number }) {
   return (
     <div
-      className="event-card event-card-enter overflow-hidden"
+      className="event-card event-card-enter glass rounded-card overflow-hidden"
       style={{ '--i': Math.min(index, 5) } as React.CSSProperties}
       aria-hidden="true"
     >
