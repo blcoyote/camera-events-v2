@@ -104,11 +104,17 @@ export function _resetReviewGate(): void {
  */
 export async function handleReviewAlert(
   msg: FrigateReviewMessage,
-  verify = waitForPersistedEvent,
+  verify: (
+    ids: string[] | (() => string[]),
+  ) => Promise<FrigateEvent | null> = waitForPersistedEvent,
 ): Promise<void> {
   let event: FrigateEvent | null = null
   try {
-    event = await verify(msg.detections)
+    // Re-read each polling round so alert updates that add detection ids
+    // while verification is pending are picked up.
+    event = await verify(
+      () => reviewGate.detectionsFor(msg.reviewId) ?? msg.detections,
+    )
   } catch {
     event = null
   }

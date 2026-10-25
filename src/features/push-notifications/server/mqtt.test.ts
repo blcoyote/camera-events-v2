@@ -426,7 +426,9 @@ describe('handleReviewAlert', () => {
 
     await handleReviewAlert(msg, verify)
 
-    expect(verify).toHaveBeenCalledWith(msg.detections)
+    expect(verify).toHaveBeenCalledWith(expect.any(Function))
+    const source = verify.mock.calls[0][0] as () => string[]
+    expect(source()).toEqual(msg.detections)
     expect(notifyMock).toHaveBeenCalledWith(
       'handle_cam_ok',
       [
@@ -524,7 +526,9 @@ describe('onFrigateMessage — frigate/reviews wiring', () => {
         { burstStart: true },
       ),
     )
-    expect(verifyMock).toHaveBeenCalledWith(['1713182400.123-abc'])
+    const source = verifyMock.mock.calls[0][0] as () => string[]
+    expect(typeof source).toBe('function')
+    expect(source()).toEqual(['1713182400.123-abc'])
   })
 
   it('verifies only once across repeated alert updates of the same review', async () => {
@@ -545,6 +549,40 @@ describe('onFrigateMessage — frigate/reviews wiring', () => {
     )
     await new Promise((r) => setTimeout(r, 0))
 
+    expect(verifyMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('re-reads merged detections from alert updates that arrive during verification', async () => {
+    const { onFrigateMessage } = await import('./mqtt')
+    let resolveVerify: (e: FrigateEvent | null) => void = () => {}
+    verifyMock.mockImplementation(
+      () =>
+        new Promise<FrigateEvent | null>((resolve) => {
+          resolveVerify = resolve
+        }),
+    )
+
+    onFrigateMessage(
+      'frigate/reviews',
+      makeReviewPayload({ id: 'merge-1', camera: 'merge_cam' }),
+    )
+    onFrigateMessage(
+      'frigate/reviews',
+      makeReviewPayload({
+        type: 'update',
+        id: 'merge-1',
+        camera: 'merge_cam',
+        detections: ['1713182400.123-abc', 'late-event'],
+      }),
+    )
+
+    expect(verifyMock).toHaveBeenCalledTimes(1)
+    const source = verifyMock.mock.calls[0][0] as () => string[]
+    expect(typeof source).toBe('function')
+    expect(source()).toEqual(['1713182400.123-abc', 'late-event'])
+
+    resolveVerify(makeFrigateEvent({ id: 'late-event' }))
+    await vi.waitFor(() => expect(notifyMock).toHaveBeenCalledTimes(1))
     expect(verifyMock).toHaveBeenCalledTimes(1)
   })
 

@@ -67,8 +67,12 @@ export type ReviewAlertDecision = 'notify' | 'skip'
  * severity `alert` on a `new` or `update` message.
  */
 export class ReviewAlertGate {
-  /** Insertion-ordered, so the first entry is always the oldest. */
-  private readonly tracked = new Set<string>()
+  /**
+   * Review id -> latest known detection ids. Insertion-ordered, so the first
+   * entry is always the oldest; merging updates a value in place and never
+   * refreshes that position.
+   */
+  private readonly tracked = new Map<string, string[]>()
 
   constructor(private readonly maxTracked = 500) {}
 
@@ -78,19 +82,36 @@ export class ReviewAlertGate {
       this.tracked.delete(msg.reviewId)
       return 'skip'
     }
+
+    const known = this.tracked.get(msg.reviewId)
+    if (known) {
+      this.merge(known, msg.detections)
+      return 'skip'
+    }
     if (msg.severity !== 'alert') return 'skip'
-    if (this.tracked.has(msg.reviewId)) return 'skip'
 
     if (this.tracked.size >= this.maxTracked) {
-      const oldest = this.tracked.values().next()
+      const oldest = this.tracked.keys().next()
       if (!oldest.done) this.tracked.delete(oldest.value)
     }
-    this.tracked.add(msg.reviewId)
+    this.tracked.set(msg.reviewId, [...new Set(msg.detections)])
     return 'notify'
+  }
+
+  /** Latest known detection ids (a copy) for a tracked review. */
+  detectionsFor(reviewId: string): string[] | undefined {
+    const known = this.tracked.get(reviewId)
+    return known ? [...known] : undefined
   }
 
   /** Verification failed: forget the review so a later alert update can retry. */
   release(reviewId: string): void {
     this.tracked.delete(reviewId)
+  }
+
+  private merge(known: string[], incoming: string[]): void {
+    for (const id of incoming) {
+      if (!known.includes(id)) known.push(id)
+    }
   }
 }

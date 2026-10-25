@@ -3,7 +3,9 @@ import type { FrigateEvent } from '#/features/shared/server/frigate/types'
 import type { FrigateResult } from '#/features/shared/server/frigate/config'
 import {
   VERIFY_ATTEMPTS,
+  VERIFY_BUDGET_MS,
   VERIFY_INTERVAL_MS,
+  VERIFY_LOOKUP_TIMEOUT_MS,
   waitForPersistedEvent,
 } from './event-verify'
 
@@ -37,6 +39,20 @@ const notFound: FrigateResult<FrigateEvent> = {
 
 function found(event: FrigateEvent): FrigateResult<FrigateEvent> {
   return { ok: true, data: event }
+}
+
+function makeClock(start = 0) {
+  let t = start
+  return {
+    now: () => t,
+    advance: (ms: number) => {
+      t += ms
+    },
+    sleep: vi.fn((ms: number) => {
+      t += ms
+      return Promise.resolve()
+    }),
+  }
 }
 
 describe('waitForPersistedEvent', () => {
@@ -208,10 +224,156 @@ describe('waitForPersistedEvent', () => {
     expect(fetchEvent).toHaveBeenCalledTimes(2)
   })
 
+  describe('time budget', () => {
+    it('stops once the budget is exhausted even if attempts remain', async () => {
+      const clock = makeClock()
+      const fetchEvent = vi.fn().mockResolvedValue(notFound)
+
+      const result = await waitForPersistedEvent(['a-1'], {
+        attempts: 100,
+        intervalMs: 2_000,
+        budgetMs: 5_000,
+        now: clock.now,
+        sleep: clock.sleep,
+        fetchEvent,
+      })
+
+      expect(result).toBeNull()
+      expect(fetchEvent).toHaveBeenCalledTimes(3)
+      expect(clock.now()).toBeLessThanOrEqual(5_000)
+    })
+
+    it('lets slow lookups consume the budget', async () => {
+      const clock = makeClock()
+      const fetchEvent = vi.fn(() => {
+        clock.advance(3_000)
+        return Promise.resolve(notFound)
+      })
+
+      const result = await waitForPersistedEvent(['a-1'], {
+        attempts: 100,
+        intervalMs: 2_000,
+        budgetMs: 10_000,
+        now: clock.now,
+        sleep: clock.sleep,
+        fetchEvent,
+      })
+
+      expect(result).toBeNull()
+      expect(clock.now()).toBeLessThanOrEqual(10_000)
+      expect(fetchEvent.mock.calls.length).toBeLessThanOrEqual(4)
+    })
+
+    it('caps each lookup timeout at min(lookup timeout, remaining budget)', async () => {
+      const clock = makeClock()
+      const fetchEvent = vi.fn().mockResolvedValue(notFound)
+
+      await waitForPersistedEvent(['a-1'], {
+        attempts: 100,
+        intervalMs: 2_000,
+        budgetMs: 5_000,
+        now: clock.now,
+        sleep: clock.sleep,
+        fetchEvent,
+      })
+
+      expect(fetchEvent.mock.calls.map((c) => c[1])).toEqual([
+        VERIFY_LOOKUP_TIMEOUT_MS,
+        VERIFY_LOOKUP_TIMEOUT_MS,
+        1_000,
+      ])
+    })
+
+    it('truncates the last sleep to the remaining budget', async () => {
+      const clock = makeClock()
+      const fetchEvent = vi.fn().mockResolvedValue(notFound)
+
+      await waitForPersistedEvent(['a-1'], {
+        attempts: 100,
+        intervalMs: 2_000,
+        budgetMs: 5_000,
+        now: clock.now,
+        sleep: clock.sleep,
+        fetchEvent,
+      })
+
+      expect(clock.sleep.mock.calls.map((c) => c[0])).toEqual([
+        2_000, 2_000, 1_000,
+      ])
+    })
+  })
+
+  describe('id source function', () => {
+    it('re-reads the ids every round', async () => {
+      const clock = makeClock()
+      const b = makeEvent({ id: 'b-2' })
+      const getIds = vi
+        .fn<() => string[]>()
+        .mockReturnValueOnce(['a-1'])
+        .mockReturnValue(['a-1', 'b-2'])
+      const fetchEvent = vi.fn((id: string) =>
+        Promise.resolve(id === 'b-2' ? found(b) : notFound),
+      )
+
+      const result = await waitForPersistedEvent(getIds, {
+        now: clock.now,
+        sleep: clock.sleep,
+        fetchEvent,
+      })
+
+      expect(result).toEqual(b)
+      expect(getIds).toHaveBeenCalledTimes(2)
+      expect(fetchEvent.mock.calls.map((c) => c[0])).toEqual([
+        'a-1',
+        'a-1',
+        'b-2',
+      ])
+    })
+
+    it('keeps polling through rounds with no ids and finds one added later', async () => {
+      const clock = makeClock()
+      const x = makeEvent({ id: 'x-1' })
+      const getIds = vi
+        .fn<() => string[]>()
+        .mockReturnValueOnce([])
+        .mockReturnValueOnce(['../bad'])
+        .mockReturnValue(['x-1'])
+      const fetchEvent = vi.fn().mockResolvedValue(found(x))
+
+      const result = await waitForPersistedEvent(getIds, {
+        now: clock.now,
+        sleep: clock.sleep,
+        fetchEvent,
+      })
+
+      expect(result).toEqual(x)
+      expect(fetchEvent).toHaveBeenCalledOnce()
+      expect(clock.sleep).toHaveBeenCalledTimes(2)
+    })
+
+    it('still gives up when the function never yields ids', async () => {
+      const clock = makeClock()
+      const fetchEvent = vi.fn()
+
+      const result = await waitForPersistedEvent(() => [], {
+        budgetMs: 5_000,
+        now: clock.now,
+        sleep: clock.sleep,
+        fetchEvent,
+      })
+
+      expect(result).toBeNull()
+      expect(fetchEvent).not.toHaveBeenCalled()
+      expect(clock.now()).toBeLessThanOrEqual(5_000)
+    })
+  })
+
   describe('defaults', () => {
     it('exports the documented default constants', () => {
       expect(VERIFY_ATTEMPTS).toBe(8)
       expect(VERIFY_INTERVAL_MS).toBe(2_000)
+      expect(VERIFY_BUDGET_MS).toBe(15_000)
+      expect(VERIFY_LOOKUP_TIMEOUT_MS).toBe(3_000)
     })
 
     it('uses default attempts and interval when options are omitted', async () => {

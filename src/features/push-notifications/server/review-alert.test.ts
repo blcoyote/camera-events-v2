@@ -236,4 +236,104 @@ describe('ReviewAlertGate', () => {
       'notify',
     )
   })
+
+  describe('detectionsFor', () => {
+    it('returns the detections of a tracked review', () => {
+      const gate = new ReviewAlertGate()
+      gate.consider(makeMsg({ detections: ['d1', 'd2'] }))
+      expect(gate.detectionsFor('r1')).toEqual(['d1', 'd2'])
+    })
+
+    it('returns undefined for an untracked review', () => {
+      const gate = new ReviewAlertGate()
+      expect(gate.detectionsFor('nope')).toBeUndefined()
+    })
+
+    it('merges new detections from an alert update and still skips', () => {
+      const gate = new ReviewAlertGate()
+      gate.consider(makeMsg({ detections: ['d1'] }))
+      expect(
+        gate.consider(makeMsg({ type: 'update', detections: ['d1', 'd2'] })),
+      ).toBe('skip')
+      expect(gate.detectionsFor('r1')).toEqual(['d1', 'd2'])
+    })
+
+    it('keeps existing ids first and appends new ones in order', () => {
+      const gate = new ReviewAlertGate()
+      gate.consider(makeMsg({ detections: ['d1', 'd2'] }))
+      gate.consider(makeMsg({ type: 'update', detections: ['d3', 'd2', 'd4'] }))
+      expect(gate.detectionsFor('r1')).toEqual(['d1', 'd2', 'd3', 'd4'])
+    })
+
+    it('does not duplicate ids', () => {
+      const gate = new ReviewAlertGate()
+      gate.consider(makeMsg({ detections: ['d1'] }))
+      gate.consider(makeMsg({ type: 'update', detections: ['d1', 'd1'] }))
+      expect(gate.detectionsFor('r1')).toEqual(['d1'])
+    })
+
+    it('merges detections from a detection-severity update of a tracked review', () => {
+      const gate = new ReviewAlertGate()
+      gate.consider(makeMsg({ detections: ['d1'] }))
+      expect(
+        gate.consider(
+          makeMsg({
+            type: 'update',
+            severity: 'detection',
+            detections: ['d1', 'd9'],
+          }),
+        ),
+      ).toBe('skip')
+      expect(gate.detectionsFor('r1')).toEqual(['d1', 'd9'])
+    })
+
+    it('does not track an untracked detection-severity review', () => {
+      const gate = new ReviewAlertGate()
+      gate.consider(makeMsg({ severity: 'detection' }))
+      expect(gate.detectionsFor('r1')).toBeUndefined()
+    })
+
+    it('returns a copy that callers cannot use to mutate the gate', () => {
+      const gate = new ReviewAlertGate()
+      gate.consider(makeMsg({ detections: ['d1'] }))
+      gate.detectionsFor('r1')?.push('evil')
+      expect(gate.detectionsFor('r1')).toEqual(['d1'])
+    })
+
+    it('does not alias the message detections array', () => {
+      const gate = new ReviewAlertGate()
+      const detections = ['d1']
+      gate.consider(makeMsg({ detections }))
+      detections.push('late')
+      expect(gate.detectionsFor('r1')).toEqual(['d1'])
+    })
+
+    it('is undefined after end', () => {
+      const gate = new ReviewAlertGate()
+      gate.consider(makeMsg())
+      gate.consider(makeMsg({ type: 'end' }))
+      expect(gate.detectionsFor('r1')).toBeUndefined()
+    })
+
+    it('is undefined after release', () => {
+      const gate = new ReviewAlertGate()
+      gate.consider(makeMsg())
+      gate.release('r1')
+      expect(gate.detectionsFor('r1')).toBeUndefined()
+    })
+
+    it('merging does not refresh eviction order', () => {
+      const gate = new ReviewAlertGate(2)
+      gate.consider(makeMsg({ reviewId: 'a' }))
+      gate.consider(makeMsg({ reviewId: 'b' }))
+      // merge into the oldest entry; it must stay oldest
+      gate.consider(
+        makeMsg({ reviewId: 'a', type: 'update', detections: ['d1', 'd2'] }),
+      )
+      gate.consider(makeMsg({ reviewId: 'c' }))
+      expect(gate.detectionsFor('a')).toBeUndefined()
+      expect(gate.detectionsFor('b')).toEqual(['d1'])
+      expect(gate.detectionsFor('c')).toEqual(['d1'])
+    })
+  })
 })
