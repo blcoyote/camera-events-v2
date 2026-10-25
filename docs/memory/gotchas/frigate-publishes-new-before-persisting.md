@@ -57,6 +57,13 @@ events list either. That is the quick way to tell the two apart in the field.
 
 ## What to do instead
 
+> **Current approach (2026-10-25):** pushes no longer trigger on `"new"`. They
+> trigger on `frigate/reviews` alerts, and the server checks the Event exists
+> within a bounded budget before sending. A Review becomes an alert later in
+> the object's life, so the race below mostly no longer applies. See
+> [[decisions/2026-10-25-notify-from-verified-review-alerts]]. The rest of
+> this section explains why checking at `"new"` time does not work.
+
 Do **not** "verify the event before pushing" by calling `GET /api/events/{id}`
 at `"new"` time — at that instant the row is usually absent _by design_, so a
 naive existence gate suppresses most notifications, and polling until it appears
@@ -73,4 +80,5 @@ the MQTT payload. See
 - [[architecture/push-pipeline]]
 - [[architecture/frigate-http-api]]
 - [[decisions/2026-08-29-ghost-event-notifications]]
+- [[decisions/2026-10-25-notify-from-verified-review-alerts]]
 - [[Home]]
