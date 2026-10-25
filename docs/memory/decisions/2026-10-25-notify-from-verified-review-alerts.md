@@ -26,7 +26,10 @@ object stops being a false positive, before persistence, and ignores Frigate's
   forgotten on `end`, released on a failed check so a later update retries).
 - **Check:** before alerting, `waitForPersistedEvent` (`event-verify.ts`)
   polls `getEvent` for the Review's detection ids, which must pass
-  `isValidEventId`, for 8 rounds 2s apart. No saved Event means no push.
+  `isValidEventId`. It runs for 8 rounds 2s apart, within a hard 15s budget,
+  and each request is capped at 3s or the time left. Each round re-reads the
+  gate's merged detection list, so ids added by an update during the check are
+  included. No saved Event means no push.
 - **Batching unchanged:** the saved Event becomes one `DetectionInfo` fed to
   `EventBatcher`, so burst, patch, Apple pacing, Mute and Preferences are as
   before.

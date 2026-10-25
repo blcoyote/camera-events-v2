@@ -18,7 +18,7 @@ created: 2026-06-29
 4. `frigate/reviews` messages go through `parseFrigateReview()` and
    `ReviewAlertGate`: the first `new`/`update` with `severity: "alert"` per
    Review starts a notification. `waitForPersistedEvent()` then polls Frigate
-   (8 × 2s) until one of the Review's detection Events is saved; if none is,
+   (8 × 2s, 15s hard budget) until one of the Review's detection Events is saved; if none is,
    nothing is sent. The saved Event goes into `EventBatcher`, which flushes a
    camera's first Detection immediately (leading edge), then batches follow-ups
    per camera into one Patch per Patch window (`EVENT_BATCH_WINDOW_MS`, default

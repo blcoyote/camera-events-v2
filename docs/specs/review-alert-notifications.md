@@ -22,7 +22,11 @@ The pipeline now:
 2. **Checks the Event exists before alerting.** Before anything goes to the
    batcher, the server polls `GET /api/events/{id}` for the Review's detection
    ids, in order, up to `VERIFY_ATTEMPTS` (8) rounds `VERIFY_INTERVAL_MS` (2s)
-   apart, so roughly 14s at most. The first saved Event becomes the
+   apart. The whole check has a hard 15s budget (`VERIFY_BUDGET_MS`). Each
+   request times out after at most 3s (`VERIFY_LOOKUP_TIMEOUT_MS`), or sooner
+   if less of the budget is left, so a hung Frigate can't stall it. Alert
+   updates that arrive during the check add their detection ids to the list,
+   and every round re-reads it. The first saved Event becomes the
    notification's subject and deep link. If none appears, no push is sent, and
    a later alert `update` for the same Review may retry.
 3. **Keeps the burst and patch behaviour.** A checked Review is fed to the
@@ -64,7 +68,7 @@ Feature: Push notifications follow Frigate review alerts
 
   Scenario: A review whose events never get saved does not notify
     When a review alert arrives
-    And none of its detection events can be fetched from Frigate within ~14s
+    And none of its detection events can be fetched from Frigate within 15s
     Then no notification is sent
 
   Scenario: Raw tracked-object messages do not notify
