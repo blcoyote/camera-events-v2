@@ -11,7 +11,7 @@ The network video recorder that owns cameras, recordings and detection. This app
 A video source configured in Frigate, identified by name.
 
 **Detection**:
-The instant message Frigate publishes when it first notices an object on a camera. It may never become an Event. Pushes no longer fire on it; they fire on a Review alert whose Event is confirmed saved. Not yet saved within the 2-minute grace window it is a Pending detection; after that, a Ghost detection.
+The instant message Frigate publishes when it first notices an object on a camera. It triggers a push before anything is saved, and it may never become an Event. Not yet saved within the 2-minute grace window it is a Pending detection; after that, a Ghost detection.
 _Avoid_: Event (for the message), motion
 
 **Event**:
@@ -19,7 +19,7 @@ The saved record of a detection, with a clip and/or snapshot, that users browse 
 _Avoid_: Detection (for the saved record), saved (for favorited; see Favorite)
 
 **Review**:
-Frigate's grouping of related events into one item for human review. Its severity is `alert` or `detection`, set by Frigate's `review` config. The first `alert` per Review, once its Event is saved, is what starts a push.
+Frigate's grouping of related events into one item for human review.
 
 **Retention**:
 Frigate keeping an Event beyond its normal expiry. Starts when an Event gets its first favorite and ends when its last favorite is removed.
