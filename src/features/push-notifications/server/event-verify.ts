@@ -13,7 +13,7 @@ export const VERIFY_BUDGET_MS = 15_000
 /** Upper bound for a single event lookup, in ms. */
 export const VERIFY_LOOKUP_TIMEOUT_MS = 3_000
 
-export type EventFetcher = (
+type EventFetcher = (
   id: string,
   timeoutMs: number,
 ) => Promise<FrigateResult<FrigateEvent>>
