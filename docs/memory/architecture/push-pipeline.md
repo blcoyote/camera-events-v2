@@ -15,12 +15,17 @@ created: 2026-06-29
 3. Only `frigate/events` and `frigate/reviews` clear the Frigate in-process
    cache. `frigate/stats` and `frigate/available` are health heartbeats and do
    not.
-4. `frigate/events` messages go through `parseFrigateEvent()` into
-   `EventBatcher`. The batcher flushes a camera's first Detection immediately
-   (leading edge), then batches follow-ups per camera into one Patch per Patch
-   window (`EVENT_BATCH_WINDOW_MS`, default 30s). Each flush reports whether it
-   opens a new Burst (no Detections for `EVENT_BURST_GAP_MS`, default 10min) or
-   continues one.
+4. `frigate/reviews` messages go through `parseFrigateReview()` and
+   `ReviewAlertGate`: the first `new`/`update` with `severity: "alert"` per
+   Review starts a notification. `waitForPersistedEvent()` then polls Frigate
+   (8 × 2s) until one of the Review's detection Events is saved; if none is,
+   nothing is sent. The saved Event goes into `EventBatcher`, which flushes a
+   camera's first Detection immediately (leading edge), then batches follow-ups
+   per camera into one Patch per Patch window (`EVENT_BATCH_WINDOW_MS`, default
+   30s). Each flush reports whether it opens a new Burst (no Detections for
+   `EVENT_BURST_GAP_MS`, default 10min) or continues one. `frigate/events` no
+   longer triggers pushes. See
+   [[decisions/2026-10-25-notify-from-verified-review-alerts]].
 5. On flush, Delivery (see [[decisions/2026-10-14-delivery-module]]) checks Mute
    first, then each user's Preference, then sends to each of the user's Devices.
    A Burst's opening Alert that Mute swallowed is promoted on the first unmuted

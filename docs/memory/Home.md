@@ -47,6 +47,7 @@ this vault is meant to be used.
 - [[decisions/2026-10-17-single-glossary-and-vocabulary]] — CONTEXT.md is the only domain glossary; Ghost, Alert, Availability, Device, Favorite and Patch-count vocabulary settled
 - [[decisions/2026-10-24-glassmorphism-shadcn-design-system]] — Glassmorphism tokens (`--gl-*`) → shadcn semantic vars → Tailwind; light only, Radix overlays, iOS status bar `default`
 - [[decisions/2026-10-24-glassmorphism-dark-mode]] — dark mode via `:root.dark` over `--gl-*` primitives; navy `#0b1424`, light/dark/auto toggle in header + Settings
+- [[decisions/2026-10-25-notify-from-verified-review-alerts]] — push triggers on `frigate/reviews` alerts, only once the Event is confirmed saved; supersedes the 2026-08-29 trigger
 
 ## ⚠️ Gotchas
 
