@@ -2,7 +2,10 @@ import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
 import { clearFrigateCache } from '#/features/shared/server/frigate/cache'
 import { notifyUsersForCamera } from './push-notify'
 import { notifyUsersForCameraAvailability } from './availability-notify'
+import { waitForPersistedEvent } from './event-verify'
 import type { DetectionInfo } from './event-batcher'
+import type { FrigateReviewMessage } from './review-alert'
+import type { FrigateEvent } from '#/features/shared/server/frigate/types'
 
 vi.mock('mqtt', () => {
   const mockClient = {
@@ -20,6 +23,10 @@ vi.mock('mqtt', () => {
 
 vi.mock('./push-notify', () => ({
   notifyUsersForCamera: vi.fn().mockResolvedValue(undefined),
+}))
+
+vi.mock('./event-verify', () => ({
+  waitForPersistedEvent: vi.fn(),
 }))
 
 vi.mock('./availability-notify', () => ({
@@ -70,60 +77,6 @@ describe('onFrigateMessage', () => {
 
     onFrigateMessage('frigate/reviews', Buffer.from('{}'))
     expect(frigateCache.size).toBe(0)
-  })
-
-  it('logs "New detection" when a valid new detection is received', async () => {
-    const { onFrigateMessage } = await import('./mqtt')
-    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
-
-    onFrigateMessage(
-      'frigate/events',
-      Buffer.from(
-        JSON.stringify({
-          type: 'new',
-          after: {
-            id: 'x',
-            camera: 'front_porch',
-            label: 'person',
-            start_time: 1713182400,
-          },
-        }),
-      ),
-    )
-
-    expect(
-      logSpy.mock.calls.some((call) =>
-        String(call[0]).includes('New detection'),
-      ),
-    ).toBe(true)
-
-    logSpy.mockRestore()
-  })
-
-  it('logs "Ignored" when the message is not a "new" event', async () => {
-    const { onFrigateMessage } = await import('./mqtt')
-    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
-
-    onFrigateMessage(
-      'frigate/events',
-      Buffer.from(
-        JSON.stringify({
-          type: 'update',
-          after: {
-            id: 'x',
-            camera: 'front_porch',
-            label: 'person',
-            start_time: 1713182400,
-          },
-        }),
-      ),
-    )
-
-    expect(
-      logSpy.mock.calls.some((call) => String(call[0]).includes('Ignored')),
-    ).toBe(true)
-
-    logSpy.mockRestore()
   })
 
   it('does not clear the Frigate cache for frigate/stats', async () => {
@@ -338,138 +291,330 @@ describe('dispatchAvailability', () => {
   })
 })
 
-describe('parseFrigateEvent', () => {
-  function makePayload(obj: unknown): Buffer {
-    return Buffer.from(JSON.stringify(obj))
+describe('frigate/events no longer notifies', () => {
+  const notifyMock = vi.mocked(notifyUsersForCamera)
+
+  beforeEach(() => {
+    vi.useFakeTimers()
+    notifyMock.mockClear()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('clears the cache but never dispatches a notification for a "new" event', async () => {
+    const { onFrigateMessage } = await import('./mqtt')
+    const { frigateCache } =
+      await import('#/features/shared/server/frigate/cache')
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+    frigateCache.set('k', { ok: true, data: 'cached' })
+
+    onFrigateMessage(
+      'frigate/events',
+      Buffer.from(
+        JSON.stringify({
+          type: 'new',
+          after: {
+            id: 'x',
+            camera: 'events_only_cam',
+            label: 'person',
+            start_time: 1713182400,
+          },
+        }),
+      ),
+    )
+    await vi.advanceTimersByTimeAsync(60_000)
+
+    expect(frigateCache.size).toBe(0)
+    expect(notifyMock).not.toHaveBeenCalled()
+    expect(
+      logSpy.mock.calls.some((call) => String(call[0]).includes('Ignored')),
+    ).toBe(false)
+    logSpy.mockRestore()
+  })
+})
+
+function makeReviewPayload(
+  overrides: {
+    type?: string
+    id?: string
+    camera?: string
+    severity?: string
+    detections?: string[]
+  } = {},
+): Buffer {
+  const {
+    type = 'new',
+    id = 'review-1',
+    camera = 'front_porch',
+    severity = 'alert',
+    detections = ['1713182400.123-abc'],
+  } = overrides
+  return Buffer.from(
+    JSON.stringify({
+      type,
+      before: {},
+      after: { id, camera, severity, data: { detections } },
+    }),
+  )
+}
+
+function makeFrigateEvent(overrides: Partial<FrigateEvent> = {}): FrigateEvent {
+  return {
+    id: '1713182400.123-abc',
+    label: 'person',
+    sub_label: null,
+    camera: 'front_porch',
+    start_time: 1713182400.123,
+    end_time: 1713182460,
+    false_positive: null,
+    zones: [],
+    thumbnail: '',
+    has_clip: true,
+    has_snapshot: true,
+    retain_indefinitely: false,
+    plus_id: null,
+    box: null,
+    top_score: 0.9,
+    data: {
+      attributes: [],
+      box: [0, 0, 0, 0],
+      region: [0, 0, 0, 0],
+      score: 0.9,
+      top_score: 0.9,
+      type: 'object',
+    },
+    ...overrides,
+  }
+}
+
+describe('handleReviewAlert', () => {
+  const notifyMock = vi.mocked(notifyUsersForCamera)
+  const verifyMock = vi.mocked(waitForPersistedEvent)
+
+  beforeEach(async () => {
+    notifyMock.mockClear()
+    verifyMock.mockReset()
+    const { _resetReviewGate } = await import('./mqtt')
+    _resetReviewGate()
+    vi.spyOn(console, 'log').mockImplementation(() => {})
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  const msg: FrigateReviewMessage = {
+    type: 'new',
+    reviewId: 'review-1',
+    camera: 'handle_cam_ok',
+    severity: 'alert',
+    detections: ['1713182400.123-abc'],
   }
 
-  it('parses a valid "new" event', async () => {
-    const { parseFrigateEvent } = await import('./mqtt')
-    const result = parseFrigateEvent(
-      makePayload({
-        type: 'new',
-        before: {},
-        after: {
+  it('feeds the verified event into the batcher using the review camera', async () => {
+    const { handleReviewAlert } = await import('./mqtt')
+    const verify = vi.fn().mockResolvedValue(
+      makeFrigateEvent({
+        camera: 'other_cam',
+        label: 'dog',
+        has_clip: false,
+        has_snapshot: true,
+      }),
+    )
+
+    await handleReviewAlert(msg, verify)
+
+    expect(verify).toHaveBeenCalledWith(expect.any(Function))
+    const source = verify.mock.calls[0][0] as () => string[]
+    expect(source()).toEqual(msg.detections)
+    expect(notifyMock).toHaveBeenCalledWith(
+      'handle_cam_ok',
+      [
+        {
           id: '1713182400.123-abc',
-          camera: 'front_porch',
-          label: 'person',
-          start_time: 1713182400.123,
-          score: 0.87,
-          zones: ['yard'],
-          has_snapshot: true,
-          has_clip: false,
+          camera: 'handle_cam_ok',
+          label: 'dog',
+          startTime: 1713182400.123,
+          hasSnapshot: true,
+          hasClip: false,
         },
-      }),
+      ],
+      { burstStart: true },
     )
-    expect(result).toEqual({
-      id: '1713182400.123-abc',
-      camera: 'front_porch',
-      label: 'person',
-      startTime: 1713182400.123,
-      hasSnapshot: true,
-      hasClip: false,
+  })
+
+  it('does not notify and logs a skip when no saved event is found', async () => {
+    const { handleReviewAlert } = await import('./mqtt')
+    const logSpy = vi.mocked(console.log)
+
+    await handleReviewAlert(
+      { ...msg, camera: 'handle_cam_null' },
+      vi.fn().mockResolvedValue(null),
+    )
+
+    expect(notifyMock).not.toHaveBeenCalled()
+    expect(
+      logSpy.mock.calls.some((call) =>
+        String(call[0]).includes('alert skipped — no saved event'),
+      ),
+    ).toBe(true)
+  })
+
+  it('does not notify and does not reject when verification throws', async () => {
+    const { handleReviewAlert } = await import('./mqtt')
+
+    await expect(
+      handleReviewAlert(
+        { ...msg, camera: 'handle_cam_throw' },
+        vi.fn().mockRejectedValue(new Error('boom')),
+      ),
+    ).resolves.toBeUndefined()
+
+    expect(notifyMock).not.toHaveBeenCalled()
+  })
+
+  it('releases the review on failure so a later alert update can retry', async () => {
+    const { onFrigateMessage } = await import('./mqtt')
+    verifyMock.mockResolvedValue(null)
+    const payload = makeReviewPayload({
+      id: 'retry-review',
+      camera: 'retry_cam',
     })
+
+    onFrigateMessage('frigate/reviews', payload)
+    await vi.waitFor(() => expect(verifyMock).toHaveBeenCalledTimes(1))
+    // allow handleReviewAlert to finish and release
+    await new Promise((r) => setTimeout(r, 0))
+
+    onFrigateMessage('frigate/reviews', payload)
+    await vi.waitFor(() => expect(verifyMock).toHaveBeenCalledTimes(2))
+  })
+})
+
+describe('onFrigateMessage — frigate/reviews wiring', () => {
+  const notifyMock = vi.mocked(notifyUsersForCamera)
+  const verifyMock = vi.mocked(waitForPersistedEvent)
+
+  beforeEach(async () => {
+    notifyMock.mockClear()
+    verifyMock.mockReset()
+    clearFrigateCache()
+    const { _resetReviewGate } = await import('./mqtt')
+    _resetReviewGate()
+    vi.spyOn(console, 'log').mockImplementation(() => {})
   })
 
-  it('carries has_clip through when Frigate is retaining a recording', async () => {
-    const { parseFrigateEvent } = await import('./mqtt')
-    const result = parseFrigateEvent(
-      makePayload({
-        type: 'new',
-        after: {
-          id: 'x',
-          camera: 'c',
-          label: 'person',
-          start_time: 1,
-          has_snapshot: false,
-          has_clip: true,
-        },
-      }),
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('verifies and notifies for an alert review', async () => {
+    const { onFrigateMessage } = await import('./mqtt')
+    verifyMock.mockResolvedValue(makeFrigateEvent({ id: 'wired-ev' }))
+
+    onFrigateMessage(
+      'frigate/reviews',
+      makeReviewPayload({ id: 'wired-1', camera: 'wired_cam' }),
     )
-    expect(result).toMatchObject({ hasSnapshot: false, hasClip: true })
-  })
 
-  it('defaults both persistence flags to false when Frigate omits them', async () => {
-    const { parseFrigateEvent } = await import('./mqtt')
-    const result = parseFrigateEvent(
-      makePayload({
-        type: 'new',
-        after: { id: 'x', camera: 'c', label: 'person', start_time: 1 },
-      }),
+    await vi.waitFor(() =>
+      expect(notifyMock).toHaveBeenCalledWith(
+        'wired_cam',
+        [expect.objectContaining({ id: 'wired-ev', camera: 'wired_cam' })],
+        { burstStart: true },
+      ),
     )
-    expect(result).toMatchObject({ hasSnapshot: false, hasClip: false })
+    const source = verifyMock.mock.calls[0][0] as () => string[]
+    expect(typeof source).toBe('function')
+    expect(source()).toEqual(['1713182400.123-abc'])
   })
 
-  it('returns null for "update" events', async () => {
-    const { parseFrigateEvent } = await import('./mqtt')
-    const result = parseFrigateEvent(
-      makePayload({
+  it('verifies only once across repeated alert updates of the same review', async () => {
+    const { onFrigateMessage } = await import('./mqtt')
+    verifyMock.mockResolvedValue(makeFrigateEvent())
+
+    onFrigateMessage(
+      'frigate/reviews',
+      makeReviewPayload({ id: 'dup-1', camera: 'dup_cam' }),
+    )
+    onFrigateMessage(
+      'frigate/reviews',
+      makeReviewPayload({ type: 'update', id: 'dup-1', camera: 'dup_cam' }),
+    )
+    onFrigateMessage(
+      'frigate/reviews',
+      makeReviewPayload({ type: 'update', id: 'dup-1', camera: 'dup_cam' }),
+    )
+    await new Promise((r) => setTimeout(r, 0))
+
+    expect(verifyMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('re-reads merged detections from alert updates that arrive during verification', async () => {
+    const { onFrigateMessage } = await import('./mqtt')
+    let resolveVerify: (e: FrigateEvent | null) => void = () => {}
+    verifyMock.mockImplementation(
+      () =>
+        new Promise<FrigateEvent | null>((resolve) => {
+          resolveVerify = resolve
+        }),
+    )
+
+    onFrigateMessage(
+      'frigate/reviews',
+      makeReviewPayload({ id: 'merge-1', camera: 'merge_cam' }),
+    )
+    onFrigateMessage(
+      'frigate/reviews',
+      makeReviewPayload({
         type: 'update',
-        after: { id: 'x', camera: 'c', label: 'person', start_time: 1 },
+        id: 'merge-1',
+        camera: 'merge_cam',
+        detections: ['1713182400.123-abc', 'late-event'],
       }),
     )
-    expect(result).toBeNull()
+
+    expect(verifyMock).toHaveBeenCalledTimes(1)
+    const source = verifyMock.mock.calls[0][0] as () => string[]
+    expect(typeof source).toBe('function')
+    expect(source()).toEqual(['1713182400.123-abc', 'late-event'])
+
+    resolveVerify(makeFrigateEvent({ id: 'late-event' }))
+    await vi.waitFor(() => expect(notifyMock).toHaveBeenCalledTimes(1))
+    expect(verifyMock).toHaveBeenCalledTimes(1)
   })
 
-  it('returns null for "end" events', async () => {
-    const { parseFrigateEvent } = await import('./mqtt')
-    const result = parseFrigateEvent(
-      makePayload({
-        type: 'end',
-        after: { id: 'x', camera: 'c', label: 'person', start_time: 1 },
-      }),
+  it('never verifies a detection-severity review', async () => {
+    const { onFrigateMessage } = await import('./mqtt')
+
+    onFrigateMessage(
+      'frigate/reviews',
+      makeReviewPayload({ id: 'det-1', severity: 'detection' }),
     )
-    expect(result).toBeNull()
+    await new Promise((r) => setTimeout(r, 0))
+
+    expect(verifyMock).not.toHaveBeenCalled()
+    expect(notifyMock).not.toHaveBeenCalled()
   })
 
-  it('returns null for invalid JSON', async () => {
-    const { parseFrigateEvent } = await import('./mqtt')
-    expect(parseFrigateEvent(Buffer.from('not json'))).toBeNull()
-  })
+  it('logs "Ignored" for a malformed payload and does not throw', async () => {
+    const { onFrigateMessage } = await import('./mqtt')
+    const logSpy = vi.mocked(console.log)
 
-  it('returns null when after is missing', async () => {
-    const { parseFrigateEvent } = await import('./mqtt')
-    expect(parseFrigateEvent(makePayload({ type: 'new' }))).toBeNull()
-  })
+    expect(() =>
+      onFrigateMessage('frigate/reviews', Buffer.from('not json')),
+    ).not.toThrow()
 
-  it('returns null when required fields are missing', async () => {
-    const { parseFrigateEvent } = await import('./mqtt')
-    // Missing id
     expect(
-      parseFrigateEvent(
-        makePayload({
-          type: 'new',
-          after: { camera: 'c', label: 'person', start_time: 1 },
-        }),
+      logSpy.mock.calls.some((call) =>
+        String(call[0]).includes(
+          '[mqtt] Ignored frigate/reviews message (malformed payload)',
+        ),
       ),
-    ).toBeNull()
-    // Missing camera
-    expect(
-      parseFrigateEvent(
-        makePayload({
-          type: 'new',
-          after: { id: 'x', label: 'person', start_time: 1 },
-        }),
-      ),
-    ).toBeNull()
-    // Missing label
-    expect(
-      parseFrigateEvent(
-        makePayload({
-          type: 'new',
-          after: { id: 'x', camera: 'c', start_time: 1 },
-        }),
-      ),
-    ).toBeNull()
-    // Non-numeric start_time
-    expect(
-      parseFrigateEvent(
-        makePayload({
-          type: 'new',
-          after: { id: 'x', camera: 'c', label: 'person', start_time: 'bad' },
-        }),
-      ),
-    ).toBeNull()
+    ).toBe(true)
+    expect(verifyMock).not.toHaveBeenCalled()
   })
 })
 

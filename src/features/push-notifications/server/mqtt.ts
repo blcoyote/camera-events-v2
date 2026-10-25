@@ -11,6 +11,10 @@ import {
 } from './camera-availability'
 import type { CameraAvailabilityStatus } from './camera-availability'
 import { notifyUsersForCameraAvailability } from './availability-notify'
+import { ReviewAlertGate, parseFrigateReview } from './review-alert'
+import type { FrigateReviewMessage } from './review-alert'
+import { waitForPersistedEvent } from './event-verify'
+import type { FrigateEvent } from '#/features/shared/server/frigate/types'
 import { resolveBatcherConfig, resolveOfflineThreshold } from './env'
 
 /** MQTT topics to subscribe to for Frigate event and availability updates. */
@@ -86,37 +90,54 @@ export function _resetAvailabilityTracker(): void {
   )
 }
 
+/** Singleton review alert gate — reassignable so tests can isolate state. */
+let reviewGate = new ReviewAlertGate()
+
+/** Reset the review alert gate's internal state. Exported for testing only. */
+export function _resetReviewGate(): void {
+  reviewGate = new ReviewAlertGate()
+}
+
 /**
- * Parse a Frigate MQTT event payload into a DetectionInfo, or null
- * if the message should be ignored (not a "new" event, or malformed).
+ * Verify a review alert's event exists in Frigate, then feed it into the
+ * batcher. Exported for testing.
  */
-export function parseFrigateEvent(payload: Buffer): DetectionInfo | null {
+export async function handleReviewAlert(
+  msg: FrigateReviewMessage,
+  verify: (
+    ids: string[] | (() => string[]),
+  ) => Promise<FrigateEvent | null> = waitForPersistedEvent,
+): Promise<void> {
+  let event: FrigateEvent | null = null
   try {
-    const msg = JSON.parse(payload.toString())
-    if (msg.type !== 'new') return null
-
-    const after = msg.after
-    if (
-      !after ||
-      typeof after.id !== 'string' ||
-      typeof after.camera !== 'string' ||
-      typeof after.label !== 'string' ||
-      typeof after.start_time !== 'number'
-    ) {
-      return null
-    }
-
-    return {
-      id: after.id,
-      camera: after.camera,
-      label: after.label,
-      startTime: after.start_time,
-      hasSnapshot: after.has_snapshot === true,
-      hasClip: after.has_clip === true,
-    }
+    // Re-read each polling round so alert updates that add detection ids
+    // while verification is pending are picked up.
+    event = await verify(
+      () => reviewGate.detectionsFor(msg.reviewId) ?? msg.detections,
+    )
   } catch {
-    return null
+    event = null
   }
+
+  if (!event) {
+    reviewGate.release(msg.reviewId)
+    console.log(
+      `[mqtt] Review ${msg.reviewId} on ${msg.camera} alert skipped — no saved event`,
+    )
+    return
+  }
+
+  console.log(
+    `[mqtt] Review alert: ${event.label} on ${event.camera} (review ${msg.reviewId}, event ${event.id})`,
+  )
+  eventBatcher.add({
+    id: event.id,
+    camera: msg.camera,
+    label: event.label,
+    startTime: event.start_time,
+    hasSnapshot: event.has_snapshot,
+    hasClip: event.has_clip,
+  })
 }
 
 /**
@@ -125,9 +146,11 @@ export function parseFrigateEvent(payload: Buffer): DetectionInfo | null {
  * Clears the API cache only for `frigate/events` and `frigate/reviews` —
  * `frigate/stats` arrives on a heartbeat interval with no data change most of
  * the time, so clearing the cache on every reading would defeat its purpose.
- * `frigate/events` also feeds new events into the per-camera batcher for push
- * notification dispatch; `frigate/stats` and `frigate/available` feed the
- * camera availability tracker for online/offline push notifications.
+ * `frigate/reviews` drives push notifications: the first time a review is seen
+ * with `alert` severity, its saved event is verified in Frigate and then fed
+ * into the per-camera batcher. `frigate/events` only invalidates the cache.
+ * `frigate/stats` and `frigate/available` feed the camera availability tracker
+ * for online/offline push notifications.
  */
 export function onFrigateMessage(topic: string, payload: Buffer): void {
   if (topic === 'frigate/events' || topic === 'frigate/reviews') {
@@ -135,17 +158,12 @@ export function onFrigateMessage(topic: string, payload: Buffer): void {
     clearFrigateCache()
   }
 
-  if (topic === 'frigate/events') {
-    const event = parseFrigateEvent(payload)
-    if (event) {
-      console.log(
-        `[mqtt] New detection: ${event.label} on ${event.camera} (${event.id})`,
-      )
-      eventBatcher.add(event)
-    } else {
-      console.log(
-        '[mqtt] Ignored frigate/events message (not a "new" event or malformed payload)',
-      )
+  if (topic === 'frigate/reviews') {
+    const msg = parseFrigateReview(payload)
+    if (!msg) {
+      console.log('[mqtt] Ignored frigate/reviews message (malformed payload)')
+    } else if (reviewGate.consider(msg) === 'notify') {
+      void handleReviewAlert(msg)
     }
   } else if (topic === 'frigate/stats') {
     const camerasFps = parseFrigateStatsMessage(payload)
