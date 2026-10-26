@@ -401,11 +401,11 @@ export function CameraEventDetailPage({
             <div className="flex items-center gap-3">
               <Progress
                 className="flex-1"
-                value={Math.round(event.data.top_score * 100)}
+                value={Math.round(event.data.score * 100)}
                 aria-label="Detection confidence"
               />
               <span className="text-sm font-semibold text-foreground">
-                {Math.round(event.data.top_score * 100)}%
+                {Math.round(event.data.score * 100)}%
               </span>
             </div>
           </div>
