@@ -231,6 +231,21 @@ describe('CameraEventDetailPage', () => {
       expect(bar.getAttribute('aria-valuenow')).toBe('90')
       expect(screen.getByText('90%')).toBeTruthy()
     })
+
+    it('shows the snapshot score (as drawn on the image), not the top score', () => {
+      render(
+        <CameraEventDetailPage
+          result={successResult({
+            data: { ...makeEvent().data, score: 0.83, top_score: 0.91 },
+          })}
+        />,
+      )
+      const bar = screen.getByRole('progressbar', {
+        name: 'Detection confidence',
+      })
+      expect(bar.getAttribute('aria-valuenow')).toBe('83')
+      expect(screen.getByText('83%')).toBeTruthy()
+    })
   })
 
   describe('error result', () => {
