@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Camera Events v2 is a self-hosted PWA for browsing and monitoring [Frigate NVR](https://frigate.video/) events. It receives live motion events from Frigate over MQTT, batches them per camera, and delivers Web Push notifications to subscribed iOS/Android/desktop devices. Built with TanStack Start (SSR), React 19, Tailwind CSS v4, and deployed via Bun.
+Camera Events v2 is a self-hosted PWA for browsing and monitoring [Frigate NVR](https://frigate.video/) events. It receives live motion events from Frigate over MQTT, batches them per camera, and delivers Web Push notifications to subscribed iOS/Android/desktop devices.
 
 **Tech stack:** TanStack Start + TanStack Router (file-based, SSR) · React 19 · Vite 8 · Tailwind CSS v4 · better-sqlite3 / bun:sqlite · MQTT (RabbitMQ) · Google OAuth via Arctic · web-push (VAPID) · Serwist service worker · Vitest + Playwright
 
@@ -10,25 +10,11 @@ Camera Events v2 is a self-hosted PWA for browsing and monitoring [Frigate NVR](
 
 ## Model Usage & Delegation
 
-These rules govern which model does what. They exist so that the expensive reasoning model is reserved for thinking, and the cheaper/faster model does the mechanical work — without quality loss.
+Defaults; the user can override at any time ("don't delegate", "plan with Sonnet") and that wins without re-arguing.
 
-- **These are defaults; the user can override them at any time.** If the user directs model usage for a task — e.g. "plan this with Sonnet", "implement this with Opus", "don't delegate", "do it all yourself" — that instruction takes precedence over the Opus-plans/Sonnet-implements split below for that work. Honor the override without re-arguing the default.
-- **Opus plans. Sonnet implements.** Opus is the planning model: use it for understanding the codebase, designing the approach, decomposing work, reviewing diffs, and making architectural or security trade-off decisions. Delegate the actual implementation of each work chunk to a Sonnet subagent (via the `Agent` tool with `model: "sonnet"`, or a Workflow with `model: 'sonnet'` agents).
-- **Decompose plans into Sonnet-sized chunks.** A plan is not done until it is broken into work chunks each small and self-contained enough that a Sonnet subagent can complete it adequately on its own. If a chunk still requires non-trivial design judgement, ambiguous decisions, or holding more context than fits comfortably, it is too big — split it further or resolve the open questions in the plan first.
-- **What makes a chunk Sonnet-ready:**
-  - Narrow, explicit scope — ideally one feature slice or one to a few named files.
-  - Concrete file targets and the exact change intended, not a vague goal.
-  - Acceptance criteria spelled out, normally as the tests to write/pass (follow the project's Red → Green → Refactor TDD discipline).
-  - No unresolved design decisions, cross-feature trade-offs, or security judgement calls left for the implementer — Opus resolves those during planning.
-  - Self-contained: the chunk's instructions carry enough context that the subagent does not need to re-derive the plan.
-- **Keep chunk outputs small.** Prefer many small, independently verifiable chunks over one large change. Smaller diffs are easier for Sonnet to get right and for Opus to review.
-- **Opus stays in the loop.** After Sonnet completes a chunk, Opus reviews the result (correctness, the project's architecture and security rules, test coverage) before moving on. Anything that surfaces a new design question goes back to planning, not straight into more implementation.
-- **Escalate when needed.** If a chunk turns out to need real design or debugging judgement mid-implementation, stop and hand it back to Opus to re-plan rather than letting Sonnet improvise beyond the chunk's stated scope.
-
-## Path Aliases
-
-- `#/*` maps to `./src/*` (defined in `package.json` `imports` and `tsconfig.json` `paths`).
-- Always use `#/features/...` for cross-directory imports within `src/`.
+- **Opus plans, Sonnet implements.** Opus: understanding the codebase, design, decomposition, diff review, architecture/security trade-offs. Delegate implementation of each chunk to a Sonnet subagent (`Agent` with `model: "sonnet"`).
+- **Chunks must be Sonnet-ready:** narrow scope (one slice / a few named files), exact change and file targets, acceptance criteria as tests (Red → Green → Refactor), no unresolved design or security decisions, self-contained instructions. If a chunk needs design judgement, split it or resolve it in planning first.
+- **Keep chunk outputs small.** Opus reviews every chunk (correctness, architecture and security rules, test coverage) before moving on. New design questions go back to planning; if a chunk needs real judgement mid-implementation, stop and re-plan rather than letting Sonnet improvise.
 
 ## Development Commands
 
@@ -44,425 +30,88 @@ bun run check        # Prettier write + ESLint --fix
 bun run knip         # Unused-code report
 ```
 
-## Tailwind CSS
+- Path alias: `#/*` → `./src/*`. Use `#/features/...` for cross-directory imports within `src/`.
+- **NEVER run `npx tsr generate`** — the `tsr` npm package is an unrelated tool that **deletes** test files and `vite.config.ts`. Route tree (`src/routeTree.gen.ts`) is generated by the `tanstackStart()` Vite plugin during `bun run dev` / `bun run build`. After adding a route file under `src/routes/`, start the dev server.
 
-- Always use Tailwind CSS canonical class names instead of arbitrary value syntax when a built-in utility exists. For example, use `text-foreground` instead of `text-[var(--gl-fg)]`, `min-h-11` instead of `min-h-[44px]`, `rounded-4xl` instead of `rounded-[2rem]`, `shrink-0` instead of `flex-shrink-0`.
-- The design system is **Glassmorphism**, light and dark (dark via `.dark` on `<html>` overriding `--gl-*` in `:root.dark`; spec `docs/specs/glassmorphism-dark-mode.md`). Source: `docs/design-system/glassmorphism/`. Spec: `docs/specs/glassmorphism-design-system.md`. Decision: `docs/memory/decisions/2026-10-24-glassmorphism-shadcn-design-system.md`.
-- Tokens are layered: `--gl-*` primitives in `src/styles.css` `:root` → shadcn semantic vars (`--background`, `--primary`, …) → Tailwind `@theme inline`. Use the semantic utilities: `bg-background`, `bg-card`, `text-foreground`, `text-fg-2`, `text-muted-foreground`, `text-brand`, `text-brand-strong`, `bg-surface-warm`, `bg-surface-hover`, `border-border`, `border-border-soft`, `success|warn|danger` with their `-text` partners, `glass`, `glass-flat`, `glass-strong`, `eyebrow`, `rounded-input|card|hero`, `shadow-raised`, `leading-display`. Never use raw hex, raw Tailwind colour scale values (`red-500`, `emerald-600`, …), or `dark:` variants. The guard test `src/styles.legacy-tokens.test.ts` bans legacy token names.
-- Every new colour primitive in `src/styles.css` needs a `:root.dark` value; fills and text use separate tokens (`--gl-accent-fill` vs `--gl-accent-strong`).
-- Font is Inter (`font-sans`).
-- Element rules live in `@layer base` and kept component classes in `@layer components`. Never add unlayered rules to `src/styles.css`: they override every utility (see `docs/memory/gotchas/unlayered-css-beats-tailwind-utilities.md`).
-- **UI components:** shadcn/ui primitives live in `src/features/shared/components/ui/` (Button, Card, Input, Badge, Switch, Toggle, Sheet, DropdownMenu, Dialog). `cn()` is in `src/features/shared/utils/cn.ts`, and `components.json` is at the root. The shadcn CLI may not reach its registry from cloud containers; if so, hand-write the source from shadcn's new-york style using the unified `radix-ui` package. Radix tests need `@testing-library/user-event`; `src/test-setup.ts` holds the jsdom polyfills.
+## Detailed rules live in path-scoped files
 
-## Route Generation
+These load automatically when you touch matching files; read them directly otherwise.
 
-- **NEVER run `npx tsr generate`**. The `tsr` npm package is an unrelated unused-code removal tool that will **delete** test files and `vite.config.ts`. Running it with `--write` is destructive and irreversible without git.
-- Route tree generation (`src/routeTree.gen.ts`) is handled automatically by the `tanstackStart()` Vite plugin during `bun run dev` and `bun run build`. No separate CLI step is needed.
-- If you add a new route file under `src/routes/`, start the dev server (`bun run dev`) to trigger route tree regeneration.
+- `.claude/rules/styling.md` — Tailwind canonical classes, Glassmorphism tokens, no raw colours/`dark:`, no unlayered CSS (`.tsx`, `.css`)
+- `.claude/rules/testing.md` — test conventions, per-layer guidance, mocking patterns (`*.test.ts(x)`)
+- `.claude/rules/push-pipeline.md` — Frigate client/cache and the MQTT → push pipeline (`push-notifications`, `shared/server/frigate`)
+- `.claude/rules/server-boundaries.md` — server/client import rules (`server/`, `routes/`); full playbook in the `tanstack-start-boundaries` skill
+- `docs/agents/env-vars.md` — environment variables (required ones: `SESSION_SECRET` ≥32 chars, `GOOGLE_CLIENT_ID/SECRET`, `FRIGATE_URL` unless `FRIGATE_MOCK=true`)
+- `docs/specs/` — design doc per significant feature; read the relevant spec before modifying a feature
 
 ## Feature-Sliced Architecture
 
-- The codebase uses a vertical feature-slice architecture. Each feature lives in its own folder under `src/features/` and owns all of its components, hooks, utilities, types, and server logic.
-- **Features must never import from other features.** No cross-feature imports are allowed — if two features need the same logic, it belongs in `src/features/shared/`.
-- `src/features/shared/` is the only place for code that is used by multiple features. Shared code should be genuinely reusable, not a dumping ground for convenience.
-- When creating a new feature, give it its own folder under `src/features/` with everything it needs. Prefer duplication over coupling between features.
-
-### Feature Map
-
-| Feature              | Location                           | What it owns                                                                                                                               |
-| -------------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| `auth`               | `src/features/auth/`               | Google OAuth flow, session helpers, `useStandaloneAuth` hook                                                                               |
-| `camera-details`     | `src/features/camera-details/`     | Event detail page, snapshot lightbox, event snapshot, info card, blob download hook, clip/snapshot/thumbnail proxies                       |
-| `camera-events`      | `src/features/camera-events/`      | Event list page, filter pills, events loading skeleton, mock data                                                                          |
-| `cameras`            | `src/features/cameras/`            | Camera grid page, sortable tiles, camera order persistence, snapshot proxy                                                                 |
-| `favorites`          | `src/features/favorites/`          | Favorited events list page; server logic lives in shared/server/favorites/                                                                 |
-| `home`               | `src/features/home/`               | Home/landing page component                                                                                                                |
-| `push-notifications` | `src/features/push-notifications/` | MQTT subscriber, event batcher, push dispatcher, SQLite push store                                                                         |
-| `settings`           | `src/features/settings/`           | Settings page, notification preferences UI, `usePushSubscription` hook                                                                     |
-| `shared`             | `src/features/shared/`             | Frigate API client + cache + types + validation, session, SQLite driver, shared components + hooks, shadcn/ui primitives (`components/ui`) |
-| `shell`              | `src/features/shell/`              | App header, service worker registration                                                                                                    |
-
-## Route Structure
-
-```
-src/routes/
-  __root.tsx                      # Root layout: Header, ServiceWorkerRegistration, TanStack devtools
-  index.tsx                       # Landing / login page
-  _authenticated.tsx              # Auth guard layout (redirects unauthenticated users)
-  _authenticated/
-    camera-events.index.tsx       # /camera-events — paginated event list
-    camera-events.$id.tsx         # /camera-events/:id — event detail
-    cameras.tsx                   # /cameras — camera grid with drag-reorder
-    settings.tsx                  # /settings — push notification preferences
-  api/
-    auth/google.ts                # GET /api/auth/google — OAuth initiation
-    auth/google/callback.ts       # GET /api/auth/google/callback — OAuth callback
-    auth/logout.ts                # POST /api/auth/logout
-    auth/admin-status.ts          # GET /api/auth/admin-status — current user's is_admin flag, re-read fresh per request
-    cameras/$name/latest.ts       # GET /api/cameras/:name/latest — proxied live snapshot
-    events/$id/clip.ts            # GET /api/events/:id/clip
-    events/$id/snapshot.ts        # GET /api/events/:id/snapshot
-    events/$id/thumbnail.ts       # GET /api/events/:id/thumbnail
-    push/subscribe.ts             # POST /api/push/subscribe
-    push/unsubscribe.ts           # POST /api/push/unsubscribe
-    push/preferences.ts           # GET/POST /api/push/preferences
-    push/availability-preference.ts # GET/PUT /api/push/availability-preference — global camera offline/online alert toggle
-    push/vapid-public-key.ts      # GET /api/push/vapid-public-key
-    push/test.ts                  # POST /api/push/test
-```
+- Each feature lives in `src/features/<name>/` and owns its components, hooks, utils, types and server logic. Features: `auth`, `camera-details`, `camera-events`, `cameras`, `favorites`, `home`, `live-view`, `push-notifications`, `settings`, `shared`, `shell`.
+- **Features must never import from other features.** Code needed by several features belongs in `src/features/shared/` — genuinely reusable, not a dumping ground. Prefer duplication over coupling.
+- Routes are file-based under `src/routes/` (`_authenticated/` is the auth-guard layout; `api/` holds the HTTP endpoints). The service worker source is `src/sw.ts` (push logic in `src/sw-push-handlers.ts`), built by `vite-plugin-sw.ts` with Serwist.
 
 ## Cross-Platform PWA
 
-- **Cross-platform support is a top priority.** This app is a PWA that must work seamlessly on both iOS (Safari standalone) and Android (Chrome), as well as desktop browsers. Never ship a feature that only works on one platform — always test and account for both iOS and Android behavior differences.
-- Every feature — including push notifications, service worker interactions, OAuth, and cookie-dependent API calls — must be implemented with cross-platform compatibility in mind.
-- When you spot a platform-specific issue or limitation (e.g. an API not supported on iOS, cookie behavior differences in standalone mode, etc.), **do not silently fix it**. Flag it to me first, explain the issue and your proposed fix, and wait for confirmation before implementing.
-- The service worker is built by `vite-plugin-sw.ts` (custom plugin) using Serwist. The SW source is `src/sw.ts`; push handler logic lives in `src/sw-push-handlers.ts`.
+- Cross-platform is a top priority: iOS (Safari standalone), Android (Chrome) and desktop. Never ship a feature that works on only one platform; this covers push, service worker, OAuth and cookie-dependent calls.
+- When you spot a platform-specific issue or limitation (unsupported API on iOS, standalone cookie differences, …), **do not silently fix it**. Flag it, explain the issue and your proposed fix, and wait for confirmation.
 
-## TanStack Start Server/Client Boundaries
+## Server/Client Boundaries & Server Functions
 
-**Before writing or reviewing any of the following, invoke the `tanstack-start-boundaries` skill:**
-
-- `createServerFn` handlers or server-only utilities
-- Route `loader` functions
-- New files under `src/features/shared/server/`
-- React hooks or components that use browser APIs (`window`, `localStorage`, `Notification`, etc.)
-- Anything that might mix server-only imports with client-accessible code
-
-The skill covers the full layering model, import protection rules, and common mistake patterns for this project.
-
-## Server Function Authentication
-
-- **TanStack Start `createServerFn` endpoints are directly callable via HTTP** at `/_serverFn/{hash}`. Route-level layout guards (like `_authenticated.tsx`'s `beforeLoad`) only protect client-side navigation — they do NOT protect server functions from direct HTTP access.
-- **Every `createServerFn` handler that accesses protected data MUST call `await requireSession()`** (from `#/features/shared/server/session`) as its first operation. Never rely on the route hierarchy for server-side authentication.
-- When adding a new server function inside an `_authenticated` route, always include the auth check. The function hash is discoverable in client-side JavaScript bundles, so security-through-obscurity does not apply.
-- For server functions that accept user input (e.g. via `inputValidator`), always validate the input inside the handler as well — use validators like `isValidEventId()` and `isValidCameraName()` (from `#/features/shared/server/frigate/validation`) to prevent SSRF and path traversal against the Frigate backend.
+- Before writing or reviewing `createServerFn` handlers, route loaders, files under `src/features/shared/server/`, or hooks/components using browser APIs, invoke the `tanstack-start-boundaries` skill.
+- **`createServerFn` endpoints are directly callable over HTTP** (`/_serverFn/{hash}`); route guards only protect client navigation. Every handler touching protected data MUST `await requireSession()` (from `#/features/shared/server/session`) as its first operation.
+- Validate input inside the handler too: `isValidEventId()`, `isValidCameraName()` (from `#/features/shared/server/frigate/validation`) to prevent SSRF/path traversal against Frigate.
 
 ## Authentication
 
-- **Google OAuth via Arctic.** The flow is: `GET /api/auth/google` → Google → `GET /api/auth/google/callback` → set encrypted session cookie → redirect.
-- OAuth state (PKCE `codeVerifier` + `state` + optional `returnTo`) is encoded as base64 JSON in the `oauth_state` cookie (5-minute TTL, `httpOnly`, `sameSite: lax`).
-- `returnTo` paths are validated by `sanitizeReturnTo()` — only same-origin relative paths are accepted; absolute URLs, protocol-relative, and backslash paths are rejected.
-- Session cookie name: `google-sso`; 30-day absolute TTL from sign-in; `httpOnly`, `secure` in production, `sameSite: lax`. Sessions are app-owned (`getAppSession` / `startNewAppSession` / `clearAppSession` in `#/features/shared/server/session`) — TanStack Start no longer provides `useSession`. See `docs/memory/decisions/2026-10-13-app-owned-session-cookie.md`.
-- `SESSION_SECRET` env var must be ≥ 32 characters. It is validated at call time (not module scope) to avoid env-access during SSR module init.
-- `requireSession()` → returns the user's Google `sub` ID or throws `'Unauthorized'`.
-- `getCurrentUserFn` is a server function called in `__root.tsx`'s `beforeLoad` to populate `context.user` for all routes.
+- Google OAuth via Arctic: `GET /api/auth/google` → Google → `/api/auth/google/callback` → encrypted session cookie → redirect. OAuth state (PKCE verifier, state, optional `returnTo`) is base64 JSON in the `oauth_state` cookie (5 min, `httpOnly`, `sameSite: lax`). `returnTo` goes through `sanitizeReturnTo()` (same-origin relative paths only).
+- Session cookie `google-sso`: 30-day absolute TTL, `httpOnly`, `secure` in production, `sameSite: lax`. App-owned via `getAppSession` / `startNewAppSession` / `clearAppSession` (TanStack `useSession` is not used; see `docs/memory/decisions/2026-10-13-app-owned-session-cookie.md`).
+- `SESSION_SECRET` is validated at call time, not module scope (avoids env access during SSR init). `requireSession()` returns the user's Google `sub` or throws `'Unauthorized'`. `getCurrentUserFn` in `__root.tsx` `beforeLoad` populates `context.user`.
 
-## Frigate Integration
+## SQLite (runtime-portable)
 
-- All Frigate API calls go through `src/features/shared/server/frigate/client.ts`.
-- **Mock mode:** set `FRIGATE_MOCK=true` to use `mock-client.ts` which returns randomized data — no live Frigate needed.
-- **Caching:** successful JSON responses are memoized in-process by `cache.ts` (a `Map`). The cache is cleared whenever an MQTT event arrives (`frigate/events` or `frigate/reviews` topics only — `frigate/stats` and `frigate/available` are health heartbeats and do not invalidate the cache).
-- **Input validation:** `isValidCameraName()` and `isValidEventId()` must be called before using user-supplied values in Frigate URL paths.
-- `FRIGATE_URL` must be set in production (e.g. `http://frigate:5000`).
-
-## MQTT & Push Notification Pipeline
-
-1. `src/server.ts` calls `startMqttSubscriber()` at server startup.
-2. MQTT subscriber connects to `MQTT_URL` and subscribes to `frigate/events`, `frigate/reviews`, `frigate/stats`, and `frigate/available`.
-3. `frigate/events`/`frigate/reviews` messages clear the Frigate cache; `frigate/stats`/`frigate/available` do not (they're periodic health heartbeats, not data changes).
-4. New `frigate/events` messages are parsed by `parseFrigateEvent()` and fed into `EventBatcher`.
-5. `EventBatcher` flushes a camera's first event immediately (leading edge), then batches follow-ups into `EVENT_BATCH_WINDOW_MS` windows (default 30s). Each flush reports whether it opens a new activity burst — no events for `EVENT_BURST_GAP_MS` (default 10min) — or continues one.
-6. On flush, `notifyUsersForCamera()` loads all push subscriptions from SQLite, checks per-user camera preferences, and dispatches Web Push via `web-push`. Burst starts alert; continuations are patched into the notification already on screen by the service worker and are paced for Apple endpoints via `APPLE_UPDATE_INTERVAL_MS`. See `docs/specs/camera-motion-notification-dedup.md`.
-7. `frigate/stats` (Frigate's per-camera `camera_fps`, published at Frigate's own `stats_interval`) is fed into `CameraAvailabilityTracker`, which flags a camera offline after `CAMERA_OFFLINE_THRESHOLD` consecutive zero-fps readings (default 10) and back online on the next nonzero reading. `frigate/available` ("online"/"offline", Frigate's MQTT Last Will and Testament) flags every known camera offline immediately, with no debounce, when Frigate itself goes down. Transitions dispatch via `notifyUsersForCameraAvailability()`, gated by a global per-user opt-in preference (default **off**, toggled in Settings — independent of the per-camera motion opt-out). See `docs/specs/camera-availability-notifications.md`.
-8. Push subscriptions and per-camera/global preferences are stored in `data/camera-events.db` (SQLite, WAL mode).
-9. Push is silently disabled if `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, or `VAPID_SUBJECT` are missing.
-
-## SQLite (Runtime-Portable Driver)
-
-- `src/features/shared/server/sqlite/index.ts` exposes a single `openSqlite(path)` function that branches at runtime: **Node → `better-sqlite3`** (used by Vitest), **Bun → `bun:sqlite`** (production).
-- Both branches expose the same `SqliteDatabase` interface (`prepare`, `exec`, `pragmaRead`, `pragmaWrite`, `close`).
-- `better-sqlite3` is a devDependency (not bundled into the production Bun image).
-- Do not run a Node dev process and a Bun production server concurrently against the same DB file — WAL/SHM file ownership differs between drivers.
-- Default DB path: `data/camera-events.db` (relative to the working directory).
+- `openSqlite(path)` in `src/features/shared/server/sqlite/index.ts` picks the driver at runtime: Node → `better-sqlite3` (Vitest, devDependency), Bun → `bun:sqlite` (production). Same `SqliteDatabase` interface (`prepare`, `exec`, `pragmaRead`, `pragmaWrite`, `close`).
+- Never run a Node dev process and a Bun production server against the same DB file (WAL/SHM ownership differs). Default path: `data/camera-events.db`.
 
 ## SSR & Hydration
 
-- This project uses TanStack Start with server-side rendering. All pages and components must produce identical HTML on server and client during the initial render.
-- Never read browser-only globals (`window`, `navigator`, `document`, `Notification`, `PushManager`, `localStorage`, etc.) during render. These don't exist on the server and will cause hydration mismatches.
-- Defer browser-only checks to `useEffect`. Use safe defaults (e.g. `false`, `'default'`, `null`) as initial state so the server and client agree on the first paint.
-- When a component must branch on client-only state, render a neutral placeholder until a `useEffect` confirms the client has mounted, rather than conditionally rendering different content that the server can't predict.
-- Use `useIsomorphicLayoutEffect` (alias `useLayoutEffect` on client, `useEffect` on server) for DOM-measurement effects — see `useCameraOrder.ts` for the pattern.
+- Server and client must produce identical HTML on first render. Never read browser globals (`window`, `navigator`, `document`, `Notification`, `PushManager`, `localStorage`, …) during render.
+- Use safe defaults (`false`, `'default'`, `null`) as initial state and defer browser checks to `useEffect`; render a neutral placeholder until mounted. For DOM measurement use `useIsomorphicLayoutEffect` (see `useCameraOrder.ts`).
 
 ## Test-Driven Development
 
-Before writing or modifying implementation code, use the `test-driven-development` skill and follow the Red → Green → Refactor cycle for every new code addition or bug fix.
+Use the `test-driven-development` skill before writing or changing implementation code. Strict **Red → Green → Refactor** for every addition or bug fix:
 
-All new behaviour must be written test-first. Follow the **Red → Green → Refactor** cycle strictly:
+1. **RED** — write a failing test; run `bun run test` and confirm it fails for the right reason (assertion, not a syntax/import error).
+2. **GREEN** — minimum production code to pass. No extras.
+3. **REFACTOR** — improve the design with tests green; re-run after each change.
 
-1. **RED** — Write a failing test that describes the behaviour you intend to add. Run `bun run test` and confirm it fails for the right reason (assertion failure, not a syntax error or import crash).
-2. **GREEN** — Write the minimum production code to make that test pass. No extra logic, no "while I'm here" cleanup.
-3. **REFACTOR** — With the tests green, improve the design: rename, extract, simplify. Re-run tests after every change to stay green.
-
-Never write production code before a failing test exists. Never skip the refactor step.
-
-### Running Tests
-
-```bash
-bun run test                   # Run all tests once (unit)
-bun run test -- --watch        # Watch mode — re-runs on file save
-bun run test -- --reporter=verbose   # Verbose per-test output
-bun run test -- src/features/cameras # Run a single feature's tests
-bun run test -- validation     # Filter by filename substring
-```
-
-The Vitest config in `vite.config.ts` defines two projects:
-
-- `unit` — jsdom environment, matches `src/**/*.test.ts` and `src/**/*.test.tsx`
-
-### Test File Placement
-
-Every test file lives **next to the source file it tests**, named `<source>.test.ts` or `<source>.test.tsx`. No separate `__tests__/` directories.
-
-```
-src/features/cameras/utils/mergeCameraOrder.ts
-src/features/cameras/utils/mergeCameraOrder.test.ts   ← lives here
-```
-
-### Imports
-
-```ts
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-```
-
-Do not import from `@jest/*`. Do not use globals — always import `describe`, `it`, `expect`, etc. explicitly.
-
-### Structure: One `describe` per exported symbol
-
-Each top-level `describe` block covers one exported function or class. Nest `describe` blocks for logical sub-groups (e.g. error paths, edge cases). Keep each `it` focused on a single observable outcome.
-
-```ts
-describe('isValidCameraName', () => {
-  it('returns true for alphanumeric names', () => { ... })
-  it('returns false for path traversal with ../', () => { ... })
-  it('returns false for names containing spaces', () => { ... })
-})
-```
-
-### What to Test at Each Layer
-
-**Pure functions (utils, validators, parsers)** — test exhaustively. These are the easiest to TDD: write the test, watch it fail, implement the regex/logic, go green. See `validation.test.ts`, `mergeCameraOrder.test.ts`.
-
-**Pure component logic** — extract rendering-decision functions (e.g. `getCamerasPageState`, `getAlertMessage`) from the component and test them in isolation with plain `expect` calls. No render needed. See `CamerasPage.test.tsx`, `AlertBanner.test.ts`.
-
-**React hooks** — test via `renderHook` from `@testing-library/react` when the hook has meaningful state transitions. For hooks that only accept option shapes or export constants, a structural type-level test is sufficient (see `usePullToRefresh.test.ts`).
-
-**React components** — render with `@testing-library/react`, query by accessible role/label, assert on user-visible output. Use `vi.mock()` to stub child components that own their own tests. See `CamerasPage.test.tsx`.
-
-**Server-side logic (proxies, MQTT handlers, push pipeline)** — stub `globalThis.fetch` and `process.env` directly. Restore after each test with `beforeEach`/`afterEach`. See `clip-proxy.test.ts`, `mqtt.test.ts`.
-
-**Async behaviour with timers** — use `vi.useFakeTimers()` / `vi.advanceTimersByTime()`. Always call `vi.useRealTimers()` in `afterEach`. See `event-batcher.test.ts`.
-
-### Mocking Patterns
-
-**Module mock** — stub an entire module for the whole file:
-
-```ts
-vi.mock('#/features/cameras/hooks/useCameraOrder', () => ({
-  useCameraOrder: (cameras: string[]) => ({
-    visibleOrder: cameras,
-    setOrder: vi.fn(),
-    saveError: null,
-    dismissError: vi.fn(),
-  }),
-}))
-```
-
-**Spy / stub** — mock a single function and assert on calls:
-
-```ts
-const flush = vi.fn()
-batcher.add(makeEvent())
-vi.advanceTimersByTime(30_000)
-expect(flush).toHaveBeenCalledOnce()
-expect(flush).toHaveBeenCalledWith('front_porch', [makeEvent()])
-```
-
-**Fetch mock** — stub `globalThis.fetch` per test, restore in `afterEach`:
-
-```ts
-const originalFetch = globalThis.fetch
-afterEach(() => {
-  globalThis.fetch = originalFetch
-})
-
-globalThis.fetch = vi.fn().mockResolvedValue({
-  ok: true,
-  status: 200,
-  arrayBuffer: () => Promise.resolve(new ArrayBuffer(4)),
-})
-```
-
-**Environment variables** — mutate `process.env` directly, restore in `afterEach`:
-
-```ts
-const original = process.env.FRIGATE_URL
-beforeEach(() => {
-  process.env.FRIGATE_URL = 'http://frigate.local:5000'
-})
-afterEach(() => {
-  if (original === undefined) delete process.env.FRIGATE_URL
-  else process.env.FRIGATE_URL = original
-})
-```
-
-**Factory helpers** — use a `make*` helper to create default test fixtures, then spread overrides:
-
-```ts
-function makeEvent(overrides: Partial<DetectionInfo> = {}): DetectionInfo {
-  return {
-    id: '1234.5678-abc',
-    camera: 'front_porch',
-    label: 'person',
-    startTime: 1713182400,
-    ...overrides,
-  }
-}
-```
-
-### Special Test Variants
-
-- `*.driver-contract.test.ts` — validate that the `SqliteDatabase` abstraction behaves identically under both `better-sqlite3` (Node) and `bun:sqlite` (Bun). These tests create a real on-disk database in a temp path and must be self-contained.
-- `*.bun-runtime.test.ts` — skipped when running under Node (use `it.skipIf(!process.versions.bun, ...)`). Tests the Bun production code path.
-- `*.bun-branch.test.ts` — tests the Bun branch via module mocking so they can run under Node in CI.
-- `*.integration.test.ts` — hits real external dependencies (e.g. a live MQTT broker). Not part of `bun run test`; run manually.
-
-### TDD for Server Functions
-
-When adding a `createServerFn` handler:
-
-1. **RED** — write a test that calls the handler function directly (not via HTTP), asserts the correct return value or thrown error, and expects `requireSession()` to throw when called without a valid session.
-2. **GREEN** — implement the handler with `await requireSession()` as the first line.
-3. **REFACTOR** — extract any complex logic into a pure helper and test that helper independently.
-
-### TDD for Validators / Input Guards
-
-Security-critical validators like `isValidCameraName` and `isValidEventId` must have exhaustive test coverage before any production code reads from them. Write tests for valid inputs, path-traversal payloads, null bytes, control characters, empty strings, and maximum-length strings first.
+Never write production code before a failing test exists. Conventions (placement, mocking, special test files) are in `.claude/rules/testing.md`.
 
 ## Deployment
 
-- **Runtime:** Bun (Nitro preset `bun`). Production entry: `bun run .output/server`.
-- **Docker:** multi-stage `Dockerfile`. `docker-compose.yml` wires the app, RabbitMQ (MQTT + management plugins), and Traefik for TLS.
-- **Persistent volumes:** `ce-v2-data` (SQLite DB), `rabbitmq-data` (broker state).
-- Security headers (HSTS, X-Content-Type-Options, X-Frame-Options, Referrer-Policy, Permissions-Policy, COOP/CORP) are applied via Traefik middleware labels.
-
-## Environment Variables
-
-| Variable                   | Required          | Purpose                                                                                                   |
-| -------------------------- | ----------------- | --------------------------------------------------------------------------------------------------------- |
-| `SESSION_SECRET`           | Yes               | Cookie encryption key (≥32 chars)                                                                         |
-| `GOOGLE_CLIENT_ID`         | Yes               | Google OAuth client ID                                                                                    |
-| `GOOGLE_CLIENT_SECRET`     | Yes               | Google OAuth client secret                                                                                |
-| `ADMIN_EMAILS`             | No                | Comma-separated emails promoted to `users.is_admin` at sign-in; unset/empty means no admins (fail-closed) |
-| `FRIGATE_URL`              | Yes (unless mock) | Base URL of Frigate instance (e.g. `http://frigate:5000`)                                                 |
-| `FRIGATE_MOCK`             | No                | Set to `true` to use mock Frigate client                                                                  |
-| `MQTT_URL`                 | No                | MQTT broker URL (e.g. `mqtt://rabbitmq:1883`); push/cache-invalidation disabled if unset                  |
-| `VAPID_PUBLIC_KEY`         | No                | Web Push VAPID public key; push disabled if any VAPID var missing                                         |
-| `VAPID_PRIVATE_KEY`        | No                | Web Push VAPID private key                                                                                |
-| `VAPID_SUBJECT`            | No                | Push contact (`mailto:...`); push disabled if any VAPID var missing                                       |
-| `APP_URL`                  | No                | Public app URL for OAuth redirect; falls back to request origin in dev                                    |
-| `EVENT_BATCH_WINDOW_MS`    | No                | Window for follow-up (patch) pushes per camera (default 30000ms)                                          |
-| `EVENT_BURST_GAP_MS`       | No                | Quiet gap before a camera alerts again instead of patching (default 600000ms)                             |
-| `APPLE_UPDATE_INTERVAL_MS` | No                | Min spacing between patch pushes to one Apple endpoint; 0 disables (default 300000ms)                     |
-| `CAMERA_OFFLINE_THRESHOLD` | No                | Consecutive zero-`camera_fps` `frigate/stats` readings before a camera is flagged offline (default 10)    |
-
-Generate VAPID keys with: `npx web-push generate-vapid-keys`
-
-## Design Docs
-
-Feature design documents live in `docs/specs/`. Each significant feature has a spec documenting problem statement, approach, alternatives, and trade-offs. Review the relevant spec before modifying a feature. Current specs include: `camera-availability-notifications`, `cameras-page`, `cross-platform-pwa-fixes`, `event-clip-snapshot-download`, `event-count-setting`, `event-request-cache`, `feature-sliced-architecture`, `focus-refetch`, `frigate-api-client`, `glassmorphism-design-system`, `google-sso-login`, `mqtt-cache-invalidation`, `mqtt-push-notifications`, `pull-to-refresh`, `rearrange-cameras-on-feed`, `web-push-notifications`, and more.
-
-<!-- BEGIN BEADS INTEGRATION v:1 profile:minimal hash:7510c1e2 -->
+- Bun runtime (Nitro preset `bun`); production entry `bun run .output/server`. Multi-stage `Dockerfile`; `docker-compose.yml` wires the app, RabbitMQ (MQTT + management) and Traefik (TLS, security headers via middleware labels). Volumes: `ce-v2-data` (SQLite), `rabbitmq-data`.
 
 ## Beads Issue Tracker
 
-This project uses **bd (beads)** for issue tracking. Run `bd prime` to see full workflow context and commands.
-
-### Quick Reference
-
-```bash
-bd ready              # Find available work
-bd show <id>          # View issue details
-bd update <id> --claim  # Claim work
-bd close <id>         # Complete work
-```
-
-### Rules
-
-- Use `bd` for ALL task tracking — do NOT use TodoWrite, TaskCreate, or markdown TODO lists
-- Run `bd prime` for detailed command reference and session close protocol
-- Use `bd` for issues/tasks ONLY. Do NOT use `bd remember` for persistent knowledge — all durable memory goes to the Obsidian vault at `docs/memory/` (see "Long-Term Memory Vault" below). Do NOT use MEMORY.md files.
-
-**Architecture in one line:** issues live in a local Dolt DB; sync uses `refs/dolt/data` on your git remote; `.beads/issues.jsonl` is a passive export. See https://github.com/gastownhall/beads/blob/main/docs/SYNC_CONCEPTS.md for details and anti-patterns.
+Use **bd (beads)** for ALL task tracking — not TodoWrite, TaskCreate or markdown TODO lists. `bd prime` shows the workflow; `bd ready`, `bd show <id>`, `bd update <id> --claim`, `bd close <id>`. Do NOT use `bd remember`: durable knowledge goes to the vault below, and there are no `MEMORY.md` files. Issues live in a local Dolt DB synced via `refs/dolt/data`; `.beads/issues.jsonl` is a passive export. Details: `docs/agents/issue-tracker.md`, `docs/agents/triage-labels.md` (default five-label vocabulary as `bd` labels).
 
 ## Long-Term Memory Vault
 
-This project keeps an **Obsidian vault** at `docs/memory/` for durable, explanatory
-knowledge — architectural rationale, the _why_ behind non-obvious code, platform
-gotchas, decision records, and the project glossary.
+`docs/memory/` is an Obsidian vault for durable, explanatory knowledge (rationale, gotchas, decisions, glossary). `bd` is for short-lived actionable issues; the vault is for the _why_. Start at `docs/memory/Home.md`; follow `docs/memory/README.md` (one idea per note, `[[wikilinks]]`, frontmatter from `templates/memory-note.md`). Domain docs: root `CONTEXT.md` + ADRs (`docs/agents/domain.md`).
 
-- **`bd` vs the vault:** use `bd` for issues (actionable, short-lived task tracking)
-  and the vault for durable knowledge (explanatory, long-lived). A bd issue says
-  _"fix the iOS push race"_; a vault note explains _why iOS standalone PWAs drop the
-  session cookie and how we work around it_. This does not contradict the bd rule
-  above — the vault is not a `MEMORY.md` and is not for task tracking.
-- **When you learn something durable** about this project that isn't already in the
-  code, git history, or this file, add an atomic note to the vault rather than
-  letting it evaporate at session end. Start from `docs/memory/Home.md` (the map of
-  content) to find or create the right place; follow the conventions in
-  `docs/memory/README.md` (one idea per note, link with `[[wikilinks]]`, frontmatter
-  via `docs/memory/templates/memory-note.md`).
-- **Record every larger architectural decision as an ADR.** Whenever we make a
-  non-trivial architectural or design choice — a new subsystem, a cross-cutting
-  pattern, a framework/library/runtime choice, a security posture, or a deliberate
-  deviation from a prior plan — write a dated decision record in
-  `docs/memory/decisions/` (`YYYY-MM-DD-slug.md`, ADR-style: Context → Decision →
-  Alternatives → Why it matters). This is a second memory: it must reflect the
-  **current implementation as the chosen state**, even where the code has since
-  deviated from the spec/plan that preceded it — when it deviates, record the current
-  reality and note the deviation. Add the new ADR to the "Decisions" list in
-  `docs/memory/Home.md`.
-- **Git:** notes are committed (shared); the per-user `docs/memory/.obsidian/` config
-  is gitignored.
+- When you learn something durable that isn't in the code, git history or this file, add a note rather than letting it evaporate.
+- **Record every larger architectural decision as an ADR** in `docs/memory/decisions/` (`YYYY-MM-DD-slug.md`: Context → Decision → Alternatives → Why it matters). It must reflect the **current implementation as the chosen state**, noting any deviation from the earlier spec/plan. Add it to the "Decisions" list in `docs/memory/Home.md`.
+- Notes are committed; `docs/memory/.obsidian/` is gitignored.
 
 ## Session Completion
 
-**When ending a work session**, you MUST complete ALL steps below. Work is NOT complete until `git push` succeeds.
+**When ending a work session you MUST complete ALL steps. Work is NOT complete until `git push` succeeds.**
 
-**MANDATORY WORKFLOW:**
+1. File issues for remaining work
+2. Run quality gates if code changed (tests, linters, builds)
+3. Update issue status — close finished work, update in-progress items
+4. **Push:** `git pull --rebase && git push`, then `git status` MUST show "up to date with origin"
+5. Clean up stashes and prune remote branches
+6. Verify everything is committed AND pushed; hand off context for the next session
 
-1. **File issues for remaining work** - Create issues for anything that needs follow-up
-2. **Run quality gates** (if code changed) - Tests, linters, builds
-3. **Update issue status** - Close finished work, update in-progress items
-4. **PUSH TO REMOTE** - This is MANDATORY:
-   ```bash
-   git pull --rebase
-   git push
-   git status  # MUST show "up to date with origin"
-   ```
-5. **Clean up** - Clear stashes, prune remote branches
-6. **Verify** - All changes committed AND pushed
-7. **Hand off** - Provide context for next session
-
-**CRITICAL RULES:**
-
-- Work is NOT complete until `git push` succeeds
-- NEVER stop before pushing - that leaves work stranded locally
-- NEVER say "ready to push when you are" - YOU must push
-- If push fails, resolve and retry until it succeeds
-- **No AI attestations or co-authoring anywhere.** Do not include `Co-Authored-By:` trailers, `Generated with Claude` footers, `Claude-Session:` links, or any other AI attribution in commit messages, PR titles, PR bodies, code comments, or any other artifact pushed to the repository. This applies to all AI tools and models — Claude, Copilot, GPT, etc.
-
-<!-- END BEADS INTEGRATION -->
-
-## Agent skills
-
-### Issue tracker
-
-Issues are tracked in beads (`bd`), not GitHub Issues. See `docs/agents/issue-tracker.md`.
-
-### Triage labels
-
-Default five-label vocabulary, applied as `bd` labels. See `docs/agents/triage-labels.md`.
-
-### Domain docs
-
-Single-context: root `CONTEXT.md` + ADRs in `docs/memory/decisions/`. See `docs/agents/domain.md`.
+Rules: never stop before pushing; never say "ready to push when you are" — push yourself; if the push fails, resolve and retry. **No AI attestations or co-authoring anywhere:** no `Co-Authored-By:` trailers, "Generated with Claude" footers, `Claude-Session:` links or other AI attribution in commits, PR titles/bodies, code comments or any pushed artifact.
