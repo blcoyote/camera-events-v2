@@ -22,8 +22,8 @@ Reference pair: `src/features/shared/server/favorites/favorites-fns.ts` → `fav
 
 ## Rules
 
-1. **Server-only module?** (touches `process.env` secrets, DB, `requireSession()`, Frigate client) → put it in `server/`, add the `server-only` marker as the first line, call it only from a handler.
-2. **Data bridge for components or loaders?** → `createServerFn` in a `*-fns.ts` file; `await requireSession()` first; dynamic-import the handlers.
+1. **Server-only module?** (touches `process.env` secrets, DB, `requireSession()`, Frigate client) → put it in `server/`, add the `server-only` marker as the first line, call it only from a handler. `*-fns.ts`/`load-*.ts` wrappers are client-importable and never get the marker.
+2. **Data bridge for components or loaders?** → `createServerFn` in a `*-fns.ts` file; dynamic-import the handlers, and `await requireSession()` first when it returns protected data (not for public fns like `getCurrentUserFn`, which must serve signed-out visitors). Protected = user-specific data, any write, or anything using server secrets. Examples: public read `getCurrentUserFn` (no session); authenticated read `loadEventsFn`; authenticated write `toggleFavoriteFn`.
 3. **Loaders** call `createServerFn` functions only, never `requireSession()` or server modules directly.
 4. **No `VITE_` prefix on secrets** — `import.meta.env.VITE_*` is bundled into the client.
 5. **No barrel re-exports** that mix server-only and client-safe exports.
@@ -38,7 +38,7 @@ The trace lists the import chain; the violation is at the last importer, so fix 
 
 - [ ] New server-only files are in `server/` and start with the `server-only` import
 - [ ] `*-fns.ts` files have no static imports of server-only modules
-- [ ] Every `createServerFn` handler calls `await requireSession()` first (see `CLAUDE.md` > Server Function Authentication)
+- [ ] Every `createServerFn` handler touching protected data calls `await requireSession()` first (see `CLAUDE.md` > Server Function Authentication)
 - [ ] Loaders only call server functions
 - [ ] No `VITE_`-prefixed secrets; no mixed barrels
 - [ ] Browser-API access is behind `useEffect`
