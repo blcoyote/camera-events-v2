@@ -8,8 +8,8 @@ import { getEventSnapshot } from '#/features/shared/server/frigate/client'
 export async function handleSnapshotRequest(
   eventId: string,
   isAuthenticated: boolean,
-  download: boolean = false,
-  showBoundingBox: boolean = false,
+  download = false,
+  showBoundingBox = false,
 ): Promise<Response> {
   if (!isAuthenticated) {
     return new Response(null, { status: 401 })

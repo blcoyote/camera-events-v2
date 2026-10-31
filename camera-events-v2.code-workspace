@@ -6,7 +6,6 @@
   ],
   "extensions": {
     "recommendations": [
-      "oxc.oxc-vscode",
       "biomejs.biome",
       "bradlc.vscode-tailwindcss",
       "vitest.explorer",
