@@ -205,6 +205,61 @@ describe('parsePushPayload', () => {
   })
 })
 
+describe('parsePushPayload locale', () => {
+  const event = {
+    camera: 'c',
+    count: 3,
+    labels: ['Person', 'Bil'],
+    timestamp: 1793412744,
+    burstStart: true,
+  }
+
+  it('re-derives a Danish body from payload.locale', () => {
+    const r = parsePushPayload({
+      title: 'T',
+      body: 'x',
+      url: '/',
+      locale: 'da',
+      event,
+    })
+    expect(r.body).toBe('3 nye hændelser — Person, Bil kl. 03.12')
+  })
+
+  it('falls back to English for missing or unknown locale', () => {
+    for (const locale of [undefined, 'fr']) {
+      const r = parsePushPayload({
+        title: 'T',
+        body: 'x',
+        url: '/',
+        locale,
+        event,
+      })
+      expect(r.body).toBe('3 new events — Person, Bil at 03:12')
+    }
+  })
+
+  it('keeps a merged Patch Danish', () => {
+    const plan = planNotification(
+      parsePushPayload({
+        title: 'T',
+        body: 'x',
+        url: '/',
+        tag: 't',
+        locale: 'da',
+        event: { ...event, count: 1, burstStart: false },
+      }),
+      {
+        camera: 'c',
+        count: 1,
+        labels: ['Person'],
+        timestamp: 1793412744,
+        url: '/',
+      },
+    )
+    expect(plan.body).toBe('2 nye hændelser — Person, Bil kl. 03.12')
+  })
+})
+
 describe('buildNotificationOptions', () => {
   function makePlan(overrides: Record<string, unknown> = {}) {
     return {

@@ -4,6 +4,8 @@ import type { PushStore, PushSubscriptionRow } from './push-store'
 import { isPushEnabled, sendPushNotification } from './push'
 import { getPushStore } from './push-store'
 import { areNotificationsMuted } from './notification-mute'
+import { isPushLocale } from './push-locale'
+import type { PushLocale } from './push-locale'
 
 function hostOf(endpoint: string): string {
   try {
@@ -19,9 +21,11 @@ type DeliveryStore = Pick<
   | 'isCameraEnabledForUser'
   | 'isCameraAvailabilityEnabledForUser'
 > & {
-  getSubscriptionsByUserId: (
-    userId: string,
-  ) => Array<Pick<PushSubscriptionRow, 'endpoint' | 'p256dh' | 'auth'>>
+  getSubscriptionsByUserId: (userId: string) => Array<
+    Pick<PushSubscriptionRow, 'endpoint' | 'p256dh' | 'auth'> & {
+      locale?: string
+    }
+  >
 }
 
 /** Everything Delivery touches in the outside world; production defaults wire the real modules. */
@@ -45,7 +49,7 @@ export interface DeliveryRequest {
   description: string
   burst?: { key: string; start: boolean }
   isUserEligible: (userId: string, store: DeliveryStore) => boolean
-  buildPayload: (burstStart: boolean) => PushPayload
+  buildPayload: (burstStart: boolean, locale: PushLocale) => PushPayload
   allowEndpoint?: (
     endpoint: string,
     burstStart: boolean,
@@ -97,7 +101,15 @@ export function createDelivery(
     const burstStart = burst ? burst.start || swallowed.has(burst.key) : false
 
     const store = await deps.getStore()
-    const payload = request.buildPayload(burstStart)
+    const payloads = new Map<PushLocale, PushPayload>()
+    const payloadFor = (locale: PushLocale) => {
+      let payload = payloads.get(locale)
+      if (!payload) {
+        payload = request.buildPayload(burstStart, locale)
+        payloads.set(locale, payload)
+      }
+      return payload
+    }
     let attempted = 0
     let succeeded = 0
 
@@ -123,7 +135,7 @@ export function createDelivery(
               endpoint: sub.endpoint,
               keys: { p256dh: sub.p256dh, auth: sub.auth },
             },
-            payload,
+            payloadFor(isPushLocale(sub.locale) ? sub.locale : 'en'),
           )
           // An expired endpoint is gone: nobody was there to alert.
           if (outcome !== 'expired') {

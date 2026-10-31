@@ -24,5 +24,10 @@
   "label_horse": "Horse",
   "label_package": "Package",
   "label_face": "Face",
-  "label_license_plate": "License plate"
+  "label_license_plate": "License plate",
+  "push_event_single": "{label} detected at {time}",
+  "push_event_multi": "{count} new events — {labels} at {time}",
+  "push_labels_more": "{labels} +{more} more",
+  "push_camera_offline": "Camera went offline — no frames received",
+  "push_camera_online": "Camera is back online"
 }

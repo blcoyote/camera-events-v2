@@ -24,5 +24,10 @@
   "label_horse": "Hest",
   "label_package": "Pakke",
   "label_face": "Ansigt",
-  "label_license_plate": "Nummerplade"
+  "label_license_plate": "Nummerplade",
+  "push_event_single": "{label} registreret kl. {time}",
+  "push_event_multi": "{count} nye hændelser — {labels} kl. {time}",
+  "push_labels_more": "{labels} +{more} mere",
+  "push_camera_offline": "Kameraet gik offline — ingen billeder modtaget",
+  "push_camera_online": "Kameraet er online igen"
 }

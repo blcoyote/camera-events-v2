@@ -1,6 +1,7 @@
 import '@tanstack/react-start/server-only'
 import webPush from 'web-push'
 import { getPushStore } from './push-store'
+import type { PushLocale } from './push-locale'
 
 /**
  * Structured event data the service worker merges on.
@@ -34,6 +35,8 @@ export interface PushPayload {
   /** Groups notifications so a camera's follow-ups replace rather than stack. */
   tag?: string
   event?: PushEventInfo
+  /** Language the text above was rendered in; the SW re-derives merged bodies with it. */
+  locale?: PushLocale
 }
 
 export interface PushSubscriptionInfo {

@@ -1,8 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   formatCameraName,
-  formatLabel,
-  formatTime,
   buildCameraPayload,
   cameraNotificationTag,
   notifyUsersForCamera,
@@ -55,32 +53,6 @@ describe('formatCameraName', () => {
   })
 })
 
-describe('formatLabel', () => {
-  it('capitalizes the first letter', () => {
-    expect(formatLabel('person')).toBe('Person')
-    expect(formatLabel('car')).toBe('Car')
-  })
-
-  it('handles already-capitalized labels', () => {
-    expect(formatLabel('Dog')).toBe('Dog')
-  })
-})
-
-describe('formatTime', () => {
-  it('formats a unix timestamp to HH:MM', () => {
-    // 1713182400 = 2024-04-15T12:00:00Z
-    const result = formatTime(1713182400)
-    // Just check format — the exact time depends on the test machine's locale
-    expect(result).toMatch(/^\d{2}:\d{2}$/)
-  })
-})
-
-describe('formatTime timezone', () => {
-  it('uses Europe/Copenhagen 24h regardless of machine TZ', () => {
-    expect(formatTime(1793412744)).toBe('03:12') // 02:12 UTC, CET
-  })
-})
-
 describe('cameraNotificationTag', () => {
   it('namespaces the tag per camera so cameras alert independently', () => {
     expect(cameraNotificationTag('front_porch')).toBe('camera-front_porch')
@@ -88,9 +60,38 @@ describe('cameraNotificationTag', () => {
   })
 })
 
+describe('buildCameraPayload locale', () => {
+  const t = 1793412744 // 03:12 Copenhagen
+  const ev = (label: string, id = 'e') => makeEvent({ id, label, startTime: t })
+
+  it('renders a Danish single-event body and sets payload.locale', () => {
+    const p = buildCameraPayload('front_porch', [ev('car')], true, 'da')
+    expect(p.body).toBe('Bil registreret kl. 03.12')
+    expect(p.locale).toBe('da')
+    expect(p.event?.labels).toEqual(['Bil'])
+  })
+
+  it('keeps English byte-identical', () => {
+    const p = buildCameraPayload('front_porch', [ev('car')], true, 'en')
+    expect(p.body).toBe('Car detected at 03:12')
+    expect(p.locale).toBe('en')
+  })
+
+  it('renders Danish multi-event and +N mere bodies', () => {
+    const labels = ['person', 'car', 'dog', 'cat', 'bird']
+    const p = buildCameraPayload(
+      'front_porch',
+      labels.map((l, i) => ev(l, `e${i}`)),
+      true,
+      'da',
+    )
+    expect(p.body).toBe('5 nye hændelser — Person, Bil, Hund +2 mere kl. 03.12')
+  })
+})
+
 describe('buildCameraPayload', () => {
   it('links a single event to its detail page', () => {
-    const payload = buildCameraPayload('front_porch', [makeEvent()], true)
+    const payload = buildCameraPayload('front_porch', [makeEvent()], true, 'en')
 
     expect(payload.title).toBe('Front Porch')
     expect(payload.body).toContain('Person detected at')
@@ -103,6 +104,7 @@ describe('buildCameraPayload', () => {
       'front_porch',
       [makeEvent({ hasSnapshot: false, hasClip: true })],
       true,
+      'en',
     )
 
     expect(payload.url).toBe('/camera-events/1713182400.123-abc')
@@ -115,6 +117,7 @@ describe('buildCameraPayload', () => {
       'front_porch',
       [makeEvent({ hasSnapshot: false, hasClip: false })],
       true,
+      'en',
     )
 
     expect(payload.body).toContain('Person detected at')
@@ -126,13 +129,14 @@ describe('buildCameraPayload', () => {
       'front_porch',
       [makeEvent({ id: 'e1' }), makeEvent({ id: 'e2' })],
       true,
+      'en',
     )
 
     expect(payload.url).toBe('/camera-events')
   })
 
   it('tags the payload per camera so the SW can group and patch it', () => {
-    const payload = buildCameraPayload('front_porch', [makeEvent()], true)
+    const payload = buildCameraPayload('front_porch', [makeEvent()], true, 'en')
 
     expect(payload.tag).toBe('camera-front_porch')
   })
@@ -142,7 +146,7 @@ describe('buildCameraPayload', () => {
       makeEvent({ id: 'e1', label: 'person', startTime: 1713182400 }),
       makeEvent({ id: 'e2', label: 'car', startTime: 1713182500 }),
     ]
-    const payload = buildCameraPayload('front_porch', events, true)
+    const payload = buildCameraPayload('front_porch', events, true, 'en')
 
     expect(payload.event).toEqual({
       camera: 'front_porch',
@@ -154,7 +158,12 @@ describe('buildCameraPayload', () => {
   })
 
   it('marks continuation flushes as non-burst-start', () => {
-    const payload = buildCameraPayload('front_porch', [makeEvent()], false)
+    const payload = buildCameraPayload(
+      'front_porch',
+      [makeEvent()],
+      false,
+      'en',
+    )
 
     expect(payload.event?.burstStart).toBe(false)
   })
@@ -165,7 +174,7 @@ describe('buildCameraPayload', () => {
       makeEvent({ id: 'e2', label: 'person' }),
       makeEvent({ id: 'e3', label: 'car' }),
     ]
-    const payload = buildCameraPayload('front_porch', events, true)
+    const payload = buildCameraPayload('front_porch', events, true, 'en')
 
     expect(payload.event?.labels).toEqual(['Car', 'Person'])
     expect(payload.event?.count).toBe(3)
@@ -176,7 +185,7 @@ describe('buildCameraPayload', () => {
       makeEvent({ id: 'e1', startTime: 1713182400 }),
       makeEvent({ id: 'e2', startTime: 1713182500 }),
     ]
-    const payload = buildCameraPayload('front_porch', events, true)
+    const payload = buildCameraPayload('front_porch', events, true, 'en')
 
     expect(payload.event?.timestamp).toBe(1713182500)
   })
@@ -187,6 +196,7 @@ describe('buildCameraPayload', () => {
         'front_porch',
         [makeEvent({ label: 'car' })],
         true,
+        'en',
       )
 
       expect(payload.body).toMatch(/Car detected at \d{2}:\d{2}/)
@@ -198,7 +208,7 @@ describe('buildCameraPayload', () => {
         makeEvent({ id: 'e2', label: 'car' }),
         makeEvent({ id: 'e3', label: 'dog' }),
       ]
-      const payload = buildCameraPayload('front_porch', events, true)
+      const payload = buildCameraPayload('front_porch', events, true, 'en')
 
       expect(payload.body).toContain('3 new events')
       expect(payload.body).toContain('Person, Car, Dog')
@@ -212,7 +222,7 @@ describe('buildCameraPayload', () => {
         makeEvent({ id: 'e4', label: 'cat' }),
         makeEvent({ id: 'e5', label: 'bird' }),
       ]
-      const payload = buildCameraPayload('driveway', events, true)
+      const payload = buildCameraPayload('driveway', events, true, 'en')
 
       expect(payload.body).toContain('+2 more')
     })
@@ -317,7 +327,12 @@ describe('notifyUsersForCamera', () => {
     await notifyUsersForCamera('front_porch', [event], { burstStart: true })
 
     expect(sendPushNotificationMock).toHaveBeenCalledTimes(2)
-    const expectedPayload = buildCameraPayload('front_porch', [event], true)
+    const expectedPayload = buildCameraPayload(
+      'front_porch',
+      [event],
+      true,
+      'en',
+    )
     expect(sendPushNotificationMock).toHaveBeenNthCalledWith(
       1,
       {
@@ -393,7 +408,12 @@ describe('notifyUsersForCamera', () => {
     await notifyUsersForCamera('front_porch', events, { burstStart: true })
 
     expect(sendPushNotificationMock).toHaveBeenCalledTimes(1)
-    const expectedPayload = buildCameraPayload('front_porch', events, true)
+    const expectedPayload = buildCameraPayload(
+      'front_porch',
+      events,
+      true,
+      'en',
+    )
     expect(sendPushNotificationMock).toHaveBeenCalledWith(
       {
         endpoint: 'https://push.example/a',

@@ -7,6 +7,7 @@ interface FakeSub {
   endpoint: string
   p256dh: string
   auth: string
+  locale?: string
 }
 
 function makeStore(users: Record<string, FakeSub[]>) {
@@ -185,13 +186,51 @@ describe('createDelivery', () => {
     })
   })
 
+  describe('locale', () => {
+    it('sends each subscription the payload for its locale, built once per locale', async () => {
+      const send = vi.fn(() => Promise.resolve())
+      const buildPayload = vi.fn(
+        (burstStart: boolean, locale: string): PushPayload => ({
+          ...makePayload(burstStart),
+          body: `body-${locale}`,
+        }),
+      )
+      const store = makeStore({
+        u1: [
+          { ...makeSub(1), locale: 'da' },
+          { ...makeSub(2), locale: 'en' },
+        ],
+        u2: [
+          { ...makeSub(3), locale: 'da' },
+          { ...makeSub(4), locale: 'xx' },
+          makeSub(5),
+        ],
+      })
+      await createDelivery(
+        makeDeps({ send, getStore: () => Promise.resolve(store) }),
+      ).deliver(makeRequest({ buildPayload }))
+
+      const bodies = send.mock.calls.map(
+        (c) => (c as unknown as [unknown, PushPayload])[1].body,
+      )
+      expect(bodies).toEqual([
+        'body-da',
+        'body-en',
+        'body-da',
+        'body-en',
+        'body-en',
+      ])
+      expect(buildPayload).toHaveBeenCalledTimes(2)
+    })
+  })
+
   describe('burstStart', () => {
     it('passes true for burst.start true', async () => {
       const buildPayload = vi.fn(makePayload)
       await createDelivery(makeDeps()).deliver(
         makeRequest({ burst: { key: 'k', start: true }, buildPayload }),
       )
-      expect(buildPayload).toHaveBeenCalledWith(true)
+      expect(buildPayload).toHaveBeenCalledWith(true, 'en')
     })
 
     it('passes false for burst.start false', async () => {
@@ -199,13 +238,13 @@ describe('createDelivery', () => {
       await createDelivery(makeDeps()).deliver(
         makeRequest({ burst: { key: 'k', start: false }, buildPayload }),
       )
-      expect(buildPayload).toHaveBeenCalledWith(false)
+      expect(buildPayload).toHaveBeenCalledWith(false, 'en')
     })
 
     it('passes false when burst is omitted', async () => {
       const buildPayload = vi.fn(makePayload)
       await createDelivery(makeDeps()).deliver(makeRequest({ buildPayload }))
-      expect(buildPayload).toHaveBeenCalledWith(false)
+      expect(buildPayload).toHaveBeenCalledWith(false, 'en')
     })
   })
 
@@ -236,9 +275,9 @@ describe('createDelivery', () => {
       await run(d, 'k', true)
       setMuted(false)
       await run(d, 'k', false)
-      expect(buildPayload).toHaveBeenLastCalledWith(true)
+      expect(buildPayload).toHaveBeenLastCalledWith(true, 'en')
       await run(d, 'k', false)
-      expect(buildPayload).toHaveBeenLastCalledWith(false)
+      expect(buildPayload).toHaveBeenLastCalledWith(false, 'en')
     })
 
     it('does not promote after a muted continuation', async () => {
@@ -248,7 +287,7 @@ describe('createDelivery', () => {
       await run(d, 'k', false)
       setMuted(false)
       await run(d, 'k', false)
-      expect(buildPayload).toHaveBeenLastCalledWith(false)
+      expect(buildPayload).toHaveBeenLastCalledWith(false, 'en')
     })
 
     it('clears the flag on a natural unmuted burst start', async () => {
@@ -259,7 +298,7 @@ describe('createDelivery', () => {
       setMuted(false)
       await run(d, 'k', true)
       await run(d, 'k', false)
-      expect(buildPayload).toHaveBeenLastCalledWith(false)
+      expect(buildPayload).toHaveBeenLastCalledWith(false, 'en')
     })
 
     it('isolates keys', async () => {
@@ -269,7 +308,7 @@ describe('createDelivery', () => {
       await run(d, 'a', true)
       setMuted(false)
       await run(d, 'b', false)
-      expect(buildPayload).toHaveBeenLastCalledWith(false)
+      expect(buildPayload).toHaveBeenLastCalledWith(false, 'en')
     })
 
     it('does not share state between instances', async () => {
@@ -278,7 +317,7 @@ describe('createDelivery', () => {
       await run(createDelivery(deps), 'k', true)
       setMuted(false)
       await run(createDelivery(deps), 'k', false)
-      expect(buildPayload).toHaveBeenLastCalledWith(false)
+      expect(buildPayload).toHaveBeenLastCalledWith(false, 'en')
     })
 
     it('a muted request without burst never touches swallowed state', async () => {
@@ -288,7 +327,7 @@ describe('createDelivery', () => {
       await d.deliver(makeRequest())
       setMuted(false)
       await run(d, 'k', false)
-      expect(buildPayload).toHaveBeenLastCalledWith(false)
+      expect(buildPayload).toHaveBeenLastCalledWith(false, 'en')
     })
 
     describe('flag is cleared only once the promoted Alert is settled', () => {
@@ -332,7 +371,7 @@ describe('createDelivery', () => {
         const { run, buildPayload } = await mutedStartThenUnmuted({ getStore })
         await expect(run(false)).rejects.toThrow('db down')
         await run(false)
-        expect(buildPayload).toHaveBeenLastCalledWith(true)
+        expect(buildPayload).toHaveBeenLastCalledWith(true, 'en')
       })
 
       it('keeps the flag when every attempted send rejects', async () => {
@@ -340,9 +379,9 @@ describe('createDelivery', () => {
         const { run, buildPayload } = await mutedStartThenUnmuted({ send })
         await run(false)
         expect(send).toHaveBeenCalled()
-        expect(buildPayload).toHaveBeenLastCalledWith(true)
+        expect(buildPayload).toHaveBeenLastCalledWith(true, 'en')
         await run(false)
-        expect(buildPayload).toHaveBeenLastCalledWith(true)
+        expect(buildPayload).toHaveBeenLastCalledWith(true, 'en')
       })
 
       it('clears the flag when at least one send succeeds', async () => {
@@ -358,7 +397,7 @@ describe('createDelivery', () => {
         await run(false)
         expect(send).toHaveBeenCalledTimes(2)
         await run(false)
-        expect(buildPayload).toHaveBeenLastCalledWith(false)
+        expect(buildPayload).toHaveBeenLastCalledWith(false, 'en')
       })
 
       it('settles (clears) when the only send resolves expired', async () => {
@@ -368,7 +407,7 @@ describe('createDelivery', () => {
         })
         await run(false)
         await run(false)
-        expect(buildPayload).toHaveBeenLastCalledWith(false)
+        expect(buildPayload).toHaveBeenLastCalledWith(false, 'en')
       })
 
       it('keeps the flag when one send is expired and the other fails', async () => {
@@ -383,7 +422,7 @@ describe('createDelivery', () => {
         })
         await run(false)
         await run(false)
-        expect(buildPayload).toHaveBeenLastCalledWith(true)
+        expect(buildPayload).toHaveBeenLastCalledWith(true, 'en')
       })
 
       it('clears the flag when one send is expired and the other is sent', async () => {
@@ -398,7 +437,7 @@ describe('createDelivery', () => {
         })
         await run(false)
         await run(false)
-        expect(buildPayload).toHaveBeenLastCalledWith(false)
+        expect(buildPayload).toHaveBeenLastCalledWith(false, 'en')
       })
 
       it('counts a send resolving undefined as sent', async () => {
@@ -406,21 +445,21 @@ describe('createDelivery', () => {
         const { run, buildPayload } = await mutedStartThenUnmuted({ send })
         await run(false)
         await run(false)
-        expect(buildPayload).toHaveBeenLastCalledWith(false)
+        expect(buildPayload).toHaveBeenLastCalledWith(false, 'en')
       })
 
       it('clears the flag when nobody is eligible', async () => {
         const { run, buildPayload } = await mutedStartThenUnmuted({})
         await run(false, { isUserEligible: () => false })
         await run(false)
-        expect(buildPayload).toHaveBeenLastCalledWith(false)
+        expect(buildPayload).toHaveBeenLastCalledWith(false, 'en')
       })
 
       it('clears the flag when every endpoint is skipped by allowEndpoint', async () => {
         const { run, buildPayload } = await mutedStartThenUnmuted({})
         await run(false, { allowEndpoint: () => false })
         await run(false)
-        expect(buildPayload).toHaveBeenLastCalledWith(false)
+        expect(buildPayload).toHaveBeenLastCalledWith(false, 'en')
       })
     })
   })
