@@ -10,7 +10,10 @@ import { ServiceWorkerRegistration } from '#/features/shell/components/ServiceWo
 import { getCurrentUserFn } from '#/features/auth/server/auth'
 import type { SessionData } from '#/features/shared/server/session'
 import { NotFound } from './-not-found'
-import { buildThemeInitScript } from '#/features/shared/hooks/themeMode'
+import {
+  THEME_COLORS,
+  buildThemeInitScript,
+} from '#/features/shared/hooks/themeMode'
 
 import appCss from '../styles.css?url'
 
@@ -38,9 +41,11 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       {
         title: 'Camera Events',
       },
+      // One meta only: TanStack dedupes by name. The init script syncs it to
+      // the resolved theme before first paint.
       {
         name: 'theme-color',
-        content: '#eef6ff',
+        content: THEME_COLORS.light,
       },
       {
         name: 'mobile-web-app-capable',
