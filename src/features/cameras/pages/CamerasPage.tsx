@@ -71,14 +71,16 @@ export function CamerasPage({
       />
 
       {canArrange && (
-        <p
-          role="status"
-          className="mt-4 flex items-center gap-1.5 text-sm text-fg-2 empty:hidden"
-        >
+        <p role="status" className="mt-4 text-sm text-fg-2 empty:hidden">
           {isEditing && (
             <>
-              Drag <GripVertical size={16} aria-hidden="true" /> to move a
-              camera. The order is saved on this device only.
+              Drag{' '}
+              <GripVertical
+                size={16}
+                aria-hidden="true"
+                className="inline-block align-text-bottom"
+              />{' '}
+              to move a camera. The order is saved on this device only.
             </>
           )}
         </p>

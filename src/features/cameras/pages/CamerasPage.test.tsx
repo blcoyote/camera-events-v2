@@ -142,6 +142,13 @@ describe('CamerasPage', () => {
       )
     })
 
+    it('lays the hint out as inline text, not a flex row that splits words on mobile', () => {
+      const json = JSON.stringify(render(ok(['a', 'b']), true))
+      const status = json.match(/"role":"status","className":"([^"]*)"/)
+      expect(status).not.toBeNull()
+      expect(status?.[1]).not.toMatch(/(^|\s)(inline-)?flex(\s|$)/)
+    })
+
     it('renders a role=status live region with 2+ cameras', () => {
       expect(JSON.stringify(render(ok(['a', 'b'])))).toContain(
         '"role":"status"',
