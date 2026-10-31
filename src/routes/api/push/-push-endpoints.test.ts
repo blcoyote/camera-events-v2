@@ -95,7 +95,44 @@ describe('handleSubscribe', () => {
       'https://push.example.com/sub1',
       'p-key',
       'a-key',
+      'en',
     )
+  })
+
+  it('stores locale da when provided', async () => {
+    vi.mocked(isPushEnabled).mockReturnValue(true)
+    const mockSave = vi.fn()
+    vi.mocked(getPushStore).mockReturnValue({
+      saveSubscription: mockSave,
+    } as any)
+    const result = await handleSubscribe('user1', {
+      endpoint: 'https://push.example.com/sub1',
+      keys: { p256dh: 'p', auth: 'a' },
+      locale: 'da',
+    })
+    expect(result.status).toBe(200)
+    expect(mockSave).toHaveBeenCalledWith(
+      'user1',
+      'https://push.example.com/sub1',
+      'p',
+      'a',
+      'da',
+    )
+  })
+
+  it('returns 400 invalid_body for an unsupported locale', async () => {
+    vi.mocked(isPushEnabled).mockReturnValue(true)
+    const mockSave = vi.fn()
+    vi.mocked(getPushStore).mockReturnValue({
+      saveSubscription: mockSave,
+    } as any)
+    const result = await handleSubscribe('user1', {
+      endpoint: 'https://push.example.com/sub1',
+      keys: { p256dh: 'p', auth: 'a' },
+      locale: 'fr',
+    })
+    expect(result).toEqual({ status: 400, body: { error: 'invalid_body' } })
+    expect(mockSave).not.toHaveBeenCalled()
   })
 
   it('returns 400 when body is invalid', async () => {

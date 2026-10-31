@@ -240,3 +240,13 @@ describe('PushStore driver contract: global mute setting', () => {
     expect(store.getNotificationMuteUntil()).toBe(0)
   })
 })
+
+describe('PushStore driver contract: locale', () => {
+  it('stores locale and updateLocale reports whether a row changed', () => {
+    store.saveSubscription('u1', 'https://e/1', 'p', 'a', 'da')
+    expect(store.getSubscriptionsByUserId('u1')[0].locale).toBe('da')
+    expect(store.updateLocale('u1', 'https://e/1', 'en')).toBe(true)
+    expect(store.updateLocale('u2', 'https://e/1', 'da')).toBe(false)
+    expect(store.getSubscriptionsByUserId('u1')[0].locale).toBe('en')
+  })
+})

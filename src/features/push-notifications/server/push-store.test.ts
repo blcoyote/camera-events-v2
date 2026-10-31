@@ -406,3 +406,48 @@ describe('getPushStore singleton', () => {
     s.close()
   })
 })
+
+describe('push-store locale', () => {
+  it('has a locale column defaulting to en', () => {
+    expect(store.tableColumns('push_subscriptions')).toContain('locale')
+    store.saveSubscription('u1', 'https://e/1', 'p', 'a')
+    expect(store.getSubscriptionsByUserId('u1')[0].locale).toBe('en')
+  })
+
+  it('stores a given locale and updates it on re-subscribe', () => {
+    store.saveSubscription('u1', 'https://e/1', 'p', 'a', 'da')
+    expect(store.getSubscriptionsByUserId('u1')[0].locale).toBe('da')
+    store.saveSubscription('u1', 'https://e/1', 'p', 'a', 'en')
+    expect(store.getSubscriptionsByUserId('u1')[0].locale).toBe('en')
+  })
+
+  it('updateLocale only touches the matching user and endpoint', () => {
+    store.saveSubscription('u1', 'https://e/1', 'p', 'a')
+    expect(store.updateLocale('u2', 'https://e/1', 'da')).toBe(false)
+    expect(store.getSubscriptionsByUserId('u1')[0].locale).toBe('en')
+    expect(store.updateLocale('u1', 'https://e/other', 'da')).toBe(false)
+    expect(store.updateLocale('u1', 'https://e/1', 'da')).toBe(true)
+    expect(store.getSubscriptionsByUserId('u1')[0].locale).toBe('da')
+  })
+
+  it('migrates a DB created without the locale column, idempotently', async () => {
+    const { openSqlite } = await import('#/features/shared/server/sqlite')
+    const p = path.join(tmpDir, 'old.db')
+    const old = await openSqlite(p)
+    old.exec(`CREATE TABLE push_subscriptions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT, user_id TEXT NOT NULL,
+      endpoint TEXT NOT NULL, p256dh TEXT NOT NULL, auth TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      UNIQUE(user_id, endpoint));
+      INSERT INTO push_subscriptions (user_id, endpoint, p256dh, auth)
+      VALUES ('u1', 'https://e/old', 'p', 'a');`)
+    old.close()
+
+    const first = await createPushStore(p)
+    expect(first.getSubscriptionsByUserId('u1')[0].locale).toBe('en')
+    first.close()
+    const second = await createPushStore(p)
+    expect(second.getSubscriptionsByUserId('u1')[0].locale).toBe('en')
+    second.close()
+  })
+})

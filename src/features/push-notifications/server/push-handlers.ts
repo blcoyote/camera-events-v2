@@ -3,6 +3,7 @@ import { isPushEnabled, getVapidPublicKey, sendPushNotification } from './push'
 import { getPushStore } from './push-store'
 import { getCameras } from '#/features/shared/server/frigate/client'
 import { readBodyField } from './request-body'
+import { isPushLocale } from './push-locale'
 
 interface HandlerResult {
   status: number
@@ -54,6 +55,13 @@ export async function handleSubscribe(
     }
   }
 
+  // Optional; absent means 'en'. Present-but-unsupported is a trust-boundary 400.
+  const localeField = readBodyField(body, 'locale')
+  if (localeField !== undefined && !isPushLocale(localeField)) {
+    return { status: 400, body: { error: 'invalid_body' } }
+  }
+  const locale = localeField ?? 'en'
+
   // Validate endpoint is an HTTPS URL (push services always use HTTPS)
   let parsedUrl: URL
   try {
@@ -68,7 +76,13 @@ export async function handleSubscribe(
     }
   }
 
-  ;(await getPushStore()).saveSubscription(userId, endpoint, p256dh, auth)
+  ;(await getPushStore()).saveSubscription(
+    userId,
+    endpoint,
+    p256dh,
+    auth,
+    locale,
+  )
   return { status: 200, body: { ok: true } }
 }
 
