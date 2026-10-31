@@ -6,8 +6,9 @@ export const loadEventFn = createServerFn({ method: 'GET' })
   .validator((data: string) => data)
   .handler(async ({ data: eventId }): Promise<FrigateResult<FrigateEvent>> => {
     const { requireSession } = await import('#/features/shared/server/session')
-    const { isValidEventId } =
-      await import('#/features/shared/server/frigate/validation')
+    const { isValidEventId } = await import(
+      '#/features/shared/server/frigate/validation'
+    )
     const { getEvent } = await import('#/features/shared/server/frigate/client')
     await requireSession()
     if (!isValidEventId(eventId)) {

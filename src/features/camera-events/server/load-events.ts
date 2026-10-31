@@ -7,8 +7,9 @@ import type { FrigateEvent } from '#/features/shared/server/frigate/types'
 export const loadEventsFn = createServerFn({ method: 'GET' }).handler(
   async (): Promise<FrigateResult<FrigateEvent[]>> => {
     const { requireSession } = await import('#/features/shared/server/session')
-    const { getEvents } =
-      await import('#/features/shared/server/frigate/client')
+    const { getEvents } = await import(
+      '#/features/shared/server/frigate/client'
+    )
     await requireSession()
     const cookies = getRequestHeader('cookie') ?? ''
     const limit = readEventLimitFromCookies(cookies)

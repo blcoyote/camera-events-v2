@@ -72,9 +72,9 @@ bun run dev           # Start dev server on :3000
 bun run build         # Production build (also generates routeTree + service worker)
 bun run preview       # Serve the production build locally
 bun run test          # Run Vitest once
-bun run lint          # ESLint
-bun run format        # Prettier check
-bun run check         # Prettier write + ESLint --fix
+bun run lint          # Biome lint
+bun run format        # Biome format check
+bun run check         # Biome format + lint --fix
 bun run knip          # Unused-code report
 ```
 

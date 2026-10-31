@@ -50,8 +50,9 @@ describe('onFrigateMessage', () => {
 
   it('clears the Frigate cache when called with frigate/events', async () => {
     const { onFrigateMessage } = await import('./mqtt')
-    const { frigateCache } =
-      await import('#/features/shared/server/frigate/cache')
+    const { frigateCache } = await import(
+      '#/features/shared/server/frigate/cache'
+    )
 
     frigateCache.set('test-key', { ok: true, data: 'cached' })
     expect(frigateCache.size).toBe(1)
@@ -62,8 +63,9 @@ describe('onFrigateMessage', () => {
 
   it('clears the Frigate cache when called with frigate/reviews', async () => {
     const { onFrigateMessage } = await import('./mqtt')
-    const { frigateCache } =
-      await import('#/features/shared/server/frigate/cache')
+    const { frigateCache } = await import(
+      '#/features/shared/server/frigate/cache'
+    )
 
     frigateCache.set('test-key', { ok: true, data: 'cached' })
     expect(frigateCache.size).toBe(1)
@@ -128,8 +130,9 @@ describe('onFrigateMessage', () => {
 
   it('does not clear the Frigate cache for frigate/stats', async () => {
     const { onFrigateMessage } = await import('./mqtt')
-    const { frigateCache } =
-      await import('#/features/shared/server/frigate/cache')
+    const { frigateCache } = await import(
+      '#/features/shared/server/frigate/cache'
+    )
 
     frigateCache.set('test-key', { ok: true, data: 'cached' })
     expect(frigateCache.size).toBe(1)
@@ -143,8 +146,9 @@ describe('onFrigateMessage', () => {
 
   it('does not clear the Frigate cache for frigate/available', async () => {
     const { onFrigateMessage } = await import('./mqtt')
-    const { frigateCache } =
-      await import('#/features/shared/server/frigate/cache')
+    const { frigateCache } = await import(
+      '#/features/shared/server/frigate/cache'
+    )
 
     frigateCache.set('test-key', { ok: true, data: 'cached' })
     expect(frigateCache.size).toBe(1)
@@ -577,8 +581,9 @@ describe('getMqttConnectionState', () => {
   it('returns not_configured when MQTT_URL is absent', async () => {
     delete process.env.MQTT_URL
     delete process.env.FRIGATE_MOCK
-    const { startMqttSubscriber, getMqttConnectionState } =
-      await import('./mqtt')
+    const { startMqttSubscriber, getMqttConnectionState } = await import(
+      './mqtt'
+    )
     startMqttSubscriber()
     expect(getMqttConnectionState()).toBe('not_configured')
   })
@@ -586,8 +591,9 @@ describe('getMqttConnectionState', () => {
   it('returns not_configured when FRIGATE_MOCK is enabled', async () => {
     process.env.MQTT_URL = 'mqtt://localhost:1883'
     process.env.FRIGATE_MOCK = 'true'
-    const { startMqttSubscriber, getMqttConnectionState } =
-      await import('./mqtt')
+    const { startMqttSubscriber, getMqttConnectionState } = await import(
+      './mqtt'
+    )
     startMqttSubscriber()
     expect(getMqttConnectionState()).toBe('not_configured')
   })
@@ -595,8 +601,9 @@ describe('getMqttConnectionState', () => {
   it('returns disconnected after startMqttSubscriber connects but before broker acks', async () => {
     process.env.MQTT_URL = 'mqtt://localhost:1883'
     delete process.env.FRIGATE_MOCK
-    const { startMqttSubscriber, getMqttConnectionState } =
-      await import('./mqtt')
+    const { startMqttSubscriber, getMqttConnectionState } = await import(
+      './mqtt'
+    )
     startMqttSubscriber()
     expect(getMqttConnectionState()).toBe('disconnected')
   })
@@ -604,8 +611,9 @@ describe('getMqttConnectionState', () => {
   it('returns connected after the connect event fires', async () => {
     process.env.MQTT_URL = 'mqtt://localhost:1883'
     delete process.env.FRIGATE_MOCK
-    const { startMqttSubscriber, getMqttConnectionState } =
-      await import('./mqtt')
+    const { startMqttSubscriber, getMqttConnectionState } = await import(
+      './mqtt'
+    )
     startMqttSubscriber()
 
     const mockClient = await getMockClient()
@@ -620,8 +628,9 @@ describe('getMqttConnectionState', () => {
   it('returns disconnected after the close event fires', async () => {
     process.env.MQTT_URL = 'mqtt://localhost:1883'
     delete process.env.FRIGATE_MOCK
-    const { startMqttSubscriber, getMqttConnectionState } =
-      await import('./mqtt')
+    const { startMqttSubscriber, getMqttConnectionState } = await import(
+      './mqtt'
+    )
     startMqttSubscriber()
 
     const mockClient = await getMockClient()

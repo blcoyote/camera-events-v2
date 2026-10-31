@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest'
-import React from 'react'
+import type React from 'react'
 import { SortableCameraTile } from './SortableCameraTile'
 import { Button } from '#/features/shared/components/ui/button'
 

@@ -64,7 +64,7 @@ describe('LiveSnapshot', () => {
     render(<LiveSnapshot cameraName="front_porch" />)
     fireEvent.click(screen.getByRole('button', { name: 'View fullscreen' }))
 
-    const { onClose } = mockSnapshotLightbox.mock.calls.at(-1)?.[0] as {
+    const { onClose } = mockSnapshotLightbox.mock.calls.at(-1)![0] as {
       onClose: () => void
     }
     act(() => {

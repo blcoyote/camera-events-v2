@@ -22,7 +22,9 @@ export const SUBSCRIBED_TOPICS = [
 ] as const
 
 export type MqttConnectionState =
-  'not_configured' | 'connected' | 'disconnected'
+  | 'not_configured'
+  | 'connected'
+  | 'disconnected'
 
 let mqttConnectionState: MqttConnectionState = 'not_configured'
 

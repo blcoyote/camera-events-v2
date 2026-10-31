@@ -10,8 +10,9 @@ export const toggleFavoriteFn = createServerFn({ method: 'POST' })
 export const getUserFavoritedEventIdsFn = createServerFn({
   method: 'GET',
 }).handler(async () => {
-  const { getUserFavoritedEventIdsHandler } =
-    await import('./favorites-handlers')
+  const { getUserFavoritedEventIdsHandler } = await import(
+    './favorites-handlers'
+  )
   return getUserFavoritedEventIdsHandler()
 })
 

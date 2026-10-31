@@ -1,0 +1,132 @@
+{
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
+  },
+  "files": {
+    "includes": [
+      "**",
+      "!**/*.json",
+      "!src/routeTree.gen.ts",
+      "!.claude/worktrees"
+    ]
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 80
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "single",
+      "jsxQuoteStyle": "double",
+      "semicolons": "asNeeded",
+      "trailingCommas": "all"
+    }
+  },
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
+    },
+    "formatter": {
+      "quoteStyle": "single"
+    }
+  },
+  "markdown": {
+    "formatter": {
+      "enabled": false
+    }
+  },
+  "yaml": {
+    "formatter": {
+      "enabled": true,
+      "quoteStyle": "single"
+    }
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "preset": "none",
+      "correctness": {
+        "useValidForDirection": "error",
+        "noSwitchDeclarations": "error",
+        "noConstantCondition": "error",
+        "noEmptyCharacterClassInRegex": "error",
+        "noEmptyPattern": "error",
+        "noPrecisionLoss": "error",
+        "noNonoctalDecimalEscape": "error",
+        "noSelfAssign": "error",
+        "noUnsafeFinally": "error",
+        "noUnsafeOptionalChaining": "error",
+        "noUnusedLabels": "error",
+        "noUnusedPrivateClassMembers": "error",
+        "useYield": "error",
+        "useIsNan": "error",
+        "useValidTypeof": "error"
+      },
+      "suspicious": {
+        "noAsyncPromiseExecutor": "error",
+        "noClassAssign": "error",
+        "noCompareNegZero": "error",
+        "noAssignInExpressions": "error",
+        "noConstantBinaryExpressions": "error",
+        "noControlCharactersInRegex": "error",
+        "noDebugger": "error",
+        "noDuplicateElseIf": "error",
+        "noDuplicateCase": "error",
+        "noCatchAssign": "error",
+        "noFallthroughSwitchClause": "error",
+        "noGlobalAssign": "error",
+        "noIrregularWhitespace": "error",
+        "noMisleadingCharacterClass": "error",
+        "noShadowRestrictedNames": "error",
+        "noSparseArray": "error",
+        "noUselessRegexBackrefs": "error",
+        "noUselessEscapeInString": "error",
+        "noVar": "error",
+        "noWith": "error",
+        "noTsIgnore": "error",
+        "noDuplicateEnumValues": "error",
+        "noExtraNonNullAssertion": "error",
+        "noMisleadingInstantiator": "error",
+        "noNonNullAssertedOptionalChain": "error",
+        "noShadow": "warn"
+      },
+      "complexity": {
+        "noExtraBooleanCast": "error",
+        "noAdjacentSpacesInRegex": "error",
+        "noUselessCatch": "error",
+        "noUselessEscapeInRegex": "error",
+        "noBannedTypes": "error"
+      },
+      "style": {
+        "useConst": "error",
+        "useImportType": {
+          "level": "error",
+          "options": {
+            "style": "separatedType"
+          }
+        },
+        "noInferrableTypes": "error",
+        "noNamespace": "error",
+        "useAsConstAssertion": "error",
+        "useForOf": "warn",
+        "useImportsFirst": "error",
+        "noCommonJs": "error",
+        "useNodejsImportProtocol": "error",
+        "useConsistentMethodSignatures": {
+          "level": "error",
+          "options": {
+            "style": "property"
+          }
+        }
+      }
+    }
+  },
+  "assist": {
+    "enabled": false
+  }
+}

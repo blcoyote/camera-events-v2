@@ -47,6 +47,7 @@ this vault is meant to be used.
 - [[decisions/2026-10-17-single-glossary-and-vocabulary]] — CONTEXT.md is the only domain glossary; Ghost, Alert, Availability, Device, Favorite and Patch-count vocabulary settled
 - [[decisions/2026-10-24-glassmorphism-shadcn-design-system]] — Glassmorphism tokens (`--gl-*`) → shadcn semantic vars → Tailwind; light only, Radix overlays, iOS status bar `default`
 - [[decisions/2026-10-24-glassmorphism-dark-mode]] — dark mode via `:root.dark` over `--gl-*` primitives; navy `#0b1424`, light/dark/auto toggle in header + Settings
+- [[decisions/2026-10-31-typescript-7-and-biome]] — TS 7 native compiler; Biome replaces ESLint and Prettier
 
 ## ⚠️ Gotchas
 

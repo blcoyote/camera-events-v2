@@ -24,9 +24,9 @@ bun run dev          # Dev server on :3000 (auto-regenerates routeTree)
 bun run build        # Production build
 bun run preview      # Serve production build locally
 bun run test         # Vitest (unit)
-bun run lint         # ESLint
-bun run format       # Prettier check
-bun run check        # Prettier write + ESLint --fix
+bun run lint         # Biome lint
+bun run format       # Biome format check
+bun run check        # Biome format + lint --fix
 bun run knip         # Unused-code report
 ```
 

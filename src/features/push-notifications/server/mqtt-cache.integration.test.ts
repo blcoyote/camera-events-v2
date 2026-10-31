@@ -113,8 +113,9 @@ describe('MQTT → cache invalidation → fresh fetch (integration)', () => {
 
     // 2. Import real modules (handler, client)
     const { startMqttSubscriber } = await import('./mqtt')
-    const { getEvents } =
-      await import('#/features/shared/server/frigate/client')
+    const { getEvents } = await import(
+      '#/features/shared/server/frigate/client'
+    )
 
     // 3. Start the MQTT subscriber (uses real handler wiring)
     startMqttSubscriber()
@@ -148,8 +149,9 @@ describe('MQTT → cache invalidation → fresh fetch (integration)', () => {
     globalThis.fetch = fetchMock
 
     const { startMqttSubscriber } = await import('./mqtt')
-    const { getEvents } =
-      await import('#/features/shared/server/frigate/client')
+    const { getEvents } = await import(
+      '#/features/shared/server/frigate/client'
+    )
 
     startMqttSubscriber()
     simulateMqttConnect()
@@ -172,8 +174,9 @@ describe('MQTT → cache invalidation → fresh fetch (integration)', () => {
     globalThis.fetch = fetchMock
 
     const { startMqttSubscriber } = await import('./mqtt')
-    const { getEvents } =
-      await import('#/features/shared/server/frigate/client')
+    const { getEvents } = await import(
+      '#/features/shared/server/frigate/client'
+    )
 
     startMqttSubscriber()
     simulateMqttConnect()
@@ -216,8 +219,9 @@ describe('MQTT → cache invalidation → fresh fetch (integration)', () => {
     globalThis.fetch = fetchMock
 
     const { startMqttSubscriber } = await import('./mqtt')
-    const { getEvents } =
-      await import('#/features/shared/server/frigate/client')
+    const { getEvents } = await import(
+      '#/features/shared/server/frigate/client'
+    )
 
     startMqttSubscriber()
     simulateMqttConnect()

@@ -1,7 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 @import 'tailwindcss';
 @import 'tw-animate-css';
-@plugin "@tailwindcss/typography";
+@plugin '@tailwindcss/typography';
 
 /*
  * Glassmorphism token layers (light only; a dark theme would override the
@@ -170,8 +170,9 @@
   border: 1px solid var(--gl-border);
   box-shadow: var(--gl-elev-raised);
   @supports not (
-    (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))
-  ) {
+      (backdrop-filter: blur(1px)) or
+      (-webkit-backdrop-filter: blur(1px))
+    ) {
     background: var(--gl-surface-solid);
   }
 }
@@ -183,8 +184,9 @@
   border: 1px solid var(--gl-border-soft);
   box-shadow: none;
   @supports not (
-    (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))
-  ) {
+      (backdrop-filter: blur(1px)) or
+      (-webkit-backdrop-filter: blur(1px))
+    ) {
     background: var(--gl-surface-solid);
   }
 }
@@ -196,8 +198,9 @@
   border: 1px solid var(--gl-border);
   box-shadow: var(--gl-elev-raised);
   @supports not (
-    (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))
-  ) {
+      (backdrop-filter: blur(1px)) or
+      (-webkit-backdrop-filter: blur(1px))
+    ) {
     background: var(--gl-surface-solid);
   }
 }
@@ -211,8 +214,9 @@
   border: 1px solid var(--gl-border);
   box-shadow: var(--gl-elev-raised);
   @supports not (
-    (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))
-  ) {
+      (backdrop-filter: blur(1px)) or
+      (-webkit-backdrop-filter: blur(1px))
+    ) {
     background: var(--gl-surface-solid);
   }
 }
