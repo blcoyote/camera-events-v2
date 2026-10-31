@@ -1,9 +1,10 @@
+import { getLocale } from '#/paraglide/runtime.js'
+import { translateLabel } from '#/features/shared/utils/labels'
 import { Video } from 'lucide-react'
 import { MediaCard } from '#/features/shared/components/MediaCard'
 import type { FrigateEvent } from '#/features/shared/server/frigate/types'
 import {
   formatRelativeTime,
-  formatLabelName,
   getLabelDotColor,
 } from '#/features/shared/utils/eventFormatting'
 import { EventThumbnail } from '#/features/shared/components/EventThumbnail'
@@ -29,7 +30,7 @@ export function EventCard({
     <MediaCard
       to="/camera-events/$id"
       params={{ id: event.id }}
-      aria-label={`${formatLabelName(event.label)} detected by ${event.camera}, ${formatRelativeTime(event.start_time)}`}
+      aria-label={`${translateLabel(event.label, getLocale())} detected by ${event.camera}, ${formatRelativeTime(event.start_time)}`}
       index={index}
       image={<EventThumbnail eventId={event.id} />}
       overlay={
@@ -41,7 +42,7 @@ export function EventCard({
                 style={{ backgroundColor: getLabelDotColor(event.label) }}
                 aria-hidden="true"
               />
-              {formatLabelName(event.label)}
+              {translateLabel(event.label, getLocale())}
             </span>
             {event.sub_label && (
               <span className="rounded-full bg-black/55 px-2 py-0.5 text-xs font-medium text-white backdrop-blur-sm">

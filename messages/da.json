@@ -10,5 +10,19 @@
   "error_endpoint_not_https": "Enhedens abonnement skal bruge HTTPS",
   "error_cameras_unavailable": "Kameralisten kunne ikke hentes",
   "error_invalid_camera_name": "Ugyldigt kameranavn",
-  "error_internal_error": "Intern serverfejl"
+  "error_internal_error": "Intern serverfejl",
+  "label_person": "Person",
+  "label_car": "Bil",
+  "label_dog": "Hund",
+  "label_cat": "Kat",
+  "label_bird": "Fugl",
+  "label_bicycle": "Cykel",
+  "label_motorcycle": "Motorcykel",
+  "label_bus": "Bus",
+  "label_truck": "Lastbil",
+  "label_boat": "Båd",
+  "label_horse": "Hest",
+  "label_package": "Pakke",
+  "label_face": "Ansigt",
+  "label_license_plate": "Nummerplade"
 }

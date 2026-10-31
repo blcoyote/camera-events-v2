@@ -7,7 +7,6 @@ import {
 } from '#/features/camera-events/pages/CameraEventsListPage'
 import {
   formatRelativeTime,
-  formatLabelName,
   getLabelDotColor,
 } from '#/features/shared/utils/eventFormatting'
 import type { FrigateEvent } from '#/features/shared/server/frigate/types'
@@ -118,13 +117,6 @@ describe('formatRelativeTime', () => {
   it('shows hours for timestamps under a day', () => {
     const now = Date.now() / 1000
     expect(formatRelativeTime(now - 7200)).toBe('2h ago')
-  })
-})
-
-describe('formatLabelName', () => {
-  it('capitalizes the first letter', () => {
-    expect(formatLabelName('person')).toBe('Person')
-    expect(formatLabelName('car')).toBe('Car')
   })
 })
 

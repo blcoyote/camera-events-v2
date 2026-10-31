@@ -1,10 +1,9 @@
+import { getLocale } from '#/paraglide/runtime.js'
+import { translateLabel } from '#/features/shared/utils/labels'
 import { useState } from 'react'
 import { cn } from '#/features/shared/utils/cn'
 import { Button } from '#/features/shared/components/ui/button'
-import {
-  formatLabelName,
-  formatCameraName,
-} from '#/features/shared/utils/eventFormatting'
+import { formatCameraName } from '#/features/shared/utils/eventFormatting'
 
 export function EventClipPlayer({
   eventId,
@@ -24,7 +23,7 @@ export function EventClipPlayer({
 
   const [retry, setRetry] = useState(0)
 
-  const ariaLabel = `Clip of ${formatLabelName(label)} from ${formatCameraName(
+  const ariaLabel = `Clip of ${translateLabel(label, getLocale())} from ${formatCameraName(
     camera,
   )}`
 

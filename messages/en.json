@@ -10,5 +10,19 @@
   "error_endpoint_not_https": "Subscription endpoint must use HTTPS",
   "error_cameras_unavailable": "Failed to fetch camera list",
   "error_invalid_camera_name": "Invalid camera name",
-  "error_internal_error": "Internal server error"
+  "error_internal_error": "Internal server error",
+  "label_person": "Person",
+  "label_car": "Car",
+  "label_dog": "Dog",
+  "label_cat": "Cat",
+  "label_bird": "Bird",
+  "label_bicycle": "Bicycle",
+  "label_motorcycle": "Motorcycle",
+  "label_bus": "Bus",
+  "label_truck": "Truck",
+  "label_boat": "Boat",
+  "label_horse": "Horse",
+  "label_package": "Package",
+  "label_face": "Face",
+  "label_license_plate": "License plate"
 }

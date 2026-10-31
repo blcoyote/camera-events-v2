@@ -21,10 +21,6 @@ export function formatRelativeTime(unixSeconds: number): string {
   return formatDate(unixSeconds, getLocale())
 }
 
-export function formatLabelName(label: string): string {
-  return label.charAt(0).toUpperCase() + label.slice(1)
-}
-
 const LABEL_DOT_COLORS: Record<string, string> = {
   person: '#4fb8b2',
   car: '#f59e0b',

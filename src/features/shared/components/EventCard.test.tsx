@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, cleanup } from '@testing-library/react'
 import '@testing-library/jest-dom/vitest'
 import React from 'react'
+import { withLocale } from '#/test-utils/locale'
 import type { FrigateEvent } from '#/features/shared/server/frigate/types'
 
 // ─── Module mocks ─────────────────────────────────────────────────────────────
@@ -95,6 +96,18 @@ afterEach(() => {
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
 describe('EventCard', () => {
+  it('renders the label in Danish under the da locale', () => {
+    const restore = withLocale('da')
+    try {
+      const { getByText } = render(
+        <EventCard event={makeEvent({ label: 'car' })} index={0} />,
+      )
+      expect(getByText('Bil')).toBeInTheDocument()
+    } finally {
+      restore()
+    }
+  })
+
   it('renders a FavoriteButton', () => {
     render(<EventCard event={makeEvent()} index={0} />)
     expect(mockFavoriteButton).toHaveBeenCalled()

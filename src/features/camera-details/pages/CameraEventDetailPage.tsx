@@ -1,3 +1,5 @@
+import { getLocale } from '#/paraglide/runtime.js'
+import { translateLabel } from '#/features/shared/utils/labels'
 import { useEffect, useRef, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { Button } from '#/features/shared/components/ui/button'
@@ -8,7 +10,6 @@ import type { FrigateResult } from '#/features/shared/server/frigate/config'
 import type { FrigateEvent } from '#/features/shared/server/frigate/types'
 import {
   formatRelativeTime,
-  formatLabelName,
   getLabelDotColor,
   formatCameraName,
 } from '#/features/shared/utils/eventFormatting'
@@ -19,7 +20,6 @@ import { InfoCard } from '../components/InfoCard'
 import { parseEventStartTimeMs } from '../utils/eventId'
 import { useFavoriteToggle } from '#/features/shared/hooks/useFavoriteToggle'
 import { FavoriteButton } from '#/features/shared/components/FavoriteButton'
-import { getLocale } from '#/paraglide/runtime.js'
 import { formatDateTime, formatPercent } from '#/features/shared/utils/intl'
 
 // ─── Pure functions (exported for testing) ───
@@ -253,7 +253,7 @@ export function CameraEventDetailPage({
   const dotColor = getLabelDotColor(event.label)
 
   const snapshotSrc = `/api/events/${event.id}/snapshot`
-  const snapshotAlt = `Snapshot of ${formatLabelName(event.label)} detected by ${formatCameraName(event.camera)}`
+  const snapshotAlt = `Snapshot of ${translateLabel(event.label, getLocale())} detected by ${formatCameraName(event.camera)}`
 
   return (
     <main id="main-content" className="page-wrap px-4 pb-8 pt-6 sm:pt-14">
@@ -275,7 +275,7 @@ export function CameraEventDetailPage({
             style={{ backgroundColor: dotColor }}
             aria-hidden="true"
           />
-          {formatLabelName(event.label)}
+          {translateLabel(event.label, getLocale())}
           {event.sub_label && (
             <span className="text-xl font-normal text-fg-2 sm:text-2xl">
               — {event.sub_label}

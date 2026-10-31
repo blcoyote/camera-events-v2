@@ -1,7 +1,8 @@
+import { getLocale } from '#/paraglide/runtime.js'
+import { translateLabel } from '#/features/shared/utils/labels'
 import { useState } from 'react'
 import type { FrigateResult } from '#/features/shared/server/frigate/config'
 import type { FrigateEvent } from '#/features/shared/server/frigate/types'
-import { formatLabelName } from '#/features/shared/utils/eventFormatting'
 import { FilterPill } from '../components/FilterPill'
 import { EventCard } from '#/features/shared/components/EventCard'
 import { Button } from '#/features/shared/components/ui/button'
@@ -111,7 +112,7 @@ export function CameraEventsListPage({
                 {labels.map((l) => (
                   <FilterPill
                     key={l}
-                    label={formatLabelName(l)}
+                    label={translateLabel(l, getLocale())}
                     active={labelFilter === l}
                     onClick={() => setLabelFilter(labelFilter === l ? null : l)}
                     count={events.filter((e) => e.label === l).length}
