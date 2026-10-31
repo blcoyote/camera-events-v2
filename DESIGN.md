@@ -240,7 +240,7 @@ The upstream scale is 12 / 14 / 16 / 18 / 24 / 36 / 54 / 76. The app uses up to 
 - **Container:** `.page-wrap` is centred, with a maximum width of 1180px and side gutters of 16px on phones, 24px from 640px and 36px from 1024px.
 - **Spacing:** on a 4px base. Card padding is 24px (raised), 16px (flat) or 32px (hero), and stacks use gaps of 8 to 16px.
 - **Touch targets:** every interactive element is at least 44px (`min-h-11` / `size-11`). Even the small button and toggle sizes keep 44px. The switch extends its hit area with an 8px invisible inset.
-- **Responsive:** phone-first. The header nav collapses into a drawer below 640px, and event grids gain columns as the width grows.
+- **Responsive:** phone-first. Below 640px navigation moves to a bottom tab bar and page heroes collapse to the top bar's title; event grids gain columns as the width grows.
 - **Safe areas:** the sticky header pads `env(safe-area-inset-top)`, and the body and bottom toasts pad `env(safe-area-inset-bottom)` for the iOS standalone app.
 - **Scroll:** `overscroll-behavior-y: none` on `html`, so only the app's own pull-to-refresh gesture runs.
 
@@ -307,7 +307,8 @@ Light and tactile pills.
 
 - **Header:** a sticky glass pane. Light it is more transparent (50%) so content scrolling underneath shows through; dark it is 80% opaque, because bright footage scrolling under a 42% header dropped nav text to 1.45:1. It pads for the top safe area.
 - **Links:** Label type in Slate Ink. Hover and active states turn the text Harbour Ink and grow a 2px Sky Glass underline from the left over 180ms.
-- **Mobile:** below 640px, a 44px icon button opens a side sheet (NavDrawer) with the links stacked.
+- **Mobile:** below 640px there is no hamburger or drawer. A bottom tab bar (Cameras, Events, Favorites, Settings; outline icon over a label, at least 56px tall) sits on the header glass with a top hairline and pads for the home indicator. The active tab is Cobalt text plus a 2px Sky Glass bar on its top edge and `aria-current="page"`; event detail belongs to Events and Live view to Cameras. The top bar shrinks to the page title (decorative; each page keeps a visually hidden `h1`) and the avatar menu. The theme toggle is desktop-only; phones use Settings › Appearance.
+- **Page header (PageHeader):** on desktop the glass hero card (eyebrow, display title, optional actions). On phones it takes no space except its actions, such as the Cameras reorder button.
 
 ### Event Card (signature)
 
