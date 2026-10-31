@@ -1,6 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import React from 'react'
 import { getCamerasPageState, CamerasPage } from './CamerasPage'
+import { Button } from '#/features/shared/components/ui/button'
 import type { FrigateResult } from '#/features/shared/server/frigate/config'
 
 // CamerasPage is tested here by calling it as a function and inspecting
@@ -81,94 +82,72 @@ describe('CamerasPage', () => {
     expect(json).toContain('"title":"Latest snapshots"')
   })
 
-  it('renders pencil icon button when cameras are present and isEditing=false', () => {
-    const output = CamerasPage({
-      result: ok(['front', 'back']),
-      isEditing: false,
-      onEditingChange: vi.fn(),
-    })
-    const json = JSON.stringify(output)
-    expect(json).toContain('Reorder cameras on this device')
-  })
-
-  it('renders checkmark icon button when isEditing=true', () => {
-    const output = CamerasPage({
-      result: ok(['front', 'back']),
-      isEditing: true,
-      onEditingChange: vi.fn(),
-    })
-    const json = JSON.stringify(output)
-    expect(json).toContain('Done reordering cameras')
-  })
-
-  it('calls onEditingChange when reorder button is clicked', () => {
-    const onEditingChange = vi.fn()
-    const output = CamerasPage({
-      result: ok(['front', 'back']),
-      isEditing: false,
-      onEditingChange,
-    })
-    // Find the reorder button's onClick handler in the JSX and invoke it
-    const json = JSON.stringify(output)
-    // Button is present
-    expect(json).toContain('Reorder cameras on this device')
-    // Simulate the click by finding onClick in the element tree
-    function findEditButton(node: unknown): React.ReactElement<{
-      onPressedChange: (pressed: boolean) => void
-    }> | null {
-      if (!node || typeof node !== 'object') return null
-      const el = node as React.ReactElement<{
-        children?: unknown
-        actions?: unknown
-        onPressedChange?: (pressed: boolean) => void
-        title?: string
-      }>
-      if (
-        el.props.title === 'Reorder cameras on this device' &&
-        typeof el.props.onPressedChange === 'function'
-      ) {
-        return el as React.ReactElement<{
-          onPressedChange: (pressed: boolean) => void
-        }>
-      }
-      const children = el.props.children
-      const viaActions = findEditButton(el.props.actions)
-      if (viaActions) return viaActions
-      if (Array.isArray(children)) {
-        for (const child of children) {
-          const found = findEditButton(child)
-          if (found) return found
-        }
-      } else if (children) {
-        return findEditButton(children)
-      }
-      return null
+  describe('Arrange button', () => {
+    function findByType(
+      node: unknown,
+      type: unknown,
+    ): React.ReactElement<any>[] {
+      if (!node || typeof node !== 'object') return []
+      const el = node as React.ReactElement<any>
+      const out: React.ReactElement<any>[] = el.type === type ? [el] : []
+      const kids: unknown[] = [el.props?.children, el.props?.actions].flat()
+      for (const k of kids) out.push(...findByType(k, type))
+      return out
     }
-    const btn = findEditButton(output)
-    expect(btn).not.toBeNull()
-    btn?.props.onPressedChange(true)
-    expect(onEditingChange).toHaveBeenCalledWith(true)
-  })
+    const render = (
+      cameras: FrigateResult<string[]>,
+      isEditing = false,
+      fn = vi.fn(),
+    ) => CamerasPage({ result: cameras, isEditing, onEditingChange: fn })
 
-  it('does not render Edit button when state is empty', () => {
-    const output = CamerasPage({
-      result: emptyResult,
-      isEditing: false,
-      onEditingChange: vi.fn(),
+    it('shows "Arrange" when idle', () => {
+      const [btn] = findByType(render(ok(['a', 'b'])), Button)
+      expect(JSON.stringify(btn.props.children)).toContain('Arrange')
+      expect(btn.props.variant).toBe('secondary')
     })
-    const json = JSON.stringify(output)
-    // The Edit button has a title attribute that's unique
-    expect(json).not.toContain('Reorder cameras on this device')
-  })
 
-  it('does not render Edit button when state is error', () => {
-    const output = CamerasPage({
-      result: errorResult,
-      isEditing: false,
-      onEditingChange: vi.fn(),
+    it('shows "Done" when editing', () => {
+      const [btn] = findByType(render(ok(['a', 'b']), true), Button)
+      expect(JSON.stringify(btn.props.children)).toContain('Done')
+      expect(btn.props.variant).toBe('default')
     })
-    const json = JSON.stringify(output)
-    expect(json).not.toContain('Reorder cameras on this device')
+
+    it('clicking enters edit mode', () => {
+      const fn = vi.fn()
+      findByType(render(ok(['a', 'b']), false, fn), Button)[0].props.onClick()
+      expect(fn).toHaveBeenCalledWith(true)
+    })
+
+    it('clicking while editing leaves edit mode', () => {
+      const fn = vi.fn()
+      findByType(render(ok(['a', 'b']), true, fn), Button)[0].props.onClick()
+      expect(fn).toHaveBeenCalledWith(false)
+    })
+
+    it('is absent with a single camera', () => {
+      expect(JSON.stringify(render(ok(['a'])))).not.toContain('Arrange')
+    })
+
+    it('is absent when empty or on error', () => {
+      expect(JSON.stringify(render(emptyResult))).not.toContain('Arrange')
+      expect(JSON.stringify(render(errorResult))).not.toContain('Arrange')
+    })
+
+    it('shows the saved-on-this-device hint only when editing', () => {
+      expect(JSON.stringify(render(ok(['a', 'b']), true))).toContain(
+        'saved on this device only',
+      )
+      expect(JSON.stringify(render(ok(['a', 'b'])))).not.toContain(
+        'saved on this device only',
+      )
+    })
+
+    it('renders a role=status live region with 2+ cameras', () => {
+      expect(JSON.stringify(render(ok(['a', 'b'])))).toContain(
+        '"role":"status"',
+      )
+      expect(JSON.stringify(render(ok(['a'])))).not.toContain('"role":"status"')
+    })
   })
 
   it('passes isEditing to SortableCamerasGrid', () => {
