@@ -5,6 +5,7 @@ import '@testing-library/jest-dom/vitest'
 import React from 'react'
 import type { FrigateEvent } from '#/features/shared/server/frigate/types'
 import type { FrigateResult } from '#/features/shared/server/frigate/config'
+import { withLocale } from '#/test-utils/locale'
 
 // ─── Module mocks ─────────────────────────────────────────────────────────────
 
@@ -64,8 +65,12 @@ vi.mock('../components/InfoCard', () => ({
 }))
 
 // Import component AFTER mocks
-const { CameraEventDetailPage, getDownloadUrl, getDetailPageState } =
-  await import('./CameraEventDetailPage')
+const {
+  CameraEventDetailPage,
+  getDownloadUrl,
+  getDetailPageState,
+  formatDuration,
+} = await import('./CameraEventDetailPage')
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────
 
@@ -552,5 +557,58 @@ describe('CameraEventDetailPage', () => {
       ).toBeInTheDocument()
       expect(mockFavoriteButton).toHaveBeenCalled()
     })
+  })
+})
+
+describe('CameraEventDetailPage in Danish', () => {
+  it('renders the pending state in Danish', () => {
+    const restore = withLocale('da')
+    try {
+      render(
+        <CameraEventDetailPage
+          result={{ ok: false, error: 'HTTP 404', status: 404 }}
+          eventId="1713095000.123456-abcdef"
+          nowMs={1713095000_000 + 5_000}
+        />,
+      )
+      expect(screen.getByText('Behandles')).toBeInTheDocument()
+      expect(
+        screen.getByRole('button', { name: 'Tjek igen' }),
+      ).toBeInTheDocument()
+    } finally {
+      restore()
+    }
+  })
+
+  it('renders the not-found state in Danish', () => {
+    const restore = withLocale('da')
+    try {
+      render(
+        <CameraEventDetailPage
+          result={{ ok: false, error: 'HTTP 404', status: 404 }}
+          eventId="1713095000.123456-abcdef"
+          nowMs={1713095000_000 + 3_600_000}
+        />,
+      )
+      expect(screen.getByText('Hændelsen blev ikke fundet')).toBeInTheDocument()
+      expect(screen.getByText('Tilbage til hændelser')).toBeInTheDocument()
+    } finally {
+      restore()
+    }
+  })
+
+  it('renders the event page and Danish durations', () => {
+    const restore = withLocale('da')
+    try {
+      render(
+        <CameraEventDetailPage result={successResult({ has_clip: true })} />,
+      )
+      expect(screen.getByText('Se klip')).toBeInTheDocument()
+      expect(formatDuration(100, 130)).toBe('30 s')
+      expect(formatDuration(100, 280)).toBe('3 min')
+      expect(formatDuration(100, 235)).toBe('2 min 15 s')
+    } finally {
+      restore()
+    }
   })
 })

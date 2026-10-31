@@ -1,3 +1,4 @@
+import { m } from '#/paraglide/messages.js'
 import { getLocale } from '#/paraglide/runtime.js'
 import { translateLabel } from '#/features/shared/utils/labels'
 import { useEffect, useRef, useState } from 'react'
@@ -61,13 +62,12 @@ export function getDetailPageState(
       }
       return {
         kind: 'error',
-        message:
-          "The event you're looking for doesn't exist or has been removed.",
+        message: m.details_not_found_body(),
       }
     }
     return {
       kind: 'error',
-      message: 'Could not load event. Check that Frigate is running.',
+      message: m.details_load_error(),
     }
   }
   return { kind: 'event', event: result.data }
@@ -79,10 +79,12 @@ export function formatTimestamp(unixSeconds: number): string {
 
 export function formatDuration(startTime: number, endTime: number): string {
   const diff = Math.round(endTime - startTime)
-  if (diff < 60) return `${diff}s`
-  const mins = Math.floor(diff / 60)
-  const secs = diff % 60
-  return secs > 0 ? `${mins}m ${secs}s` : `${mins}m`
+  if (diff < 60) return m.details_duration_seconds({ seconds: diff })
+  const minutes = Math.floor(diff / 60)
+  const seconds = diff % 60
+  return seconds > 0
+    ? m.details_duration_minutes_seconds({ minutes, seconds })
+    : m.details_duration_minutes({ minutes })
 }
 
 export function getDownloadUrl(
@@ -207,19 +209,18 @@ export function CameraEventDetailPage({
     return (
       <main id="main-content" className="page-wrap px-4 py-6 sm:py-12">
         <Card className="rise-in block px-5 py-6 text-center sm:px-8 sm:py-8">
-          <p className="eyebrow mb-1">Camera Events</p>
+          <p className="eyebrow mb-1">{m.app_name()}</p>
           <h1 className="mb-3 text-3xl font-semibold tracking-tight leading-display text-foreground sm:text-4xl">
-            Still being saved
+            {m.details_pending_title()}
           </h1>
           <p className="mx-auto mb-6 max-w-md text-base text-fg-2 sm:text-lg">
-            Frigate is still writing this event to disk. It should appear in a
-            moment — this page is checking automatically.
+            {m.details_pending_body()}
           </p>
           <div className="flex flex-wrap items-center justify-center gap-3">
-            <Button onClick={onRetry}>Check again</Button>
+            <Button onClick={onRetry}>{m.details_check_again()}</Button>
             <Button asChild variant="ghost">
               <Link to="/camera-events" className="no-underline">
-                Back to Camera Events
+                {m.details_back()}
               </Link>
             </Button>
           </div>
@@ -232,16 +233,16 @@ export function CameraEventDetailPage({
     return (
       <main id="main-content" className="page-wrap px-4 py-6 sm:py-12">
         <Card className="rise-in block px-5 py-6 text-center sm:px-8 sm:py-8">
-          <p className="eyebrow mb-1">Camera Events</p>
+          <p className="eyebrow mb-1">{m.app_name()}</p>
           <h1 className="mb-3 text-3xl font-semibold tracking-tight leading-display text-foreground sm:text-4xl">
-            Event not found
+            {m.details_not_found_title()}
           </h1>
           <p className="mx-auto mb-6 max-w-md text-base text-fg-2 sm:text-lg">
             {state.message}
           </p>
           <Button asChild>
             <Link to="/camera-events" className="no-underline">
-              Back to Camera Events
+              {m.details_back()}
             </Link>
           </Button>
         </Card>
@@ -253,7 +254,10 @@ export function CameraEventDetailPage({
   const dotColor = getLabelDotColor(event.label)
 
   const snapshotSrc = `/api/events/${event.id}/snapshot`
-  const snapshotAlt = `Snapshot of ${translateLabel(event.label, getLocale())} detected by ${formatCameraName(event.camera)}`
+  const snapshotAlt = m.details_snapshot_alt({
+    label: translateLabel(event.label, getLocale()),
+    camera: formatCameraName(event.camera),
+  })
 
   return (
     <main id="main-content" className="page-wrap px-4 pb-8 pt-6 sm:pt-14">
@@ -262,7 +266,7 @@ export function CameraEventDetailPage({
           to="/camera-events"
           className="inline-flex min-h-11 items-center py-2 text-sm font-medium text-brand-strong no-underline transition hover:text-foreground"
         >
-          &larr; Back to Camera Events
+          &larr; {m.details_back()}
         </Link>
       </div>
 
@@ -333,7 +337,7 @@ export function CameraEventDetailPage({
           >
             <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 px-7 py-3 text-sm font-semibold text-brand-strong transition hover:bg-surface-hover sm:px-4">
               <Film className="h-4 w-4" aria-hidden="true" />
-              Watch clip
+              {m.details_watch_clip()}
             </summary>
             {clipAccordionOpened && (
               <div className="border-t border-border-soft">
@@ -355,41 +359,43 @@ export function CameraEventDetailPage({
         <dl className="mt-4 grid grid-cols-1 gap-0 divide-y divide-border-soft sm:mt-6 sm:grid-cols-2 sm:gap-4 sm:divide-y-0 lg:grid-cols-3">
           <InfoCard
             icon={Camera}
-            label="Camera"
+            label={m.details_camera()}
             value={formatCameraName(event.camera)}
           />
           <InfoCard
             icon={Clock}
-            label="Duration"
+            label={m.details_duration()}
             value={formatDuration(event.start_time, event.end_time)}
           />
           {event.zones.length > 0 && (
             <InfoCard
               icon={MapPin}
-              label="Zones"
+              label={m.details_zones()}
               value={event.zones.join(', ')}
             />
           )}
           <InfoCard
             icon={Film}
-            label="Clip"
-            value={event.has_clip ? 'Available' : 'None'}
+            label={m.details_clip()}
+            value={event.has_clip ? m.details_available() : m.details_none()}
             downloadUrl={
               event.has_clip ? getDownloadUrl(event.id, 'clip') : undefined
             }
-            aria-label={event.has_clip ? 'Download video clip' : undefined}
+            aria-label={event.has_clip ? m.details_download_clip() : undefined}
           />
           <InfoCard
             icon={Image}
-            label="Snapshot"
-            value={event.has_snapshot ? 'Available' : 'None'}
+            label={m.details_snapshot()}
+            value={
+              event.has_snapshot ? m.details_available() : m.details_none()
+            }
             downloadUrl={
               event.has_snapshot
                 ? getDownloadUrl(event.id, 'snapshot')
                 : undefined
             }
             aria-label={
-              event.has_snapshot ? 'Download snapshot image' : undefined
+              event.has_snapshot ? m.details_download_snapshot() : undefined
             }
           />
         </dl>
@@ -397,13 +403,13 @@ export function CameraEventDetailPage({
         {event.data.score > 0 && (
           <div className="mt-4 border-t border-border-soft pt-4 sm:glass-flat sm:mt-6 sm:rounded-input sm:p-4 sm:pt-4">
             <h2 className="eyebrow mb-2 text-muted-foreground">
-              Detection confidence
+              {m.details_confidence()}
             </h2>
             <div className="flex items-center gap-3">
               <Progress
                 className="flex-1"
                 value={Math.round(event.data.score * 100)}
-                aria-label="Detection confidence"
+                aria-label={m.details_confidence()}
               />
               <span className="text-sm font-semibold text-foreground">
                 {formatPercent(event.data.score, getLocale())}
