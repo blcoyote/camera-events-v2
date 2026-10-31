@@ -24,6 +24,7 @@ vi.mock('#/features/shared/server/session', async (importOriginal) => ({
 
 const mockHandleSubscribe = vi.fn()
 const mockHandleUnsubscribe = vi.fn()
+const mockHandleUpdateLocale = vi.fn()
 const mockHandleSetPreference = vi.fn()
 const mockHandleGetPreferences = vi.fn()
 const mockHandleSetAvailabilityPreference = vi.fn()
@@ -39,6 +40,10 @@ vi.mock('#/features/push-notifications/server/push-handlers', () => ({
     mockHandleSetAvailabilityPreference(...args),
   handleGetAvailabilityPreference: (...args: unknown[]) =>
     mockHandleGetAvailabilityPreference(...args),
+}))
+
+vi.mock('#/features/push-notifications/server/locale-handlers', () => ({
+  handleUpdateLocale: (...args: unknown[]) => mockHandleUpdateLocale(...args),
 }))
 
 const mockHandleSetNotificationMute = vi.fn()
@@ -102,6 +107,48 @@ describe('POST /api/push/subscribe route handler', () => {
     expect(mockHandleSubscribe).toHaveBeenCalledWith('user-1', {
       endpoint: 'x',
     })
+  })
+})
+
+describe('POST /api/push/locale route handler', () => {
+  it('does not read the request body when there is no session sub', async () => {
+    mockGetAppSession.mockResolvedValue(sessionWithSub(undefined))
+    mockHandleUpdateLocale.mockResolvedValue({ status: 401, body: {} })
+    const { Route } = await import('./locale')
+    const request = makeRequest()
+
+    await (Route.options.server as any).handlers.POST({ request })
+
+    expect(request.json).not.toHaveBeenCalled()
+    expect(mockHandleUpdateLocale).toHaveBeenCalledWith(null, undefined)
+  })
+
+  it('reads the request body when there is a session sub', async () => {
+    mockGetAppSession.mockResolvedValue(sessionWithSub('user-1'))
+    mockHandleUpdateLocale.mockResolvedValue({ status: 200, body: {} })
+    const { Route } = await import('./locale')
+    const request = makeRequest()
+    vi.mocked(request.json).mockResolvedValue({ locale: 'da' })
+
+    await (Route.options.server as any).handlers.POST({ request })
+
+    expect(mockHandleUpdateLocale).toHaveBeenCalledWith('user-1', {
+      locale: 'da',
+    })
+  })
+
+  it('maps an unhandled error to 500 internal_error', async () => {
+    mockGetAppSession.mockResolvedValue(sessionWithSub('user-1'))
+    mockHandleUpdateLocale.mockRejectedValue(new Error('boom'))
+    const { Route } = await import('./locale')
+    const request = makeRequest()
+    vi.mocked(request.json).mockResolvedValue({})
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    const res = await (Route.options.server as any).handlers.POST({ request })
+
+    expect(res.status).toBe(500)
+    expect(await res.json()).toEqual({ error: 'internal_error' })
   })
 })
 

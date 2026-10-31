@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { getLocale } from '#/paraglide/runtime.js'
 import { errorMessage } from '#/features/shared/utils/errorMessage'
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
@@ -170,6 +171,7 @@ export function usePushSubscription(): UsePushSubscriptionReturn {
         body: JSON.stringify({
           endpoint: subJson.endpoint,
           keys: subJson.keys,
+          locale: getLocale(),
         }),
       })
 

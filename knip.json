@@ -15,5 +15,8 @@
       "exports",
       "types"
     ]
-  }
+  },
+  "ignoreDependencies": [
+    "@inlang/plugin-message-format"
+  ]
 }

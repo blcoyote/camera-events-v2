@@ -72,7 +72,7 @@ Decisions were settled in a grilling session on 2026-10-31 and are recorded in
 | Time zone     | `Europe/Copenhagen`  | `Europe/Copenhagen`   |
 
 - All formatting goes through `src/features/shared/utils/intl.ts`, which exports
-  `TIME_ZONE`, `intlLocale(locale)` and the format helpers, each taking an
+  `intlLocale(locale)` and the format helpers, each taking an
   explicit locale. No other file calls `toLocale*String` or
   `new Intl.*Format`.
 - The admin Mute countdown keeps `H:MM:SS` and `M:SS` in both languages.

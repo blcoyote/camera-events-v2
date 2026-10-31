@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Button } from '#/features/shared/components/ui/button'
+import { useSyncPushLocale } from '#/features/shared/hooks/useSyncPushLocale'
 import { resyncExistingPushSubscription } from '#/features/shared/utils/pushResync'
 
 export function ServiceWorkerRegistration() {
+  useSyncPushLocale()
   const [waitingWorker, setWaitingWorker] = useState<ServiceWorker | null>(null)
   // Tracks whether the user explicitly clicked "Update now" so the
   // controllerchange handler knows it's safe to reload even when the page

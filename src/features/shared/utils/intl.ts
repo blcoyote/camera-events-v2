@@ -1,4 +1,4 @@
-export const TIME_ZONE = 'Europe/Copenhagen'
+const TIME_ZONE = 'Europe/Copenhagen'
 
 export type AppLocale = 'en' | 'da'
 
