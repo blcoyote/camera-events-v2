@@ -2,7 +2,7 @@
 
 ## Intent Description
 
-Add a GitHub Actions workflow that runs on every pull request targeting `main`. The workflow validates code quality and correctness by running type checking, linting, and the full test suite. This provides an automated quality gate so that broken code, style violations, and test failures are caught before merge. The workflow uses the same Bun setup that the project already uses for local development and the Dockerfile. Formatting is enforced at commit time via a Husky pre-commit hook running lint-staged with Prettier, rather than in CI.
+Add a GitHub Actions workflow that runs on every pull request targeting `main`. The workflow validates code quality and correctness by running type checking, linting, and the full test suite. This provides an automated quality gate so that broken code, style violations, and test failures are caught before merge. The workflow uses the same Bun setup that the project already uses for local development and the Dockerfile. Formatting is enforced at commit time via a Husky pre-commit hook running lint-staged with Biome (auto-fix on staged files), with a `bun run format` check in CI and the pre-push hook.
 
 ## User-Facing Behavior
 
@@ -30,7 +30,7 @@ Feature: GitHub pull request checks
     And the overall workflow status is "failure"
 
   Scenario: PR with lint violations fails lint
-    Given a pull request that introduces an ESLint violation
+    Given a pull request that introduces a Biome lint violation
     When the workflow runs
     Then the "Lint" step fails
     And the overall workflow status is "failure"
@@ -46,7 +46,7 @@ Feature: GitHub pull request checks
   Scenario: Staged files are formatted on commit
     Given Husky and lint-staged are installed
     When a developer commits files with formatting issues
-    Then lint-staged runs Prettier --write on staged files
+    Then lint-staged runs `biome check --write` on staged files
     And the commit includes the formatted versions
 
   # --- Dependency caching ---
@@ -92,25 +92,25 @@ Feature: GitHub pull request checks
 
 ### Components
 
-| Component          | Location                           | Responsibility                                                     |
-| ------------------ | ---------------------------------- | ------------------------------------------------------------------ |
-| PR workflow        | `.github/workflows/pr.yml`         | Orchestrates type check, lint, and test on pull requests           |
-| Pre-commit hook    | `.husky/pre-commit`                | Runs lint-staged before each commit                                |
-| lint-staged config | `package.json` (`lint-staged` key) | Runs `prettier --write` on staged files matching common extensions |
+| Component          | Location                           | Responsibility                                                        |
+| ------------------ | ---------------------------------- | --------------------------------------------------------------------- |
+| PR workflow        | `.github/workflows/pr.yml`         | Orchestrates type check, lint, and test on pull requests              |
+| Pre-commit hook    | `.husky/pre-commit`                | Runs lint-staged before each commit                                   |
+| lint-staged config | `package.json` (`lint-staged` key) | Runs `biome check --write` on staged files matching common extensions |
 
 ### Design Decisions
 
-| Decision               | Resolution                                               | Rationale                                                                                                                                                                    |
-| ---------------------- | -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Formatting enforcement | Pre-commit hook (Husky + lint-staged) instead of CI step | Formatting is a local concern — fix it before it reaches the remote. Avoids CI failures for cosmetic issues and auto-formats on commit so developers don't need to remember. |
-| Single job vs. matrix  | Single job with sequential steps                         | Project is small; parallelizing 4 fast checks across jobs adds overhead without meaningful time savings. A single job avoids redundant checkout/install steps.               |
-| Runtime                | Bun (matches Dockerfile `oven/bun` image)                | Consistency between CI and production runtime                                                                                                                                |
-| Bun install flag       | `--frozen-lockfile`                                      | Prevents accidental lockfile changes in CI; matches Dockerfile behavior                                                                                                      |
-| Bun setup              | `oven-sh/setup-bun`                                      | Official action; installs the Bun runtime directly, no separate Node.js setup needed                                                                                         |
-| Cache strategy         | None — relies on `bun install`'s speed                   | Bun installs are fast enough that an explicit CI dependency cache step isn't worth the added complexity                                                                      |
-| Type check command     | `bun x tsc --noEmit`                                     | Runs TypeScript compiler without emitting files; catches type errors                                                                                                         |
-| Test command           | `bun run test` (runs `vitest run`)                       | Uses existing package.json script; `run` flag ensures non-interactive single pass                                                                                            |
-| Trigger events         | `pull_request` only (not `push`)                         | PRs are the merge gate; push-to-main checks can be added later if needed                                                                                                     |
+| Decision               | Resolution                                                                                      | Rationale                                                                                                                                                      |
+| ---------------------- | ----------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Formatting enforcement | Pre-commit hook (Husky + lint-staged) auto-fixes; `bun run format` also runs in CI and pre-push | Auto-formatting on commit means developers rarely hit a format failure; the CI and pre-push check catches anything that bypassed the hook.                     |
+| Single job vs. matrix  | Single job with sequential steps                                                                | Project is small; parallelizing 4 fast checks across jobs adds overhead without meaningful time savings. A single job avoids redundant checkout/install steps. |
+| Runtime                | Bun (matches Dockerfile `oven/bun` image)                                                       | Consistency between CI and production runtime                                                                                                                  |
+| Bun install flag       | `--frozen-lockfile`                                                                             | Prevents accidental lockfile changes in CI; matches Dockerfile behavior                                                                                        |
+| Bun setup              | `oven-sh/setup-bun`                                                                             | Official action; installs the Bun runtime directly, no separate Node.js setup needed                                                                           |
+| Cache strategy         | None — relies on `bun install`'s speed                                                          | Bun installs are fast enough that an explicit CI dependency cache step isn't worth the added complexity                                                        |
+| Type check command     | `bun x tsc --noEmit`                                                                            | Runs TypeScript compiler without emitting files; catches type errors                                                                                           |
+| Test command           | `bun run test` (runs `vitest run`)                                                              | Uses existing package.json script; `run` flag ensures non-interactive single pass                                                                              |
+| Trigger events         | `pull_request` only (not `push`)                                                                | PRs are the merge gate; push-to-main checks can be added later if needed                                                                                       |
 
 ### Constraints
 
@@ -132,7 +132,7 @@ Feature: GitHub pull request checks
 | AC-7  | Bun runtime used          | `oven-sh/setup-bun` matches the Dockerfile's `oven/bun` base image      |
 | AC-8  | Frozen lockfile           | `bun install --frozen-lockfile` prevents lockfile drift                 |
 | AC-9  | Pre-commit hook           | Husky pre-commit hook runs lint-staged                                  |
-| AC-10 | Staged files formatted    | lint-staged runs `prettier --write` on staged files                     |
+| AC-10 | Staged files formatted    | lint-staged runs `biome check --write` on staged files                  |
 
 ## Consistency Gate
 
