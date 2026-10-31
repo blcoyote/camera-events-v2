@@ -10,7 +10,9 @@
       "**",
       "!**/*.json",
       "!src/routeTree.gen.ts",
-      "!.claude/worktrees"
+      "!.claude/worktrees",
+      "!.claude/skills/impeccable/scripts",
+      "!.github/skills/impeccable/scripts"
     ]
   },
   "formatter": {
