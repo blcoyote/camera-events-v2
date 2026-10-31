@@ -4,6 +4,7 @@ import { SortableCamerasGrid } from '#/features/cameras/components/SortableCamer
 import { Check, Pencil } from 'lucide-react'
 import { Button } from '#/features/shared/components/ui/button'
 import { Toggle } from '#/features/shared/components/ui/toggle'
+import { PageHeader } from '#/features/shared/components/PageHeader'
 
 type CamerasState =
   | { kind: 'cameras'; cameras: string[] }
@@ -44,16 +45,12 @@ export function CamerasPage({
   const hasCameras = state.kind === 'cameras'
 
   return (
-    <main id="main-content" className="page-wrap px-4 pb-8 pt-6 sm:pt-14">
-      <section className="glass rise-in relative overflow-hidden rounded-card px-5 py-6 sm:px-8 sm:py-8">
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <p className="eyebrow mb-1">Cameras</p>
-            <h1 className="mb-0 max-w-3xl text-3xl leading-display font-semibold tracking-tight sm:text-4xl">
-              Latest snapshots
-            </h1>
-          </div>
-          {hasCameras && (
+    <main id="main-content" className="page-wrap px-4 pb-8 pt-3 sm:pt-14">
+      <PageHeader
+        eyebrow="Cameras"
+        title="Latest snapshots"
+        actions={
+          hasCameras && (
             <div className="flex shrink-0 flex-col items-end gap-1">
               <Toggle
                 aria-label={
@@ -71,9 +68,9 @@ export function CamerasPage({
                 )}
               </Toggle>
             </div>
-          )}
-        </div>
-      </section>
+          )
+        }
+      />
 
       {saveError && (
         <div

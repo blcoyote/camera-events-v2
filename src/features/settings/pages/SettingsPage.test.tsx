@@ -57,6 +57,13 @@ describe('SettingsPage', () => {
     ).toBeInTheDocument()
   })
 
+  it('renders the h1 visually hidden on phones', () => {
+    render(<SettingsPage />)
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'Settings' }),
+    ).toHaveClass('sr-only', 'sm:not-sr-only')
+  })
+
   it('renders the Appearance card second, directly after the hero', () => {
     render(<SettingsPage />)
     const headings = screen.getAllByRole('heading', { level: 2 })

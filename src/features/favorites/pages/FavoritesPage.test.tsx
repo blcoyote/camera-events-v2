@@ -62,6 +62,16 @@ function makeEvent(id: string): FrigateEvent {
 }
 
 describe('FavoritesPage', () => {
+  it.each([[[]], [['evt-1']]])(
+    'renders a phone-hidden h1 header (events: %j)',
+    (ids: string[]) => {
+      render(<FavoritesPage events={ids.map(makeEvent)} />)
+      expect(
+        screen.getByRole('heading', { level: 1, name: 'Your Favorites' }),
+      ).toHaveClass('sr-only', 'sm:not-sr-only')
+    },
+  )
+
   it('renders one EventCard per event', () => {
     render(<FavoritesPage events={[makeEvent('evt-1'), makeEvent('evt-2')]} />)
     const cards = screen.getAllByTestId('event-card')

@@ -70,6 +70,17 @@ describe('CamerasPage', () => {
     vi.clearAllMocks()
   })
 
+  it('renders a PageHeader with the Cameras eyebrow and title', () => {
+    const output = CamerasPage({
+      result: ok(['front']),
+      isEditing: false,
+      onEditingChange: vi.fn(),
+    })
+    const json = JSON.stringify(output)
+    expect(json).toContain('"eyebrow":"Cameras"')
+    expect(json).toContain('"title":"Latest snapshots"')
+  })
+
   it('renders pencil icon button when cameras are present and isEditing=false', () => {
     const output = CamerasPage({
       result: ok(['front', 'back']),
@@ -108,6 +119,7 @@ describe('CamerasPage', () => {
       if (!node || typeof node !== 'object') return null
       const el = node as React.ReactElement<{
         children?: unknown
+        actions?: unknown
         onPressedChange?: (pressed: boolean) => void
         title?: string
       }>
@@ -120,6 +132,8 @@ describe('CamerasPage', () => {
         }>
       }
       const children = el.props.children
+      const viaActions = findEditButton(el.props.actions)
+      if (viaActions) return viaActions
       if (Array.isArray(children)) {
         for (const child of children) {
           const found = findEditButton(child)

@@ -2,17 +2,13 @@ import { Link } from '@tanstack/react-router'
 import type { FrigateEvent } from '#/features/shared/server/frigate/types'
 import { EventCard } from '#/features/shared/components/EventCard'
 import { Button } from '#/features/shared/components/ui/button'
+import { PageHeader } from '#/features/shared/components/PageHeader'
 
 export function FavoritesPage({ events }: { events: FrigateEvent[] }) {
   if (events.length === 0) {
     return (
-      <main id="main-content" className="page-wrap px-4 pb-8 pt-6 sm:pt-14">
-        <section className="glass rise-in relative overflow-hidden rounded-card px-5 py-6 sm:px-8 sm:py-8">
-          <p className="eyebrow mb-1">Favorites</p>
-          <h1 className="mb-0 max-w-3xl text-3xl leading-display font-semibold tracking-tight sm:text-4xl">
-            Your Favorites
-          </h1>
-        </section>
+      <main id="main-content" className="page-wrap px-4 pb-8 pt-3 sm:pt-14">
+        <PageHeader eyebrow="Favorites" title="Your Favorites" />
         <div className="mt-12 text-center">
           <p className="text-lg font-medium text-foreground">
             No favorites yet
@@ -29,13 +25,8 @@ export function FavoritesPage({ events }: { events: FrigateEvent[] }) {
   }
 
   return (
-    <main id="main-content" className="page-wrap px-4 pb-8 pt-6 sm:pt-14">
-      <section className="glass rise-in relative overflow-hidden rounded-card px-5 py-6 sm:px-8 sm:py-8">
-        <p className="eyebrow mb-1">Favorites</p>
-        <h1 className="mb-0 max-w-3xl text-3xl leading-display font-semibold tracking-tight sm:text-4xl">
-          Your Favorites
-        </h1>
-      </section>
+    <main id="main-content" className="page-wrap px-4 pb-8 pt-3 sm:pt-14">
+      <PageHeader eyebrow="Favorites" title="Your Favorites" />
       <section
         aria-label="Favorited events"
         className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"

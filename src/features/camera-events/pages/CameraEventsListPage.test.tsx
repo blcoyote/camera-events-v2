@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, cleanup } from '@testing-library/react'
+import { render, screen, cleanup } from '@testing-library/react'
 import '@testing-library/jest-dom/vitest'
 import type { FrigateEvent } from '#/features/shared/server/frigate/types'
 
@@ -59,6 +59,13 @@ afterEach(() => {
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
 describe('CameraEventsListPage', () => {
+  it('renders a PageHeader h1 that is visually hidden on phones', () => {
+    render(<CameraEventsListPage result={{ ok: true, data: [] }} />)
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'Recent Events' }),
+    ).toHaveClass('sr-only', 'sm:not-sr-only')
+  })
+
   describe('favoritedIds prop', () => {
     it('passes initialFavorited=true to EventCard for favorited event', () => {
       const events = [makeEvent('evt-1'), makeEvent('evt-2')]

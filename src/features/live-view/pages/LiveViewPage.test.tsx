@@ -22,6 +22,14 @@ describe('LiveViewPage', () => {
     ).toBeInTheDocument()
   })
 
+  it('renders the h1 visually hidden on phones', () => {
+    render(<LiveViewPage cameraName="front_porch" />)
+    expect(screen.getByRole('heading', { name: 'front_porch' })).toHaveClass(
+      'sr-only',
+      'sm:not-sr-only',
+    )
+  })
+
   it('renders the live snapshot for the camera', () => {
     render(<LiveViewPage cameraName="front_porch" />)
     expect(screen.getByTestId('live-snapshot')).toHaveTextContent('front_porch')
