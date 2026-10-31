@@ -167,5 +167,68 @@
   "details_confidence": "Detection confidence",
   "details_duration_seconds": "{seconds}s",
   "details_duration_minutes": "{minutes}m",
-  "details_duration_minutes_seconds": "{minutes}m {seconds}s"
+  "details_duration_minutes_seconds": "{minutes}m {seconds}s",
+  "settings_account": "Account",
+  "settings_appearance": "Appearance",
+  "settings_theme_group": "Theme",
+  "settings_camera_events": "Camera Events",
+  "settings_event_limit_label": "Number of events to display",
+  "settings_event_count": [
+    {
+      "declarations": [
+        "input count",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
+      "match": {
+        "countPlural=one": "{count} event",
+        "countPlural=other": "{count} events"
+      }
+    }
+  ],
+  "settings_event_limit_desc": "Controls how many events are loaded on the Camera Events page. Range: {min}–{max}.",
+  "settings_live_view": "Live View",
+  "settings_refresh_interval": "Refresh interval",
+  "settings_refresh_seconds": "{seconds}s",
+  "settings_refresh_desc": "How often the live camera snapshot refreshes. Range: {min}–{max} seconds.",
+  "settings_notifications": "Notifications",
+  "settings_push_unsupported": "Push notifications are not supported in this browser.",
+  "settings_push_unavailable": "Push notifications are not available on this server.",
+  "settings_blocked": "Notifications are blocked in your browser settings.",
+  "settings_unblock_help": "To unblock: in Chrome, click the lock icon in the address bar > Site settings > Notifications > Allow. In Safari, go to Settings > Websites > Notifications and allow this site.",
+  "settings_test_sent": [
+    {
+      "declarations": [
+        "input count",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
+      "match": {
+        "countPlural=one": "Test sent to {count} device.",
+        "countPlural=other": "Test sent to {count} devices."
+      }
+    }
+  ],
+  "settings_enabled": "Notifications are enabled",
+  "settings_working": "Working...",
+  "settings_sending": "Sending...",
+  "settings_disable": "Disable notifications",
+  "settings_send_test": "Send test notification",
+  "settings_enable_prompt": "Enable push notifications to receive alerts on this device.",
+  "settings_enable": "Enable notifications",
+  "settings_error_session_expired": "Your session has expired. Please sign in again, then enable notifications.",
+  "settings_error_unavailable": "Notifications are temporarily unavailable. Please try again later.",
+  "settings_error_enable": "Could not enable notifications. Please try again.",
+  "settings_error_enable_detail": "Could not enable notifications: {detail}. Please try again.",
+  "settings_error_permission_not_granted": "Notification permission was not granted.",
+  "settings_error_vapid": "Could not fetch VAPID key",
+  "settings_error_brave": "Brave blocks push notifications by default. Enable \"Use Google services for push messaging\" in brave://settings/privacy, then try again.",
+  "settings_error_subscribe": "Failed to subscribe",
+  "settings_error_unsubscribe": "Failed to unsubscribe",
+  "settings_error_send_test": "Failed to send test notification",
+  "settings_description": "Account preferences and camera configuration."
 }

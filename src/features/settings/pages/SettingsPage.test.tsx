@@ -127,3 +127,21 @@ describe('SettingsPage', () => {
     expect(screen.getByText('2s')).toHaveAttribute('aria-live', 'polite')
   })
 })
+
+describe('SettingsPage (da)', () => {
+  it('renders Danish copy', async () => {
+    const { withLocale } = await import('#/test-utils/locale')
+    const restore = withLocale('da')
+    try {
+      render(<SettingsPage />)
+      expect(
+        screen.getByRole('heading', { level: 1, name: 'Indstillinger' }),
+      ).toBeInTheDocument()
+      expect(screen.getByText('Antal hændelser der vises')).toBeInTheDocument()
+      expect(screen.getByText('100 hændelser')).toBeInTheDocument()
+      expect(screen.getByText('Opdateringsinterval')).toBeInTheDocument()
+    } finally {
+      restore()
+    }
+  })
+})

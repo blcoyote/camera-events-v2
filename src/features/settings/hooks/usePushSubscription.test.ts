@@ -317,3 +317,21 @@ describe('usePushSubscription helpers', () => {
     })
   })
 })
+
+describe('formatSubscribeError (da)', () => {
+  it('translates the whole sentence including the detail', async () => {
+    const { withLocale } = await import('#/test-utils/locale')
+    const restore = withLocale('da')
+    try {
+      expect(formatSubscribeError(503, null)).toMatch(/midlertidigt/)
+      expect(formatSubscribeError(400, null)).toBe(
+        'Kunne ikke aktivere notifikationer. Prøv igen.',
+      )
+      expect(formatSubscribeError(400, { error: 'x' })).toMatch(
+        /^Kunne ikke aktivere notifikationer: .+\. Prøv igen\.$/,
+      )
+    } finally {
+      restore()
+    }
+  })
+})

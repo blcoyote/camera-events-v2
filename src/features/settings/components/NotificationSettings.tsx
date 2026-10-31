@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { m } from '#/paraglide/messages.js'
 import { usePushSubscription } from '../hooks/usePushSubscription'
 import { NotificationSection } from './NotificationSection'
 import { CameraPreferences } from './CameraPreferences'
@@ -83,7 +84,7 @@ export function NotificationSettings() {
     return (
       <NotificationSection>
         <p className="text-sm text-muted-foreground">
-          Push notifications are not supported in this browser.
+          {m.settings_push_unsupported()}
         </p>
       </NotificationSection>
     )
@@ -94,7 +95,7 @@ export function NotificationSettings() {
     return (
       <NotificationSection>
         <p className="text-sm text-muted-foreground">
-          Push notifications are not available on this server.
+          {m.settings_push_unavailable()}
         </p>
       </NotificationSection>
     )
@@ -104,14 +105,9 @@ export function NotificationSettings() {
   if (permissionState === 'denied' && !isSubscribed) {
     return (
       <NotificationSection>
-        <p className="text-sm text-muted-foreground">
-          Notifications are blocked in your browser settings.
-        </p>
+        <p className="text-sm text-muted-foreground">{m.settings_blocked()}</p>
         <p className="mt-2 text-xs text-muted-foreground">
-          To unblock: in <strong>Chrome</strong>, click the lock icon in the
-          address bar &gt; Site settings &gt; Notifications &gt; Allow. In{' '}
-          <strong>Safari</strong>, go to Settings &gt; Websites &gt;
-          Notifications and allow this site.
+          {m.settings_unblock_help()}
         </p>
       </NotificationSection>
     )
@@ -131,7 +127,7 @@ export function NotificationSettings() {
     setTestResult(null)
     const sent = await sendTest()
     if (sent > 0) {
-      setTestResult(`Test sent to ${sent} device${sent !== 1 ? 's' : ''}.`)
+      setTestResult(m.settings_test_sent({ count: sent }))
     }
   }
 
@@ -194,7 +190,7 @@ export function NotificationSettings() {
                 aria-hidden="true"
               />
               <span className="text-sm font-medium text-foreground">
-                Notifications are enabled
+                {m.settings_enabled()}
               </span>
             </div>
             <div className="flex flex-wrap items-center gap-3">
@@ -204,10 +200,10 @@ export function NotificationSettings() {
                 onClick={handleUnsubscribe}
                 disabled={isLoading}
               >
-                {isLoading ? 'Working...' : 'Disable Notifications'}
+                {isLoading ? m.settings_working() : m.settings_disable()}
               </Button>
               <Button size="sm" onClick={handleSendTest} disabled={isLoading}>
-                {isLoading ? 'Sending...' : 'Send Test Notification'}
+                {isLoading ? m.settings_sending() : m.settings_send_test()}
               </Button>
             </div>
             <AvailabilityAlertsToggle
@@ -225,14 +221,14 @@ export function NotificationSettings() {
         ) : (
           <>
             <p className="text-sm text-muted-foreground">
-              Enable push notifications to receive alerts on this device.
+              {m.settings_enable_prompt()}
             </p>
             <Button
               className="w-fit"
               onClick={handleSubscribe}
               disabled={isLoading}
             >
-              {isLoading ? 'Working...' : 'Enable Notifications'}
+              {isLoading ? m.settings_working() : m.settings_enable()}
             </Button>
           </>
         )}

@@ -167,5 +167,68 @@
   "details_confidence": "Registreringssikkerhed",
   "details_duration_seconds": "{seconds} s",
   "details_duration_minutes": "{minutes} min",
-  "details_duration_minutes_seconds": "{minutes} min {seconds} s"
+  "details_duration_minutes_seconds": "{minutes} min {seconds} s",
+  "settings_account": "Konto",
+  "settings_appearance": "Udseende",
+  "settings_theme_group": "Tema",
+  "settings_camera_events": "Hændelser",
+  "settings_event_limit_label": "Antal hændelser der vises",
+  "settings_event_count": [
+    {
+      "declarations": [
+        "input count",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
+      "match": {
+        "countPlural=one": "{count} hændelse",
+        "countPlural=other": "{count} hændelser"
+      }
+    }
+  ],
+  "settings_event_limit_desc": "Styrer, hvor mange hændelser der indlæses på siden Hændelser. Interval: {min}–{max}.",
+  "settings_live_view": "Live-visning",
+  "settings_refresh_interval": "Opdateringsinterval",
+  "settings_refresh_seconds": "{seconds} s",
+  "settings_refresh_desc": "Hvor ofte kameraets live-stillbillede opdateres. Interval: {min}–{max} sekunder.",
+  "settings_notifications": "Notifikationer",
+  "settings_push_unsupported": "Pushnotifikationer understøttes ikke i denne browser.",
+  "settings_push_unavailable": "Pushnotifikationer er ikke tilgængelige på denne server.",
+  "settings_blocked": "Notifikationer er blokeret i browserens indstillinger.",
+  "settings_unblock_help": "Sådan fjerner du blokeringen: I Chrome skal du klikke på låseikonet i adresselinjen > Webstedsindstillinger > Notifikationer > Tillad. I Safari skal du gå til Indstillinger > Websteder > Notifikationer og tillade dette websted.",
+  "settings_test_sent": [
+    {
+      "declarations": [
+        "input count",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
+      "match": {
+        "countPlural=one": "Test sendt til {count} enhed.",
+        "countPlural=other": "Test sendt til {count} enheder."
+      }
+    }
+  ],
+  "settings_enabled": "Notifikationer er aktiveret",
+  "settings_working": "Arbejder...",
+  "settings_sending": "Sender...",
+  "settings_disable": "Deaktivér notifikationer",
+  "settings_send_test": "Send testnotifikation",
+  "settings_enable_prompt": "Aktivér pushnotifikationer for at modtage notifikationer på denne enhed.",
+  "settings_enable": "Aktivér notifikationer",
+  "settings_error_session_expired": "Din session er udløbet. Log ind igen, og aktivér derefter notifikationer.",
+  "settings_error_unavailable": "Notifikationer er midlertidigt utilgængelige. Prøv igen senere.",
+  "settings_error_enable": "Kunne ikke aktivere notifikationer. Prøv igen.",
+  "settings_error_enable_detail": "Kunne ikke aktivere notifikationer: {detail}. Prøv igen.",
+  "settings_error_permission_not_granted": "Tilladelse til notifikationer blev ikke givet.",
+  "settings_error_vapid": "Kunne ikke hente VAPID-nøglen",
+  "settings_error_brave": "Brave blokerer pushnotifikationer som standard. Aktivér \"Use Google services for push messaging\" i brave://settings/privacy, og prøv igen.",
+  "settings_error_subscribe": "Kunne ikke tilmelde",
+  "settings_error_unsubscribe": "Kunne ikke afmelde",
+  "settings_error_send_test": "Kunne ikke sende testnotifikation",
+  "settings_description": "Kontoindstillinger og kamerakonfiguration."
 }

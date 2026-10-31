@@ -92,3 +92,20 @@ describe('AppearanceSettings', () => {
     expect(mockSetTheme).toHaveBeenLastCalledWith('auto')
   })
 })
+
+describe('AppearanceSettings (da)', () => {
+  it('renders Danish labels', async () => {
+    const { withLocale } = await import('#/test-utils/locale')
+    const restore = withLocale('da')
+    try {
+      render(<AppearanceSettings />)
+      expect(
+        screen.getByRole('heading', { level: 2, name: 'Udseende' }),
+      ).toBeInTheDocument()
+      expect(screen.getByRole('group', { name: 'Tema' })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Lys' })).toBeInTheDocument()
+    } finally {
+      restore()
+    }
+  })
+})

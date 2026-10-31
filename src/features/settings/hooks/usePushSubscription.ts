@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { m } from '#/paraglide/messages.js'
 import { getLocale } from '#/paraglide/runtime.js'
 import { errorMessage } from '#/features/shared/utils/errorMessage'
 
@@ -29,17 +30,17 @@ export function formatSubscribeError(
   parsedBody: { error?: unknown } | null,
 ): string {
   if (status === 401) {
-    return 'Your session has expired. Please sign in again, then enable notifications.'
+    return m.settings_error_session_expired()
   }
   if (status >= 500) {
-    return 'Notifications are temporarily unavailable. Please try again later.'
+    return m.settings_error_unavailable()
   }
   // 4xx: surface server-supplied detail when present.
-  const detail =
-    parsedBody && typeof parsedBody.error === 'string'
-      ? `: ${errorMessage(parsedBody.error)}`
-      : ''
-  return `Could not enable notifications${detail}. Please try again.`
+  return parsedBody && typeof parsedBody.error === 'string'
+    ? m.settings_error_enable_detail({
+        detail: errorMessage(parsedBody.error),
+      })
+    : m.settings_error_enable()
 }
 
 export interface UsePushSubscriptionReturn {
@@ -134,8 +135,8 @@ export function usePushSubscription(): UsePushSubscriptionReturn {
       if (permission !== 'granted') {
         setError(
           permission === 'denied'
-            ? 'Notifications are blocked in your browser settings.'
-            : 'Notification permission was not granted.',
+            ? m.settings_blocked()
+            : m.settings_error_permission_not_granted(),
         )
         return
       }
@@ -146,7 +147,7 @@ export function usePushSubscription(): UsePushSubscriptionReturn {
         const res = await fetch('/api/push/vapid-public-key', {
           credentials: 'include',
         })
-        if (!res.ok) throw new Error('Could not fetch VAPID key')
+        if (!res.ok) throw new Error(m.settings_error_vapid())
         const data = await res.json()
         key = data.publicKey
         setVapidPublicKey(key)
@@ -192,11 +193,11 @@ export function usePushSubscription(): UsePushSubscriptionReturn {
     } catch (err) {
       const isBrave = !!(navigator as any).brave
       if (isBrave && err instanceof DOMException && err.name === 'AbortError') {
-        setError(
-          'Brave blocks push notifications by default. Enable "Use Google services for push messaging" in brave://settings/privacy, then try again.',
-        )
+        setError(m.settings_error_brave())
       } else {
-        setError(err instanceof Error ? err.message : 'Failed to subscribe')
+        setError(
+          err instanceof Error ? err.message : m.settings_error_subscribe(),
+        )
       }
     } finally {
       setIsLoading(false)
@@ -223,7 +224,9 @@ export function usePushSubscription(): UsePushSubscriptionReturn {
       setCurrentSubscription(null)
       setIsSubscribed(false)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to unsubscribe')
+      setError(
+        err instanceof Error ? err.message : m.settings_error_unsubscribe(),
+      )
     } finally {
       setIsLoading(false)
     }
@@ -241,13 +244,15 @@ export function usePushSubscription(): UsePushSubscriptionReturn {
       })
 
       if (!res.ok) {
-        throw new Error('Failed to send test notification')
+        throw new Error(m.settings_error_send_test())
       }
 
       const data = await res.json()
       return data.sent ?? 0
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to send test')
+      setError(
+        err instanceof Error ? err.message : m.settings_error_send_test(),
+      )
       return 0
     } finally {
       setIsLoading(false)
