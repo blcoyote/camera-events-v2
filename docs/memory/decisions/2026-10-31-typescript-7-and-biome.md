@@ -40,9 +40,10 @@ TypeScript 5/6 JavaScript compiler API that TS 7 does not ship.
   check. Re-enable when Biome fixes that.
 - `noInferrableTypes` has no `ignoreParameters` option, so defaulted parameters
   drop their redundant annotation (`download = false`).
-- **Markdown is not formatted.** Biome 2.6's Markdown formatter inserts a blank
-  line inside YAML frontmatter, which breaks every vault note. Re-enable
-  `markdown.formatter` once that is fixed.
+- **Markdown needs `markdown.parser.frontmatter: true`.** It defaults to off,
+  and then Biome 2.6 reads YAML frontmatter as a thematic break plus a setext
+  heading: it inserts blank lines and turns `tags: [...]` into an `##` heading,
+  breaking every vault note and `.claude/rules` path scope.
 
 ## Alternatives
 
