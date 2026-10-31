@@ -9,10 +9,8 @@ import {
   loadOrder,
   saveOrder,
 } from '#/features/cameras/utils/cameraOrderStorage'
+import { m } from '#/paraglide/messages.js'
 import { mergeCameraOrder } from '#/features/cameras/utils/mergeCameraOrder'
-
-export const SAVE_ERROR_MESSAGE =
-  'Order saved for this session only — storage is full or disabled'
 
 const useIsomorphicLayoutEffect =
   typeof window !== 'undefined' ? useLayoutEffect : useEffect
@@ -34,7 +32,7 @@ export function useCameraOrder(frigateCameras: string[]) {
     setSavedOrder(next)
     const result = saveOrder(next)
     if (!result.ok) {
-      setSaveError(SAVE_ERROR_MESSAGE)
+      setSaveError(m.cameras_save_error())
     }
   }, [])
 

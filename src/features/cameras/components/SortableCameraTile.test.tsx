@@ -191,3 +191,20 @@ describe('SortableCameraTile', () => {
     expect(json).not.toContain('/live/$name')
   })
 })
+
+describe('SortableCameraTile (da)', () => {
+  it('renders Danish labels', async () => {
+    const { withLocale } = await import('#/test-utils/locale')
+    const restore = withLocale('da')
+    try {
+      const json = JSON.stringify(
+        getOutput({ name: 'front', isEditing: true, imgSrc: '/img' }),
+      )
+      expect(json).toContain('Live-visning af front')
+      expect(json).toContain('Seneste stillbillede fra front')
+      expect(json).toContain('Flyt front')
+    } finally {
+      restore()
+    }
+  })
+})

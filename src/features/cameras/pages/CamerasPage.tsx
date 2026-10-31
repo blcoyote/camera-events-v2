@@ -3,6 +3,7 @@ import { useCameraOrder } from '#/features/cameras/hooks/useCameraOrder'
 import { SortableCamerasGrid } from '#/features/cameras/components/SortableCamerasGrid'
 import { ArrowUpDown, Check, GripVertical } from 'lucide-react'
 import { Button } from '#/features/shared/components/ui/button'
+import { m } from '#/paraglide/messages.js'
 import { PageHeader } from '#/features/shared/components/PageHeader'
 
 type CamerasState =
@@ -16,7 +17,7 @@ export function getCamerasPageState(
   if (!result.ok) {
     return {
       kind: 'error',
-      message: 'Could not load cameras. Check that Frigate is running.',
+      message: m.cameras_load_error(),
     }
   }
   if (result.data.length === 0) {
@@ -46,8 +47,8 @@ export function CamerasPage({
   return (
     <main id="main-content" className="page-wrap px-4 pb-8 pt-3 sm:pt-14">
       <PageHeader
-        eyebrow="Cameras"
-        title="Latest snapshots"
+        eyebrow={m.cameras_eyebrow()}
+        title={m.cameras_page_title()}
         actions={
           canArrange && (
             <Button
@@ -58,11 +59,12 @@ export function CamerasPage({
             >
               {isEditing ? (
                 <>
-                  <Check size={16} aria-hidden="true" /> Done
+                  <Check size={16} aria-hidden="true" /> {m.cameras_done()}
                 </>
               ) : (
                 <>
-                  <ArrowUpDown size={16} aria-hidden="true" /> Arrange
+                  <ArrowUpDown size={16} aria-hidden="true" />{' '}
+                  {m.cameras_arrange()}
                 </>
               )}
             </Button>
@@ -98,16 +100,16 @@ export function CamerasPage({
               size="sm"
               onClick={dismissError}
               className="shrink-0"
-              aria-label="Dismiss storage error"
+              aria-label={m.cameras_dismiss_storage_error()}
             >
-              Dismiss
+              {m.cameras_dismiss()}
             </Button>
           </div>
         </div>
       )}
 
       {state.kind === 'empty' && (
-        <p className="mt-8 text-center text-fg-2">No cameras found</p>
+        <p className="mt-8 text-center text-fg-2">{m.cameras_empty()}</p>
       )}
 
       {state.kind === 'error' && (

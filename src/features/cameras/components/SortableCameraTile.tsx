@@ -3,6 +3,7 @@ import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { MediaCard } from '#/features/shared/components/MediaCard'
 import { GripVertical } from 'lucide-react'
+import { m } from '#/paraglide/messages.js'
 import { Button } from '#/features/shared/components/ui/button'
 
 interface SortableCameraTileProps {
@@ -50,11 +51,11 @@ export function SortableCameraTile({
         scanLines={false}
         to={isEditing ? undefined : '/live/$name'}
         params={isEditing ? undefined : { name }}
-        aria-label={`Live view of ${name}`}
+        aria-label={m.cameras_live_view_of({ name })}
         image={
           <img
             src={imgSrc}
-            alt={`Latest snapshot from ${name}`}
+            alt={m.cameras_latest_snapshot_from({ name })}
             loading="lazy"
             className={`h-full w-full object-cover transition-transform duration-300${isEditing ? '' : ' group-hover:scale-105'}`}
           />
@@ -66,7 +67,7 @@ export function SortableCameraTile({
             <Button
               variant="ghost"
               size="icon"
-              aria-label={`Reorder ${name}`}
+              aria-label={m.cameras_reorder({ name })}
               className="ml-2 cursor-grab touch-none select-none text-fg-2 active:cursor-grabbing"
               {...attributes}
               {...listeners}

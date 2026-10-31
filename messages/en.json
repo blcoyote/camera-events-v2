@@ -66,5 +66,20 @@
   "shared_refreshed": "Refreshed",
   "shared_lightbox_hint": "Pinch to zoom, drag to pan, swipe down or press Escape to close.",
   "shared_lightbox_close": "Close snapshot viewer",
-  "ui_close": "Close"
+  "ui_close": "Close",
+  "cameras_eyebrow": "Cameras",
+  "cameras_page_title": "Latest snapshots",
+  "cameras_arrange": "Arrange",
+  "cameras_done": "Done",
+  "cameras_dismiss": "Dismiss",
+  "cameras_dismiss_storage_error": "Dismiss storage error",
+  "cameras_empty": "No cameras found",
+  "cameras_load_error": "Could not load cameras. Check that Frigate is running.",
+  "cameras_save_error": "Order saved for this session only — storage is full or disabled",
+  "cameras_live_view_of": "Live view of {name}",
+  "cameras_latest_snapshot_from": "Latest snapshot from {name}",
+  "cameras_reorder": "Reorder {name}",
+  "cameras_list": "Camera list",
+  "cameras_loading_title": "Loading cameras…",
+  "cameras_loading": "Loading cameras"
 }

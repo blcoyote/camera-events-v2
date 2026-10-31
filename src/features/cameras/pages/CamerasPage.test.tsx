@@ -16,8 +16,6 @@ vi.mock('#/features/cameras/hooks/useCameraOrder', () => ({
     saveError: null,
     dismissError: vi.fn(),
   }),
-  SAVE_ERROR_MESSAGE:
-    'Order saved for this session only — storage is full or disabled',
 }))
 
 vi.mock('#/features/cameras/components/SortableCamerasGrid', () => ({
@@ -164,5 +162,27 @@ describe('CamerasPage', () => {
       onEditingChange: vi.fn(),
     })
     expect(JSON.stringify(editOutput)).toContain('"isEditing":true')
+  })
+})
+
+describe('CamerasPage (da)', () => {
+  it('renders Danish copy', async () => {
+    const { withLocale } = await import('#/test-utils/locale')
+    const restore = withLocale('da')
+    try {
+      const render = (r: FrigateResult<string[]>, e = false) =>
+        JSON.stringify(
+          CamerasPage({ result: r, isEditing: e, onEditingChange: vi.fn() }),
+        )
+      const json = render(ok(['a', 'b']))
+      expect(json).toContain('"eyebrow":"Kameraer"')
+      expect(json).toContain('"title":"Seneste stillbilleder"')
+      expect(json).toContain('Arranger')
+      expect(render(ok(['a', 'b']), true)).toContain('Færdig')
+      expect(render(emptyResult)).toContain('Ingen kameraer fundet')
+      expect(render(errorResult)).toContain('Tjek at Frigate kører')
+    } finally {
+      restore()
+    }
   })
 })

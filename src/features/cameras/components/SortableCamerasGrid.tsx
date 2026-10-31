@@ -15,6 +15,7 @@ import {
   arrayMove,
 } from '@dnd-kit/sortable'
 import { restrictToParentElement } from '@dnd-kit/modifiers'
+import { m } from '#/paraglide/messages.js'
 import { SortableCameraTile } from './SortableCameraTile'
 
 export function reorderOnDragEnd(
@@ -65,7 +66,7 @@ export function SortableCamerasGrid({
     >
       <SortableContext items={cameras} strategy={verticalListSortingStrategy}>
         <section
-          aria-label="Camera list"
+          aria-label={m.cameras_list()}
           className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
         >
           {cameras.map((name, index) => (
