@@ -46,7 +46,7 @@ describe('parsePushPayload', () => {
     })
   })
 
-  it('re-formats a single-event body using the device timezone', () => {
+  it('re-formats a single-event body in Europe/Copenhagen', () => {
     // 1713182400 = 2024-04-15T12:00:00Z
     const result = parsePushPayload({
       title: 'Front Porch',
@@ -60,11 +60,7 @@ describe('parsePushPayload', () => {
         burstStart: true,
       },
     })
-    const localTime = new Date(1713182400 * 1000).toLocaleTimeString('en-GB', {
-      hour: '2-digit',
-      minute: '2-digit',
-    })
-    expect(result.body).toBe(`Person detected at ${localTime}`)
+    expect(result.body).toBe('Person detected at 14:00')
     expect(result.event).toEqual({
       camera: 'front_porch',
       count: 1,
@@ -87,11 +83,7 @@ describe('parsePushPayload', () => {
         burstStart: true,
       },
     })
-    const localTime = new Date(1713182400 * 1000).toLocaleTimeString('en-GB', {
-      hour: '2-digit',
-      minute: '2-digit',
-    })
-    expect(result.body).toBe(`3 new events — Person, Car, Dog at ${localTime}`)
+    expect(result.body).toBe('3 new events — Person, Car, Dog at 14:00')
   })
 
   it('truncates label lists beyond three with +N more', () => {

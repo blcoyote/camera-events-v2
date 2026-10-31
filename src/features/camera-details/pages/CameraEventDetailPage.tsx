@@ -19,6 +19,8 @@ import { InfoCard } from '../components/InfoCard'
 import { parseEventStartTimeMs } from '../utils/eventId'
 import { useFavoriteToggle } from '#/features/shared/hooks/useFavoriteToggle'
 import { FavoriteButton } from '#/features/shared/components/FavoriteButton'
+import { getLocale } from '#/paraglide/runtime.js'
+import { formatDateTime, formatPercent } from '#/features/shared/utils/intl'
 
 // ─── Pure functions (exported for testing) ───
 
@@ -72,13 +74,7 @@ export function getDetailPageState(
 }
 
 export function formatTimestamp(unixSeconds: number): string {
-  return new Date(unixSeconds * 1000).toLocaleString('en-US', {
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-  })
+  return formatDateTime(unixSeconds, getLocale())
 }
 
 export function formatDuration(startTime: number, endTime: number): string {
@@ -410,7 +406,7 @@ export function CameraEventDetailPage({
                 aria-label="Detection confidence"
               />
               <span className="text-sm font-semibold text-foreground">
-                {Math.round(event.data.score * 100)}%
+                {formatPercent(event.data.score, getLocale())}
               </span>
             </div>
           </div>

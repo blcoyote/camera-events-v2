@@ -1,3 +1,6 @@
+import { getLocale } from '#/paraglide/runtime.js'
+import { formatDate } from './intl'
+
 export function formatRelativeTime(unixSeconds: number): string {
   const now = Date.now() / 1000
   const diff = now - unixSeconds
@@ -15,10 +18,7 @@ export function formatRelativeTime(unixSeconds: number): string {
     const days = Math.floor(diff / 86400)
     return `${days}d ago`
   }
-  return new Date(unixSeconds * 1000).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-  })
+  return formatDate(unixSeconds, getLocale())
 }
 
 export function formatLabelName(label: string): string {

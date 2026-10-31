@@ -75,6 +75,12 @@ describe('formatTime', () => {
   })
 })
 
+describe('formatTime timezone', () => {
+  it('uses Europe/Copenhagen 24h regardless of machine TZ', () => {
+    expect(formatTime(1793412744)).toBe('03:12') // 02:12 UTC, CET
+  })
+})
+
 describe('cameraNotificationTag', () => {
   it('namespaces the tag per camera so cameras alert independently', () => {
     expect(cameraNotificationTag('front_porch')).toBe('camera-front_porch')

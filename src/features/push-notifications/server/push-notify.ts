@@ -38,7 +38,12 @@ export function formatLabel(label: string): string {
 /** Format a unix timestamp to a short HH:MM time string. */
 export function formatTime(unixSeconds: number): string {
   const d = new Date(unixSeconds * 1000)
-  return d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+  return d.toLocaleTimeString('en-GB', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+    timeZone: 'Europe/Copenhagen',
+  })
 }
 
 /** Condense a label list to at most three names plus a "+N more" suffix. */
