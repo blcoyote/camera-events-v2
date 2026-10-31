@@ -28,19 +28,22 @@ Feature: Inline event clip playback and bounding-box overlay
     Given I am signed in
     And I open the event detail page for a Frigate event
 
-  Scenario: Event has a clip — collapsed "Watch clip" accordion below the snapshot
+  Scenario: Event has a clip — "Watch clip" accordion, open by default
     Given the event has has_clip = true
     When the page loads
     Then I see a "Watch clip" accordion summary below the snapshot block
-    And the accordion is collapsed by default
-    And no <video> element is in the DOM (no metadata fetch on page load)
-    When I open the accordion
-    Then a <video> element mounts inside the accordion
+    And the accordion is open by default
+    And a <video> element is mounted inside it immediately
     And the element has the playsinline attribute (iOS inline rendering)
     And the element has preload="metadata"
     And the element does not autoplay
-    When I close the accordion after opening it
-    Then the <video> element remains in the DOM (latched on first open) so re-opening is instant
+    And the page does not auto-scroll on load
+    When I close the accordion
+    Then the <video> element remains in the DOM so re-opening is instant
+    When I re-open the accordion
+    Then the page scrolls it into view
+
+  Note (2026-10-31): Changed to open by default after the dark-mode critique: the clip is the answer to the notification; preload=metadata keeps cost low.
 
   Scenario: Event has no clip — snapshot only
     Given has_clip = false and has_snapshot = true

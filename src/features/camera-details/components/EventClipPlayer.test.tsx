@@ -79,6 +79,36 @@ describe('EventClipPlayer', () => {
     // After error: no video element, fallback message visible
     expect(container.querySelector('video')).toBeNull()
     expect(screen.getByText(/couldn't load clip/i)).toBeInTheDocument()
+    expect(screen.getByRole('status')).toBeInTheDocument()
+    expect(
+      screen.getByText(
+        'Frigate may still be saving it, or it may no longer be stored.',
+      ),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: 'Try again' }),
+    ).toBeInTheDocument()
+  })
+
+  it('Try again remounts a <video> with a retry query param and onError fires each time', () => {
+    const onError = vi.fn()
+    const { container } = render(
+      <EventClipPlayer
+        eventId="front_door.123"
+        camera="front_door"
+        label="person"
+        onError={onError}
+      />,
+    )
+    fireEvent.error(container.querySelector('video') as HTMLVideoElement)
+    fireEvent.click(screen.getByRole('button', { name: 'Try again' }))
+
+    const video = container.querySelector('video') as HTMLVideoElement
+    expect(video).toBeInTheDocument()
+    expect(video.getAttribute('src')).toContain('retry=1')
+
+    fireEvent.error(video)
+    expect(onError).toHaveBeenCalledTimes(2)
   })
 
   it('keeps the same aspect-ratio wrapper after onError so layout does not shift', () => {

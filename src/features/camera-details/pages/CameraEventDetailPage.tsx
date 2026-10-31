@@ -184,11 +184,13 @@ export function CameraEventDetailPage({
     nowMs ?? fallbackNow,
   )
   const [lightboxOpen, setLightboxOpen] = useState(false)
-  // Latches to true on first accordion open. We don't mount the
-  // EventClipPlayer until this is true, so preload='metadata' doesn't
-  // fire against the proxy on every page visit. Once opened, the player
-  // stays mounted so re-expanding the accordion is instant.
-  const [clipAccordionOpened, setClipAccordionOpened] = useState(false)
+  // The clip is the answer to the notification, so the accordion starts open
+  // and the player mounts immediately (preload='metadata' keeps cost low).
+  // Stays mounted when collapsed so re-expanding is instant.
+  const [clipAccordionOpened, setClipAccordionOpened] = useState(true)
+  // Browsers may fire 'toggle' for an initially-open <details>; only scroll
+  // once the user has closed it at least once (i.e. on a user-initiated open).
+  const clipClosedOnce = useRef(false)
   // Call hook unconditionally (React rules) — use empty string as sentinel in error branch
   const eventId = state.kind === 'event' ? state.event.id : ''
   const {
@@ -314,9 +316,12 @@ export function CameraEventDetailPage({
 
         {event.has_clip && (
           <details
+            open
             className="-mx-4 mb-6 overflow-hidden border-y border-border-soft bg-card sm:mx-0 sm:mb-8 sm:rounded-card sm:border"
             onToggle={(e) => {
-              if (e.currentTarget.open) {
+              if (!e.currentTarget.open) {
+                clipClosedOnce.current = true
+              } else if (clipClosedOnce.current) {
                 setClipAccordionOpened(true)
                 const target = e.currentTarget
                 requestAnimationFrame(() => {

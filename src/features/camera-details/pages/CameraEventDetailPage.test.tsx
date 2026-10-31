@@ -431,40 +431,45 @@ describe('CameraEventDetailPage', () => {
       expect(summary).toBeInTheDocument()
     })
 
-    it('does NOT mount the EventClipPlayer until the accordion is opened (no preload on page load)', () => {
-      render(
-        <CameraEventDetailPage
-          result={successResult({ has_clip: true, has_snapshot: true })}
-        />,
-      )
-      // Player must be absent from the DOM initially — no <video> means no
-      // metadata fetch against /api/events/{id}/clip on page load.
-      expect(document.querySelector('[data-testid="clip-player"]')).toBeNull()
-      expect(mockEventClipPlayer).not.toHaveBeenCalled()
-    })
-
-    it('mounts the player when the accordion is opened', () => {
+    it('is open by default with the player mounted immediately', () => {
       render(
         <CameraEventDetailPage
           result={successResult({ has_clip: true, has_snapshot: true })}
         />,
       )
       const details = document.querySelector('details') as HTMLDetailsElement
-      expect(details).not.toBeNull()
-      expect(details.open).toBe(false)
-
-      // Native <details> exposes open as a boolean property; flipping it
-      // dispatches a 'toggle' event that React's onToggle picks up.
-      details.open = !details.open
-      fireEvent(details, new Event('toggle', { bubbles: false }))
-
-      expect(mockEventClipPlayer).toHaveBeenCalled()
+      expect(details.open).toBe(true)
       expect(
         document.querySelector('[data-testid="clip-player"]'),
       ).toBeInTheDocument()
     })
 
-    it('keeps the player mounted after the accordion is closed again (latched)', () => {
+    it('does not scroll on the initial toggle event, but scrolls when the user re-opens', () => {
+      vi.stubGlobal('requestAnimationFrame', (cb: FrameRequestCallback) => {
+        cb(0)
+        return 0
+      })
+      const scroll = vi.fn()
+      Element.prototype.scrollIntoView = scroll
+      render(
+        <CameraEventDetailPage
+          result={successResult({ has_clip: true, has_snapshot: true })}
+        />,
+      )
+      const details = document.querySelector('details') as HTMLDetailsElement
+      // Browser may fire toggle for an initially-open details.
+      fireEvent(details, new Event('toggle', { bubbles: false }))
+      expect(scroll).not.toHaveBeenCalled()
+
+      details.open = false
+      fireEvent(details, new Event('toggle', { bubbles: false }))
+      details.open = true
+      fireEvent(details, new Event('toggle', { bubbles: false }))
+      expect(scroll).toHaveBeenCalledOnce()
+      vi.unstubAllGlobals()
+    })
+
+    it('keeps the player mounted after the accordion is closed and re-opened', () => {
       render(
         <CameraEventDetailPage
           result={successResult({ has_clip: true, has_snapshot: true })}
@@ -472,15 +477,14 @@ describe('CameraEventDetailPage', () => {
       )
       const details = document.querySelector('details') as HTMLDetailsElement
 
-      details.open = !details.open
+      details.open = false
       fireEvent(details, new Event('toggle', { bubbles: false }))
       expect(
         document.querySelector('[data-testid="clip-player"]'),
       ).toBeInTheDocument()
 
-      details.open = !details.open
+      details.open = true
       fireEvent(details, new Event('toggle', { bubbles: false }))
-      // Latched — player stays mounted so re-expanding is instant.
       expect(
         document.querySelector('[data-testid="clip-player"]'),
       ).toBeInTheDocument()
@@ -539,10 +543,6 @@ describe('CameraEventDetailPage', () => {
           result={successResult({ has_clip: true, has_snapshot: true })}
         />,
       )
-      const details = document.querySelector('details') as HTMLDetailsElement
-      details.open = !details.open
-      fireEvent(details, new Event('toggle', { bubbles: false }))
-
       const playerProps = mockEventClipPlayer.mock.calls.at(-1)?.[0]
       expect(playerProps?.onError).toBeDefined()
       playerProps?.onError?.()
