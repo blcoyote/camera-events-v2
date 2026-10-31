@@ -1,5 +1,7 @@
 export type AdminMuteView =
-  { kind: 'hidden' } | { kind: 'idle' } | { kind: 'muted'; remainingMs: number }
+  | { kind: 'hidden' }
+  | { kind: 'idle' }
+  | { kind: 'muted'; remainingMs: number }
 
 export function getAdminMuteView(input: {
   isAdmin: boolean

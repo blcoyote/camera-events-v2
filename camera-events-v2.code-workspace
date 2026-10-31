@@ -1,21 +1,20 @@
 {
   "folders": [
     {
-      "path": ".",
-    },
+      "path": "."
+    }
   ],
   "extensions": {
     "recommendations": [
       "oxc.oxc-vscode",
-      "esbenp.prettier-vscode",
+      "biomejs.biome",
       "bradlc.vscode-tailwindcss",
       "vitest.explorer",
-      "oven.bun-vscode",
+      "oven.bun-vscode"
     ],
     "unwantedRecommendations": [
-      "biomejs.biome",
       "denoland.vscode-deno",
-      "ms-vscode.vscode-typescript-tslint-plugin",
-    ],
-  },
+      "ms-vscode.vscode-typescript-tslint-plugin"
+    ]
+  }
 }

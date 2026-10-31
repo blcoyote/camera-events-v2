@@ -14,8 +14,8 @@
     "verify:bun-bundle": "node scripts/verify-bun-bundle.mjs",
     "audit:advisories": "bun scripts/audit-advisories.ts",
     "lint": "oxlint",
-    "format": "prettier --check .",
-    "check": "prettier --write . && oxlint --fix",
+    "format": "biome format .",
+    "check": "biome format --write . && oxlint --fix",
     "knip": "knip",
     "prepare": "husky",
     "start": "bun run .output/server"
@@ -50,6 +50,7 @@
     "web-push": "^3.6.7"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.6.4",
     "@serwist/build": "^9.5.13",
     "@tailwindcss/typography": "^0.5.20",
     "@tanstack/devtools-vite": "0.8.5",
@@ -73,12 +74,11 @@
     "oxlint": "^1.90.0",
     "oxlint-tsgolint": "^7.0.2005",
     "playwright": "^1.64.1",
-    "prettier": "^3.9.10",
     "typescript": "^7.0.2",
     "vite": "^8.3.4",
     "vitest": "^5.0.4"
   },
   "lint-staged": {
-    "*.{js,jsx,ts,tsx,md,json,css,yml,yaml}": "prettier --write"
+    "*.{js,jsx,ts,tsx,css,yml,yaml}": "biome format --write --no-errors-on-unmatched"
   }
 }

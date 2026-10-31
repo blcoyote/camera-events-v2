@@ -84,8 +84,9 @@ describe('push module', () => {
         .mocked(webPush.sendNotification)
         .mockResolvedValue({} as any)
 
-      const { sendPushNotification, PUSH_SEND_TIMEOUT_MS } =
-        await import('./push')
+      const { sendPushNotification, PUSH_SEND_TIMEOUT_MS } = await import(
+        './push'
+      )
 
       const subscription = {
         endpoint: 'https://push.example.com/sub1',

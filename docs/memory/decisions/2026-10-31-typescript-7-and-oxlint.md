@@ -44,3 +44,17 @@ Type-check went from ~7 s to ~1 s and lint from ~10 s to ~2 s, which makes the
 pre-push gate cheap. Oxlint's extra `correctness` and type-aware rules (e.g.
 `no-floating-promises`) are available if we later want a stricter gate; they
 currently flag ~35 warnings and are deliberately off.
+
+## Addendum: Biome replaces Prettier
+
+Formatting moved from Prettier to Biome (`biome.json`, formatter only; linter
+and assist off since Oxlint lints). Settings mirror the old Prettier config:
+single quotes (JS, CSS, YAML), no semicolons, trailing commas, width 80. JSON
+stays unformatted, as `.prettierignore` had it.
+
+- **Markdown is not formatted.** Biome 2.6's Markdown formatter inserts a blank
+  line inside YAML frontmatter, which breaks every vault note. Re-enable
+  `markdown.formatter` once that is fixed.
+- One-time reformat of ~20 files: Biome wraps `await import(...)` differently,
+  spaces `font` shorthand slashes (`16px / 1`) and drops trailing commas in the
+  `.code-workspace` JSONC.

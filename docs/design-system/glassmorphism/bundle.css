@@ -29,7 +29,7 @@ body {
   align-items: center;
   justify-content: center;
   gap: var(--space-2);
-  font: 500 16px/1 var(--font-body);
+  font: 500 16px / 1 var(--font-body);
   padding: var(--space-3) var(--space-5);
   border-radius: var(--radius-pill);
   border: 1px solid transparent;
@@ -124,7 +124,7 @@ body {
   margin: 0 0 var(--space-2);
 }
 .gl-card__title {
-  font: 600 24px/1.2 var(--font-display);
+  font: 600 24px / 1.2 var(--font-display);
   margin: 0 0 var(--space-2);
 }
 .gl-card__body {
@@ -152,7 +152,7 @@ body {
   color: var(--fg);
 }
 .gl-field__input {
-  font: 400 16px/1.55 var(--font-body);
+  font: 400 16px / 1.55 var(--font-body);
   color: var(--fg);
   padding: var(--space-3) var(--space-4);
   background: var(--surface-warm);
@@ -190,7 +190,7 @@ body {
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
-  font: 500 12px/1 var(--font-body);
+  font: 500 12px / 1 var(--font-body);
   padding: 6px 10px;
   border-radius: var(--radius-pill);
   background: var(--surface);
@@ -238,8 +238,9 @@ body {
   }
 }
 @supports not (
-  (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))
-) {
+    (backdrop-filter: blur(1px)) or
+    (-webkit-backdrop-filter: blur(1px))
+  ) {
   .gl-card,
   .gl-btn--secondary,
   .gl-badge {

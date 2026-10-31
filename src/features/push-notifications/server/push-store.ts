@@ -190,7 +190,9 @@ export async function createPushStore(
 
     isCameraEnabledForUser(userId, camera) {
       const row = stmts.isCameraEnabled.get(userId, camera) as
-        { enabled: number } | null | undefined
+        | { enabled: number }
+        | null
+        | undefined
       // No row = default enabled (opt-out model)
       return row == null || row.enabled === 1
     },
@@ -201,7 +203,9 @@ export async function createPushStore(
 
     isCameraAvailabilityEnabledForUser(userId) {
       const row = stmts.getAvailabilityPref.get(userId) as
-        { enabled: number } | null | undefined
+        | { enabled: number }
+        | null
+        | undefined
       // No row = default DISABLED (opt-in model) — the opposite default of isCameraEnabledForUser
       return row != null && row.enabled === 1
     },
@@ -212,7 +216,9 @@ export async function createPushStore(
 
     getNotificationMuteUntil() {
       const row = stmts.getGlobalSetting.get(NOTIFICATION_MUTE_UNTIL_KEY) as
-        { value: string } | null | undefined
+        | { value: string }
+        | null
+        | undefined
       return parseMuteUntil(row?.value)
     },
 

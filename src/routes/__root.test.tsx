@@ -29,7 +29,8 @@ function htmlAndHeadChildren() {
 
 function getHead() {
   const head = Route.options.head?.({} as never) as
-    { meta?: Meta[]; scripts?: Meta[] } | undefined
+    | { meta?: Meta[]; scripts?: Meta[] }
+    | undefined
   return head ?? {}
 }
 
@@ -60,7 +61,8 @@ describe('root document shell', () => {
   it('renders the theme init script inside <head>', () => {
     const { headKids } = htmlAndHeadChildren()
     const script = headKids.find((c) => (c as El).type === 'script') as
-      El | undefined
+      | El
+      | undefined
     expect(script).toBeDefined()
     expect(script?.props.dangerouslySetInnerHTML).toEqual({
       __html: buildThemeInitScript(),
