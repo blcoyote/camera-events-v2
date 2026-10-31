@@ -25,6 +25,9 @@ colors:
   alarm-red-text: '#c81e3a'
   alarm-red-fill: '#c81e3a'
   dim-overlay: 'rgba(16, 32, 51, 0.4)'
+  control-edge: 'rgba(255, 255, 255, 0.64)'
+  control-well: 'rgba(238, 246, 255, 0.72)'
+  thumb-pearl: '#ffffff'
 typography:
   display:
     fontFamily: 'Inter, system-ui, sans-serif'
@@ -159,7 +162,7 @@ components:
 
 Camera Events is the home's own glass, lit softly from behind. It should feel domestic and reassuring, never like a security console. Every surface is a frosted pane floating over a cool sky backdrop. Two blurred blue light pools sit behind the panes, so the blur always has something to catch, and each pane catches the light along a 1px white edge. When nothing is happening the app is calm and airy, and the camera footage is the only vivid thing on screen.
 
-The system follows the open-source Open Design "Glassmorphism" system (`docs/design-system/glassmorphism/`, Apache-2.0) and adds its own dark theme. The light theme is a pale morning sky. The dark theme is the same porch at night: deep navy, not black, with dimmed light pools and pale-blue accent text, so opening an alert at 3 a.m. doesn't glare. Density is moderate, with generous radii, a 44px minimum touch target and whitespace before borders.
+The system follows the open-source Open Design "Glassmorphism" system (`docs/design-system/glassmorphism/`, Apache-2.0) and adds its own dark theme. The light theme is a pale morning sky. The dark theme is night mode, the same porch at night: deep navy, not black, with dimmed light pools, pale-blue accent text, a deeper and less luminous cobalt, pearl rather than white thumbs, and an opaque header over footage, so opening an alert at 3 a.m. doesn't glare. Camera footage is never dimmed or filtered in either theme; it is evidence. Density is moderate, with generous radii, a 44px minimum touch target and whitespace before borders.
 
 Components are light and tactile, glass you can press. Cards lift on hover, buttons drop 1px on press, and focus shows as a soft blue halo instead of an outline. Motion is quick and uses a single curve.
 
@@ -177,14 +180,17 @@ A cool, low-saturation sky palette with one confident blue for action and three 
 
 ### Primary
 
-- **Cobalt** (`cobalt`): the action colour. It fills primary buttons, the active filter pill and a checked switch, and it colours small accent text and links, where it passes AA. In dark mode, accent text lightens to a pale cobalt (`#8ab4ff`, hover `#a9c7ff`), while the filled primary stays this cobalt with white text.
+- **Cobalt** (`cobalt`): the action colour. It fills primary buttons, the active filter pill and a checked switch, and it colours small accent text and links, where it passes AA. In dark mode, accent text lightens to a pale cobalt (`#8ab4ff`, hover `#a9c7ff`), and the fill deepens to a night cobalt (`#2b55c9`, hover `#345fd8`; white text 6.5:1) so the brightest UI on a dark screen is not a saturated blue slab.
 - **Sky Glass** (`sky-glass`): the ambient brand blue. Use it for the focus halo, selection, nav underlines, active icons, the backdrop light pools and large display accents. It is too light for small text or for white-on-blue labels (3.2:1).
 
 ### Neutral
 
 - **Morning Haze** (`morning-haze`): the page backdrop under all glass. Dark: `#0b1424` deep navy.
 - **Glass Pane** (`glass-pane`): the default pane surface for cards, the header, badges and secondary buttons. Dark: `rgba(22, 34, 58, 0.62)`.
-- **Warm Glass** (`glass-pane-warm`): nested or flat surfaces such as inputs, flat cards, switch tracks and ghost hover. Dark: `rgba(18, 30, 52, 0.55)`.
+- **Warm Glass** (`glass-pane-warm`): nested or flat surfaces such as flat cards and ghost hover. Dark: `rgba(18, 30, 52, 0.55)`.
+- **Control Edge** (`control-edge`): the boundary of every input, select, filter pill, switch and slider rail. Light it matches Glass Edge; dark it is white at 38% (3.4:1 against a card), because the 10% glass hairline disappears at night.
+- **Control Well** (`control-well`): the fill of inputs, selects and switch tracks. Light it matches Warm Glass; dark it is a recessed `rgba(5, 10, 20, 0.55)` well.
+- **Thumb Pearl** (`thumb-pearl`): switch and slider thumbs. White in light; dark `#c5d3ea`, bright enough to read (11:1) without the glare of pure white.
 - **Lit Glass** (`glass-pane-lit`): hover state for panes, popovers and strong glass.
 - **Solid Glass** (`glass-pane-solid`): the fallback surface when `backdrop-filter` is unsupported.
 - **Glass Edge / Soft Edge** (`glass-edge`, `glass-edge-soft`): the white hairline on every pane, and the softer one on nested panes. Dark: white at 10% and 6% alpha.
@@ -201,6 +207,8 @@ A cool, low-saturation sky palette with one confident blue for action and three 
 ### Named Rules
 
 **The Fill-Versus-Text Rule.** Fills and text never share a token. A status or accent colour has a fill token and a separate `-text` or `-strong` token, and each one gets a dark value.
+
+**The Night Boundary Rule.** In dark mode every control boundary and focus indicator reaches 3:1 against what is behind it (WCAG 1.4.11). Controls use Control Edge and Control Well, never the glass hairline alone.
 
 **The No Raw Colour Rule.** Use only semantic utilities (`bg-card`, `text-fg-2`, `text-brand-strong`, `bg-success`, ...). Raw hex, Tailwind scale colours (`red-500`) and `dark:` variants are banned and are enforced by `src/styles.legacy-tokens.test.ts`. The one exception is chips that sit on top of camera footage (see Components).
 
@@ -244,7 +252,7 @@ Depth comes from translucency first, then a soft, blue-tinted glow. Panes blur a
 
 - **Raised** (`0 24px 80px rgba(79, 140, 255, 0.18)`): the default for glass panes, cards, the header and primary buttons. Dark: `0 24px 80px rgba(0, 0, 0, 0.45)`.
 - **Raised hover** (`0 28px 88px rgba(79, 140, 255, 0.26)`): when an event card lifts.
-- **Focus ring** (`0 0 0 4px rgba(79, 140, 255, 0.28)`): a 4px halo on every focusable element, used instead of an outline. Dark: `rgba(138, 180, 255, 0.45)`.
+- **Focus ring** (`0 0 0 4px rgba(79, 140, 255, 0.28)`): a 4px halo on every focusable element, used instead of an outline. Dark: a solid 2px `#8ab4ff` ring plus a 6px `rgba(138, 180, 255, 0.35)` halo (`0 0 0 2px #8ab4ff, 0 0 0 6px rgba(138, 180, 255, 0.35)`), 8:1 against a card; the halo alone measured 2.7:1.
 
 ### Named Rules
 
@@ -287,17 +295,17 @@ Light and tactile pills.
 
 ### Inputs / Fields
 
-- **Style:** Warm Glass, a hairline edge, 16px radius, 12px × 16px padding, at least 44px tall, and body-size text so iOS doesn't zoom.
+- **Style:** Control Well fill, a Control Edge border, 16px radius, 12px × 16px padding, at least 44px tall, and body-size text so iOS doesn't zoom.
 - **Focus:** the border turns Sky Glass and the focus halo appears.
 - **Error / Disabled:** `aria-invalid` turns the border Alarm Red. Disabled fields drop to 55% opacity with a not-allowed cursor.
 
 ### Switch
 
-- **Style:** a 48 × 28px pill track in Warm Glass with a 20px white thumb that carries the Raised glow. When checked, the track fills with Cobalt and the thumb slides 24px.
+- **Style:** a 48 × 28px pill track in Control Well with a Control Edge border and a 20px Thumb Pearl thumb that carries the Raised glow. When checked, the track fills with Cobalt, keeps its Control Edge border, and the thumb slides 24px.
 
 ### Navigation
 
-- **Header:** a sticky glass pane that is more transparent (50% light, 42% dark) so content scrolling underneath shows through. It pads for the top safe area.
+- **Header:** a sticky glass pane. Light it is more transparent (50%) so content scrolling underneath shows through; dark it is 80% opaque, because bright footage scrolling under a 42% header dropped nav text to 1.45:1. It pads for the top safe area.
 - **Links:** Label type in Slate Ink. Hover and active states turn the text Harbour Ink and grow a 2px Sky Glass underline from the left over 180ms.
 - **Mobile:** below 640px, a 44px icon button opens a side sheet (NavDrawer) with the links stacked.
 

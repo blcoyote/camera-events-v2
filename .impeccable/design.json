@@ -1,51 +1,260 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-31T00:00:00Z",
+  "generatedAt": "2026-10-31T20:14:43.810Z",
   "title": "Design System: Camera Events",
   "extensions": {
     "colorMeta": {
-      "sky-glass": { "role": "primary", "displayName": "Sky Glass", "canonical": "#4f8cff", "dark": "#4f8cff", "tonalRamp": ["oklch(15% 0.05 262)", "oklch(25% 0.09 262)", "oklch(35% 0.13 262)", "oklch(45% 0.16 262)", "oklch(55% 0.18 262)", "oklch(65% 0.18 262)", "oklch(80% 0.10 262)", "oklch(95% 0.03 262)"] },
-      "cobalt": { "role": "primary", "displayName": "Cobalt", "canonical": "#1856ff", "dark": "#1856ff (fill); text #8ab4ff, hover #a9c7ff", "tonalRamp": ["oklch(15% 0.07 265)", "oklch(25% 0.13 265)", "oklch(35% 0.19 265)", "oklch(45% 0.24 265)", "oklch(52% 0.26 265)", "oklch(65% 0.20 265)", "oklch(80% 0.11 265)", "oklch(95% 0.03 265)"] },
-      "morning-haze": { "role": "neutral", "displayName": "Morning Haze", "canonical": "#eef6ff", "dark": "#0b1424", "tonalRamp": ["oklch(15% 0.02 250)", "oklch(25% 0.02 250)", "oklch(35% 0.02 250)", "oklch(45% 0.02 250)", "oklch(55% 0.02 250)", "oklch(70% 0.02 250)", "oklch(85% 0.015 250)", "oklch(97% 0.015 245)"] },
-      "glass-pane": { "role": "neutral", "displayName": "Glass Pane", "canonical": "rgba(255, 255, 255, 0.74)", "dark": "rgba(22, 34, 58, 0.62)" },
-      "glass-pane-warm": { "role": "neutral", "displayName": "Warm Glass", "canonical": "rgba(238, 246, 255, 0.72)", "dark": "rgba(18, 30, 52, 0.55)" },
-      "glass-pane-lit": { "role": "neutral", "displayName": "Lit Glass", "canonical": "rgba(255, 255, 255, 0.9)", "dark": "rgba(30, 46, 76, 0.82)" },
-      "glass-pane-solid": { "role": "neutral", "displayName": "Solid Glass", "canonical": "rgba(255, 255, 255, 0.94)", "dark": "rgba(22, 34, 58, 0.96)" },
-      "glass-edge": { "role": "neutral", "displayName": "Glass Edge", "canonical": "rgba(255, 255, 255, 0.64)", "dark": "rgba(255, 255, 255, 0.1)" },
-      "glass-edge-soft": { "role": "neutral", "displayName": "Soft Edge", "canonical": "rgba(255, 255, 255, 0.38)", "dark": "rgba(255, 255, 255, 0.06)" },
-      "harbour-ink": { "role": "neutral", "displayName": "Harbour Ink", "canonical": "#102033", "dark": "#e6eefc", "tonalRamp": ["oklch(15% 0.03 255)", "oklch(23% 0.04 255)", "oklch(35% 0.04 255)", "oklch(45% 0.04 255)", "oklch(55% 0.035 255)", "oklch(68% 0.03 255)", "oklch(82% 0.02 255)", "oklch(95% 0.01 255)"] },
-      "slate-ink": { "role": "neutral", "displayName": "Slate Ink", "canonical": "#34465f", "dark": "#b6c4dc" },
-      "dusk-grey": { "role": "neutral", "displayName": "Dusk Grey", "canonical": "#60708a", "dark": "#8c9dba" },
-      "porch-green": { "role": "status", "displayName": "Porch Green", "canonical": "#22c55e", "textPartner": "#15803d", "darkText": "#4ade80" },
-      "lamp-amber": { "role": "status", "displayName": "Lamp Amber", "canonical": "#f59e0b", "textPartner": "#b45309", "darkText": "#fbbf24" },
-      "alarm-red": { "role": "status", "displayName": "Alarm Red", "canonical": "#ef4444", "textPartner": "#c81e3a", "darkText": "#fb7185", "darkFill": "#dc2626" },
-      "dim-overlay": { "role": "neutral", "displayName": "Dim Overlay", "canonical": "rgba(16, 32, 51, 0.4)", "dark": "rgba(2, 6, 14, 0.6)" }
+      "sky-glass": {
+        "role": "primary",
+        "displayName": "Sky Glass",
+        "canonical": "#4f8cff",
+        "dark": "#4f8cff",
+        "tonalRamp": [
+          "oklch(15% 0.05 262)",
+          "oklch(25% 0.09 262)",
+          "oklch(35% 0.13 262)",
+          "oklch(45% 0.16 262)",
+          "oklch(55% 0.18 262)",
+          "oklch(65% 0.18 262)",
+          "oklch(80% 0.10 262)",
+          "oklch(95% 0.03 262)"
+        ]
+      },
+      "cobalt": {
+        "role": "primary",
+        "displayName": "Cobalt",
+        "canonical": "#1856ff",
+        "dark": "#2b55c9 fill (hover #345fd8); text #8ab4ff, hover #a9c7ff",
+        "tonalRamp": [
+          "oklch(15% 0.07 265)",
+          "oklch(25% 0.13 265)",
+          "oklch(35% 0.19 265)",
+          "oklch(45% 0.24 265)",
+          "oklch(52% 0.26 265)",
+          "oklch(65% 0.20 265)",
+          "oklch(80% 0.11 265)",
+          "oklch(95% 0.03 265)"
+        ]
+      },
+      "morning-haze": {
+        "role": "neutral",
+        "displayName": "Morning Haze",
+        "canonical": "#eef6ff",
+        "dark": "#0b1424",
+        "tonalRamp": [
+          "oklch(15% 0.02 250)",
+          "oklch(25% 0.02 250)",
+          "oklch(35% 0.02 250)",
+          "oklch(45% 0.02 250)",
+          "oklch(55% 0.02 250)",
+          "oklch(70% 0.02 250)",
+          "oklch(85% 0.015 250)",
+          "oklch(97% 0.015 245)"
+        ]
+      },
+      "glass-pane": {
+        "role": "neutral",
+        "displayName": "Glass Pane",
+        "canonical": "rgba(255, 255, 255, 0.74)",
+        "dark": "rgba(22, 34, 58, 0.62)"
+      },
+      "glass-pane-warm": {
+        "role": "neutral",
+        "displayName": "Warm Glass",
+        "canonical": "rgba(238, 246, 255, 0.72)",
+        "dark": "rgba(18, 30, 52, 0.55)"
+      },
+      "glass-pane-lit": {
+        "role": "neutral",
+        "displayName": "Lit Glass",
+        "canonical": "rgba(255, 255, 255, 0.9)",
+        "dark": "rgba(30, 46, 76, 0.82)"
+      },
+      "glass-pane-solid": {
+        "role": "neutral",
+        "displayName": "Solid Glass",
+        "canonical": "rgba(255, 255, 255, 0.94)",
+        "dark": "rgba(22, 34, 58, 0.96)"
+      },
+      "glass-edge": {
+        "role": "neutral",
+        "displayName": "Glass Edge",
+        "canonical": "rgba(255, 255, 255, 0.64)",
+        "dark": "rgba(255, 255, 255, 0.1)"
+      },
+      "glass-edge-soft": {
+        "role": "neutral",
+        "displayName": "Soft Edge",
+        "canonical": "rgba(255, 255, 255, 0.38)",
+        "dark": "rgba(255, 255, 255, 0.06)"
+      },
+      "harbour-ink": {
+        "role": "neutral",
+        "displayName": "Harbour Ink",
+        "canonical": "#102033",
+        "dark": "#e6eefc",
+        "tonalRamp": [
+          "oklch(15% 0.03 255)",
+          "oklch(23% 0.04 255)",
+          "oklch(35% 0.04 255)",
+          "oklch(45% 0.04 255)",
+          "oklch(55% 0.035 255)",
+          "oklch(68% 0.03 255)",
+          "oklch(82% 0.02 255)",
+          "oklch(95% 0.01 255)"
+        ]
+      },
+      "slate-ink": {
+        "role": "neutral",
+        "displayName": "Slate Ink",
+        "canonical": "#34465f",
+        "dark": "#b6c4dc"
+      },
+      "dusk-grey": {
+        "role": "neutral",
+        "displayName": "Dusk Grey",
+        "canonical": "#60708a",
+        "dark": "#8c9dba"
+      },
+      "porch-green": {
+        "role": "status",
+        "displayName": "Porch Green",
+        "canonical": "#22c55e",
+        "textPartner": "#15803d",
+        "darkText": "#4ade80"
+      },
+      "lamp-amber": {
+        "role": "status",
+        "displayName": "Lamp Amber",
+        "canonical": "#f59e0b",
+        "textPartner": "#b45309",
+        "darkText": "#fbbf24"
+      },
+      "alarm-red": {
+        "role": "status",
+        "displayName": "Alarm Red",
+        "canonical": "#ef4444",
+        "textPartner": "#c81e3a",
+        "darkText": "#fb7185",
+        "darkFill": "#dc2626"
+      },
+      "dim-overlay": {
+        "role": "neutral",
+        "displayName": "Dim Overlay",
+        "canonical": "rgba(16, 32, 51, 0.4)",
+        "dark": "rgba(2, 6, 14, 0.6)"
+      },
+      "control-edge": {
+        "role": "neutral",
+        "displayName": "Control Edge",
+        "canonical": "rgba(255, 255, 255, 0.64)",
+        "dark": "rgba(255, 255, 255, 0.38)"
+      },
+      "control-well": {
+        "role": "neutral",
+        "displayName": "Control Well",
+        "canonical": "rgba(238, 246, 255, 0.72)",
+        "dark": "rgba(5, 10, 20, 0.55)"
+      },
+      "thumb-pearl": {
+        "role": "neutral",
+        "displayName": "Thumb Pearl",
+        "canonical": "#ffffff",
+        "dark": "#c5d3ea"
+      }
     },
     "typographyMeta": {
-      "display": { "displayName": "Display", "purpose": "Page titles." },
-      "headline": { "displayName": "Headline", "purpose": "Section and detail-view headings." },
-      "title": { "displayName": "Title", "purpose": "Card titles." },
-      "body": { "displayName": "Body", "purpose": "Descriptions and settings copy." },
-      "label": { "displayName": "Label", "purpose": "Nav links, filter pills, compact buttons, event-card camera names." },
-      "eyebrow": { "displayName": "Eyebrow", "purpose": "Uppercase Cobalt section labels." },
-      "mono": { "displayName": "Mono", "purpose": "Inline code." }
+      "display": {
+        "displayName": "Display",
+        "purpose": "Page titles."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Section and detail-view headings."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Card titles."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Descriptions and settings copy."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Nav links, filter pills, compact buttons, event-card camera names."
+      },
+      "eyebrow": {
+        "displayName": "Eyebrow",
+        "purpose": "Uppercase Cobalt section labels."
+      },
+      "mono": {
+        "displayName": "Mono",
+        "purpose": "Inline code."
+      }
     },
     "shadows": [
-      { "name": "raised", "value": "0 24px 80px rgba(79, 140, 255, 0.18)", "dark": "0 24px 80px rgba(0, 0, 0, 0.45)", "purpose": "Default elevation for glass panes, cards, header and primary buttons." },
-      { "name": "raised-hover", "value": "0 28px 88px rgba(79, 140, 255, 0.26)", "dark": "0 28px 88px rgba(0, 0, 0, 0.55)", "purpose": "Lifted event card." },
-      { "name": "ring", "value": "0 0 0 1px rgba(255, 255, 255, 0.64)", "dark": "0 0 0 1px rgba(255, 255, 255, 0.1)", "purpose": "Hairline edge as a shadow." },
-      { "name": "focus", "value": "0 0 0 4px rgba(79, 140, 255, 0.28)", "dark": "0 0 0 4px rgba(138, 180, 255, 0.45)", "purpose": "Focus halo on every interactive element; replaces the outline." }
+      {
+        "name": "raised",
+        "value": "0 24px 80px rgba(79, 140, 255, 0.18)",
+        "dark": "0 24px 80px rgba(0, 0, 0, 0.45)",
+        "purpose": "Default elevation for glass panes, cards, header and primary buttons."
+      },
+      {
+        "name": "raised-hover",
+        "value": "0 28px 88px rgba(79, 140, 255, 0.26)",
+        "dark": "0 28px 88px rgba(0, 0, 0, 0.55)",
+        "purpose": "Lifted event card."
+      },
+      {
+        "name": "ring",
+        "value": "0 0 0 1px rgba(255, 255, 255, 0.64)",
+        "dark": "0 0 0 1px rgba(255, 255, 255, 0.1)",
+        "purpose": "Hairline edge as a shadow."
+      },
+      {
+        "name": "focus",
+        "value": "0 0 0 4px rgba(79, 140, 255, 0.28)",
+        "dark": "0 0 0 2px #8ab4ff, 0 0 0 6px rgba(138, 180, 255, 0.35)",
+        "purpose": "Focus halo on every interactive element; replaces the outline."
+      }
     ],
     "motion": [
-      { "name": "fast", "value": "180ms", "purpose": "Hover, press, colour and nav underline." },
-      { "name": "base", "value": "280ms", "purpose": "Panels, dialogs, sheets, toasts." },
-      { "name": "ease-standard", "value": "cubic-bezier(0.22, 1, 0.36, 1)", "purpose": "The only easing curve." },
-      { "name": "blur-glass", "value": "20px", "purpose": "Default pane blur, with saturate(140%)." },
-      { "name": "blur-glass-strong", "value": "32px", "purpose": "Strong glass for busy backdrops." }
+      {
+        "name": "fast",
+        "value": "180ms",
+        "purpose": "Hover, press, colour and nav underline."
+      },
+      {
+        "name": "base",
+        "value": "280ms",
+        "purpose": "Panels, dialogs, sheets, toasts."
+      },
+      {
+        "name": "ease-standard",
+        "value": "cubic-bezier(0.22, 1, 0.36, 1)",
+        "purpose": "The only easing curve."
+      },
+      {
+        "name": "blur-glass",
+        "value": "20px",
+        "purpose": "Default pane blur, with saturate(140%)."
+      },
+      {
+        "name": "blur-glass-strong",
+        "value": "32px",
+        "purpose": "Strong glass for busy backdrops."
+      }
     ],
     "breakpoints": [
-      { "name": "sm", "value": "640px" },
-      { "name": "lg", "value": "1024px" }
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      }
     ]
   },
   "components": [
@@ -125,11 +334,36 @@
       "Light and dark are equal citizens. Dark is a full token override, not a filter."
     ],
     "rules": [
-      { "name": "The Fill-Versus-Text Rule", "body": "Fills and text never share a token. A status or accent colour has a fill token and a separate `-text` or `-strong` token, and each one gets a dark value.", "section": "colors" },
-      { "name": "The No Raw Colour Rule", "body": "Use only semantic utilities (`bg-card`, `text-fg-2`, `text-brand-strong`, `bg-success`, ...). Raw hex, Tailwind scale colours (`red-500`) and `dark:` variants are banned and are enforced by `src/styles.legacy-tokens.test.ts`. The one exception is chips that sit on top of camera footage (see Components).", "section": "colors" },
-      { "name": "The Literal Label Rule", "body": "Use sentence case and short sentences, with no exclamation marks in the UI. Labels say exactly what happens (\"Save changes\", \"Download clip\").", "section": "typography" },
-      { "name": "The Two-Layer Rule", "body": "Nest glass at most two levels deep: a pane, then a warm pane with the soft edge and no shadow. A third translucent layer makes contrast collapse.", "section": "elevation" },
-      { "name": "The Glow-Not-Grey Rule", "body": "Elevation in the light theme is a blue-tinted glow. Never use a neutral grey drop shadow.", "section": "elevation" }
+      {
+        "name": "The Fill-Versus-Text Rule",
+        "body": "Fills and text never share a token. A status or accent colour has a fill token and a separate `-text` or `-strong` token, and each one gets a dark value.",
+        "section": "colors"
+      },
+      {
+        "name": "The No Raw Colour Rule",
+        "body": "Use only semantic utilities (`bg-card`, `text-fg-2`, `text-brand-strong`, `bg-success`, ...). Raw hex, Tailwind scale colours (`red-500`) and `dark:` variants are banned and are enforced by `src/styles.legacy-tokens.test.ts`. The one exception is chips that sit on top of camera footage (see Components).",
+        "section": "colors"
+      },
+      {
+        "name": "The Night Boundary Rule",
+        "body": "In dark mode every control boundary and focus indicator reaches 3:1 against what is behind it (WCAG 1.4.11). Controls use Control Edge and Control Well, never the glass hairline alone.",
+        "section": "colors"
+      },
+      {
+        "name": "The Literal Label Rule",
+        "body": "Use sentence case and short sentences, with no exclamation marks in the UI. Labels say exactly what happens (\"Save changes\", \"Download clip\").",
+        "section": "typography"
+      },
+      {
+        "name": "The Two-Layer Rule",
+        "body": "Nest glass at most two levels deep: a pane, then a warm pane with the soft edge and no shadow. A third translucent layer makes contrast collapse.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Glow-Not-Grey Rule",
+        "body": "Elevation in the light theme is a blue-tinted glow. Never use a neutral grey drop shadow.",
+        "section": "elevation"
+      }
     ],
     "dos": [
       "Do put every surface on a glass utility (`glass`, `glass-flat`, `glass-strong`, `glass-header`) so the blur, the edge and the fallback come together.",
