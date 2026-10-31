@@ -88,3 +88,35 @@ A camera that is receiving frames again after being offline.
 
 **Admin**:
 A user with `users.is_admin`. Admins set the Mute. The flag is seeded one-way from `ADMIN_EMAILS` at sign-in and read fail-closed: anything unexpected means not admin.
+
+## Danish terms
+
+User-facing Danish equivalents of the terms above, approved 2026-10-31. UI copy in `messages/da.json` uses these exactly.
+
+| English                              | Danish                              | Notes                                           |
+| ------------------------------------ | ----------------------------------- | ----------------------------------------------- |
+| Event                                | Hændelse                            | Plural: hændelser                               |
+| Detection                            | Registrering                        | Mostly internal                                 |
+| Alert / notification                 | Notifikation                        | "Notifikationer" in Settings                    |
+| Mute (admin)                         | Pause                               | Verb "Sæt på pause"; state "På pause til 21.40" |
+| Favorite                             | Favorit                             | Plural: favoritter                              |
+| Retention                            | Gemmes                              | "Gemmes i Frigate"                              |
+| Camera / Cameras                     | Kamera / Kameraer                   |                                                 |
+| Live view                            | Live-visning                        |                                                 |
+| Snapshot                             | Stillbillede                        |                                                 |
+| Clip                                 | Klip                                |                                                 |
+| Download                             | Hent                                | "Hent klip"                                     |
+| Online / Offline                     | Online / Offline                    |                                                 |
+| Availability notifications           | Kamerastatus-notifikationer         |                                                 |
+| Preference (per camera)              | Kameravalg                          |                                                 |
+| Device                               | Enhed                               |                                                 |
+| Pending                              | Behandles                           | "Frigate har ikke gemt den endnu"               |
+| Ghost                                | Ikke gemt                           |                                                 |
+| Settings                             | Indstillinger                       |                                                 |
+| Appearance                           | Udseende                            |                                                 |
+| Language / Automatic                 | Sprog / Automatisk                  | Options shown as "English", "Dansk"             |
+| Arrange                              | Arranger                            |                                                 |
+| Sign in / Sign out                   | Log ind / Log ud                    |                                                 |
+| Person, Car, Dog, Cat, Bird, Bicycle | Person, Bil, Hund, Kat, Fugl, Cykel | Frigate labels                                  |
+| Motorcycle, Bus, Truck, Boat, Horse  | Motorcykel, Bus, Lastbil, Båd, Hest |                                                 |
+| Package, Face, License plate         | Pakke, Ansigt, Nummerplade          |                                                 |

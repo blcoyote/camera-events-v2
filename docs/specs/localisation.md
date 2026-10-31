@@ -136,38 +136,10 @@ falls back to `error_unknown`. HTTP status codes stay unchanged.
 3. The final PR adds `preferredLanguage` to the strategy and ships the Language
    control.
 
-## Danish term table (draft, needs review)
+## Danish terms
 
-To be added to `CONTEXT.md` under Language once approved. Sonnet chunks use
-these terms exactly.
-
-| English                              | Danish                              | Notes                                           |
-| ------------------------------------ | ----------------------------------- | ----------------------------------------------- |
-| Event                                | Hændelse                            | Plural: hændelser                               |
-| Detection                            | Registrering                        | Mostly internal                                 |
-| Alert / notification                 | Notifikation                        | "Notifikationer" in Settings                    |
-| Mute (admin)                         | Pause                               | Verb "Sæt på pause"; state "På pause til 21.40" |
-| Favorite                             | Favorit                             | Plural: favoritter                              |
-| Retention                            | Gemmes                              | "Gemmes i Frigate"                              |
-| Camera / Cameras                     | Kamera / Kameraer                   |                                                 |
-| Live view                            | Live-visning                        |                                                 |
-| Snapshot                             | Stillbillede                        |                                                 |
-| Clip                                 | Klip                                |                                                 |
-| Download                             | Hent                                | "Hent klip"                                     |
-| Online / Offline                     | Online / Offline                    |                                                 |
-| Availability notifications           | Kamerastatus-notifikationer         |                                                 |
-| Preference (per camera)              | Kameravalg                          |                                                 |
-| Device                               | Enhed                               |                                                 |
-| Pending                              | Behandles                           | "Frigate har ikke gemt den endnu"               |
-| Ghost                                | Ikke gemt                           |                                                 |
-| Settings                             | Indstillinger                       |                                                 |
-| Appearance                           | Udseende                            |                                                 |
-| Language / Automatic                 | Sprog / Automatisk                  | Options shown as "English", "Dansk"             |
-| Arrange                              | Arranger                            |                                                 |
-| Sign in / Sign out                   | Log ind / Log ud                    |                                                 |
-| Person, Car, Dog, Cat, Bird, Bicycle | Person, Bil, Hund, Kat, Fugl, Cykel | Frigate labels                                  |
-| Motorcycle, Bus, Truck, Boat, Horse  | Motorcykel, Bus, Lastbil, Båd, Hest |                                                 |
-| Package, Face, License plate         | Pakke, Ansigt, Nummerplade          |                                                 |
+The approved Danish terms live in `CONTEXT.md` under "Danish terms". Copy
+chunks use them exactly.
 
 ## Acceptance
 
