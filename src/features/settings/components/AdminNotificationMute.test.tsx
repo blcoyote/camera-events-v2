@@ -9,6 +9,7 @@ import {
 } from '@testing-library/react'
 import '@testing-library/jest-dom/vitest'
 import { AdminNotificationMute } from './AdminNotificationMute'
+import { withLocale } from '#/test-utils/locale'
 
 const originalFetch = globalThis.fetch
 
@@ -323,5 +324,33 @@ describe('AdminNotificationMute', () => {
     })
 
     expect(button).not.toBeDisabled()
+  })
+
+  it('renders Danish copy with plural durations', async () => {
+    const restore = withLocale('da')
+    try {
+      globalThis.fetch = vi
+        .fn()
+        .mockResolvedValue(
+          jsonResponse(200, { isAdmin: true, mutedUntil: null }),
+        )
+      render(<AdminNotificationMute />)
+      const select =
+        await screen.findByLabelText<HTMLSelectElement>('Varighed af pause')
+      expect(Array.from(select.options).map((o) => o.text)).toEqual([
+        'Fra — genoptag notifikationer',
+        '10 minutter',
+        '30 minutter',
+        '1 time',
+        '2 timer',
+        '4 timer',
+        '6 timer',
+      ])
+      expect(
+        screen.getByRole('button', { name: 'Genoptag notifikationer' }),
+      ).toBeTruthy()
+    } finally {
+      restore()
+    }
   })
 })

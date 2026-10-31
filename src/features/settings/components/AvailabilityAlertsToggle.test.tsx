@@ -2,6 +2,7 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { render, screen, fireEvent, cleanup } from '@testing-library/react'
 import { AvailabilityAlertsToggle } from './AvailabilityAlertsToggle'
+import { withLocale } from '#/test-utils/locale'
 
 describe('AvailabilityAlertsToggle', () => {
   afterEach(cleanup)
@@ -37,5 +38,17 @@ describe('AvailabilityAlertsToggle', () => {
     render(<AvailabilityAlertsToggle enabled onToggle={onToggle} />)
     fireEvent.click(screen.getByRole('switch'))
     expect(onToggle).toHaveBeenCalledWith(false)
+  })
+
+  it('renders Danish copy', () => {
+    const restore = withLocale('da')
+    try {
+      render(<AvailabilityAlertsToggle enabled={false} onToggle={vi.fn()} />)
+      expect(
+        screen.getByRole('switch', { name: 'Kamerastatus-notifikationer' }),
+      ).toBeTruthy()
+    } finally {
+      restore()
+    }
   })
 })

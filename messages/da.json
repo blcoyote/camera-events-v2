@@ -234,5 +234,52 @@
   "route_skip_to_content": "Gå til hovedindhold",
   "route_not_found_title": "Siden blev ikke fundet",
   "route_not_found_body": "Siden findes ikke, eller den er flyttet.",
-  "route_not_found_home": "Til forsiden"
+  "route_not_found_home": "Til forsiden",
+  "settings_prefs_title": "Kameranotifikationer",
+  "settings_prefs_hint": "Vælg, hvilke kameraer der sender dig push-notifikationer.",
+  "settings_prefs_switch": "Notifikationer for {name}",
+  "settings_availability_title": "Kamerastatus-notifikationer",
+  "settings_availability_hint": "Få besked, når et kamera holder op med at sende video eller kommer online igen.",
+  "settings_availability_switch": "Kamerastatus-notifikationer",
+  "settings_mute_title": "Admin",
+  "settings_mute_description": "Sæt notifikationer om bevægelse og kamerastatus på pause for alle brugere i den valgte periode, eller vælg Fra for at genoptage med det samme. Hændelser registreres stadig — kun push-notifikationer sættes på pause.",
+  "settings_mute_duration_label": "Varighed af pause",
+  "settings_mute_off": "Fra — genoptag notifikationer",
+  "settings_mute_minutes": [
+    {
+      "declarations": [
+        "input count",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
+      "match": {
+        "countPlural=one": "{count} minut",
+        "countPlural=other": "{count} minutter"
+      }
+    }
+  ],
+  "settings_mute_hours": [
+    {
+      "declarations": [
+        "input count",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
+      "match": {
+        "countPlural=one": "{count} time",
+        "countPlural=other": "{count} timer"
+      }
+    }
+  ],
+  "settings_mute_submit": "Sæt alle notifikationer på pause i {duration}",
+  "settings_mute_submitting": "Sætter på pause…",
+  "settings_mute_resume": "Genoptag notifikationer",
+  "settings_mute_resuming": "Genoptager…",
+  "settings_mute_active": "Alle notifikationer er på pause — {remaining} tilbage",
+  "settings_mute_error_silence": "Kunne ikke sætte notifikationer på pause. Prøv igen.",
+  "settings_mute_error_resume": "Kunne ikke genoptage notifikationer. Prøv igen."
 }
