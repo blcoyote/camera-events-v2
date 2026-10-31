@@ -36,7 +36,7 @@ Camera Events turns Frigate's detections into a calm, trustworthy signal on the 
 
 - Features: an event feed with filters and pagination, event detail with inline clip playback, snapshot and download, a cameras page with an arrangeable order and availability, live view, favorites (which start Retention in Frigate), and settings for the device's push subscription, per-camera Preferences, Availability notifications, appearance, event count and the admin Mute.
 - Use the domain terms from `CONTEXT.md` exactly: Detection vs Event, Burst, Alert, Patch, Preference, Mute, Device, Favorite, Retention.
-- The UI is English only, with no localisation planned. Dates and times follow Danish conventions: 24-hour clock and day-month order (e.g. 31 Oct 2026, 21:40), the same on every device regardless of browser locale.
+- The UI is available in English and Danish. The language follows the device's system language (any `da*` locale gives Danish, everything else English), with a per-device override in Settings. Dates, times and numbers follow Danish conventions in both languages: day-month order, 24-hour clock, Europe/Copenhagen time (`en-GB` / `da-DK`). See `docs/specs/localisation.md`.
 - Platform constraints such as iOS standalone cookies, iOS ignoring the silent flag on push, and service worker limits are flagged and confirmed before they are worked around, never fixed silently.
 
 ## Evidence on Hand
