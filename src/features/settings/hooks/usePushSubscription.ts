@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { errorMessage } from '#/features/shared/utils/errorMessage'
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
@@ -35,7 +36,7 @@ export function formatSubscribeError(
   // 4xx: surface server-supplied detail when present.
   const detail =
     parsedBody && typeof parsedBody.error === 'string'
-      ? `: ${parsedBody.error}`
+      ? `: ${errorMessage(parsedBody.error)}`
       : ''
   return `Could not enable notifications${detail}. Please try again.`
 }

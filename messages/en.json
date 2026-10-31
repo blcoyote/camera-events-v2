@@ -1,4 +1,14 @@
 {
   "$schema": "https://inlang.com/schema/inlang-message-format",
-  "app_name": "Camera Events"
+  "app_name": "Camera Events",
+  "error_unknown": "Something went wrong",
+  "error_unauthorized": "Unauthorized",
+  "error_forbidden": "Forbidden",
+  "error_push_not_configured": "Push notifications are not configured",
+  "error_invalid_body": "Invalid request",
+  "error_invalid_endpoint": "Invalid subscription endpoint URL",
+  "error_endpoint_not_https": "Subscription endpoint must use HTTPS",
+  "error_cameras_unavailable": "Failed to fetch camera list",
+  "error_invalid_camera_name": "Invalid camera name",
+  "error_internal_error": "Internal server error"
 }

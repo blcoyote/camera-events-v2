@@ -14,13 +14,13 @@ describe('handleGetAdminStatus', () => {
   it('returns 401 when userId is null', async () => {
     const result = await handleGetAdminStatus(null)
     expect(result.status).toBe(401)
-    expect(result.body).toEqual({ error: 'Unauthorized' })
+    expect(result.body).toEqual({ error: 'unauthorized' })
   })
 
   it('returns 401 when userId is an empty string', async () => {
     const result = await handleGetAdminStatus('')
     expect(result.status).toBe(401)
-    expect(result.body).toEqual({ error: 'Unauthorized' })
+    expect(result.body).toEqual({ error: 'unauthorized' })
   })
 
   it('returns 200 with isAdmin: true for an admin', async () => {

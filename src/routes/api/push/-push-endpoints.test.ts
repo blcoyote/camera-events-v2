@@ -53,7 +53,7 @@ describe('handleVapidPublicKey', () => {
     const result = handleVapidPublicKey()
     expect(result.status).toBe(503)
     expect(result.body).toMatchObject({
-      error: expect.stringContaining('not configured'),
+      error: 'push_not_configured',
     })
   })
 })
@@ -154,7 +154,7 @@ describe('handleSubscribe', () => {
     })
     expect(result.status).toBe(400)
     expect(result.body).toMatchObject({
-      error: expect.stringContaining('HTTPS'),
+      error: 'endpoint_not_https',
     })
   })
 
@@ -167,7 +167,7 @@ describe('handleSubscribe', () => {
     })
     expect(result.status).toBe(400)
     expect(result.body).toMatchObject({
-      error: expect.stringContaining('endpoint URL'),
+      error: 'invalid_endpoint',
     })
   })
 
@@ -257,7 +257,7 @@ describe('handleUnsubscribe', () => {
     const result = await handleUnsubscribe('user1', {})
     expect(result.status).toBe(400)
     expect(result.body).toMatchObject({
-      error: expect.stringContaining('endpoint'),
+      error: 'invalid_body',
     })
   })
 
@@ -265,7 +265,7 @@ describe('handleUnsubscribe', () => {
     const result = await handleUnsubscribe('user1', { endpoint: 123 })
     expect(result.status).toBe(400)
     expect(result.body).toMatchObject({
-      error: expect.stringContaining('endpoint'),
+      error: 'invalid_body',
     })
   })
 
@@ -469,7 +469,7 @@ describe('handleSetPreference', () => {
     })
     expect(result.status).toBe(400)
     expect(result.body).toMatchObject({
-      error: expect.stringContaining('camera'),
+      error: 'invalid_camera_name',
     })
   })
 

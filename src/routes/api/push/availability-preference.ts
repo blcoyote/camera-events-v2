@@ -28,9 +28,7 @@ export const Route = createFileRoute('/api/push/availability-preference')({
             '[push/availability-preference GET] Unhandled error:',
             err,
           )
-          const message =
-            err instanceof Error ? err.message : 'Internal server error'
-          return new Response(JSON.stringify({ error: message }), {
+          return new Response(JSON.stringify({ error: 'internal_error' }), {
             status: 500,
             headers: { 'Content-Type': 'application/json' },
           })
@@ -75,9 +73,7 @@ export const Route = createFileRoute('/api/push/availability-preference')({
             '[push/availability-preference PUT] Unhandled error:',
             err,
           )
-          const message =
-            err instanceof Error ? err.message : 'Internal server error'
-          return new Response(JSON.stringify({ error: message }), {
+          return new Response(JSON.stringify({ error: 'internal_error' }), {
             status: 500,
             headers: { 'Content-Type': 'application/json' },
           })

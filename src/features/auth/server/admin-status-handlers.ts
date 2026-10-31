@@ -17,7 +17,7 @@ export async function handleGetAdminStatus(
   userId: string | null,
 ): Promise<HandlerResult> {
   if (!userId) {
-    return { status: 401, body: { error: 'Unauthorized' } }
+    return { status: 401, body: { error: 'unauthorized' } }
   }
 
   const isAdmin = (await getUserStore()).isAdmin(userId)

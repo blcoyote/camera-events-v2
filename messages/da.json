@@ -1,4 +1,14 @@
 {
   "$schema": "https://inlang.com/schema/inlang-message-format",
-  "app_name": "Camera Events"
+  "app_name": "Camera Events",
+  "error_unknown": "Noget gik galt",
+  "error_unauthorized": "Ikke logget ind",
+  "error_forbidden": "Ingen adgang",
+  "error_push_not_configured": "Notifikationer er ikke sat op",
+  "error_invalid_body": "Ugyldig forespørgsel",
+  "error_invalid_endpoint": "Ugyldig adresse til enhedens abonnement",
+  "error_endpoint_not_https": "Enhedens abonnement skal bruge HTTPS",
+  "error_cameras_unavailable": "Kameralisten kunne ikke hentes",
+  "error_invalid_camera_name": "Ugyldigt kameranavn",
+  "error_internal_error": "Intern serverfejl"
 }

@@ -38,7 +38,7 @@ describe('formatSubscribeError', () => {
 
   it('surfaces server-supplied detail on 4xx', () => {
     const msg = formatSubscribeError(400, {
-      error: 'Invalid subscription endpoint URL',
+      error: 'invalid_endpoint',
     })
     expect(msg).toBe(
       'Could not enable notifications: Invalid subscription endpoint URL. Please try again.',
