@@ -15,8 +15,5 @@
       "exports",
       "types"
     ]
-  },
-  "ignoreDependencies": [
-    "@tanstack/router-plugin"
-  ]
+  }
 }
