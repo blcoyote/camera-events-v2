@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { cn } from '#/features/shared/utils/cn'
 import { Button } from '#/features/shared/components/ui/button'
 import {
   formatLabelName,
@@ -28,7 +29,12 @@ export function EventClipPlayer({
   )}`
 
   return (
-    <div className="relative aspect-video w-full overflow-hidden bg-black sm:rounded-card">
+    <div
+      className={cn(
+        'relative aspect-video w-full overflow-hidden sm:rounded-card',
+        status === 'idle' ? 'bg-black' : 'border border-border-soft',
+      )}
+    >
       {status === 'idle' ? (
         <video
           key={retry}

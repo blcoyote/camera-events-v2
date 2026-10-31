@@ -33,6 +33,11 @@ describe('LiveSnapshot', () => {
     expect(screen.getByText('Live')).toBeInTheDocument()
   })
 
+  it('shows the camera name as visible caption text', () => {
+    render(<LiveSnapshot cameraName="front_door" />)
+    expect(screen.getByText('front_door')).toBeInTheDocument()
+  })
+
   it('renders a fullscreen button', () => {
     render(<LiveSnapshot cameraName="front_porch" />)
     expect(

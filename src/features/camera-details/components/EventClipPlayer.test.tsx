@@ -90,6 +90,20 @@ describe('EventClipPlayer', () => {
     ).toBeInTheDocument()
   })
 
+  it('drops the black wrapper background once errored', () => {
+    const { container } = render(
+      <EventClipPlayer
+        eventId="front_door.123"
+        camera="front_door"
+        label="person"
+      />,
+    )
+    const wrapper = container.firstElementChild as HTMLElement
+    expect(wrapper).toHaveClass('bg-black')
+    fireEvent.error(container.querySelector('video') as HTMLVideoElement)
+    expect(wrapper).not.toHaveClass('bg-black')
+  })
+
   it('Try again remounts a <video> with a retry query param and onError fires each time', () => {
     const onError = vi.fn()
     const { container } = render(
@@ -120,12 +134,14 @@ describe('EventClipPlayer', () => {
       />,
     )
     const initialWrapper = container.firstElementChild as HTMLElement
-    const initialClasses = initialWrapper.className
 
     fireEvent.error(container.querySelector('video') as HTMLVideoElement)
 
     const afterWrapper = container.firstElementChild as HTMLElement
-    expect(afterWrapper.className).toBe(initialClasses)
+    for (const c of ['aspect-video', 'w-full', 'relative', 'overflow-hidden']) {
+      expect(initialWrapper).toHaveClass(c)
+      expect(afterWrapper).toHaveClass(c)
+    }
   })
 
   it('invokes the optional onError callback when the video errors', () => {
