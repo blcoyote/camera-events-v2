@@ -24,9 +24,9 @@ and units. Status: planned. The full design is in `docs/specs/localisation.md`.
   compiled by both the Vite plugin and `postinstall`.
 - **Resolution on the server:** cookie → `Accept-Language` → `en`, via
   `paraglideMiddleware` wrapping the fetch handler in `src/server.ts`.
-- **Resolution on the client:** cookie → the server-written `<html lang>` →
-  `en`. A custom client strategy keeps the client from re-deciding the
-  language, so server and client always match.
+- **Resolution on the client:** `getLocale` is overwritten to read the
+  server-written `<html lang>`, so server and client always match. This also
+  stops Paraglide's first-call cookie write, which would pin "Automatic".
 - **URLs:** no locale in the URL.
 - **Override:** the `PARAGLIDE_LOCALE` cookie is per device. On iOS, Safari and
   the installed app each keep their own.

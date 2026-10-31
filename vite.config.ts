@@ -6,6 +6,7 @@ import viteReact from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { swPlugin } from './vite-plugin-sw.ts'
 import { nitro } from 'nitro/vite'
+import { paraglideVitePlugin } from '@inlang/paraglide-js'
 
 const isTest = !!process.env.VITEST
 
@@ -41,6 +42,12 @@ export default defineConfig({
   plugins: [
     apiDevMiddlewarePlugin(),
     tailwindcss(),
+    paraglideVitePlugin({
+      project: './project.inlang',
+      outdir: './src/paraglide',
+      emitTsDeclarations: false,
+      strategy: ['cookie', 'baseLocale'],
+    }),
     ...(isTest ? [] : [devtools(), tanstackStart(), nitro({ preset: 'bun' })]),
     viteReact(),
     ...(isTest ? [] : [swPlugin()]),

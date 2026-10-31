@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { withLocale } from '#/test-utils/locale'
 import { HeadContent } from '@tanstack/react-router'
 import { Route } from './__root'
 import { buildThemeInitScript } from '#/features/shared/hooks/themeMode'
@@ -69,6 +70,19 @@ describe('root document shell', () => {
   it('marks <html> with suppressHydrationWarning', () => {
     const { html } = htmlAndHeadChildren()
     expect(html.props.suppressHydrationWarning).toBe(true)
+  })
+
+  it('renders lang="en" by default', () => {
+    expect(htmlAndHeadChildren().html.props.lang).toBe('en')
+  })
+
+  it('renders lang="da" under the da locale', () => {
+    const restore = withLocale('da')
+    try {
+      expect(htmlAndHeadChildren().html.props.lang).toBe('da')
+    } finally {
+      restore()
+    }
   })
 
   it('renders the theme init script inside <head>', () => {

@@ -39,13 +39,19 @@ Decisions were settled in a grilling session on 2026-10-31 and are recorded in
 | Where                                      | Order                                                                      |
 | ------------------------------------------ | -------------------------------------------------------------------------- |
 | Server (SSR, server functions, API routes) | `PARAGLIDE_LOCALE` cookie → `Accept-Language` (`preferredLanguage`) → `en` |
-| Client                                     | `PARAGLIDE_LOCALE` cookie → `<html lang>` written by the server → `en`     |
+| Client                                     | `<html lang>` written by the server (cookie already applied) → `en`        |
 | Push delivery (MQTT pipeline, no request)  | The locale stored on each push subscription; `en` when absent              |
 
-- The client never reads `navigator.languages`. It reads the server's decision
-  from `document.documentElement.lang` through a Paraglide custom client
-  strategy (`custom-documentLang`), so the server and client cannot disagree
-  and hydration stays clean.
+- The client never re-decides. `src/i18n/client-locale.ts` overwrites
+  `getLocale` in the browser to return `document.documentElement.lang`, the
+  server's decision, so server and client cannot disagree and hydration stays
+  clean. This also bypasses Paraglide's first-call `setLocale`, which would
+  otherwise write the `PARAGLIDE_LOCALE` cookie for a year and silently pin
+  "Automatic" to the first language a device saw.
+- The Paraglide strategy is `['cookie', 'baseLocale']` (server only in
+  effect); the final chunk inserts `preferredLanguage` before `baseLocale`.
+- The inlang message-format plugin is a devDependency loaded from
+  `./node_modules`, not a CDN, so compiling needs no network.
 - The `preferredLanguage` strategy matches exact tags first, then the base
   language, in the browser's preference order. `da-DK` therefore gives `da`, and
   `nb-NO` gives `en`.

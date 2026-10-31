@@ -4,6 +4,8 @@ FROM --platform=$BUILDPLATFORM oven/bun:1-alpine AS deps
 WORKDIR /app
 RUN apk add --no-cache python3 make g++
 COPY package.json bun.lock* ./
+COPY project.inlang/settings.json ./project.inlang/settings.json
+COPY messages ./messages
 RUN bun install --frozen-lockfile
 
 FROM --platform=$BUILDPLATFORM oven/bun:1-alpine AS build
