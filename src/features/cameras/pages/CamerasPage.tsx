@@ -4,6 +4,10 @@ import { SortableCamerasGrid } from '#/features/cameras/components/SortableCamer
 import { ArrowUpDown, Check, GripVertical } from 'lucide-react'
 import { Button } from '#/features/shared/components/ui/button'
 import { m } from '#/paraglide/messages.js'
+import {
+  ICON_SENTINEL,
+  splitAroundIcon,
+} from '#/features/cameras/utils/splitAroundIcon'
 import { PageHeader } from '#/features/shared/components/PageHeader'
 
 type CamerasState =
@@ -76,13 +80,19 @@ export function CamerasPage({
         <p role="status" className="mt-4 text-sm text-fg-2 empty:hidden">
           {isEditing && (
             <>
-              Drag{' '}
-              <GripVertical
-                size={16}
-                aria-hidden="true"
-                className="inline-block align-text-bottom"
-              />{' '}
-              to move a camera. The order is saved on this device only.
+              {splitAroundIcon(
+                m.cameras_arrange_hint({ icon: ICON_SENTINEL }),
+              ).flatMap((part, i) => [
+                i > 0 && (
+                  <GripVertical
+                    key={i}
+                    size={16}
+                    aria-hidden="true"
+                    className="inline-block align-text-bottom"
+                  />
+                ),
+                part,
+              ])}
             </>
           )}
         </p>

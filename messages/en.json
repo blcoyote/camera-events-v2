@@ -81,5 +81,64 @@
   "cameras_reorder": "Reorder {name}",
   "cameras_list": "Camera list",
   "cameras_loading_title": "Loading cameras…",
-  "cameras_loading": "Loading cameras"
+  "cameras_loading": "Loading cameras",
+  "events_page_title": "Recent Events",
+  "events_load_error": "Could not load events. Check that Frigate is running.",
+  "events_empty_title": "No events recorded",
+  "events_empty_hint": "Events will appear here when your cameras detect activity.",
+  "events_filter_type_group": "Filter by detection type",
+  "events_filter_all_types": "All types",
+  "events_filter_camera_group": "Filter by camera",
+  "events_filter_all_cameras": "All cameras",
+  "events_count": [
+    {
+      "declarations": [
+        "input count",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
+      "match": {
+        "countPlural=one": "{count} event",
+        "countPlural=other": "{count} events"
+      }
+    }
+  ],
+  "events_count_filtered": [
+    {
+      "declarations": [
+        "input count",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
+      "match": {
+        "countPlural=one": "{count} event (filtered)",
+        "countPlural=other": "{count} events (filtered)"
+      }
+    }
+  ],
+  "events_grid_label": "Camera events",
+  "events_no_match": "No events match the selected filters.",
+  "events_clear_filters": "Clear filters",
+  "events_loading_title": "Loading events…",
+  "events_loading_status": "Loading camera events",
+  "events_loading_label": "Loading events",
+  "favorites_page_title": "Your Favorites",
+  "favorites_empty_title": "No favorites yet",
+  "favorites_empty_hint": "Tap the heart on any event to save it here",
+  "favorites_browse": "Browse events",
+  "favorites_grid_label": "Favorited events",
+  "favorites_loading_title": "Loading favorites…",
+  "favorites_loading_status": "Loading favorites",
+  "favorites_loading_label": "Loading favorites",
+  "home_title": "Monitor your cameras, anywhere.",
+  "home_subtitle": "View motion, person, and vehicle detection events from all your cameras in one place.",
+  "home_sign_in": "Sign in with Google",
+  "live_snapshot_alt": "Live snapshot from {name}",
+  "live_fullscreen": "View fullscreen",
+  "live_badge": "Live",
+  "cameras_arrange_hint": "Drag {icon} to move a camera. The order is saved on this device only."
 }
