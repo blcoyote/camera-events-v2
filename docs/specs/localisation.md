@@ -48,8 +48,8 @@ Decisions were settled in a grilling session on 2026-10-31 and are recorded in
   clean. This also bypasses Paraglide's first-call `setLocale`, which would
   otherwise write the `PARAGLIDE_LOCALE` cookie for a year and silently pin
   "Automatic" to the first language a device saw.
-- The Paraglide strategy is `['cookie', 'baseLocale']` (server only in
-  effect); the final chunk inserts `preferredLanguage` before `baseLocale`.
+- The Paraglide strategy is `['cookie', 'preferredLanguage', 'baseLocale']`
+  (server only in effect).
 - The inlang message-format plugin is a devDependency loaded from
   `./node_modules`, not a CDN, so compiling needs no network.
 - The `preferredLanguage` strategy matches exact tags first, then the base
@@ -133,8 +133,8 @@ falls back to `error_unknown`. HTTP status codes stay unchanged.
    `preferredLanguage` strategy left out. Without a cookie everyone resolves
    to English, so Danish is invisible.
 2. To test Danish during development, set `document.cookie = 'PARAGLIDE_LOCALE=da'`.
-3. The final PR adds `preferredLanguage` to the strategy and ships the Language
-   control.
+3. Done: the final PR added `preferredLanguage` to the strategy and shipped the
+   Language control (Settings → Appearance).
 
 ## Danish terms
 

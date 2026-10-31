@@ -170,6 +170,8 @@
   "details_duration_minutes_seconds": "{minutes} min {seconds} s",
   "settings_account": "Konto",
   "settings_appearance": "Udseende",
+  "settings_language_label": "Sprog",
+  "settings_language_auto": "Automatisk",
   "settings_theme_group": "Tema",
   "settings_camera_events": "Hændelser",
   "settings_event_limit_label": "Antal hændelser der vises",

@@ -170,6 +170,8 @@
   "details_duration_minutes_seconds": "{minutes}m {seconds}s",
   "settings_account": "Account",
   "settings_appearance": "Appearance",
+  "settings_language_label": "Language",
+  "settings_language_auto": "Automatic",
   "settings_theme_group": "Theme",
   "settings_camera_events": "Camera Events",
   "settings_event_limit_label": "Number of events to display",

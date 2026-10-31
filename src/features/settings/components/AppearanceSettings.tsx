@@ -7,6 +7,7 @@ import {
 import { Toggle } from '#/features/shared/components/ui/toggle'
 import { useTheme } from '#/features/shared/hooks/useTheme'
 import type { ThemeMode } from '#/features/shared/hooks/themeMode'
+import { LanguageSetting } from './LanguageSetting'
 import { cn } from '#/features/shared/utils/cn'
 
 const THEME_OPTIONS: ReadonlyArray<{ value: ThemeMode; label: () => string }> =
@@ -43,6 +44,8 @@ export function AppearanceSettings({ className }: { className?: string }) {
           )
         })}
       </div>
+
+      <LanguageSetting />
     </Card>
   )
 }

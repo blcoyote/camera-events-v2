@@ -46,7 +46,7 @@ export default defineConfig({
       project: './project.inlang',
       outdir: './src/paraglide',
       emitTsDeclarations: false,
-      strategy: ['cookie', 'baseLocale'],
+      strategy: ['cookie', 'preferredLanguage', 'baseLocale'],
     }),
     ...(isTest ? [] : [devtools(), tanstackStart(), nitro({ preset: 'bun' })]),
     viteReact(),

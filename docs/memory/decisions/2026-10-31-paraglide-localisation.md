@@ -15,7 +15,7 @@ created: 2026-10-31
 The household is Danish and PRODUCT.md previously said "English only, no
 localisation planned". The user asked for English and Danish, selected by the
 system language with English as the fallback, and Danish conventions for dates
-and units. Status: planned. The full design is in `docs/specs/localisation.md`.
+and units. Status: implemented (PR stack #171). The full design is in `docs/specs/localisation.md`.
 
 ## Decision
 
