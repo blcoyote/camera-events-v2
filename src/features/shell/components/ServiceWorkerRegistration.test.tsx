@@ -130,3 +130,34 @@ describe('ServiceWorkerRegistration', () => {
     })
   })
 })
+
+describe('ServiceWorkerRegistration toast offset', () => {
+  afterEach(() => cleanup())
+
+  it('clears the phone tab bar and drops to 1rem from sm up', async () => {
+    const waiting = { postMessage: vi.fn() }
+    Object.defineProperty(navigator, 'serviceWorker', {
+      value: {
+        register: vi.fn().mockResolvedValue({
+          update: vi.fn().mockResolvedValue(undefined),
+          waiting,
+          installing: null,
+          addEventListener: vi.fn(),
+        }),
+        ready: Promise.resolve({ active: null }),
+        controller: null,
+        addEventListener: vi.fn(),
+      },
+      configurable: true,
+      writable: true,
+    })
+    const { findByRole } = render(<ServiceWorkerRegistration />)
+    const alert = await findByRole('alert')
+    expect(alert.className).toContain(
+      'bottom-[calc(4.5rem+env(safe-area-inset-bottom))]',
+    )
+    expect(alert.className).toContain(
+      'sm:bottom-[calc(1rem+env(safe-area-inset-bottom))]',
+    )
+  })
+})

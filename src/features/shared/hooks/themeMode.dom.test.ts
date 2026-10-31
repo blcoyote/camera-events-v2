@@ -111,6 +111,25 @@ describe('applyResolvedTheme', () => {
       expect(meta.content).toBe(THEME_COLORS.light)
     })
 
+    it('updates every theme-color meta, including media-scoped ones', () => {
+      const metas = [
+        '(prefers-color-scheme: light)',
+        '(prefers-color-scheme: dark)',
+      ].map((media) => {
+        const m = document.createElement('meta')
+        m.name = 'theme-color'
+        m.media = media
+        m.content = 'initial'
+        document.head.appendChild(m)
+        return m
+      })
+      applyResolvedTheme('dark')
+      expect(metas.map((m) => m.content)).toEqual([
+        THEME_COLORS.dark,
+        THEME_COLORS.dark,
+      ])
+    })
+
     it('does not throw when the theme-color meta is missing', () => {
       expect(() => applyResolvedTheme('dark')).not.toThrow()
       expect(document.querySelector('meta[name="theme-color"]')).toBeNull()
@@ -186,6 +205,14 @@ describe('buildThemeInitScript', () => {
     expect(document.documentElement.classList.contains('light')).toBe(false)
     expect(document.documentElement.style.colorScheme).toBe('dark')
     expect(meta.content).toBe('#0b1424')
+  })
+
+  it('updates every theme-color meta for stored "dark"', () => {
+    const a = addMeta()
+    const b = addMeta()
+    localStorage.setItem(THEME_STORAGE_KEY, 'dark')
+    runScript()
+    expect([a.content, b.content]).toEqual(['#0b1424', '#0b1424'])
   })
 
   it('falls back to light for garbage when the system is not dark', () => {

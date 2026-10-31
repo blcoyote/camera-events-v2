@@ -47,7 +47,7 @@ describe('NativeSelect', () => {
     renderSelect({ className: 'extra' })
     const cls = screen.getByLabelText('Duration').className
     expect(cls).toContain('rounded-input')
-    expect(cls).toContain('bg-surface-warm')
+    expect(cls).toContain('bg-control-fill')
     expect(cls).toContain('min-h-11')
     expect(cls).toContain('extra')
   })
@@ -57,5 +57,13 @@ describe('NativeSelect', () => {
     const select = screen.getByLabelText<HTMLSelectElement>('Duration')
     expect(select.getAttribute('aria-invalid')).toBe('true')
     expect(select.disabled).toBe(true)
+  })
+  it('uses control border and fill tokens', () => {
+    renderSelect()
+    const cls = screen.getByLabelText('Duration').className
+    expect(cls).toContain('border-control-border')
+    expect(cls).toContain('bg-control-fill')
+    expect(cls).not.toMatch(/(^|\s)border-border/)
+    expect(cls).not.toContain('bg-surface-warm')
   })
 })

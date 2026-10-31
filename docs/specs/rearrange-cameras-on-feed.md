@@ -21,16 +21,17 @@ Feature: Rearrange cameras on the /cameras feed
     Given I have no saved camera order on this device
     When I open /cameras
     Then the grid shows cameras in the order: "front", "back", "garage"
-    And no "Edit" affordance is triggered automatically
+    And no "Arrange" affordance is triggered automatically
 
   Scenario: Entering and exiting Edit mode
     Given I am on /cameras
-    When I tap the "Edit" button
+    When I tap the "Arrange" button
     Then tiles show a visual affordance indicating they are draggable
     And the button label changes to "Done"
+    And a hint says the order is saved on this device only while in the mode
     When I tap the "Done" button
     Then tiles return to their non-draggable appearance
-    And the button label changes back to "Edit"
+    And the button label changes back to "Arrange"
 
   Scenario: Desktop user reorders cameras with a pointer in Edit mode
     Given I am on /cameras with a pointer device
@@ -176,7 +177,7 @@ Feature: Rearrange cameras on the /cameras feed
 ### Edit-mode interaction with pull-to-refresh
 
 - `CamerasPage` tracks `isEditing` and passes a `disabled` flag to `usePullToRefresh` in the route component (new optional prop on the existing hook), OR communicates via a shared context. Pull-to-refresh hook already lives in `src/features/shared/hooks/usePullToRefresh`; adding a `disabled` flag is the minimal change.
-- The `Edit` / `Done` toggle is a button within the page header island.
+- The `Arrange` / `Done` button is a button within the page header island.
 
 ### Out of scope
 

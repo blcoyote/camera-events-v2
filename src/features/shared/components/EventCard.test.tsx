@@ -131,4 +131,13 @@ describe('EventCard', () => {
     >
     expect(props.eventId).toBe(event.id)
   })
+
+  it('renders the sub-label chip on a dark scrim over footage', () => {
+    const { getByText } = render(
+      <EventCard event={makeEvent({ sub_label: 'Brian' })} index={0} />,
+    )
+    const cls = getByText('Brian').className
+    expect(cls).toContain('bg-black/55')
+    expect(cls).not.toContain('bg-white/20')
+  })
 })

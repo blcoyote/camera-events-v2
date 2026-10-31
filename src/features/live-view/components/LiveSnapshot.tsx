@@ -30,12 +30,18 @@ export function LiveSnapshot({ cameraName }: { cameraName: string }) {
           </Button>
         }
       >
-        <div className="flex items-center gap-2">
+        <div className="flex min-w-0 items-center gap-2">
           <span
             className="live-pulse h-2.5 w-2.5 rounded-full bg-danger"
             aria-hidden="true"
           />
           <span className="text-sm font-semibold text-foreground">Live</span>
+          <span className="text-sm text-fg-2" aria-hidden="true">
+            ·
+          </span>
+          <span className="truncate text-sm font-semibold text-foreground">
+            {cameraName}
+          </span>
         </div>
       </MediaCard>
       <SnapshotLightbox

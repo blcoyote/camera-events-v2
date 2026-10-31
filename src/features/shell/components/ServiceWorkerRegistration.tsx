@@ -128,7 +128,7 @@ export function ServiceWorkerRegistration() {
   return (
     <div
       role="alert"
-      className="glass fixed bottom-[calc(1rem+env(safe-area-inset-bottom))] left-4 right-4 z-50 mx-auto max-w-md animate-[slideUp_280ms_ease-out] rounded-card px-5 py-4 sm:left-auto"
+      className="glass fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom))] sm:bottom-[calc(1rem+env(safe-area-inset-bottom))] left-4 right-4 z-50 mx-auto max-w-md animate-[slideUp_280ms_ease-out] rounded-card px-5 py-4 sm:left-auto"
     >
       <p className="text-sm font-medium text-foreground">
         A new version is available.

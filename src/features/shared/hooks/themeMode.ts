@@ -43,7 +43,8 @@ export function nextThemeMode(mode: ThemeMode): ThemeMode {
 
 /**
  * Applies a resolved theme to the document: swaps the `light`/`dark` class on
- * <html>, sets `color-scheme`, and syncs `<meta name="theme-color">` when present.
+ * <html>, sets `color-scheme`, and syncs every `<meta name="theme-color">`
+ * (including media-scoped ones) so an explicit choice overrides the media query.
  * The `document` default is only evaluated at call time, so importing this
  * module on the server is safe.
  */
@@ -56,8 +57,9 @@ export function applyResolvedTheme(
   root.classList.add(resolved)
   root.style.colorScheme = resolved
 
-  const meta = doc.querySelector('meta[name="theme-color"]')
-  if (meta) meta.setAttribute('content', THEME_COLORS[resolved])
+  doc
+    .querySelectorAll('meta[name="theme-color"]')
+    .forEach((meta) => meta.setAttribute('content', THEME_COLORS[resolved]))
 }
 
 /**
@@ -83,8 +85,8 @@ export function buildThemeInitScript(): string {
     'var c=' +
     json(THEME_COLORS) +
     ';' +
-    'var t=document.querySelector(\'meta[name="theme-color"]\');' +
-    "if(t)t.setAttribute('content',c[r])" +
+    'var t=document.querySelectorAll(\'meta[name="theme-color"]\');' +
+    "for(var i=0;i<t.length;i++)t[i].setAttribute('content',c[r])" +
     '}catch(e){}})();'
   )
 }

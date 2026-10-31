@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { cn } from '#/features/shared/utils/cn'
+import { Button } from '#/features/shared/components/ui/button'
 import {
   formatLabelName,
   formatCameraName,
@@ -20,15 +22,23 @@ export function EventClipPlayer({
   // an error event yet.
   const [status, setStatus] = useState<'idle' | 'errored'>('idle')
 
+  const [retry, setRetry] = useState(0)
+
   const ariaLabel = `Clip of ${formatLabelName(label)} from ${formatCameraName(
     camera,
   )}`
 
   return (
-    <div className="relative aspect-video w-full overflow-hidden bg-black sm:rounded-card">
+    <div
+      className={cn(
+        'relative aspect-video w-full overflow-hidden sm:rounded-card',
+        status === 'idle' ? 'bg-black' : 'border border-border-soft',
+      )}
+    >
       {status === 'idle' ? (
         <video
-          src={`/api/events/${eventId}/clip`}
+          key={retry}
+          src={`/api/events/${eventId}/clip${retry > 0 ? `?retry=${retry}` : ''}`}
           controls
           playsInline
           preload="metadata"
@@ -42,9 +52,24 @@ export function EventClipPlayer({
       ) : (
         <div
           role="status"
-          className="flex h-full w-full items-center justify-center px-4 text-center text-sm text-white"
+          className="flex h-full w-full flex-col items-center justify-center gap-3 bg-surface-warm px-4 text-center"
         >
-          Couldn't load clip
+          <p className="text-sm font-semibold text-foreground">
+            Couldn't load clip
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Frigate may still be saving it, or it may no longer be stored.
+          </p>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => {
+              setRetry((n) => n + 1)
+              setStatus('idle')
+            }}
+          >
+            Try again
+          </Button>
         </div>
       )}
     </div>

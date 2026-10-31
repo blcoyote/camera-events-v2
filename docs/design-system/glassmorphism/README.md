@@ -91,7 +91,8 @@ The app adds a dark version of this system. It is not part of the Open Design so
 - **Background:** deep navy `#0b1424`, not pure black.
 - **Glass panes:** translucent navy `rgba(22, 34, 58, 0.62)`, with a faint white hairline `rgba(255, 255, 255, 0.1)`. Backdrop blobs are about half the light alpha.
 - **Text:** `fg` `#e6eefc`, `fg-2` `#b6c4dc`, `muted` `#8c9dba`.
-- **Accent:** filled primary stays `#1856ff` with white text. Accent text lightens to `#8ab4ff`, and its hover to `#a9c7ff`.
+- **Accent:** the filled primary deepens to a night cobalt `#2b55c9` (hover `#345fd8`) with white text, 6.5:1. Accent text lightens to `#8ab4ff`, and its hover to `#a9c7ff`.
+- **Controls (night mode, added 2026-10-31):** inputs, selects, filter pills, switches and slider rails use `control-border` `rgba(255, 255, 255, 0.38)` (3.4:1 against a card) and a recessed `control-fill` `rgba(5, 10, 20, 0.55)`. Thumbs are pearl `#c5d3ea`, not white. The focus ring is a solid 2px `#8ab4ff` plus a 6px `rgba(138, 180, 255, 0.35)` halo. The sticky header is 80% opaque so footage scrolling under it can't wash out the nav. Light mode is unchanged.
 - **Status:** text lightens to `#4ade80` (success), `#fbbf24` (warn) and `#fb7185` (danger). The destructive fill is `#dc2626`.
 
 Dark mode is switched by a `dark` class on `<html>`, which the `:root.dark` block keys on. The class is set before first paint, so the page never flashes light.

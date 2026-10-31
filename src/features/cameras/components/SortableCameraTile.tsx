@@ -2,6 +2,7 @@ import type { CSSProperties } from 'react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { MediaCard } from '#/features/shared/components/MediaCard'
+import { GripVertical } from 'lucide-react'
 import { Button } from '#/features/shared/components/ui/button'
 
 interface SortableCameraTileProps {
@@ -37,7 +38,12 @@ export function SortableCameraTile({
     <div
       ref={setNodeRef}
       style={style}
-      className={isEditing ? 'select-none touch-none' : undefined}
+      {...(isEditing ? { 'data-editing': '' } : {})}
+      className={
+        isEditing
+          ? 'rounded-card outline-2 outline-dashed outline-offset-4 outline-border'
+          : undefined
+      }
     >
       <MediaCard
         index={index}
@@ -50,7 +56,7 @@ export function SortableCameraTile({
             src={imgSrc}
             alt={`Latest snapshot from ${name}`}
             loading="lazy"
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            className={`h-full w-full object-cover transition-transform duration-300${isEditing ? '' : ' group-hover:scale-105'}`}
           />
         }
       >
@@ -61,24 +67,11 @@ export function SortableCameraTile({
               variant="ghost"
               size="icon"
               aria-label={`Reorder ${name}`}
-              className="ml-2 size-9 cursor-grab text-fg-2 active:cursor-grabbing"
+              className="ml-2 cursor-grab touch-none select-none text-fg-2 active:cursor-grabbing"
               {...attributes}
               {...listeners}
             >
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 16 16"
-                fill="currentColor"
-                aria-hidden="true"
-              >
-                <path
-                  d="M4 5h8M4 8h8M4 11h8"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                />
-              </svg>
+              <GripVertical size={18} aria-hidden="true" />
             </Button>
           )}
         </div>

@@ -44,7 +44,7 @@ export function EventCard({
               {formatLabelName(event.label)}
             </span>
             {event.sub_label && (
-              <span className="rounded-full bg-white/20 px-2 py-0.5 text-xs font-medium text-white backdrop-blur-sm">
+              <span className="rounded-full bg-black/55 px-2 py-0.5 text-xs font-medium text-white backdrop-blur-sm">
                 {event.sub_label}
               </span>
             )}

@@ -47,6 +47,24 @@ function getOutput(props: React.ComponentProps<typeof SortableCameraTile>) {
   return SortableCameraTile(props)
 }
 
+type HandleProps = {
+  'aria-label'?: string
+  className?: string
+  children?: unknown
+}
+
+function findHandle(node: unknown): React.ReactElement<HandleProps> | null {
+  if (!node || typeof node !== 'object') return null
+  const el = node as React.ReactElement<HandleProps>
+  if (el.props?.['aria-label'] === 'Reorder front') return el
+  const children = el.props?.children
+  for (const child of Array.isArray(children) ? children : [children]) {
+    const found = findHandle(child)
+    if (found) return found
+  }
+  return null
+}
+
 describe('SortableCameraTile', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -78,11 +96,55 @@ describe('SortableCameraTile', () => {
     expect(json).not.toContain('Reorder front')
   })
 
-  it('applies select-none and touch-none classes in edit mode', () => {
+  it('puts select-none and touch-none on the handle, not the wrapper, in edit mode', () => {
     const output = getOutput({ name: 'front', isEditing: true, imgSrc: '/img' })
-    const json = JSON.stringify(output)
-    expect(json).toContain('select-none')
-    expect(json).toContain('touch-none')
+    const handle = findHandle(output)
+    expect(handle?.props.className).toContain('select-none')
+    expect(handle?.props.className).toContain('touch-none')
+    const wrapper = (output as React.ReactElement<{ className?: string }>).props
+    expect(wrapper.className).not.toContain('touch-none')
+  })
+
+  it('handle uses the default icon size, not size-9', () => {
+    const handle = findHandle(
+      getOutput({ name: 'front', isEditing: true, imgSrc: '/img' }),
+    )
+    expect(handle?.props.className).not.toContain('size-9')
+  })
+
+  it('marks the wrapper as editing with a dashed outline in edit mode', () => {
+    const props = (
+      getOutput({
+        name: 'front',
+        isEditing: true,
+        imgSrc: '/img',
+      }) as React.ReactElement<Record<string, string>>
+    ).props
+    expect(props['data-editing']).toBe('')
+    expect(props.className).toContain('outline-dashed')
+  })
+
+  it('has no editing marker or outline in view mode', () => {
+    const props = (
+      getOutput({
+        name: 'front',
+        isEditing: false,
+        imgSrc: '/img',
+      }) as React.ReactElement<Record<string, string>>
+    ).props
+    expect(props['data-editing']).toBeUndefined()
+    expect(props.className ?? '').not.toContain('outline-dashed')
+  })
+
+  it('drops the image hover zoom in edit mode only', () => {
+    const edit = JSON.stringify(
+      getOutput({ name: 'front', isEditing: true, imgSrc: '/img' }),
+    )
+    const view = JSON.stringify(
+      getOutput({ name: 'front', isEditing: false, imgSrc: '/img' }),
+    )
+    expect(edit).not.toContain('scale-105')
+    expect(view).toContain('scale-105')
   })
 
   it('does not apply touch-blocking classes outside edit mode', () => {
@@ -105,24 +167,7 @@ describe('SortableCameraTile', () => {
 
   it('drag handle is the shared Button primitive, which supplies the focus ring', () => {
     const output = getOutput({ name: 'front', isEditing: true, imgSrc: '/img' })
-    function findHandle(
-      node: unknown,
-    ): React.ReactElement<{ 'aria-label'?: string }> | null {
-      if (!node || typeof node !== 'object') return null
-      const el = node as React.ReactElement<{
-        'aria-label'?: string
-        children?: unknown
-      }>
-      if (el.props['aria-label'] === 'Reorder front') return el
-      const children = el.props.children
-      for (const child of Array.isArray(children) ? children : [children]) {
-        const found = findHandle(child)
-        if (found) return found
-      }
-      return null
-    }
-    const handle = findHandle(output)
-    expect(handle?.type).toBe(Button)
+    expect(findHandle(output)?.type).toBe(Button)
   })
 
   it('links to the live view page for the camera when not editing', () => {

@@ -18,4 +18,12 @@ describe('Input', () => {
     fireEvent.change(el, { target: { value: 'abcd' } })
     expect(onChange).toHaveBeenCalledOnce()
   })
+  it('uses control border and fill tokens', () => {
+    render(<Input aria-label="n" />)
+    const cls = screen.getByLabelText('n').className
+    expect(cls).toContain('border-control-border')
+    expect(cls).toContain('bg-control-fill')
+    expect(cls).not.toMatch(/(^|\s)border-border/)
+    expect(cls).not.toContain('bg-surface-warm')
+  })
 })

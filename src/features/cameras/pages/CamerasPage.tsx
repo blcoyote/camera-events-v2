@@ -1,9 +1,9 @@
 import type { FrigateResult } from '#/features/shared/server/frigate/config'
 import { useCameraOrder } from '#/features/cameras/hooks/useCameraOrder'
 import { SortableCamerasGrid } from '#/features/cameras/components/SortableCamerasGrid'
-import { Check, Pencil } from 'lucide-react'
+import { ArrowUpDown, Check, GripVertical } from 'lucide-react'
 import { Button } from '#/features/shared/components/ui/button'
-import { Toggle } from '#/features/shared/components/ui/toggle'
+import { PageHeader } from '#/features/shared/components/PageHeader'
 
 type CamerasState =
   | { kind: 'cameras'; cameras: string[] }
@@ -41,39 +41,48 @@ export function CamerasPage({
   const { visibleOrder, setOrder, saveError, dismissError } =
     useCameraOrder(frigateCameras)
 
-  const hasCameras = state.kind === 'cameras'
+  const canArrange = state.kind === 'cameras' && state.cameras.length > 1
 
   return (
-    <main id="main-content" className="page-wrap px-4 pb-8 pt-6 sm:pt-14">
-      <section className="glass rise-in relative overflow-hidden rounded-card px-5 py-6 sm:px-8 sm:py-8">
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <p className="eyebrow mb-1">Cameras</p>
-            <h1 className="mb-0 max-w-3xl text-3xl leading-display font-semibold tracking-tight sm:text-4xl">
-              Latest snapshots
-            </h1>
-          </div>
-          {hasCameras && (
-            <div className="flex shrink-0 flex-col items-end gap-1">
-              <Toggle
-                aria-label={
-                  isEditing ? 'Done reordering cameras' : 'Reorder cameras'
-                }
-                pressed={isEditing}
-                onPressedChange={onEditingChange}
-                title="Reorder cameras on this device"
-                className="size-11 px-0"
-              >
-                {isEditing ? (
-                  <Check size={16} aria-hidden="true" />
-                ) : (
-                  <Pencil size={16} aria-hidden="true" />
-                )}
-              </Toggle>
-            </div>
+    <main id="main-content" className="page-wrap px-4 pb-8 pt-3 sm:pt-14">
+      <PageHeader
+        eyebrow="Cameras"
+        title="Latest snapshots"
+        actions={
+          canArrange && (
+            <Button
+              variant={isEditing ? 'default' : 'secondary'}
+              size="sm"
+              onClick={() => onEditingChange(!isEditing)}
+              className="shrink-0"
+            >
+              {isEditing ? (
+                <>
+                  <Check size={16} aria-hidden="true" /> Done
+                </>
+              ) : (
+                <>
+                  <ArrowUpDown size={16} aria-hidden="true" /> Arrange
+                </>
+              )}
+            </Button>
+          )
+        }
+      />
+
+      {canArrange && (
+        <p
+          role="status"
+          className="mt-4 flex items-center gap-1.5 text-sm text-fg-2 empty:hidden"
+        >
+          {isEditing && (
+            <>
+              Drag <GripVertical size={16} aria-hidden="true" /> to move a
+              camera. The order is saved on this device only.
+            </>
           )}
-        </div>
-      </section>
+        </p>
+      )}
 
       {saveError && (
         <div

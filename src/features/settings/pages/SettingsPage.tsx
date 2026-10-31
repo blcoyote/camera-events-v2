@@ -20,6 +20,7 @@ import {
 import { NotificationSettings } from '../components/NotificationSettings'
 import { AdminNotificationMute } from '../components/AdminNotificationMute'
 import { AppearanceSettings } from '../components/AppearanceSettings'
+import { PageHeader } from '#/features/shared/components/PageHeader'
 
 export function getSettingsContent(): { heading: string; description: string } {
   return {
@@ -35,13 +36,8 @@ export function SettingsPage() {
     useLiveViewRefreshInterval()
 
   return (
-    <main id="main-content" className="page-wrap px-4 pb-8 pt-6 sm:pt-14">
-      <Card variant="hero" className="rise-in">
-        <p className="eyebrow mb-1">Account</p>
-        <h1 className="mb-0 max-w-3xl text-3xl font-semibold tracking-tight leading-display text-foreground sm:text-4xl">
-          {content.heading}
-        </h1>
-      </Card>
+    <main id="main-content" className="page-wrap px-4 pb-8 pt-3 sm:pt-14">
+      <PageHeader eyebrow="Account" title={content.heading} />
 
       <AppearanceSettings className="mt-6" />
 

@@ -274,7 +274,7 @@ const DARK_VALUES: [string, string][] = [
   ['--gl-surface-warm', 'rgba(18, 30, 52, 0.55)'],
   ['--gl-surface-hover', 'rgba(30, 46, 76, 0.82)'],
   ['--gl-surface-solid', 'rgba(22, 34, 58, 0.96)'],
-  ['--gl-surface-header', 'rgba(22, 34, 58, 0.42)'],
+  ['--gl-surface-header', 'rgba(22, 34, 58, 0.8)'],
   ['--gl-fg', '#e6eefc'],
   ['--gl-fg-2', '#b6c4dc'],
   ['--gl-muted', '#8c9dba'],
@@ -292,7 +292,12 @@ const DARK_VALUES: [string, string][] = [
   ['--gl-elev-raised', '0 24px 80px rgba(0, 0, 0, 0.45)'],
   ['--gl-elev-raised-hover', '0 28px 88px rgba(0, 0, 0, 0.55)'],
   ['--gl-elev-ring', '0 0 0 1px rgba(255, 255, 255, 0.1)'],
-  ['--gl-focus-ring', '0 0 0 4px rgba(138, 180, 255, 0.45)'],
+  ['--gl-focus-ring', '0 0 0 2px #8ab4ff, 0 0 0 6px rgba(138, 180, 255, 0.35)'],
+  ['--gl-accent-fill', '#2b55c9'],
+  ['--gl-accent-fill-hover', '#345fd8'],
+  ['--gl-control-border', 'rgba(255, 255, 255, 0.38)'],
+  ['--gl-control-fill', 'rgba(5, 10, 20, 0.55)'],
+  ['--gl-thumb', '#c5d3ea'],
 ]
 
 /** Declarations of the top-level block with the given selector, as a map. */
@@ -349,5 +354,27 @@ describe('dark token block (:root.dark)', () => {
       (name) => !dark.has(name),
     )
     expect(missing).toEqual([])
+  })
+})
+
+describe('control tokens', () => {
+  const root = declarationsOf(':root')
+  it('defines light control primitives in :root', () => {
+    expect(root.get('--gl-control-border')).toMatch(
+      /^(rgba\(255, 255, 255, 0\.64\)|var\(--gl-border\))$/,
+    )
+    expect(root.get('--gl-control-fill')).toMatch(
+      /^(rgba\(238, 246, 255, 0\.72\)|var\(--gl-surface-warm\))$/,
+    )
+    expect(root.get('--gl-thumb')).toBe('#ffffff')
+  })
+  it('maps them in @theme inline', () => {
+    expect(css).toContain('--color-control-border: var(--gl-control-border);')
+    expect(css).toContain('--color-control-fill: var(--gl-control-fill);')
+    expect(css).toContain('--color-thumb: var(--gl-thumb);')
+  })
+  it('keeps light accent fill unchanged', () => {
+    expect(root.get('--gl-accent-fill')).toBe('#1856ff')
+    expect(root.get('--gl-accent-fill-hover')).toBe('#1448e0')
   })
 })

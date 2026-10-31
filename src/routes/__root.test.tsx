@@ -39,8 +39,21 @@ function metaContent(name: string): unknown {
 }
 
 describe('root route head()', () => {
-  it('sets a static light theme-color', () => {
-    expect(metaContent('theme-color')).toBe('#eef6ff')
+  // TanStack dedupes head meta by name, so a second theme-color (e.g. a
+  // media-scoped dark one) silently replaces the first in the SSR HTML.
+  // One meta, synced to the resolved theme by the pre-paint init script.
+  it('sets a single theme-color meta that the init script syncs', () => {
+    const colors = (getHead().meta ?? []).filter(
+      (m) => m.name === 'theme-color',
+    )
+    expect(colors).toEqual([{ name: 'theme-color', content: '#eef6ff' }])
+  })
+
+  it('gives every named meta a unique name', () => {
+    const names = (getHead().meta ?? [])
+      .map((m) => m.name)
+      .filter((n): n is string => typeof n === 'string')
+    expect(new Set(names).size).toBe(names.length)
   })
 
   it('uses the default iOS status bar style', () => {
