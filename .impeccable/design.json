@@ -1,0 +1,151 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-31T00:00:00Z",
+  "title": "Design System: Camera Events",
+  "extensions": {
+    "colorMeta": {
+      "sky-glass": { "role": "primary", "displayName": "Sky Glass", "canonical": "#4f8cff", "dark": "#4f8cff", "tonalRamp": ["oklch(15% 0.05 262)", "oklch(25% 0.09 262)", "oklch(35% 0.13 262)", "oklch(45% 0.16 262)", "oklch(55% 0.18 262)", "oklch(65% 0.18 262)", "oklch(80% 0.10 262)", "oklch(95% 0.03 262)"] },
+      "cobalt": { "role": "primary", "displayName": "Cobalt", "canonical": "#1856ff", "dark": "#1856ff (fill); text #8ab4ff, hover #a9c7ff", "tonalRamp": ["oklch(15% 0.07 265)", "oklch(25% 0.13 265)", "oklch(35% 0.19 265)", "oklch(45% 0.24 265)", "oklch(52% 0.26 265)", "oklch(65% 0.20 265)", "oklch(80% 0.11 265)", "oklch(95% 0.03 265)"] },
+      "morning-haze": { "role": "neutral", "displayName": "Morning Haze", "canonical": "#eef6ff", "dark": "#0b1424", "tonalRamp": ["oklch(15% 0.02 250)", "oklch(25% 0.02 250)", "oklch(35% 0.02 250)", "oklch(45% 0.02 250)", "oklch(55% 0.02 250)", "oklch(70% 0.02 250)", "oklch(85% 0.015 250)", "oklch(97% 0.015 245)"] },
+      "glass-pane": { "role": "neutral", "displayName": "Glass Pane", "canonical": "rgba(255, 255, 255, 0.74)", "dark": "rgba(22, 34, 58, 0.62)" },
+      "glass-pane-warm": { "role": "neutral", "displayName": "Warm Glass", "canonical": "rgba(238, 246, 255, 0.72)", "dark": "rgba(18, 30, 52, 0.55)" },
+      "glass-pane-lit": { "role": "neutral", "displayName": "Lit Glass", "canonical": "rgba(255, 255, 255, 0.9)", "dark": "rgba(30, 46, 76, 0.82)" },
+      "glass-pane-solid": { "role": "neutral", "displayName": "Solid Glass", "canonical": "rgba(255, 255, 255, 0.94)", "dark": "rgba(22, 34, 58, 0.96)" },
+      "glass-edge": { "role": "neutral", "displayName": "Glass Edge", "canonical": "rgba(255, 255, 255, 0.64)", "dark": "rgba(255, 255, 255, 0.1)" },
+      "glass-edge-soft": { "role": "neutral", "displayName": "Soft Edge", "canonical": "rgba(255, 255, 255, 0.38)", "dark": "rgba(255, 255, 255, 0.06)" },
+      "harbour-ink": { "role": "neutral", "displayName": "Harbour Ink", "canonical": "#102033", "dark": "#e6eefc", "tonalRamp": ["oklch(15% 0.03 255)", "oklch(23% 0.04 255)", "oklch(35% 0.04 255)", "oklch(45% 0.04 255)", "oklch(55% 0.035 255)", "oklch(68% 0.03 255)", "oklch(82% 0.02 255)", "oklch(95% 0.01 255)"] },
+      "slate-ink": { "role": "neutral", "displayName": "Slate Ink", "canonical": "#34465f", "dark": "#b6c4dc" },
+      "dusk-grey": { "role": "neutral", "displayName": "Dusk Grey", "canonical": "#60708a", "dark": "#8c9dba" },
+      "porch-green": { "role": "status", "displayName": "Porch Green", "canonical": "#22c55e", "textPartner": "#15803d", "darkText": "#4ade80" },
+      "lamp-amber": { "role": "status", "displayName": "Lamp Amber", "canonical": "#f59e0b", "textPartner": "#b45309", "darkText": "#fbbf24" },
+      "alarm-red": { "role": "status", "displayName": "Alarm Red", "canonical": "#ef4444", "textPartner": "#c81e3a", "darkText": "#fb7185", "darkFill": "#dc2626" },
+      "dim-overlay": { "role": "neutral", "displayName": "Dim Overlay", "canonical": "rgba(16, 32, 51, 0.4)", "dark": "rgba(2, 6, 14, 0.6)" }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Page titles." },
+      "headline": { "displayName": "Headline", "purpose": "Section and detail-view headings." },
+      "title": { "displayName": "Title", "purpose": "Card titles." },
+      "body": { "displayName": "Body", "purpose": "Descriptions and settings copy." },
+      "label": { "displayName": "Label", "purpose": "Nav links, filter pills, compact buttons, event-card camera names." },
+      "eyebrow": { "displayName": "Eyebrow", "purpose": "Uppercase Cobalt section labels." },
+      "mono": { "displayName": "Mono", "purpose": "Inline code." }
+    },
+    "shadows": [
+      { "name": "raised", "value": "0 24px 80px rgba(79, 140, 255, 0.18)", "dark": "0 24px 80px rgba(0, 0, 0, 0.45)", "purpose": "Default elevation for glass panes, cards, header and primary buttons." },
+      { "name": "raised-hover", "value": "0 28px 88px rgba(79, 140, 255, 0.26)", "dark": "0 28px 88px rgba(0, 0, 0, 0.55)", "purpose": "Lifted event card." },
+      { "name": "ring", "value": "0 0 0 1px rgba(255, 255, 255, 0.64)", "dark": "0 0 0 1px rgba(255, 255, 255, 0.1)", "purpose": "Hairline edge as a shadow." },
+      { "name": "focus", "value": "0 0 0 4px rgba(79, 140, 255, 0.28)", "dark": "0 0 0 4px rgba(138, 180, 255, 0.45)", "purpose": "Focus halo on every interactive element; replaces the outline." }
+    ],
+    "motion": [
+      { "name": "fast", "value": "180ms", "purpose": "Hover, press, colour and nav underline." },
+      { "name": "base", "value": "280ms", "purpose": "Panels, dialogs, sheets, toasts." },
+      { "name": "ease-standard", "value": "cubic-bezier(0.22, 1, 0.36, 1)", "purpose": "The only easing curve." },
+      { "name": "blur-glass", "value": "20px", "purpose": "Default pane blur, with saturate(140%)." },
+      { "name": "blur-glass-strong", "value": "32px", "purpose": "Strong glass for busy backdrops." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "lg", "value": "1024px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Cobalt pill for the one primary action per view.",
+      "html": "<button class=\"ds-btn-primary\">Save changes</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 12px 20px; border: 0; border-radius: 9999px; background: var(--gl-accent-fill, #1856ff); color: var(--gl-accent-on, #fff); font: 500 16px/1.2 Inter, system-ui, sans-serif; box-shadow: var(--gl-elev-raised, 0 24px 80px rgba(79,140,255,0.18)); cursor: pointer; transition: background-color 180ms cubic-bezier(0.22,1,0.36,1), box-shadow 180ms cubic-bezier(0.22,1,0.36,1), transform 180ms cubic-bezier(0.22,1,0.36,1); } .ds-btn-primary:hover { background: var(--gl-accent-fill-hover, #1448e0); } .ds-btn-primary:active { transform: translateY(1px); } .ds-btn-primary:focus-visible { outline: none; box-shadow: var(--gl-focus-ring, 0 0 0 4px rgba(79,140,255,0.28)); }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Glass pill for secondary actions.",
+      "html": "<button class=\"ds-btn-secondary\">Cancel</button>",
+      "css": ".ds-btn-secondary { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 12px 20px; border-radius: 9999px; background: var(--gl-surface, rgba(255,255,255,0.74)); backdrop-filter: blur(20px) saturate(140%); -webkit-backdrop-filter: blur(20px) saturate(140%); border: 1px solid var(--gl-border, rgba(255,255,255,0.64)); color: var(--gl-fg, #102033); font: 500 16px/1.2 Inter, system-ui, sans-serif; cursor: pointer; transition: background-color 180ms cubic-bezier(0.22,1,0.36,1), transform 180ms cubic-bezier(0.22,1,0.36,1); } .ds-btn-secondary:hover { background: var(--gl-surface-hover, rgba(255,255,255,0.9)); } .ds-btn-secondary:active { transform: translateY(1px); } .ds-btn-secondary:focus-visible { outline: none; box-shadow: var(--gl-focus-ring, 0 0 0 4px rgba(79,140,255,0.28)); }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Cobalt text action with a warm-glass hover wash.",
+      "html": "<button class=\"ds-btn-ghost\">View all</button>",
+      "css": ".ds-btn-ghost { display: inline-flex; align-items: center; min-height: 44px; padding: 12px 20px; border: 0; border-radius: 9999px; background: transparent; color: var(--gl-accent-strong, #1856ff); font: 500 16px/1.2 Inter, system-ui, sans-serif; cursor: pointer; transition: background-color 180ms cubic-bezier(0.22,1,0.36,1); } .ds-btn-ghost:hover { background: var(--gl-surface-warm, rgba(238,246,255,0.72)); } .ds-btn-ghost:focus-visible { outline: none; box-shadow: var(--gl-focus-ring, 0 0 0 4px rgba(79,140,255,0.28)); }"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Warm-glass field, 16px radius, Sky Glass border and halo on focus.",
+      "html": "<input class=\"ds-input\" placeholder=\"Search cameras\" />",
+      "css": ".ds-input { width: 100%; min-height: 44px; padding: 12px 16px; border-radius: 16px; border: 1px solid var(--gl-border, rgba(255,255,255,0.64)); background: var(--gl-surface-warm, rgba(238,246,255,0.72)); color: var(--gl-fg, #102033); font: 400 16px/1.4 Inter, system-ui, sans-serif; outline: none; transition: border-color 180ms cubic-bezier(0.22,1,0.36,1), box-shadow 180ms cubic-bezier(0.22,1,0.36,1); } .ds-input::placeholder { color: var(--gl-muted, #60708a); } .ds-input:focus-visible { border-color: var(--gl-accent, #4f8cff); box-shadow: var(--gl-focus-ring, 0 0 0 4px rgba(79,140,255,0.28)); }"
+    },
+    {
+      "name": "Filter Pill",
+      "kind": "chip",
+      "refersTo": "filter-pill",
+      "description": "Glass toggle pill; Cobalt fill when on. Used for label and camera filters.",
+      "html": "<div style=\"display:flex;gap:8px\"><button class=\"ds-pill\" aria-pressed=\"true\">Person <span class=\"ds-pill-count\">12</span></button><button class=\"ds-pill\" aria-pressed=\"false\">Car <span class=\"ds-pill-count\">4</span></button></div>",
+      "css": ".ds-pill { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 8px 16px; border-radius: 9999px; background: var(--gl-surface, rgba(255,255,255,0.74)); backdrop-filter: blur(20px) saturate(140%); border: 1px solid var(--gl-border, rgba(255,255,255,0.64)); color: var(--gl-fg, #102033); font: 600 14px/1.2 Inter, system-ui, sans-serif; cursor: pointer; transition: background-color 180ms cubic-bezier(0.22,1,0.36,1), transform 180ms cubic-bezier(0.22,1,0.36,1); } .ds-pill:hover { background: var(--gl-surface-hover, rgba(255,255,255,0.9)); transform: translateY(-2px); } .ds-pill[aria-pressed=\"true\"] { background: var(--gl-accent-fill, #1856ff); color: var(--gl-accent-on, #fff); border-color: transparent; } .ds-pill-count { font-size: 12px; } .ds-pill[aria-pressed=\"false\"] .ds-pill-count { color: var(--gl-muted, #60708a); } .ds-pill:focus-visible { outline: none; box-shadow: var(--gl-focus-ring, 0 0 0 4px rgba(79,140,255,0.28)); }"
+    },
+    {
+      "name": "Status Badge",
+      "kind": "chip",
+      "refersTo": "badge",
+      "description": "Glass pill with a status dot; text uses the -text token, dot uses the fill token.",
+      "html": "<span class=\"ds-badge ds-badge--success\"><span class=\"ds-badge-dot\"></span>Online</span>",
+      "css": ".ds-badge { display: inline-flex; align-items: center; gap: 4px; padding: 6px 10px; border-radius: 9999px; background: var(--gl-surface, rgba(255,255,255,0.74)); backdrop-filter: blur(20px) saturate(140%); border: 1px solid var(--gl-border, rgba(255,255,255,0.64)); font: 500 12px/1 Inter, system-ui, sans-serif; color: var(--gl-fg-2, #34465f); } .ds-badge-dot { width: 6px; height: 6px; border-radius: 9999px; background: var(--gl-muted, #60708a); } .ds-badge--success { color: var(--gl-success-text, #15803d); } .ds-badge--success .ds-badge-dot { background: var(--gl-success, #22c55e); }"
+    },
+    {
+      "name": "Glass Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Raised frosted pane: 24px radius, white hairline, blue glow.",
+      "html": "<div class=\"ds-card\"><p class=\"ds-card-eyebrow\">Notifications</p><h2 class=\"ds-card-title\">Front door</h2><p class=\"ds-card-body\">Alerts for people and cars on this camera.</p></div>",
+      "css": ".ds-card { display: flex; flex-direction: column; gap: 16px; padding: 24px; border-radius: 24px; background: var(--gl-surface, rgba(255,255,255,0.74)); backdrop-filter: blur(20px) saturate(140%); -webkit-backdrop-filter: blur(20px) saturate(140%); border: 1px solid var(--gl-border, rgba(255,255,255,0.64)); box-shadow: var(--gl-elev-raised, 0 24px 80px rgba(79,140,255,0.18)); color: var(--gl-fg, #102033); font-family: Inter, system-ui, sans-serif; } .ds-card-eyebrow { margin: 0; font-size: 12px; font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase; color: var(--gl-accent-strong, #1856ff); } .ds-card-title { margin: 0; font-size: 24px; font-weight: 600; letter-spacing: -0.025em; } .ds-card-body { margin: 0; line-height: 1.55; color: var(--gl-fg-2, #34465f); }"
+    },
+    {
+      "name": "Nav Link",
+      "kind": "nav",
+      "refersTo": "nav-link",
+      "description": "Slate Ink label; a 2px Sky Glass underline grows from the left on hover and when active.",
+      "html": "<nav style=\"display:flex;gap:16px\"><a class=\"ds-nav-link is-active\" href=\"#\">Events</a><a class=\"ds-nav-link\" href=\"#\">Cameras</a><a class=\"ds-nav-link\" href=\"#\">Favorites</a></nav>",
+      "css": ".ds-nav-link { position: relative; display: inline-flex; align-items: center; min-height: 44px; padding: 8px 4px; color: var(--gl-fg-2, #34465f); text-decoration: none; font: 600 14px/1.2 Inter, system-ui, sans-serif; transition: color 180ms cubic-bezier(0.22,1,0.36,1); } .ds-nav-link::after { content: ''; position: absolute; left: 0; bottom: 0; width: 100%; height: 2px; background: var(--gl-accent, #4f8cff); transform: scaleX(0); transform-origin: left; transition: transform 180ms cubic-bezier(0.22,1,0.36,1); } .ds-nav-link:hover, .ds-nav-link.is-active { color: var(--gl-fg, #102033); } .ds-nav-link:hover::after, .ds-nav-link.is-active::after { transform: scaleX(1); } .ds-nav-link:focus-visible { outline: none; box-shadow: var(--gl-focus-ring, 0 0 0 4px rgba(79,140,255,0.28)); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Frosted Porch Light",
+    "overview": "Camera Events is the home's own glass, lit softly from behind. It should feel domestic and reassuring, never like a security console. Every surface is a frosted pane floating over a cool sky backdrop. Two blurred blue light pools sit behind the panes, so the blur always has something to catch, and each pane catches the light along a 1px white edge. When nothing is happening the app is calm and airy, and the camera footage is the only vivid thing on screen.\n\nThe system follows the open-source Open Design \"Glassmorphism\" system (`docs/design-system/glassmorphism/`, Apache-2.0) and adds its own dark theme. The light theme is a pale morning sky. The dark theme is the same porch at night: deep navy, not black, with dimmed light pools and pale-blue accent text, so opening an alert at 3 a.m. doesn't glare. Density is moderate, with generous radii, a 44px minimum touch target and whitespace before borders.\n\nComponents are light and tactile, glass you can press. Cards lift on hover, buttons drop 1px on press, and focus shows as a soft blue halo instead of an outline. Motion is quick and uses a single curve.",
+    "keyCharacteristics": [
+      "Translucent panes with backdrop blur and saturate(140%), always edged with a white hairline.",
+      "A blue-tinted glow for elevation, never a grey drop shadow.",
+      "One sans family (Inter) with tight display tracking and relaxed body leading.",
+      "Pill-shaped actions, 24px cards and 16px inputs.",
+      "Light and dark are equal citizens. Dark is a full token override, not a filter."
+    ],
+    "rules": [
+      { "name": "The Fill-Versus-Text Rule", "body": "Fills and text never share a token. A status or accent colour has a fill token and a separate `-text` or `-strong` token, and each one gets a dark value.", "section": "colors" },
+      { "name": "The No Raw Colour Rule", "body": "Use only semantic utilities (`bg-card`, `text-fg-2`, `text-brand-strong`, `bg-success`, ...). Raw hex, Tailwind scale colours (`red-500`) and `dark:` variants are banned and are enforced by `src/styles.legacy-tokens.test.ts`. The one exception is chips that sit on top of camera footage (see Components).", "section": "colors" },
+      { "name": "The Literal Label Rule", "body": "Use sentence case and short sentences, with no exclamation marks in the UI. Labels say exactly what happens (\"Save changes\", \"Download clip\").", "section": "typography" },
+      { "name": "The Two-Layer Rule", "body": "Nest glass at most two levels deep: a pane, then a warm pane with the soft edge and no shadow. A third translucent layer makes contrast collapse.", "section": "elevation" },
+      { "name": "The Glow-Not-Grey Rule", "body": "Elevation in the light theme is a blue-tinted glow. Never use a neutral grey drop shadow.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do put every surface on a glass utility (`glass`, `glass-flat`, `glass-strong`, `glass-header`) so the blur, the edge and the fallback come together.",
+      "Do keep text contrast at least 4.5:1 against the pane and the worst-case backdrop behind it. If it gets busy, raise opacity or switch to `glass-strong`.",
+      "Do give every new colour primitive a `:root.dark` value, and split fill and text tokens.",
+      "Do keep interactive targets at least 44px and show the focus halo on all of them.",
+      "Do keep one primary (Cobalt) action per view.",
+      "Do put element rules in `@layer base` and component classes in `@layer components`."
+    ],
+    "donts": [
+      "Don't replace the white hairline edge with a grey border, or the blue glow with a grey shadow.",
+      "Don't stack more than two translucent layers.",
+      "Don't use Sky Glass for small text or white-on-blue labels. Use Cobalt.",
+      "Don't use raw hex, Tailwind scale colours or `dark:` variants (except chips over footage).",
+      "Don't add unlayered CSS to `src/styles.css`, because it overrides every utility.",
+      "Don't mix in other visual metaphors such as neumorphism or skeuomorphic textures, or put busy photos behind glass."
+    ]
+  }
+}
