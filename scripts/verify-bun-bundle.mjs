@@ -42,7 +42,7 @@ const dynamicImportPattern = /await\s+import\(['"]better-sqlite3['"]\)/
 const anyImportPattern =
   /(?:^|[^.])\bimport\(['"]better-sqlite3['"]\)|\brequire\(['"]better-sqlite3['"]\)/
 
-let offenders = []
+const offenders = []
 for (const file of walk(BUNDLE_ROOT)) {
   const src = readFileSync(file, 'utf8')
   if (!anyImportPattern.test(src)) continue

@@ -6,7 +6,7 @@
   ],
   "extensions": {
     "recommendations": [
-      "dbaeumer.vscode-eslint",
+      "oxc.oxc-vscode",
       "esbenp.prettier-vscode",
       "bradlc.vscode-tailwindcss",
       "vitest.explorer",

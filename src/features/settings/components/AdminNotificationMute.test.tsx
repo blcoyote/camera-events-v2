@@ -185,7 +185,7 @@ describe('AdminNotificationMute', () => {
     const postCall = fetchMock.mock.calls.find(
       (call) => (call[1] as RequestInit | undefined)?.method === 'POST',
     )
-    expect(JSON.parse((postCall?.[1] as RequestInit).body as string)).toEqual({
+    expect(JSON.parse((postCall![1] as RequestInit).body as string)).toEqual({
       durationMs: 3_600_000,
     })
 
@@ -228,7 +228,7 @@ describe('AdminNotificationMute', () => {
     const postCall = fetchMock.mock.calls.find(
       (call) => (call[1] as RequestInit | undefined)?.method === 'POST',
     )
-    expect(JSON.parse((postCall?.[1] as RequestInit).body as string)).toEqual({
+    expect(JSON.parse((postCall![1] as RequestInit).body as string)).toEqual({
       durationMs: 0,
     })
 

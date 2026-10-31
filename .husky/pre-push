@@ -3,7 +3,7 @@
 # type-checking, linting, or formatting fails.
 set -e
 
-echo "▶ pre-push: running code_quality checks (tsc --noEmit · eslint · prettier --check)…"
+echo "▶ pre-push: running code_quality checks (tsc --noEmit · oxlint · prettier --check)…"
 
 bun x tsc --noEmit
 bun run lint
