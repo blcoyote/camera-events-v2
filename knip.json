@@ -17,7 +17,6 @@
     ]
   },
   "ignoreDependencies": [
-    "@tanstack/react-router-ssr-query",
     "@tanstack/router-plugin"
   ]
 }
