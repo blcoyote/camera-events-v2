@@ -22,4 +22,10 @@ describe('Toggle', () => {
     fireEvent.click(screen.getByRole('button'))
     expect(fn).toHaveBeenCalledWith(true)
   })
+  it('uses the control border and keeps it when pressed', () => {
+    render(<Toggle>t</Toggle>)
+    const cls = screen.getByRole('button').className
+    expect(cls).toContain('border-control-border')
+    expect(cls).not.toContain('border-transparent')
+  })
 })

@@ -66,4 +66,15 @@ describe('Slider', () => {
     const thumb = screen.getByRole('slider', { name: 'Volume' })
     expect(thumb.getAttribute('aria-describedby')).toBe('d')
   })
+  it('uses control-border rail and thumb tokens', () => {
+    const { container } = render(
+      <Slider aria-label="n" value={[1]} min={1} max={10} step={1} />,
+    )
+    const track = container.querySelector('[data-slot="slider-track"]')
+    expect(track?.className).toContain('bg-control-border')
+    expect(track?.className).not.toMatch(/(^|\s)bg-border/)
+    const cls = screen.getByRole('slider').className
+    expect(cls).toContain('bg-thumb')
+    expect(cls).not.toContain('bg-white')
+  })
 })

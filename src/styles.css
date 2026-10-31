@@ -42,6 +42,10 @@
   --gl-overlay: rgba(16, 32, 51, 0.4);
   --gl-surface-solid: rgba(255, 255, 255, 0.94);
   --gl-surface-header: rgba(255, 255, 255, 0.5);
+  /* control boundary/fill/thumb: same light values as --gl-border/--gl-surface-warm, split so dark can raise them */
+  --gl-control-border: rgba(255, 255, 255, 0.64);
+  --gl-control-fill: rgba(238, 246, 255, 0.72);
+  --gl-thumb: #ffffff;
   --gl-blob-1: rgba(79, 140, 255, 0.45);
   --gl-blob-2: rgba(24, 86, 255, 0.28);
   /* elevation, blur, motion */
@@ -64,7 +68,13 @@
   --gl-surface-warm: rgba(18, 30, 52, 0.55);
   --gl-surface-hover: rgba(30, 46, 76, 0.82);
   --gl-surface-solid: rgba(22, 34, 58, 0.96);
-  --gl-surface-header: rgba(22, 34, 58, 0.42);
+  /* night-mode values (2026-10-31 dark-mode critique): deeper, less luminous cobalt; >=3:1 control boundaries; solid focus ring; opaque header over footage */
+  --gl-surface-header: rgba(22, 34, 58, 0.8);
+  --gl-accent-fill: #2b55c9;
+  --gl-accent-fill-hover: #345fd8;
+  --gl-control-border: rgba(255, 255, 255, 0.38);
+  --gl-control-fill: rgba(5, 10, 20, 0.55);
+  --gl-thumb: #c5d3ea;
   --gl-fg: #e6eefc;
   --gl-fg-2: #b6c4dc;
   --gl-muted: #8c9dba;
@@ -82,7 +92,7 @@
   --gl-elev-raised: 0 24px 80px rgba(0, 0, 0, 0.45);
   --gl-elev-raised-hover: 0 28px 88px rgba(0, 0, 0, 0.55);
   --gl-elev-ring: 0 0 0 1px rgba(255, 255, 255, 0.1);
-  --gl-focus-ring: 0 0 0 4px rgba(138, 180, 255, 0.45);
+  --gl-focus-ring: 0 0 0 2px #8ab4ff, 0 0 0 6px rgba(138, 180, 255, 0.35);
 }
 
 /* ─ Layer 2: shadcn semantic variables ─ */
@@ -134,6 +144,9 @@
   --color-brand-strong: var(--gl-accent-strong);
   --color-primary-hover: var(--gl-accent-fill-hover);
   --color-surface-warm: var(--gl-surface-warm);
+  --color-control-border: var(--gl-control-border);
+  --color-control-fill: var(--gl-control-fill);
+  --color-thumb: var(--gl-thumb);
   --color-surface-hover: var(--gl-surface-hover);
   --color-border-soft: var(--gl-border-soft);
   --color-success: var(--gl-success);
