@@ -28,7 +28,7 @@ Reference pair: `src/features/shared/server/favorites/favorites-fns.ts` → `fav
 4. **No `VITE_` prefix on secrets** — `import.meta.env.VITE_*` is bundled into the client.
 5. **No barrel re-exports** that mix server-only and client-safe exports.
 6. **Browser APIs** are never read during render. Use safe defaults and a `useEffect` (SSR/hydration must match).
-7. `createServerOnlyFn` only throws at call time and does not stop the module being bundled; the `server-only` marker is what blocks the import. Check the current TanStack docs before using `createIsomorphicFn` / `createClientOnlyFn` — none are used in `src/` today.
+7. `createServerOnlyFn` only throws at call time and does not stop the module being bundled; the `server-only` marker is what blocks the import. Check the current TanStack docs before using `createIsomorphicFn` / `createClientOnlyFn`.
 
 ## Reading an import-protection error
 
@@ -38,7 +38,7 @@ The trace lists the import chain; the violation is at the last importer, so fix 
 
 - [ ] New server-only files are in `server/` and start with the `server-only` import
 - [ ] `*-fns.ts` files have no static imports of server-only modules
-- [ ] Every `createServerFn` handler touching protected data calls `await requireSession()` first (see `CLAUDE.md` > Server Function Authentication)
+- [ ] Every `createServerFn` handler touching protected data calls `await requireSession()` first (see `CLAUDE.md` > Server/Client Boundaries & Server Functions)
 - [ ] Loaders only call server functions
 - [ ] No `VITE_`-prefixed secrets; no mixed barrels
 - [ ] Browser-API access is behind `useEffect`

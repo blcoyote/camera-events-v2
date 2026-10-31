@@ -1,15 +1,15 @@
 ---
 name: test-driven-development
-description: Enforce RED-GREEN-REFACTOR with evidence gates. Use when writing new code, fixing a bug, adding a feature, or reviewing whether TDD discipline was followed — any time implementation code will be written or modified.
+description: Enforce RED-GREEN-REFACTOR with evidence gates. Use when implementing a feature, fixing a bug, adding or changing behaviour, writing a test, or reviewing whether TDD discipline was followed — any time implementation code will be written or modified.
 ---
 
 # Test-Driven Development
 
-The project's conventions (test placement, mocking patterns, commands) live in `CLAUDE.md` under "Test-Driven Development". This skill adds the discipline and evidence gates on top.
+The project's test conventions (placement, mocking patterns, commands) live in `.claude/rules/testing.md`. That file is path-scoped and only loads once a test file is open, so **read it before writing the first test**. This skill adds the discipline and evidence gates on top.
 
 ## Iron Law
 
-No production code without a failing test first. Code written before its test is deleted and re-derived from the test.
+No production code without a failing test first. Code written before its test is set aside (stash it or move it out of the way, never delete uncommitted work) and re-derived from the test.
 
 ## The Cycle
 
@@ -23,7 +23,7 @@ One test → one implementation → repeat. Never write all tests first and all 
 
 ## Rationalizations that mean "stop, write the test"
 
-"Too simple to test", "I'll add tests after", "I need to see the shape first" (spike, throw it away, then TDD), "I tested it manually", "keep it as reference", "just this once". Code written without a test is deleted, not adapted.
+"Too simple to test", "I'll add tests after", "I need to see the shape first" (spike, throw it away, then TDD), "I tested it manually", "keep it as reference", "just this once". Code written without a test is set aside, not adapted.
 
 ## Exceptions
 
