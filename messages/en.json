@@ -230,5 +230,9 @@
   "settings_error_subscribe": "Failed to subscribe",
   "settings_error_unsubscribe": "Failed to unsubscribe",
   "settings_error_send_test": "Failed to send test notification",
-  "settings_description": "Account preferences and camera configuration."
+  "settings_description": "Account preferences and camera configuration.",
+  "route_skip_to_content": "Skip to main content",
+  "route_not_found_title": "Page not found",
+  "route_not_found_body": "The page you're looking for doesn't exist or has been moved.",
+  "route_not_found_home": "Back to Home"
 }

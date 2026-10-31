@@ -106,3 +106,14 @@ describe('root document shell', () => {
     expect(scriptIndex).toBeGreaterThan(headContentIndex)
   })
 })
+
+describe('root route localisation', () => {
+  it('renders the skip link in Danish', () => {
+    const restore = withLocale('da')
+    try {
+      expect(JSON.stringify(renderShell())).toContain('Gå til hovedindhold')
+    } finally {
+      restore()
+    }
+  })
+})

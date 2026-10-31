@@ -5,6 +5,7 @@ import {
 } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
+import { m } from '#/paraglide/messages.js'
 import { getLocale } from '#/paraglide/runtime.js'
 import Header from '#/features/shell/components/Header'
 import { TabBar } from '#/features/shell/components/TabBar'
@@ -41,7 +42,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
         content: 'width=device-width, initial-scale=1, viewport-fit=cover',
       },
       {
-        title: 'Camera Events',
+        title: m.shell_title_app(),
       },
       // One meta only: TanStack dedupes by name. The init script syncs it to
       // the resolved theme before first paint.
@@ -63,7 +64,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       },
       {
         name: 'apple-mobile-web-app-title',
-        content: 'Camera Events',
+        content: m.shell_title_app(),
       },
     ],
     links: [
@@ -107,7 +108,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           href="#main-content"
           className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-100 focus:rounded-card focus:bg-card focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-foreground focus:shadow-raised"
         >
-          Skip to main content
+          {m.route_skip_to_content()}
         </a>
         <Header />
         {children}

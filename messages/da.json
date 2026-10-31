@@ -230,5 +230,9 @@
   "settings_error_subscribe": "Kunne ikke tilmelde",
   "settings_error_unsubscribe": "Kunne ikke afmelde",
   "settings_error_send_test": "Kunne ikke sende testnotifikation",
-  "settings_description": "Kontoindstillinger og kamerakonfiguration."
+  "settings_description": "Kontoindstillinger og kamerakonfiguration.",
+  "route_skip_to_content": "Gå til hovedindhold",
+  "route_not_found_title": "Siden blev ikke fundet",
+  "route_not_found_body": "Siden findes ikke, eller den er flyttet.",
+  "route_not_found_home": "Til forsiden"
 }
