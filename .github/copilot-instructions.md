@@ -29,7 +29,7 @@ Run these from the repo root. **Always run `bun install --frozen-lockfile` first
 | Install      | `bun install --frozen-lockfile` | ~100s | Required first. Do not edit `bun.lock` by hand.                       |
 | Type check   | `bun x tsc --noEmit`            | ~1s   | TypeScript 7 (native); strict, `noUnusedLocals`/`noUnusedParameters`. |
 | Lint         | `bun run lint`                  | <1s   | Runs `biome lint` (rules in `biome.json`).                            |
-| Format check | `bun run format`      | ~5s   | CI fails on unformatted files. Auto-fix with `bun run check`.         |
+| Format check | `bun run format`                | ~5s   | CI fails on unformatted files. Auto-fix with `bun run check`.         |
 | Test         | `bun x vitest run`              | ~17s  | 765 tests (unit project, jsdom). No Playwright needed for this.       |
 | Build        | `bun run build`                 | ~4s   | See build note below.                                                 |
 
