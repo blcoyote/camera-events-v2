@@ -78,21 +78,7 @@ describe('getHeaderAuthState', () => {
     expect(state.signOutAction).toBe('/api/auth/logout')
   })
 
-  it('mobileTopLinks is empty when user is null', () => {
-    const state = getHeaderAuthState(null)
-    expect(state.mobileTopLinks).toEqual([])
-  })
-
-  it('mobileTopLinks contains /cameras and /camera-events when user is present', () => {
-    const state = getHeaderAuthState(makeUser())
-    const targets = state.mobileTopLinks.map((l) => l.to)
-    expect(targets).toContain('/cameras')
-    expect(targets).toContain('/camera-events')
-  })
-
-  it('mobileTopLinks has Cameras before Events', () => {
-    const state = getHeaderAuthState(makeUser())
-    const labels = state.mobileTopLinks.map((l) => l.label)
-    expect(labels.indexOf('Cameras')).toBeLessThan(labels.indexOf('Events'))
+  it('no longer exposes mobileTopLinks', () => {
+    expect(getHeaderAuthState(makeUser())).not.toHaveProperty('mobileTopLinks')
   })
 })

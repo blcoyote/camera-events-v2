@@ -6,6 +6,7 @@ import {
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
 import Header from '#/features/shell/components/Header'
+import { TabBar } from '#/features/shell/components/TabBar'
 import { ServiceWorkerRegistration } from '#/features/shell/components/ServiceWorkerRegistration'
 import { getCurrentUserFn } from '#/features/auth/server/auth'
 import type { SessionData } from '#/features/shared/server/session'
@@ -109,6 +110,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         </a>
         <Header />
         {children}
+        <TabBar />
         <TanStackDevtools
           config={{
             position: 'bottom-right',
