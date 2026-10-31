@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { getHeaderAuthState } from './Header'
 import type { SessionData } from '#/features/shared/server/session'
+import { withLocale } from '#/test-utils/locale'
 
 function makeUser(overrides: Partial<SessionData> = {}): SessionData {
   return {
@@ -80,5 +81,18 @@ describe('getHeaderAuthState', () => {
 
   it('no longer exposes mobileTopLinks', () => {
     expect(getHeaderAuthState(makeUser())).not.toHaveProperty('mobileTopLinks')
+  })
+})
+
+describe('getHeaderAuthState in Danish', () => {
+  it('translates nav link labels', () => {
+    const restore = withLocale('da')
+    try {
+      expect(
+        getHeaderAuthState(makeUser()).navLinks.map((l) => l.label),
+      ).toEqual(['Kameraer', 'Hændelser', 'Favoritter', 'Indstillinger'])
+    } finally {
+      restore()
+    }
   })
 })

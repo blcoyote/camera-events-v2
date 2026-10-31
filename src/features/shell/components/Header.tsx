@@ -1,4 +1,5 @@
 import { Link, useRouteContext, useRouterState } from '@tanstack/react-router'
+import { m } from '#/paraglide/messages.js'
 import { AvatarMenu } from './AvatarMenu'
 import { ThemeToggle } from './ThemeToggle'
 import { getPageTitle } from './navigation'
@@ -24,10 +25,10 @@ export function getHeaderAuthState(user: SessionData | null): {
 } {
   const navLinks: NavLink[] = user
     ? [
-        { label: 'Cameras', to: '/cameras' },
-        { label: 'Events', to: '/camera-events' },
-        { label: 'Favorites', to: '/favorites' },
-        { label: 'Settings', to: '/settings' },
+        { label: m.shell_tab_cameras(), to: '/cameras' },
+        { label: m.shell_tab_events(), to: '/camera-events' },
+        { label: m.shell_tab_favorites(), to: '/favorites' },
+        { label: m.shell_tab_settings(), to: '/settings' },
       ]
     : []
   return {
@@ -56,7 +57,7 @@ export default function Header() {
   return (
     <header className="glass-header sticky top-0 z-50 border-b border-border pt-[env(safe-area-inset-top)]">
       <nav
-        aria-label="Site navigation"
+        aria-label={m.shell_nav_site()}
         className="page-wrap flex items-center gap-x-2 py-1.5 sm:gap-x-3 sm:py-2"
       >
         {user && (
@@ -92,7 +93,7 @@ export default function Header() {
           {state.showSignIn ? (
             <Button asChild variant="secondary" size="sm">
               <a href={state.signInHref} onClick={onSignIn}>
-                Sign in with Google
+                {m.shell_sign_in_google()}
               </a>
             </Button>
           ) : (

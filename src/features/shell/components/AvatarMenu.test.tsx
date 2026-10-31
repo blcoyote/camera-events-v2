@@ -11,6 +11,7 @@ import userEvent from '@testing-library/user-event'
 import type { ComponentProps, ReactNode } from 'react'
 import '@testing-library/jest-dom/vitest'
 import { AvatarMenu } from './AvatarMenu'
+import { withLocale } from '#/test-utils/locale'
 
 vi.mock('@tanstack/react-router', () => ({
   Link: ({
@@ -464,5 +465,30 @@ describe('AvatarMenu', () => {
       expect(globalThis.fetch).toHaveBeenCalled()
     })
     expect(screen.queryByTestId('admin-badge')).not.toBeInTheDocument()
+  })
+})
+
+describe('AvatarMenu in Danish', () => {
+  afterEach(() => cleanup())
+
+  it('translates the trigger and menu items', async () => {
+    globalThis.fetch = vi
+      .fn()
+      .mockResolvedValue(jsonResponse(200, { isAdmin: false }))
+    const restore = withLocale('da')
+    try {
+      render(<AvatarMenu avatarUrl="" initials="A" signOutAction="/x" />)
+      await userEvent
+        .setup()
+        .click(screen.getByRole('button', { name: 'Kontomenu' }))
+      expect(
+        screen.getByRole('menuitem', { name: 'Log ud' }),
+      ).toBeInTheDocument()
+      expect(
+        screen.getByRole('menuitem', { name: 'Indstillinger' }),
+      ).toBeInTheDocument()
+    } finally {
+      restore()
+    }
   })
 })

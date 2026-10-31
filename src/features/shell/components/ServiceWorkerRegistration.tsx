@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { m } from '#/paraglide/messages.js'
 import { Button } from '#/features/shared/components/ui/button'
 import { useSyncPushLocale } from '#/features/shared/hooks/useSyncPushLocale'
 import { resyncExistingPushSubscription } from '#/features/shared/utils/pushResync'
@@ -133,11 +134,11 @@ export function ServiceWorkerRegistration() {
       className="glass fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom))] sm:bottom-[calc(1rem+env(safe-area-inset-bottom))] left-4 right-4 z-50 mx-auto max-w-md animate-[slideUp_280ms_ease-out] rounded-card px-5 py-4 sm:left-auto"
     >
       <p className="text-sm font-medium text-foreground">
-        A new version is available.
+        {m.shell_update_available()}
       </p>
       <div className="mt-3 flex gap-2">
         <Button type="button" size="sm" onClick={handleUpdate}>
-          Update now
+          {m.shell_update_now()}
         </Button>
         <Button
           type="button"
@@ -145,7 +146,7 @@ export function ServiceWorkerRegistration() {
           size="sm"
           onClick={handleDismiss}
         >
-          Later
+          {m.shell_update_later()}
         </Button>
       </div>
     </div>

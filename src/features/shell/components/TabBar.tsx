@@ -1,4 +1,5 @@
 import { Link, useRouteContext, useRouterState } from '@tanstack/react-router'
+import { m } from '#/paraglide/messages.js'
 import { TABS, getActiveTab } from './navigation'
 
 export function TabBar() {
@@ -11,7 +12,7 @@ export function TabBar() {
     <>
       <div aria-hidden="true" className="h-14 sm:hidden" />
       <nav
-        aria-label="Primary"
+        aria-label={m.shell_nav_primary()}
         className="glass-header fixed inset-x-0 bottom-0 z-40 rounded-none border-t border-border pb-[env(safe-area-inset-bottom)] shadow-none sm:hidden"
       >
         <div className="grid grid-cols-4">
