@@ -154,3 +154,21 @@ describe('EventCard', () => {
     expect(cls).not.toContain('bg-white/20')
   })
 })
+
+describe('EventCard icon labels in Danish', () => {
+  it('localises the recent and clip badges', () => {
+    const restore = withLocale('da')
+    try {
+      const { getByRole } = render(
+        <EventCard
+          event={makeEvent({ has_clip: true, start_time: Date.now() / 1000 })}
+          index={0}
+        />,
+      )
+      expect(getByRole('img', { name: 'Ny hændelse' })).toBeTruthy()
+      expect(getByRole('img', { name: 'Har klip' })).toBeTruthy()
+    } finally {
+      restore()
+    }
+  })
+})

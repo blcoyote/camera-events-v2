@@ -1,3 +1,4 @@
+import { m } from '#/paraglide/messages.js'
 import { getLocale } from '#/paraglide/runtime.js'
 import { translateLabel } from '#/features/shared/utils/labels'
 import { Video } from 'lucide-react'
@@ -30,7 +31,11 @@ export function EventCard({
     <MediaCard
       to="/camera-events/$id"
       params={{ id: event.id }}
-      aria-label={`${translateLabel(event.label, getLocale())} detected by ${event.camera}, ${formatRelativeTime(event.start_time)}`}
+      aria-label={m.shared_event_card_aria({
+        label: translateLabel(event.label, getLocale()),
+        camera: event.camera,
+        time: formatRelativeTime(event.start_time),
+      })}
       index={index}
       image={<EventThumbnail eventId={event.id} />}
       overlay={
@@ -55,14 +60,14 @@ export function EventCard({
               <span
                 className="live-pulse h-2.5 w-2.5 rounded-full bg-danger ring-2 ring-danger/30"
                 role="img"
-                aria-label="Recent event"
+                aria-label={m.shared_event_recent()}
               />
             )}
             {event.has_clip && (
               <span
                 className="flex h-6 w-6 items-center justify-center rounded-full bg-black/40 backdrop-blur-sm"
                 role="img"
-                aria-label="Has video clip"
+                aria-label={m.shared_event_has_clip()}
               >
                 <Video size={12} className="text-white" aria-hidden="true" />
               </span>

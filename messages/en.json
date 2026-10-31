@@ -51,5 +51,20 @@
   "shell_theme_toggle": "Theme: {current}. Switch to {next}.",
   "shell_update_available": "A new version is available.",
   "shell_update_now": "Update now",
-  "shell_update_later": "Later"
+  "shell_update_later": "Later",
+  "shared_alert_login_failed": "Something went wrong during sign-in. Please try again.",
+  "shared_alert_access_denied": "You declined the Google sign-in request.",
+  "shared_alert_logged_out": "You have been signed out.",
+  "shared_alert_dismiss": "Dismiss message",
+  "shared_event_card_aria": "{label} detected by {camera}, {time}",
+  "shared_event_recent": "Recent event",
+  "shared_event_has_clip": "Has video clip",
+  "shared_favorite_saving": "Saving…",
+  "shared_favorite_remove": "Remove from favorites",
+  "shared_favorite_add": "Add to favorites",
+  "shared_refreshing": "Refreshing…",
+  "shared_refreshed": "Refreshed",
+  "shared_lightbox_hint": "Pinch to zoom, drag to pan, swipe down or press Escape to close.",
+  "shared_lightbox_close": "Close snapshot viewer",
+  "ui_close": "Close"
 }

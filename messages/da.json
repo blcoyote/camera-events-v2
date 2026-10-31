@@ -51,5 +51,20 @@
   "shell_theme_toggle": "Tema: {current}. Skift til {next}.",
   "shell_update_available": "En ny version er tilgængelig.",
   "shell_update_now": "Opdater nu",
-  "shell_update_later": "Senere"
+  "shell_update_later": "Senere",
+  "shared_alert_login_failed": "Noget gik galt under login. Prøv igen.",
+  "shared_alert_access_denied": "Du afviste Google-loginanmodningen.",
+  "shared_alert_logged_out": "Du er logget ud.",
+  "shared_alert_dismiss": "Luk besked",
+  "shared_event_card_aria": "{label} registreret af {camera}, {time}",
+  "shared_event_recent": "Ny hændelse",
+  "shared_event_has_clip": "Har klip",
+  "shared_favorite_saving": "Gemmer…",
+  "shared_favorite_remove": "Fjern fra favoritter",
+  "shared_favorite_add": "Føj til favoritter",
+  "shared_refreshing": "Opdaterer…",
+  "shared_refreshed": "Opdateret",
+  "shared_lightbox_hint": "Knib for at zoome, træk for at panorere, stryg ned eller tryk Escape for at lukke.",
+  "shared_lightbox_close": "Luk visning af stillbillede",
+  "ui_close": "Luk"
 }

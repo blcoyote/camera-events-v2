@@ -1,3 +1,4 @@
+import { withLocale } from '#/test-utils/locale'
 // @vitest-environment jsdom
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
@@ -60,5 +61,17 @@ describe('Dialog', () => {
       renderDialog()
       expect(screen.getByRole('dialog').className).toContain('glass-strong')
     })
+  })
+})
+
+describe('Dialog in Danish', () => {
+  it('localises the close button', () => {
+    const restore = withLocale('da')
+    try {
+      renderDialog()
+      expect(screen.getByRole('button', { name: 'Luk' })).not.toBeNull()
+    } finally {
+      restore()
+    }
   })
 })

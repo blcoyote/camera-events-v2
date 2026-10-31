@@ -1,3 +1,4 @@
+import { m } from '#/paraglide/messages.js'
 import { useEffect, useRef, useState } from 'react'
 import { X } from 'lucide-react'
 import { Alert } from '#/features/shared/components/ui/alert'
@@ -10,14 +11,15 @@ interface AlertMessage {
   type: AlertType
 }
 
-const ERROR_MESSAGES: Record<string, string> = {
-  login_failed: 'Something went wrong during sign-in. Please try again.',
-  access_denied: 'You declined the Google sign-in request.',
-  invalid_state: 'Something went wrong during sign-in. Please try again.',
+// Functions, not strings: the locale is resolved per request at call time.
+const ERROR_MESSAGES: Record<string, () => string> = {
+  login_failed: () => m.shared_alert_login_failed(),
+  access_denied: () => m.shared_alert_access_denied(),
+  invalid_state: () => m.shared_alert_login_failed(),
 }
 
-const STATUS_MESSAGES: Record<string, string> = {
-  logged_out: 'You have been signed out.',
+const STATUS_MESSAGES: Record<string, () => string> = {
+  logged_out: () => m.shared_alert_logged_out(),
 }
 
 /**
@@ -29,10 +31,10 @@ export function getAlertMessage(
   status: string | undefined,
 ): AlertMessage | null {
   if (error && ERROR_MESSAGES[error]) {
-    return { text: ERROR_MESSAGES[error], type: 'error' }
+    return { text: ERROR_MESSAGES[error](), type: 'error' }
   }
   if (status && STATUS_MESSAGES[status]) {
-    return { text: STATUS_MESSAGES[status], type: 'success' }
+    return { text: STATUS_MESSAGES[status](), type: 'success' }
   }
   return null
 }
@@ -78,7 +80,7 @@ export default function AlertBanner({
       <Button
         variant="ghost"
         size="icon"
-        aria-label="Dismiss message"
+        aria-label={m.shared_alert_dismiss()}
         onClick={() => setDismissed(true)}
       >
         <X className="size-4" aria-hidden="true" />

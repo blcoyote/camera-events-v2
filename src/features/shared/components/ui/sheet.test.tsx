@@ -1,3 +1,4 @@
+import { withLocale } from '#/test-utils/locale'
 // @vitest-environment jsdom
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
@@ -68,5 +69,17 @@ describe('Sheet', () => {
     expect(screen.getByTestId('ov').getAttribute('data-slot')).toBe(
       'sheet-overlay',
     )
+  })
+})
+
+describe('Sheet in Danish', () => {
+  it('localises the close button', () => {
+    const restore = withLocale('da')
+    try {
+      renderSheet()
+      expect(screen.getByRole('button', { name: 'Luk' })).not.toBeNull()
+    } finally {
+      restore()
+    }
   })
 })

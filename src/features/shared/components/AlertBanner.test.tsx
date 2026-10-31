@@ -1,3 +1,4 @@
+import { withLocale } from '#/test-utils/locale'
 // @vitest-environment jsdom
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { render, screen, cleanup, fireEvent } from '@testing-library/react'
@@ -109,5 +110,22 @@ describe('AlertBanner component', () => {
     render(<AlertBanner error="login_failed" />)
 
     expect(replaceStateSpy).toHaveBeenCalled()
+  })
+})
+
+describe('AlertBanner in Danish', () => {
+  it('localises message and dismiss label', () => {
+    const restore = withLocale('da')
+    try {
+      expect(getAlertMessage(undefined, 'logged_out')!.text).toBe(
+        'Du er logget ud.',
+      )
+      render(<AlertBanner error="access_denied" />)
+      expect(
+        screen.getByRole('button', { name: 'Luk besked' }),
+      ).toBeInTheDocument()
+    } finally {
+      restore()
+    }
   })
 })
