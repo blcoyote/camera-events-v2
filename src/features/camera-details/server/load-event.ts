@@ -12,7 +12,7 @@ export const loadEventFn = createServerFn({ method: 'GET' })
     const { getEvent } = await import('#/features/shared/server/frigate/client')
     await requireSession()
     if (!isValidEventId(eventId)) {
-      return { ok: false, error: 'Invalid event ID', status: 404 }
+      return { ok: false, error: 'Invalid event ID', status: 400 }
     }
     return getEvent(eventId)
   })

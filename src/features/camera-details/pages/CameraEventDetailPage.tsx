@@ -1,7 +1,7 @@
 import { m } from '#/paraglide/messages.js'
 import { getLocale } from '#/paraglide/runtime.js'
 import { translateLabel } from '#/features/shared/utils/labels'
-import type { ReactNode } from 'react'
+import type { ComponentProps, ReactNode } from 'react'
 import { useEffect, useRef, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { Button } from '#/features/shared/components/ui/button'
@@ -61,6 +61,7 @@ export function getDetailPageState(
   nowMs: number,
 ): DetailPageState {
   if (!result.ok) {
+    if (result.status === 400) return { kind: 'gone' }
     if (result.status === 404) {
       const startedAt = parseEventStartTimeMs(eventId)
       if (
@@ -141,7 +142,9 @@ function usePendingEventRetry(
       if (Date.now() >= deadline) {
         clearInterval(timer)
         // One last look so the loader re-stamps loadedAt and the page moves on.
-        void Promise.resolve(retryRef.current?.()).catch(() => {})
+        // An in-flight retry re-stamps it itself, so don't stack another.
+        if (!inFlight)
+          void Promise.resolve(retryRef.current?.()).catch(() => {})
         return
       }
       if (inFlight) return
@@ -190,7 +193,7 @@ function StateCard({
   )
 }
 
-export function CameraEventDetailPage({
+function EventDetailContent({
   result,
   eventId: requestedEventId = '',
   nowMs,
@@ -444,4 +447,11 @@ export function CameraEventDetailPage({
       )}
     </main>
   )
+}
+
+export function CameraEventDetailPage(
+  props: ComponentProps<typeof EventDetailContent>,
+) {
+  // Prev/Next only changes the route param, so key by event to reset per-event state.
+  return <EventDetailContent key={props.eventId ?? ''} {...props} />
 }

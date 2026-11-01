@@ -50,11 +50,9 @@ export async function loadCameraNeighbors(
       include_thumbnails: false,
     }),
   ])
-  return pickNeighbors(
-    eventId,
-    newer.ok ? newer.data : [],
-    older.ok ? older.data : [],
-  )
+  if (!newer.ok) throw new Error(newer.error)
+  if (!older.ok) throw new Error(older.error)
+  return pickNeighbors(eventId, newer.data, older.data)
 }
 
 export const loadCameraNeighborsFn = createServerFn({ method: 'GET' })

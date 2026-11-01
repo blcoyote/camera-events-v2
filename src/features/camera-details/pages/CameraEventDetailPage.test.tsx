@@ -214,6 +214,15 @@ describe('getDetailPageState', () => {
     expect(state).toEqual({ kind: 'gone' })
   })
 
+  it('reports a 400 (invalid ID) as gone, even with a recent timestamp', () => {
+    const state = getDetailPageState(
+      { ok: false, error: 'Invalid event ID', status: 400 },
+      RECENT_ID,
+      RECENT_NOW,
+    )
+    expect(state).toEqual({ kind: 'gone' })
+  })
+
   it('never treats a non-404 failure as pending, however fresh the ID', () => {
     const state = getDetailPageState(
       { ok: false, error: 'fetch failed' },
@@ -226,6 +235,54 @@ describe('getDetailPageState', () => {
 
 describe('CameraEventDetailPage', () => {
   describe('with a successful result', () => {
+    it('resets per-event state when navigating to a different event', () => {
+      mockUseFavoriteToggle.mockImplementation(((
+        _id: string,
+        initial: boolean,
+      ) => {
+        const [favorited] = React.useState(initial)
+        return { favorited, pending: false, error: null, toggle: mockToggle }
+      }) as never)
+      mockFavoriteButton.mockImplementation(((props: { favorited: boolean }) =>
+        React.createElement('button', {
+          'aria-pressed': props.favorited,
+        })) as never)
+      try {
+        const a = successResult({ id: '1713095000.1-aaaaaa' })
+        const b = successResult({ id: '1713095999.2-bbbbbb' })
+        const { rerender } = render(
+          <CameraEventDetailPage
+            result={a}
+            eventId="1713095000.1-aaaaaa"
+            initialFavorited={true}
+          />,
+        )
+        expect(screen.getByRole('button')).toHaveAttribute(
+          'aria-pressed',
+          'true',
+        )
+        rerender(
+          <CameraEventDetailPage
+            result={b}
+            eventId="1713095999.2-bbbbbb"
+            initialFavorited={false}
+          />,
+        )
+        expect(screen.getByRole('button')).toHaveAttribute(
+          'aria-pressed',
+          'false',
+        )
+      } finally {
+        mockUseFavoriteToggle.mockImplementation(() => ({
+          favorited: false,
+          pending: false,
+          error: null,
+          toggle: mockToggle,
+        }))
+        mockFavoriteButton.mockImplementation(() => null)
+      }
+    })
+
     it('calls useFavoriteToggle with (event.id, true) when initialFavorited=true', () => {
       const event = makeEvent()
       render(
@@ -597,6 +654,21 @@ describe('CameraEventDetailPage', () => {
       settle?.()
       await vi.advanceTimersByTimeAsync(3_000)
       expect(onRetry).toHaveBeenCalledTimes(2)
+    })
+
+    it('does not fire an extra concurrent retry at the deadline', async () => {
+      const onRetry = vi.fn(() => new Promise<void>(() => {}))
+      render(
+        <CameraEventDetailPage
+          result={{ ok: false, error: 'HTTP 404', status: 404 }}
+          eventId={eventId}
+          onRetry={onRetry}
+        />,
+      )
+      await vi.advanceTimersByTimeAsync(114_000)
+      const before = onRetry.mock.calls.length
+      await vi.advanceTimersByTimeAsync(6_000)
+      expect(onRetry.mock.calls.length).toBe(before)
     })
 
     it('keeps retrying after a retry rejects', async () => {

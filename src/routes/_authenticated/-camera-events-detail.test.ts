@@ -62,6 +62,15 @@ describe('getDetailPageState', () => {
     expect(state.kind).toBe('ghost')
   })
 
+  it('returns gone for a 400 even when the ID is recent', () => {
+    const state = getDetailPageState(
+      { ok: false, error: 'Invalid event ID', status: 400 },
+      OLD_ID,
+      1713095000_000 + 1000,
+    )
+    expect(state.kind).toBe('gone')
+  })
+
   it('returns unreachable on other errors', () => {
     const state = getDetailPageState(
       { ok: false, error: 'timeout' },

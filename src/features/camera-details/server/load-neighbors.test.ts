@@ -34,15 +34,13 @@ describe('loadCameraNeighbors', () => {
     })
   })
 
-  it('treats a failed result as empty', async () => {
+  it('rejects when a Frigate query fails', async () => {
     const getEvents = vi.fn(async (p?: { after?: unknown }) =>
       p?.after !== undefined
         ? { ok: false as const, error: 'boom' }
         : { ok: true as const, data: [ev('p', 90)] },
     )
-    const r = await loadCameraNeighbors(input, getEvents)
-    expect(r.next).toBeNull()
-    expect(r.previous?.id).toBe('p')
+    await expect(loadCameraNeighbors(input, getEvents)).rejects.toThrow('boom')
   })
 
   it('returns nulls without calling Frigate on invalid input', async () => {
