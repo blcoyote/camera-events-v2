@@ -38,9 +38,16 @@ errors). Routes: `/`, `/cameras`, `/camera-events`, `/favorites`, `/settings`,
 `front_door`, `front_porch`, `garage`, `side_gate`.
 
 For interactions (clicks, dark mode, drag) write a throwaway Playwright script
-in the scratchpad modelled on `scripts/screenshot.mjs`, signing in via
-`/api/test-auth?redirect=<path>` first. Wait for hydration before clicking (see
-the `toPass` retry in `tests/e2e/cameras-reorder.spec.ts`).
+in the scratchpad modelled on `scripts/screenshot.mjs`. For an external scratchpad,
+run the script from the repository root and replace its `playwright` import with:
+
+    import { createRequire } from 'node:module'
+    import { resolve } from 'node:path'
+    const require = createRequire(resolve(process.cwd(), 'package.json'))
+    const { chromium, devices } = require('playwright')
+
+Sign in via `/api/test-auth?redirect=<path>` first. Wait for hydration before
+clicking (see the `toPass` retry in `tests/e2e/cameras-reorder.spec.ts`).
 
 ## 3. E2E tests
 
