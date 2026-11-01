@@ -47,10 +47,10 @@ test('pointer drag reorders cameras and persists across reload', async ({
   // React has hydrated, so retry the click until the drag handles appear.
   await expect(async () => {
     const alreadyEditing = await page
-      .getByRole('button', { name: 'Done reordering cameras' })
+      .getByRole('button', { name: 'Done' })
       .count()
     if (alreadyEditing === 0) {
-      await page.getByRole('button', { name: 'Reorder cameras' }).click()
+      await page.getByRole('button', { name: 'Arrange' }).click()
     }
     await expect(
       page.getByRole('button', { name: 'Reorder backyard' }),
@@ -91,7 +91,7 @@ test('pointer drag reorders cameras and persists across reload', async ({
   expect(afterDragOrder.slice(2)).toEqual(MOCK_CAMERAS.slice(2))
 
   // Exit Edit mode
-  await page.getByRole('button', { name: 'Done reordering cameras' }).click()
+  await page.getByRole('button', { name: 'Done' }).click()
 
   // --- Reload and verify persistence ---
   await page.reload()
