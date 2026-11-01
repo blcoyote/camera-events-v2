@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { render, screen, cleanup } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import '@testing-library/jest-dom/vitest'
 import React from 'react'
 import type { FrigateEvent } from '#/features/shared/server/frigate/types'
@@ -125,5 +126,66 @@ describe('FavoritesPage', () => {
     expect(
       screen.getByRole('region', { name: /favorited events/i }),
     ).toBeInTheDocument()
+  })
+
+  describe('filter', () => {
+    const entries = [
+      entry('fav', true, []),
+      entry('shr', false, ['Alice']),
+      entry('both', true, ['Bob']),
+    ]
+    const ids = () =>
+      screen.getAllByTestId('event-card').map((c) => c.dataset.eventId)
+
+    it('renders pills with counts, All pressed by default', () => {
+      render(<FavoritesPage entries={entries} />)
+      const group = screen.getByRole('group', { name: 'Filter favorites' })
+      expect(group).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /^All ?3$/ })).toHaveAttribute(
+        'aria-pressed',
+        'true',
+      )
+      expect(
+        screen.getByRole('button', { name: /^Favorites ?2$/ }),
+      ).toHaveAttribute('aria-pressed', 'false')
+      expect(
+        screen.getByRole('button', { name: /^Shared ?2$/ }),
+      ).toBeInTheDocument()
+      expect(ids()).toEqual(['fav', 'shr', 'both'])
+    })
+
+    it('Favorites shows only favorited; Shared only shared; both appears in each', async () => {
+      const user = userEvent.setup()
+      render(<FavoritesPage entries={entries} />)
+      await user.click(screen.getByRole('button', { name: /^Favorites ?2$/ }))
+      expect(ids()).toEqual(['fav', 'both'])
+      await user.click(screen.getByRole('button', { name: /^Shared ?2$/ }))
+      expect(ids()).toEqual(['shr', 'both'])
+    })
+
+    it('empty Shared shows its message and keeps the pills', async () => {
+      const user = userEvent.setup()
+      render(<FavoritesPage entries={[entry('fav')]} />)
+      await user.click(screen.getByRole('button', { name: /^Shared ?0$/ }))
+      expect(
+        screen.getByText('Nothing has been shared with you yet'),
+      ).toBeInTheDocument()
+      expect(screen.queryByTestId('event-card')).not.toBeInTheDocument()
+      expect(
+        screen.getByRole('group', { name: 'Filter favorites' }),
+      ).toBeInTheDocument()
+    })
+
+    it('empty Favorites shows its message', async () => {
+      const user = userEvent.setup()
+      render(<FavoritesPage entries={[entry('shr', false, ['A'])]} />)
+      await user.click(screen.getByRole('button', { name: /^Favorites ?0$/ }))
+      expect(screen.getByText('No favorites yet')).toBeInTheDocument()
+    })
+
+    it('renders no pill group with zero entries', () => {
+      render(<FavoritesPage entries={[]} />)
+      expect(screen.queryByRole('group')).not.toBeInTheDocument()
+    })
   })
 })

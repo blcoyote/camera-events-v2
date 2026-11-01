@@ -202,6 +202,21 @@ The service worker needs no change. It already shows payloads without `event` as
 - AC15: The detail page shows `SharedByRow` only when `sharedBy` is non-empty. Remove calls the server fn and invalidates the router.
 - AC16: Every new string exists in both `en.json` and `da.json`.
 
+## Favorites filter (added 2026-11-01)
+
+Pills "All · Favorites · Shared", each with a count, sit above the Favorites grid whenever the list is non-empty. They reuse `FilterPill`, which moves to `src/features/shared/components/` because two features use it now. The filter is component state: it starts at All and is not remembered between visits.
+
+- **All:** every entry.
+- **Favorites:** `favorited`.
+- **Shared:** `sharedBy.length > 0`.
+
+An entry that is both favorited and shared appears under both filters. A filter with no matches keeps the pills and shows a one-line message (`favorites_filter_empty_*`). The full-page empty state is unchanged and applies only when there are no entries at all. Filtering works on the loaded list, so un-hearting a card under Favorites leaves it visible until the page reloads. There is no server change.
+
+- AC17: Pills render with counts (All = total, Favorites = favorited, Shared = has senders). All is pressed by default.
+- AC18: Selecting a pill filters the grid. An entry that is both favorited and shared appears under both.
+- AC19: An empty filter shows its message and keeps the pills. With zero entries the existing empty page shows and no pills render.
+- AC20: `FilterPill` lives in `shared/components`, and the events page imports it from there.
+
 ## Consistency Gate
 
 - [x] Intent is unambiguous: every decision came from the 2026-11-01 design session (19 questions).
