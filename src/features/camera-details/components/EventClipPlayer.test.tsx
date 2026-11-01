@@ -82,9 +82,7 @@ describe('EventClipPlayer', () => {
     expect(screen.getByText(/couldn't load clip/i)).toBeInTheDocument()
     expect(screen.getByRole('status')).toBeInTheDocument()
     expect(
-      screen.getByText(
-        'Frigate may still be saving it, or it may no longer be stored.',
-      ),
+      screen.getByText("It may still be saving, or it's no longer stored."),
     ).toBeInTheDocument()
     expect(
       screen.getByRole('button', { name: 'Try again' }),
@@ -105,14 +103,12 @@ describe('EventClipPlayer', () => {
     expect(wrapper).not.toHaveClass('bg-black')
   })
 
-  it('Try again remounts a <video> with a retry query param and onError fires each time', () => {
-    const onError = vi.fn()
+  it('Try again remounts a <video> with a retry query param', () => {
     const { container } = render(
       <EventClipPlayer
         eventId="front_door.123"
         camera="front_door"
         label="person"
-        onError={onError}
       />,
     )
     fireEvent.error(container.querySelector('video') as HTMLVideoElement)
@@ -121,9 +117,6 @@ describe('EventClipPlayer', () => {
     const video = container.querySelector('video') as HTMLVideoElement
     expect(video).toBeInTheDocument()
     expect(video.getAttribute('src')).toContain('retry=1')
-
-    fireEvent.error(video)
-    expect(onError).toHaveBeenCalledTimes(2)
   })
 
   it('keeps the same aspect-ratio wrapper after onError so layout does not shift', () => {
@@ -145,18 +138,69 @@ describe('EventClipPlayer', () => {
     }
   })
 
-  it('invokes the optional onError callback when the video errors', () => {
-    const onError = vi.fn()
+  it('sets the poster on the video when provided', () => {
     const { container } = render(
       <EventClipPlayer
         eventId="front_door.123"
         camera="front_door"
         label="person"
-        onError={onError}
+        poster="/api/events/front_door.123/snapshot"
+      />,
+    )
+    expect(container.querySelector('video')).toHaveAttribute(
+      'poster',
+      '/api/events/front_door.123/snapshot',
+    )
+  })
+
+  it('has no poster attribute by default', () => {
+    const { container } = render(
+      <EventClipPlayer
+        eventId="front_door.123"
+        camera="front_door"
+        label="person"
+      />,
+    )
+    expect(container.querySelector('video')).not.toHaveAttribute('poster')
+  })
+
+  it('shows a zoom button over the clip only when onZoom is given, and calls it', () => {
+    const onZoom = vi.fn()
+    const { rerender } = render(
+      <EventClipPlayer eventId="e1" camera="front_door" label="person" />,
+    )
+    expect(screen.queryByRole('button', { name: /fullscreen/i })).toBeNull()
+    rerender(
+      <EventClipPlayer
+        eventId="e1"
+        camera="front_door"
+        label="person"
+        onZoom={onZoom}
+      />,
+    )
+    fireEvent.click(screen.getByRole('button', { name: /fullscreen/i }))
+    expect(onZoom).toHaveBeenCalledOnce()
+  })
+
+  it('on error with a fallback, shows the fallback plus a compact notice and retry', () => {
+    const { container } = render(
+      <EventClipPlayer
+        eventId="e1"
+        camera="front_door"
+        label="person"
+        onZoom={() => {}}
+        fallback={<div data-testid="fb" />}
       />,
     )
     fireEvent.error(container.querySelector('video') as HTMLVideoElement)
-    expect(onError).toHaveBeenCalledOnce()
+
+    expect(container.querySelector('video')).toBeNull()
+    expect(screen.getByTestId('fb')).toBeInTheDocument()
+    expect(screen.getByRole('status')).toHaveTextContent("Couldn't load clip")
+    expect(container.querySelector('.aspect-video')).toBeNull()
+    expect(screen.queryByText(/Frigate may still be saving it/)).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: 'Try again' }))
+    expect(container.querySelector('video')).toBeInTheDocument()
   })
 
   it('renders Danish labels and the Danish error state', () => {

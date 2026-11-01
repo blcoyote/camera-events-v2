@@ -3,8 +3,8 @@ import {
   getDetailPageState,
   formatTimestamp,
   formatDuration,
-  getDownloadUrl,
 } from '#/features/camera-details/pages/CameraEventDetailPage'
+import { getDownloadUrl } from '#/features/camera-details/components/DownloadActions'
 import { withLocale } from '#/test-utils/locale'
 import { formatCameraName } from '#/features/shared/utils/eventFormatting'
 import type { FrigateEvent } from '#/features/shared/server/frigate/types'
@@ -53,28 +53,22 @@ describe('getDetailPageState', () => {
     }
   })
 
-  it('returns error state with 404 message when not found', () => {
+  it('returns a non-pending 404 within 24h as ghost', () => {
     const state = getDetailPageState(
       { ok: false, error: 'HTTP 404', status: 404 },
       OLD_ID,
       NOW,
     )
-    expect(state.kind).toBe('error')
-    if (state.kind === 'error') {
-      expect(state.message).toContain("doesn't exist")
-    }
+    expect(state.kind).toBe('ghost')
   })
 
-  it('returns error state with generic message on other errors', () => {
+  it('returns unreachable on other errors', () => {
     const state = getDetailPageState(
       { ok: false, error: 'timeout' },
       OLD_ID,
       NOW,
     )
-    expect(state.kind).toBe('error')
-    if (state.kind === 'error') {
-      expect(state.message).toContain('Could not load event')
-    }
+    expect(state.kind).toBe('unreachable')
   })
 })
 

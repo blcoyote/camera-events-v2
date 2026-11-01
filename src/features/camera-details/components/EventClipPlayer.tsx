@@ -1,7 +1,9 @@
 import { m } from '#/paraglide/messages.js'
 import { getLocale } from '#/paraglide/runtime.js'
 import { translateLabel } from '#/features/shared/utils/labels'
+import type { ReactNode } from 'react'
 import { useState } from 'react'
+import { Maximize } from 'lucide-react'
 import { cn } from '#/features/shared/utils/cn'
 import { Button } from '#/features/shared/components/ui/button'
 import { formatCameraName } from '#/features/shared/utils/eventFormatting'
@@ -10,12 +12,19 @@ export function EventClipPlayer({
   eventId,
   camera,
   label,
-  onError,
+  poster,
+  fallback,
+  onZoom,
 }: {
   eventId: string
   camera: string
   label: string
-  onError?: () => void
+  /** Snapshot URL shown before playback starts. */
+  poster?: string
+  /** Shown (with a compact notice) instead of the error box when the clip fails. */
+  fallback?: ReactNode
+  /** Adds a zoom button over the playing clip. */
+  onZoom?: () => void
 }) {
   // 'idle' covers the initial pre-error state — the video may or may not
   // be actively playing; we only track whether the browser has surfaced
@@ -28,6 +37,34 @@ export function EventClipPlayer({
     label: translateLabel(label, getLocale()),
     camera: formatCameraName(camera),
   })
+
+  const retryButton = (
+    <Button
+      variant="ghost"
+      size="sm"
+      onClick={() => {
+        setRetry((n) => n + 1)
+        setStatus('idle')
+      }}
+    >
+      {m.details_try_again()}
+    </Button>
+  )
+
+  if (status === 'errored' && fallback) {
+    return (
+      <div>
+        {fallback}
+        <div
+          role="status"
+          className="flex items-center justify-between gap-3 px-4 py-1 text-sm text-muted-foreground"
+        >
+          {m.details_clip_error_title()}
+          {retryButton}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div
@@ -43,12 +80,10 @@ export function EventClipPlayer({
           controls
           playsInline
           preload="metadata"
+          poster={poster}
           aria-label={ariaLabel}
           className="h-full w-full"
-          onError={() => {
-            setStatus('errored')
-            onError?.()
-          }}
+          onError={() => setStatus('errored')}
         />
       ) : (
         <div
@@ -61,17 +96,21 @@ export function EventClipPlayer({
           <p className="text-sm text-muted-foreground">
             {m.details_clip_error_body()}
           </p>
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => {
-              setRetry((n) => n + 1)
-              setStatus('idle')
-            }}
-          >
-            {m.details_try_again()}
-          </Button>
+          {retryButton}
         </div>
+      )}
+      {status === 'idle' && onZoom && (
+        <button
+          type="button"
+          onClick={onZoom}
+          aria-label={m.details_snapshot_zoom({
+            label: translateLabel(label, getLocale()),
+            camera: formatCameraName(camera),
+          })}
+          className="absolute right-4 top-4 flex h-11 w-11 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-sm transition hover:bg-black/70"
+        >
+          <Maximize size={16} aria-hidden="true" />
+        </button>
       )}
     </div>
   )

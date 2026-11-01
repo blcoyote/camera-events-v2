@@ -2,9 +2,12 @@ import { m } from '#/paraglide/messages.js'
 import { getLocale } from '#/paraglide/runtime.js'
 import { formatDate } from './intl'
 
-export function formatRelativeTime(unixSeconds: number): string {
+export function formatRelativeTime(
+  unixSeconds: number,
+  nowMs: number = Date.now(),
+): string {
   const locale = getLocale()
-  const now = Date.now() / 1000
+  const now = nowMs / 1000
   const diff = now - unixSeconds
   if (diff < 0) return m.shared_time_just_now({}, { locale })
   if (diff < 60) return m.shared_time_just_now({}, { locale })

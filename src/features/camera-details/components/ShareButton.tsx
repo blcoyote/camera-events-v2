@@ -4,7 +4,17 @@ import { Share, Share2 } from 'lucide-react'
 import { Button } from '#/features/shared/components/ui/button'
 import { ShareSheet } from './ShareSheet'
 
-export function ShareButton({ eventId }: { eventId: string }) {
+export function ShareButton({
+  eventId,
+  label,
+  startTime,
+  showLabel = false,
+}: {
+  eventId: string
+  label?: string
+  startTime?: number
+  showLabel?: boolean
+}) {
   const [open, setOpen] = useState(false)
   const buttonRef = useRef<HTMLButtonElement>(null)
   // Share2 on the server/first render; the iOS-style glyph only after mount.
@@ -19,19 +29,26 @@ export function ShareButton({ eventId }: { eventId: string }) {
       <Button
         ref={buttonRef}
         type="button"
-        variant="ghost"
-        size="icon"
+        variant={showLabel ? 'secondary' : 'ghost'}
+        size={showLabel ? 'sm' : 'icon'}
         aria-label={m.details_share()}
         onClick={() => setOpen(true)}
-        className="text-fg-2 hover:bg-transparent hover:text-foreground"
+        className={
+          showLabel
+            ? 'gap-2 px-4'
+            : 'text-fg-2 hover:bg-transparent hover:text-foreground'
+        }
       >
         <Icon size={20} aria-hidden="true" />
+        {showLabel && m.details_share()}
       </Button>
       <ShareSheet
         eventId={eventId}
         open={open}
         onOpenChange={setOpen}
         returnFocusRef={buttonRef}
+        label={label}
+        startTime={startTime}
       />
     </>
   )

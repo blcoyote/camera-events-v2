@@ -6,6 +6,7 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
+  SheetDescription,
   SheetFooter,
 } from '#/features/shared/components/ui/sheet'
 import { Button } from '#/features/shared/components/ui/button'
@@ -15,6 +16,10 @@ import {
   AvatarFallback,
   AvatarImage,
 } from '#/features/shared/components/ui/avatar'
+import { Switch } from '#/features/shared/components/ui/switch'
+import { translateLabel } from '#/features/shared/utils/labels'
+import { formatDateTime } from '#/features/shared/utils/intl'
+import { getLocale } from '#/paraglide/runtime.js'
 import { getShareRecipientsFn } from '#/features/shared/server/users/users-fns'
 import type { ShareRecipient } from '#/features/shared/server/users/types'
 
@@ -27,11 +32,15 @@ export function ShareSheet({
   open,
   onOpenChange,
   returnFocusRef,
+  label,
+  startTime,
 }: {
   eventId: string
   open: boolean
   onOpenChange: (open: boolean) => void
   returnFocusRef?: RefObject<HTMLElement | null>
+  label?: string
+  startTime?: number
 }) {
   const [recipients, setRecipients] = useState<ShareRecipient[] | null>(null)
   const [selected, setSelected] = useState<string[]>([])
@@ -107,6 +116,12 @@ export function ShareSheet({
       >
         <SheetHeader>
           <SheetTitle>{m.details_share_title()}</SheetTitle>
+          {label !== undefined && startTime !== undefined && (
+            <SheetDescription>
+              {translateLabel(label, getLocale())} ·{' '}
+              {formatDateTime(startTime, getLocale())}
+            </SheetDescription>
+          )}
         </SheetHeader>
         <div className="flex max-h-[50vh] flex-col gap-2 overflow-y-auto px-4">
           {error && (
@@ -123,15 +138,13 @@ export function ShareSheet({
               key={r.sub}
               className="flex min-h-11 cursor-pointer items-center gap-3 text-foreground"
             >
-              <input
-                type="checkbox"
-                className="size-5 accent-brand"
+              <Switch
                 checked={selected.includes(r.sub)}
                 disabled={
                   !selected.includes(r.sub) &&
                   selected.length >= MAX_SHARE_RECIPIENTS
                 }
-                onChange={() => toggle(r.sub)}
+                onCheckedChange={() => toggle(r.sub)}
               />
               <Avatar aria-hidden="true">
                 {r.avatarUrl && <AvatarImage src={r.avatarUrl} alt="" />}
@@ -142,12 +155,15 @@ export function ShareSheet({
           ))}
         </div>
         <SheetFooter>
+          <p role="status" className="text-fg-2">
+            {sent ? m.details_share_sent() : ''}
+          </p>
           <Button
             type="button"
             disabled={selected.length === 0 || sending}
             onClick={send}
           >
-            {sent ? m.details_share_sent() : m.details_share_send()}
+            {m.details_share_send()}
           </Button>
         </SheetFooter>
       </SheetContent>
