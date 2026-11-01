@@ -8,6 +8,7 @@ import {
   formatRelativeTime,
   getLabelDotColor,
 } from '#/features/shared/utils/eventFormatting'
+import { formatTime } from '#/features/shared/utils/intl'
 import { EventThumbnail } from '#/features/shared/components/EventThumbnail'
 import { useFavoriteToggle } from '#/features/shared/hooks/useFavoriteToggle'
 import { FavoriteButton } from '#/features/shared/components/FavoriteButton'
@@ -93,6 +94,10 @@ export function EventCard({
             className="shrink-0 text-xs text-muted-foreground"
             suppressHydrationWarning
           >
+            <span className="font-medium text-foreground tabular-nums">
+              {formatTime(event.start_time, getLocale())}
+            </span>
+            {' · '}
             {formatRelativeTime(event.start_time)}
           </time>
         </div>
@@ -105,13 +110,15 @@ export function EventCard({
             <span className="truncate">{sharedLabel}</span>
           </span>
         )}
-        <FavoriteButton
-          eventId={event.id}
-          favorited={favorited}
-          pending={pending}
-          error={error}
-          onToggle={toggle}
-        />
+        <span className="relative z-[2]">
+          <FavoriteButton
+            eventId={event.id}
+            favorited={favorited}
+            pending={pending}
+            error={error}
+            onToggle={toggle}
+          />
+        </span>
       </div>
       {event.zones.length > 0 && (
         <p className="mt-1 truncate text-xs text-muted-foreground">

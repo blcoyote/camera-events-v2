@@ -78,7 +78,9 @@ vi.mock('#/features/camera-events/components/CameraEventsLoading', () => ({
 }))
 
 // Import the loader AFTER mocks
-const { cameraEventsLoader } = await import('./camera-events.index')
+const { cameraEventsLoader, validateCameraEventsSearch } = await import(
+  './camera-events.index'
+)
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
@@ -118,5 +120,34 @@ describe('cameraEventsLoader', () => {
     mockGetUserFavoritedEventIdsFn.mockRejectedValue(new Error('Network error'))
     const data = await cameraEventsLoader()
     expect(data.result).toEqual(MOCK_EVENTS_RESULT)
+  })
+})
+
+describe('validateCameraEventsSearch', () => {
+  it('passes through short string type and camera', () => {
+    expect(
+      validateCameraEventsSearch({ type: 'car', camera: 'front' }),
+    ).toEqual({
+      type: 'car',
+      camera: 'front',
+    })
+  })
+
+  it('drops non-strings and values over 64 chars', () => {
+    expect(
+      validateCameraEventsSearch({ type: 5, camera: 'x'.repeat(65) }),
+    ).toEqual({ type: undefined, camera: undefined })
+  })
+
+  it('drops empty strings', () => {
+    expect(validateCameraEventsSearch({ type: '', camera: '' })).toEqual({
+      type: undefined,
+      camera: undefined,
+    })
+  })
+
+  it('accepts exactly 64 chars', () => {
+    const v = 'x'.repeat(64)
+    expect(validateCameraEventsSearch({ type: v }).type).toBe(v)
   })
 })

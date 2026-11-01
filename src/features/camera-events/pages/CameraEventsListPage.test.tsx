@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { useState } from 'react'
 import { render, screen, cleanup, fireEvent } from '@testing-library/react'
 import '@testing-library/jest-dom/vitest'
 import type { FrigateEvent } from '#/features/shared/server/frigate/types'
@@ -16,7 +17,31 @@ vi.mock('./FilterPill', () => ({
 }))
 
 // Import component AFTER mocks
-const { CameraEventsListPage } = await import('./CameraEventsListPage')
+const { CameraEventsListPage: Page, groupEventsByDay } = await import(
+  './CameraEventsListPage'
+)
+
+function CameraEventsListPage(
+  props: Omit<
+    React.ComponentProps<typeof Page>,
+    | 'labelFilter'
+    | 'cameraFilter'
+    | 'onLabelFilterChange'
+    | 'onCameraFilterChange'
+  >,
+) {
+  const [labelFilter, setLabel] = useState<string | null>(null)
+  const [cameraFilter, setCamera] = useState<string | null>(null)
+  return (
+    <Page
+      {...props}
+      labelFilter={labelFilter}
+      cameraFilter={cameraFilter}
+      onLabelFilterChange={setLabel}
+      onCameraFilterChange={setCamera}
+    />
+  )
+}
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────
 
@@ -155,5 +180,100 @@ describe('CameraEventsListPage', () => {
       const props = mockEventCard.mock.calls[0]?.[0] as Record<string, unknown>
       expect(props.initialFavorited).toBe(false)
     })
+  })
+})
+
+describe('camera filter select', () => {
+  const two = [
+    makeEvent('a'),
+    { ...makeEvent('b'), camera: 'garage' },
+    { ...makeEvent('c'), camera: 'garage' },
+  ]
+
+  it('renders a labelled select with counts and filters on change', () => {
+    render(<CameraEventsListPage result={{ ok: true, data: two }} />)
+    const select = screen.getByRole('combobox', { name: 'Filter by camera' })
+    expect(
+      screen.getByRole('option', { name: 'garage (2)' }),
+    ).toBeInTheDocument()
+    fireEvent.change(select, { target: { value: 'garage' } })
+    expect(screen.getByText('2 events (filtered)')).toBeInTheDocument()
+    fireEvent.change(select, { target: { value: '' } })
+    expect(screen.getByText('3 events')).toBeInTheDocument()
+  })
+
+  it('keeps the type row (All types) when the camera leaves one label but a type is active', () => {
+    render(
+      <CameraEventsListPage
+        result={{
+          ok: true,
+          data: [
+            { ...makeEvent('a'), label: 'car' },
+            { ...makeEvent('b'), camera: 'garage', label: 'car' },
+            { ...makeEvent('c'), camera: 'garage' },
+          ],
+        }}
+      />,
+    )
+    fireEvent.click(screen.getByRole('button', { name: /^Car/ }))
+    fireEvent.change(
+      screen.getByRole('combobox', { name: 'Filter by camera' }),
+      {
+        target: { value: 'front_porch' },
+      },
+    )
+    expect(
+      screen.getByRole('button', { name: /^All types/ }),
+    ).toBeInTheDocument()
+  })
+
+  it('is hidden with a single camera', () => {
+    render(
+      <CameraEventsListPage result={{ ok: true, data: [makeEvent('a')] }} />,
+    )
+    expect(screen.queryByRole('combobox')).toBeNull()
+  })
+})
+
+describe('groupEventsByDay', () => {
+  const at = (id: string, iso: string): FrigateEvent => ({
+    ...makeEvent(id),
+    start_time: Date.parse(iso) / 1000,
+  })
+  const now = Date.parse('2026-06-15T10:00:00Z')
+
+  it('returns no groups for no events', () => {
+    expect(groupEventsByDay([], now)).toEqual([])
+  })
+
+  it('titles yesterday correctly just after the spring-forward day', () => {
+    const groups = groupEventsByDay(
+      [at('y', '2026-03-29T10:00:00Z')],
+      Date.parse('2026-03-29T22:30:00Z'), // 30 Mar 00:30 in Copenhagen
+    )
+    expect(groups[0].title).toBe('Yesterday')
+  })
+
+  it('sorts newest first and groups by day with titles', () => {
+    const groups = groupEventsByDay(
+      [
+        at('old', '2026-06-10T10:00:00Z'),
+        at('t1', '2026-06-15T06:00:00Z'),
+        at('y1', '2026-06-14T09:00:00Z'),
+        at('t2', '2026-06-15T08:00:00Z'),
+      ],
+      now,
+    )
+    expect(groups.map((g) => g.key)).toEqual([
+      '2026-06-15',
+      '2026-06-14',
+      '2026-06-10',
+    ])
+    expect(groups.map((g) => g.title)).toEqual([
+      'Today',
+      'Yesterday',
+      'Wednesday 10 June',
+    ])
+    expect(groups[0].events.map((e) => e.id)).toEqual(['t2', 't1'])
   })
 })

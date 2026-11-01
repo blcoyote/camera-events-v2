@@ -8,7 +8,7 @@ import { cn } from '#/features/shared/utils/cn'
 // `border-control-border!`: the `glass` utility sets its own border and wins the
 // cascade, so the night-mode control boundary needs the important modifier.
 const toggleVariants = cva(
-  'glass border-control-border! inline-flex items-center justify-center gap-2 rounded-full font-medium whitespace-nowrap text-foreground shadow-none transition duration-180 ease-standard hover:bg-surface-hover min-h-11 px-4 py-2 text-sm data-[state=on]:bg-primary data-[state=on]:text-primary-foreground focus-visible:shadow-focus outline-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:shrink-0',
+  'glass border-control-border! inline-flex items-center justify-center gap-2 rounded-full font-medium whitespace-nowrap text-foreground shadow-none! transition duration-180 ease-standard hover:bg-surface-hover min-h-11 px-4 py-2 text-sm data-[state=on]:bg-primary data-[state=on]:text-primary-foreground focus-visible:shadow-focus! outline-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:shrink-0',
   {
     variants: {
       size: {

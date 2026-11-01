@@ -131,6 +131,8 @@
     }
   ],
   "events_grid_label": "Kamerahændelser",
+  "events_section_today": "I dag",
+  "events_section_yesterday": "I går",
   "events_no_match": "Ingen hændelser matcher de valgte filtre.",
   "events_clear_filters": "Ryd filtre",
   "events_loading_title": "Indlæser hændelser…",

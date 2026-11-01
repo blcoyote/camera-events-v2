@@ -42,15 +42,19 @@ describe('MediaCard component', () => {
     expect(root.tagName).toBe('DIV')
   })
 
-  it('renders an <a> when `to` is provided', () => {
-    render(
+  it('renders an <article> with one empty stretched link when `to` is provided', () => {
+    const { container } = render(
       <MediaCard image={<div>image</div>} to="/somewhere" aria-label="card">
-        <div>children</div>
+        <span data-testid="kid">children</span>
       </MediaCard>,
     )
-    const root = screen.getByLabelText('card')
-    expect(root.tagName).toBe('A')
-    expect(root).toHaveAttribute('href', '/somewhere')
+    expect(container.firstElementChild?.tagName).toBe('ARTICLE')
+    const links = screen.getAllByLabelText('card')
+    expect(links).toHaveLength(1)
+    expect(links[0].tagName).toBe('A')
+    expect(links[0]).toHaveAttribute('href', '/somewhere')
+    expect(links[0].contains(screen.getByTestId('kid'))).toBe(false)
+    expect(container.firstElementChild?.firstElementChild).toBe(links[0])
   })
 
   it('passes aria-label to the root element', () => {

@@ -28,4 +28,10 @@ describe('Toggle', () => {
     expect(cls).toContain('border-control-border')
     expect(cls).not.toContain('border-transparent')
   })
+  it('forces shadow-none and the focus ring over the glass shadow', () => {
+    render(<Toggle>t</Toggle>)
+    const cls = screen.getByRole('button').className
+    expect(cls).toContain('shadow-none!')
+    expect(cls).toContain('focus-visible:shadow-focus!')
+  })
 })

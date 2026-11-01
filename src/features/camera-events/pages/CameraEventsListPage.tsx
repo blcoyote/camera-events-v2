@@ -1,11 +1,13 @@
 import { m } from '#/paraglide/messages.js'
 import { getLocale } from '#/paraglide/runtime.js'
 import { translateLabel } from '#/features/shared/utils/labels'
-import { useState } from 'react'
+import { useId } from 'react'
+import { dayKey, formatDate } from '#/features/shared/utils/intl'
 import type { FrigateResult } from '#/features/shared/server/frigate/config'
 import type { FrigateEvent } from '#/features/shared/server/frigate/types'
 import { FilterPill } from '#/features/shared/components/FilterPill'
 import { EventCard } from '#/features/shared/components/EventCard'
+import { NativeSelect } from '#/features/shared/components/ui/native-select'
 import { Button } from '#/features/shared/components/ui/button'
 import { Alert } from '#/features/shared/components/ui/alert'
 import { PageHeader } from '#/features/shared/components/PageHeader'
@@ -32,12 +34,42 @@ export function getEventsPageState(
   return { kind: 'events', events: result.data }
 }
 
-export function getUniqueLabels(events: FrigateEvent[]): string[] {
-  return [...new Set(events.map((e) => e.label))].sort()
+function countBy(items: string[]) {
+  const counts = new Map<string, number>()
+  for (const i of items) counts.set(i, (counts.get(i) ?? 0) + 1)
+  return counts
 }
 
-export function getUniqueCameras(events: FrigateEvent[]): string[] {
-  return [...new Set(events.map((e) => e.camera))].sort()
+export function getLabelOptions(
+  events: FrigateEvent[],
+  cameraFilter: string | null,
+  activeLabel: string | null,
+): { label: string; count: number }[] {
+  const counts = countBy(
+    events
+      .filter((e) => !cameraFilter || e.camera === cameraFilter)
+      .map((e) => e.label),
+  )
+  if (activeLabel && !counts.has(activeLabel)) counts.set(activeLabel, 0)
+  return [...counts]
+    .map(([label, count]) => ({ label, count }))
+    .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label))
+}
+
+export function getCameraOptions(
+  events: FrigateEvent[],
+  labelFilter: string | null,
+  activeCamera: string | null,
+): { camera: string; count: number }[] {
+  const counts = countBy(
+    events
+      .filter((e) => !labelFilter || e.label === labelFilter)
+      .map((e) => e.camera),
+  )
+  if (activeCamera && !counts.has(activeCamera)) counts.set(activeCamera, 0)
+  return [...counts]
+    .map(([camera, count]) => ({ camera, count }))
+    .sort((a, b) => a.camera.localeCompare(b.camera))
 }
 
 export function filterEvents(
@@ -52,23 +84,61 @@ export function filterEvents(
   })
 }
 
+export function groupEventsByDay(events: FrigateEvent[], nowMs: number) {
+  const today = dayKey(nowMs / 1000)
+  const [y, mo, d] = today.split('-').map(Number)
+  const yesterday = new Date(Date.UTC(y, mo - 1, d - 1))
+    .toISOString()
+    .slice(0, 10)
+  const groups: { key: string; title: string; events: FrigateEvent[] }[] = []
+  for (const e of [...events].sort((a, b) => b.start_time - a.start_time)) {
+    const key = dayKey(e.start_time)
+    let g = groups.at(-1)
+    if (g?.key !== key) {
+      const title =
+        key === today
+          ? m.events_section_today()
+          : key === yesterday
+            ? m.events_section_yesterday()
+            : formatDate(e.start_time, getLocale(), {
+                weekday: 'long',
+                day: 'numeric',
+                month: 'long',
+              })
+      g = { key, title, events: [] }
+      groups.push(g)
+    }
+    g.events.push(e)
+  }
+  return groups
+}
+
 // ─── Exported page components ───
 
 export function CameraEventsListPage({
   result,
   favoritedIds = new Set<string>(),
+  labelFilter,
+  cameraFilter,
+  onLabelFilterChange,
+  onCameraFilterChange,
 }: {
   result: FrigateResult<FrigateEvent[]>
   favoritedIds?: Set<string>
+  labelFilter: string | null
+  cameraFilter: string | null
+  onLabelFilterChange: (label: string | null) => void
+  onCameraFilterChange: (camera: string | null) => void
 }) {
   const state = getEventsPageState(result)
-  const [labelFilter, setLabelFilter] = useState<string | null>(null)
-  const [cameraFilter, setCameraFilter] = useState<string | null>(null)
 
   const events = state.kind === 'events' ? state.events : []
-  const labels = getUniqueLabels(events)
-  const cameras = getUniqueCameras(events)
+  const labels = getLabelOptions(events, cameraFilter, labelFilter)
+  const cameras = getCameraOptions(events, labelFilter, cameraFilter)
   const filtered = filterEvents(events, labelFilter, cameraFilter)
+  const groups = groupEventsByDay(filtered, Date.now())
+  const baseId = useId()
+  let index = 0
 
   return (
     <main id="main-content" className="page-wrap px-4 pb-8 pt-3 sm:pt-14">
@@ -96,7 +166,7 @@ export function CameraEventsListPage({
         <>
           {/* Filter bar */}
           <div className="mt-6 space-y-3">
-            {labels.length > 1 && (
+            {(labels.length > 1 || labelFilter) && (
               <div
                 role="group"
                 aria-label={m.events_filter_type_group()}
@@ -105,41 +175,40 @@ export function CameraEventsListPage({
                 <FilterPill
                   label={m.events_filter_all_types()}
                   active={labelFilter === null}
-                  onClick={() => setLabelFilter(null)}
-                  count={events.length}
+                  onClick={() => onLabelFilterChange(null)}
+                  count={
+                    events.filter(
+                      (e) => !cameraFilter || e.camera === cameraFilter,
+                    ).length
+                  }
                 />
-                {labels.map((l) => (
+                {labels.map(({ label, count }) => (
                   <FilterPill
-                    key={l}
-                    label={translateLabel(l, getLocale())}
-                    active={labelFilter === l}
-                    onClick={() => setLabelFilter(labelFilter === l ? null : l)}
-                    count={events.filter((e) => e.label === l).length}
+                    key={label}
+                    label={translateLabel(label, getLocale())}
+                    active={labelFilter === label}
+                    onClick={() =>
+                      onLabelFilterChange(labelFilter === label ? null : label)
+                    }
+                    count={count}
                   />
                 ))}
               </div>
             )}
-            {cameras.length > 1 && (
-              <div
-                role="group"
-                aria-label={m.events_filter_camera_group()}
-                className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0"
-              >
-                <FilterPill
-                  label={m.events_filter_all_cameras()}
-                  active={cameraFilter === null}
-                  onClick={() => setCameraFilter(null)}
-                />
-                {cameras.map((c) => (
-                  <FilterPill
-                    key={c}
-                    label={c}
-                    active={cameraFilter === c}
-                    onClick={() =>
-                      setCameraFilter(cameraFilter === c ? null : c)
-                    }
-                  />
-                ))}
+            {(cameras.length > 1 || cameraFilter) && (
+              <div className="w-full sm:w-auto sm:max-w-xs">
+                <NativeSelect
+                  aria-label={m.events_filter_camera_group()}
+                  value={cameraFilter ?? ''}
+                  onChange={(e) => onCameraFilterChange(e.target.value || null)}
+                >
+                  <option value="">{m.events_filter_all_cameras()}</option>
+                  {cameras.map(({ camera, count }) => (
+                    <option key={camera} value={camera}>
+                      {`${camera} (${count})`}
+                    </option>
+                  ))}
+                </NativeSelect>
               </div>
             )}
           </div>
@@ -156,19 +225,29 @@ export function CameraEventsListPage({
 
           {/* Event grid */}
           {filtered.length > 0 ? (
-            <section
-              aria-label={m.events_grid_label()}
-              className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
-            >
-              {filtered.map((event, i) => (
-                <EventCard
-                  key={event.id}
-                  event={event}
-                  index={i}
-                  initialFavorited={favoritedIds.has(event.id)}
-                />
+            <div>
+              {groups.map((g, gi) => (
+                <section key={g.key} aria-labelledby={`${baseId}-${g.key}`}>
+                  <h2
+                    id={`${baseId}-${g.key}`}
+                    className={`${gi === 0 ? 'mt-4' : 'mt-6'} mb-3 text-sm font-semibold text-fg-2`}
+                    suppressHydrationWarning
+                  >
+                    {g.title}
+                  </h2>
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {g.events.map((event) => (
+                      <EventCard
+                        key={event.id}
+                        event={event}
+                        index={index++}
+                        initialFavorited={favoritedIds.has(event.id)}
+                      />
+                    ))}
+                  </div>
+                </section>
               ))}
-            </section>
+            </div>
           ) : (
             <div className="mt-8 text-center">
               <p className="text-sm text-fg-2">{m.events_no_match()}</p>
@@ -176,8 +255,8 @@ export function CameraEventsListPage({
                 variant="link"
                 size="sm"
                 onClick={() => {
-                  setLabelFilter(null)
-                  setCameraFilter(null)
+                  onLabelFilterChange(null)
+                  onCameraFilterChange(null)
                 }}
                 className="mt-2"
               >

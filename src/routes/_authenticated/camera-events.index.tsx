@@ -19,7 +19,18 @@ export async function cameraEventsLoader() {
   return { result, favoritedEventIds }
 }
 
+// Filters only narrow already-loaded events client-side; never sent to Frigate.
+export function validateCameraEventsSearch(s: Record<string, unknown>): {
+  type?: string
+  camera?: string
+} {
+  const str = (v: unknown) =>
+    typeof v === 'string' && v.length > 0 && v.length <= 64 ? v : undefined
+  return { type: str(s.type), camera: str(s.camera) }
+}
+
 export const Route = createFileRoute('/_authenticated/camera-events/')({
+  validateSearch: validateCameraEventsSearch,
   loader: cameraEventsLoader,
   pendingComponent: CameraEventsLoading,
   component: CameraEventsRoute,
@@ -28,6 +39,14 @@ export const Route = createFileRoute('/_authenticated/camera-events/')({
 function CameraEventsRoute() {
   const { result, favoritedEventIds } = Route.useLoaderData()
   const router = useRouter()
+  const { type, camera } = Route.useSearch()
+  const navigate = Route.useNavigate()
+  const setFilter = (key: 'type' | 'camera') => (v: string | null) =>
+    navigate({
+      search: (prev) => ({ ...prev, [key]: v ?? undefined }),
+      replace: true,
+      resetScroll: false,
+    })
   const favoritedIds = new Set<string>(favoritedEventIds)
 
   const onRefresh = async () => {
@@ -51,7 +70,14 @@ function CameraEventsRoute() {
         isComplete={isComplete}
         threshold={PULL_THRESHOLD}
       />
-      <CameraEventsListPage result={result} favoritedIds={favoritedIds} />
+      <CameraEventsListPage
+        result={result}
+        favoritedIds={favoritedIds}
+        labelFilter={type ?? null}
+        cameraFilter={camera ?? null}
+        onLabelFilterChange={setFilter('type')}
+        onCameraFilterChange={setFilter('camera')}
+      />
     </>
   )
 }
