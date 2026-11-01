@@ -24,6 +24,11 @@ vi.mock('./favorites-store', async (importOriginal) => {
   }
 })
 
+const mockGetUser = vi.fn()
+vi.mock('#/features/shared/server/users/user-store', () => ({
+  getUserStore: vi.fn(() => Promise.resolve({ getUser: mockGetUser })),
+}))
+
 const mockRetainEvent = vi.fn()
 const mockUnretainEvent = vi.fn()
 const mockGetEvent = vi.fn()
@@ -36,8 +41,10 @@ vi.mock('#/features/shared/server/frigate/client', () => ({
 // Import handlers AFTER mocks are set up
 const {
   toggleFavoriteHandler,
+  retainIfFirst,
+  unretainIfLast,
   getUserFavoritedEventIdsHandler,
-  getUserFavoritedEventsHandler,
+  getFavoritesPageHandler,
 } = await import('./favorites-handlers')
 
 // ─── Test fixtures ────────────────────────────────────────────────────────────
@@ -196,6 +203,61 @@ describe('toggleFavoriteHandler — retention', () => {
   })
 })
 
+describe('toggleFavoriteHandler — retention with shares', () => {
+  it('does NOT call retainEvent when the event already has a share', async () => {
+    _testStore!.addShare(VALID_ID, 'sender', 'someone')
+    await toggleFavoriteHandler({ eventId: VALID_ID })
+    expect(mockRetainEvent).not.toHaveBeenCalled()
+  })
+
+  it('does NOT call unretainEvent when unfavoriting while a share remains', async () => {
+    await toggleFavoriteHandler({ eventId: VALID_ID })
+    _testStore!.addShare(VALID_ID, 'sender', 'someone')
+    await toggleFavoriteHandler({ eventId: VALID_ID })
+    expect(mockUnretainEvent).not.toHaveBeenCalled()
+  })
+})
+
+describe('retainIfFirst', () => {
+  it('retains when reference count is 1', async () => {
+    _testStore!.addFavorite(USER, VALID_ID)
+    await retainIfFirst(_testStore!, VALID_ID)
+    expect(mockRetainEvent).toHaveBeenCalledWith(VALID_ID)
+  })
+
+  it('does not retain when count is not 1', async () => {
+    await retainIfFirst(_testStore!, VALID_ID)
+    _testStore!.addFavorite('a', VALID_ID)
+    _testStore!.addFavorite('b', VALID_ID)
+    await retainIfFirst(_testStore!, VALID_ID)
+    expect(mockRetainEvent).not.toHaveBeenCalled()
+  })
+
+  it('swallows failures', async () => {
+    _testStore!.addFavorite(USER, VALID_ID)
+    mockRetainEvent.mockRejectedValue(new Error('boom'))
+    await expect(retainIfFirst(_testStore!, VALID_ID)).resolves.toBeUndefined()
+  })
+})
+
+describe('unretainIfLast', () => {
+  it('unretains when count is 0', async () => {
+    await unretainIfLast(_testStore!, VALID_ID)
+    expect(mockUnretainEvent).toHaveBeenCalledWith(VALID_ID)
+  })
+
+  it('does not unretain when references remain', async () => {
+    _testStore!.addShare(VALID_ID, 's', 'r')
+    await unretainIfLast(_testStore!, VALID_ID)
+    expect(mockUnretainEvent).not.toHaveBeenCalled()
+  })
+
+  it('swallows failures', async () => {
+    mockUnretainEvent.mockRejectedValue(new Error('boom'))
+    await expect(unretainIfLast(_testStore!, VALID_ID)).resolves.toBeUndefined()
+  })
+})
+
 // ─── getUserFavoritedEventIdsHandler ─────────────────────────────────────────
 
 describe('getUserFavoritedEventIdsHandler', () => {
@@ -262,61 +324,109 @@ function makeEvent(id: string) {
   }
 }
 
-describe('getUserFavoritedEventsHandler', () => {
-  it('throws Unauthorized when session is missing', async () => {
-    mockRequireSession.mockRejectedValue(new Error('Unauthorized'))
-    await expect(getUserFavoritedEventsHandler()).rejects.toThrow(
-      'Unauthorized',
+describe('getFavoritesPageHandler', () => {
+  const users: Record<
+    string,
+    { first_name: string | null; email: string } | null
+  > = {}
+  beforeEach(() => {
+    for (const k of Object.keys(users)) delete users[k]
+    mockGetUser.mockImplementation((sub: string) => users[sub] ?? null)
+    mockGetEvent.mockImplementation((id: string) =>
+      Promise.resolve({ ok: true, data: makeEvent(id) }),
     )
+  })
+
+  it('throws Unauthorized before touching stores', async () => {
+    mockRequireSession.mockRejectedValue(new Error('Unauthorized'))
+    await expect(getFavoritesPageHandler()).rejects.toThrow('Unauthorized')
+    expect(mockGetEvent).not.toHaveBeenCalled()
+    expect(mockGetUser).not.toHaveBeenCalled()
+  })
+
+  it('returns [] when nothing favorited or shared', async () => {
+    expect(await getFavoritesPageHandler()).toEqual([])
     expect(mockGetEvent).not.toHaveBeenCalled()
   })
 
-  it('returns empty array when user has no favorites', async () => {
-    const result = await getUserFavoritedEventsHandler()
-    expect(result).toEqual([])
-    expect(mockGetEvent).not.toHaveBeenCalled()
-  })
-
-  it('returns FrigateEvent[] for each favorited ID', async () => {
+  it('favorites only: favorited true, sharedBy empty', async () => {
     _testStore!.addFavorite(USER, 'event-1')
-    _testStore!.addFavorite(USER, 'event-2')
-    mockGetEvent
-      .mockResolvedValueOnce({ ok: true, data: makeEvent('event-1') })
-      .mockResolvedValueOnce({ ok: true, data: makeEvent('event-2') })
-
-    const result = await getUserFavoritedEventsHandler()
-    expect(result).toHaveLength(2)
-    expect(result.map((e) => e.id)).toContain('event-1')
-    expect(result.map((e) => e.id)).toContain('event-2')
+    const result = await getFavoritesPageHandler()
+    expect(result).toHaveLength(1)
+    expect(result[0].event.id).toBe('event-1')
+    expect(result[0].favorited).toBe(true)
+    expect(result[0].sharedBy).toEqual([])
   })
 
-  it('omits events where getEvent returns ok:false (Frigate non-ok)', async () => {
+  it('shares only: favorited false, sharedBy has sender name', async () => {
+    users['alice'] = { first_name: 'Alice', email: 'a@x.dk' }
+    _testStore!.addShare('event-1', 'alice', USER)
+    const result = await getFavoritesPageHandler()
+    expect(result).toHaveLength(1)
+    expect(result[0].favorited).toBe(false)
+    expect(result[0].sharedBy).toEqual(['Alice'])
+  })
+
+  it('favorite and share on same event yield one entry', async () => {
+    users['alice'] = { first_name: 'Alice', email: 'a@x.dk' }
+    _testStore!.addFavorite(USER, 'event-1')
+    _testStore!.addShare('event-1', 'alice', USER)
+    const result = await getFavoritesPageHandler()
+    expect(result).toHaveLength(1)
+    expect(result[0].favorited).toBe(true)
+    expect(result[0].sharedBy).toEqual(['Alice'])
+    expect(mockGetEvent).toHaveBeenCalledTimes(1)
+  })
+
+  it('orders senders oldest first, falls back to email, null for unknown', async () => {
+    users['alice'] = { first_name: 'Alice', email: 'a@x.dk' }
+    users['bob'] = { first_name: null, email: 'bob@x.dk' }
+    vi.spyOn(_testStore!, 'getSharesForRecipient').mockReturnValue([
+      { eventId: 'event-1', senderId: 'bob', createdAt: '2026-01-01 10:00:00' },
+      {
+        eventId: 'event-1',
+        senderId: 'ghost',
+        createdAt: '2026-01-01 11:00:00',
+      },
+      {
+        eventId: 'event-1',
+        senderId: 'alice',
+        createdAt: '2026-01-01 12:00:00',
+      },
+      {
+        eventId: 'event-1',
+        senderId: 'alice',
+        createdAt: '2026-01-01 13:00:00',
+      },
+    ])
+    const result = await getFavoritesPageHandler()
+    expect(result[0].sharedBy).toEqual(['bob@x.dk', null, 'Alice'])
+  })
+
+  it('sorts by newest of favorite or share time, descending', async () => {
+    vi.spyOn(_testStore!, 'getFavoritesWithTime').mockReturnValue([
+      { eventId: 'old', createdAt: '2026-01-01 10:00:00' },
+      { eventId: 'mid', createdAt: '2026-01-02 10:00:00' },
+    ])
+    vi.spyOn(_testStore!, 'getSharesForRecipient').mockReturnValue([
+      { eventId: 'old', senderId: 'a', createdAt: '2026-01-03 10:00:00' },
+      { eventId: 'new', senderId: 'a', createdAt: '2026-01-02 12:00:00' },
+    ])
+    const result = await getFavoritesPageHandler()
+    expect(result.map((e) => e.event.id)).toEqual(['old', 'new', 'mid'])
+  })
+
+  it('drops entries whose Frigate event is missing', async () => {
     _testStore!.addFavorite(USER, 'event-1')
     _testStore!.addFavorite(USER, 'event-missing')
-    _testStore!.addFavorite(USER, 'event-3')
-    mockGetEvent
-      .mockResolvedValueOnce({ ok: true, data: makeEvent('event-1') })
-      .mockResolvedValueOnce({ ok: false, error: 'HTTP 404', status: 404 })
-      .mockResolvedValueOnce({ ok: true, data: makeEvent('event-3') })
-
-    const result = await getUserFavoritedEventsHandler()
-    expect(result).toHaveLength(2)
-    expect(result.map((e) => e.id)).toContain('event-1')
-    expect(result.map((e) => e.id)).toContain('event-3')
-    expect(result.map((e) => e.id)).not.toContain('event-missing')
-  })
-
-  it('calls getEvent for all IDs in parallel', async () => {
-    _testStore!.addFavorite(USER, 'event-1')
-    _testStore!.addFavorite(USER, 'event-2')
-    _testStore!.addFavorite(USER, 'event-3')
-    mockGetEvent.mockResolvedValue({ ok: true, data: makeEvent('event-x') })
-
-    await getUserFavoritedEventsHandler()
-    const calledIds = mockGetEvent.mock.calls.map((c) => c[0])
-    expect(calledIds).toContain('event-1')
-    expect(calledIds).toContain('event-2')
-    expect(calledIds).toContain('event-3')
-    expect(mockGetEvent).toHaveBeenCalledTimes(3)
+    mockGetEvent.mockImplementation((id: string) =>
+      Promise.resolve(
+        id === 'event-missing'
+          ? { ok: false, error: 'HTTP 404', status: 404 }
+          : { ok: true, data: makeEvent(id) },
+      ),
+    )
+    const result = await getFavoritesPageHandler()
+    expect(result.map((e) => e.event.id)).toEqual(['event-1'])
   })
 })

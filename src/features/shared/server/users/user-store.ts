@@ -25,6 +25,13 @@ export interface UserStore {
     avatarUrl: string
   }) => void
   getUser: (sub: string) => UserRow | null
+  /** All users, ordered by first name (email if none), case-insensitive. */
+  listUsers: () => Array<{
+    sub: string
+    email: string
+    firstName: string | null
+    avatarUrl: string | null
+  }>
   /** Authorization read. Anything that is not a stored 1 is false. */
   isAdmin: (sub: string) => boolean
   setAdmin: (sub: string, isAdmin: boolean) => void
@@ -82,6 +89,9 @@ export async function createUserStore(
         last_login_at = datetime('now')
     `),
     getBySub: db.prepare('SELECT * FROM users WHERE sub = ?'),
+    list: db.prepare(
+      'SELECT sub, email, first_name, avatar_url FROM users ORDER BY COALESCE(first_name, email) COLLATE NOCASE',
+    ),
     setAdmin: db.prepare('UPDATE users SET is_admin = ? WHERE sub = ?'),
     promote: db.prepare(
       'UPDATE users SET is_admin = 1 WHERE sub = ? AND is_admin != 1',
@@ -96,6 +106,18 @@ export async function createUserStore(
     getUser(sub) {
       const row = stmts.getBySub.get(sub) as UserRow | undefined
       return row ?? null
+    },
+
+    listUsers() {
+      const rows = stmts.list.all() as Array<
+        Pick<UserRow, 'sub' | 'email' | 'first_name' | 'avatar_url'>
+      >
+      return rows.map((r) => ({
+        sub: r.sub,
+        email: r.email,
+        firstName: r.first_name,
+        avatarUrl: r.avatar_url,
+      }))
     },
 
     isAdmin(sub) {

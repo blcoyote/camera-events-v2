@@ -16,9 +16,9 @@ export const getUserFavoritedEventIdsFn = createServerFn({
   return getUserFavoritedEventIdsHandler()
 })
 
-export const getUserFavoritedEventsFn = createServerFn({
+export const getFavoritesPageFn = createServerFn({
   method: 'GET',
 }).handler(async () => {
-  const { getUserFavoritedEventsHandler } = await import('./favorites-handlers')
-  return getUserFavoritedEventsHandler()
+  const { getFavoritesPageHandler } = await import('./favorites-handlers')
+  return getFavoritesPageHandler()
 })

@@ -25,7 +25,7 @@ afterEach(() => {
 
 describe('FavoritesPage (da)', () => {
   it('renders the empty state in Danish', () => {
-    render(<FavoritesPage events={[]} />)
+    render(<FavoritesPage entries={[]} />)
     expect(screen.getByText('Ingen favoritter endnu')).toBeInTheDocument()
     expect(screen.getByText('Gå til hændelser')).toBeInTheDocument()
   })

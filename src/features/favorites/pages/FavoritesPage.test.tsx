@@ -4,6 +4,7 @@ import { render, screen, cleanup } from '@testing-library/react'
 import '@testing-library/jest-dom/vitest'
 import React from 'react'
 import type { FrigateEvent } from '#/features/shared/server/frigate/types'
+import type { FavoriteEntry } from '#/features/shared/server/favorites/types'
 
 vi.mock('@tanstack/react-router', () => ({
   Link: ({ children, to }: { children: React.ReactNode; to: string }) =>
@@ -15,15 +16,18 @@ vi.mock('#/features/shared/components/EventCard', () => ({
     ({
       event,
       initialFavorited,
+      sharedBy,
     }: {
       event: FrigateEvent
       index: number
       initialFavorited?: boolean
+      sharedBy?: (string | null)[]
     }) => (
       <div
         data-testid="event-card"
         data-event-id={event.id}
         data-initial-favorited={String(initialFavorited)}
+        data-shared-by={JSON.stringify(sharedBy)}
       />
     ),
   ),
@@ -61,11 +65,19 @@ function makeEvent(id: string): FrigateEvent {
   }
 }
 
+function entry(
+  id: string,
+  favorited = true,
+  sharedBy: (string | null)[] = [],
+): FavoriteEntry {
+  return { event: makeEvent(id), favorited, sharedBy }
+}
+
 describe('FavoritesPage', () => {
   it.each([[[]], [['evt-1']]])(
     'renders a phone-hidden h1 header (events: %j)',
     (ids: string[]) => {
-      render(<FavoritesPage events={ids.map(makeEvent)} />)
+      render(<FavoritesPage entries={ids.map((id) => entry(id))} />)
       expect(
         screen.getByRole('heading', { level: 1, name: 'Your Favorites' }),
       ).toHaveClass('sr-only', 'sm:not-sr-only')
@@ -73,38 +85,43 @@ describe('FavoritesPage', () => {
   )
 
   it('renders one EventCard per event', () => {
-    render(<FavoritesPage events={[makeEvent('evt-1'), makeEvent('evt-2')]} />)
+    render(<FavoritesPage entries={[entry('evt-1'), entry('evt-2')]} />)
     const cards = screen.getAllByTestId('event-card')
     expect(cards).toHaveLength(2)
   })
 
-  it('passes initialFavorited=true to every EventCard', () => {
-    render(<FavoritesPage events={[makeEvent('evt-1'), makeEvent('evt-2')]} />)
-    const cards = screen.getAllByTestId('event-card')
-    cards.forEach((card) => {
-      expect(card.dataset.initialFavorited).toBe('true')
-    })
+  it('passes each entry favorited flag and sharedBy to its EventCard', () => {
+    render(
+      <FavoritesPage
+        entries={[entry('evt-1'), entry('evt-2', false, ['Alice', null])]}
+      />,
+    )
+    const [a, b] = screen.getAllByTestId('event-card')
+    expect(a.dataset.initialFavorited).toBe('true')
+    expect(a.dataset.sharedBy).toBe('[]')
+    expect(b.dataset.initialFavorited).toBe('false')
+    expect(b.dataset.sharedBy).toBe('["Alice",null]')
   })
 
   it('renders empty state headline when no events', () => {
-    render(<FavoritesPage events={[]} />)
+    render(<FavoritesPage entries={[]} />)
     expect(screen.getByText(/no favorites yet/i)).toBeInTheDocument()
   })
 
   it('renders a "Browse events" link to /camera-events in empty state', () => {
-    render(<FavoritesPage events={[]} />)
+    render(<FavoritesPage entries={[]} />)
     const link = screen.getByRole('link', { name: /browse events/i })
     expect(link).toBeInTheDocument()
     expect(link).toHaveAttribute('href', '/camera-events')
   })
 
   it('does not render event cards in empty state', () => {
-    render(<FavoritesPage events={[]} />)
+    render(<FavoritesPage entries={[]} />)
     expect(screen.queryByTestId('event-card')).not.toBeInTheDocument()
   })
 
   it('renders section with accessible label when events present', () => {
-    render(<FavoritesPage events={[makeEvent('evt-1')]} />)
+    render(<FavoritesPage entries={[entry('evt-1')]} />)
     expect(
       screen.getByRole('region', { name: /favorited events/i }),
     ).toBeInTheDocument()

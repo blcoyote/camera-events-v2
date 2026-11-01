@@ -153,6 +153,36 @@ describe('EventCard', () => {
     expect(cls).toContain('bg-black/55')
     expect(cls).not.toContain('bg-white/20')
   })
+
+  it('renders no share indicator without sharedBy', () => {
+    const { queryByText } = render(<EventCard event={makeEvent()} index={0} />)
+    expect(queryByText(/^from /)).toBeNull()
+  })
+
+  it('shows "from {name}" for a single sender', () => {
+    const { getByText } = render(
+      <EventCard event={makeEvent()} index={0} sharedBy={['Alice']} />,
+    )
+    expect(getByText('from Alice')).toBeInTheDocument()
+  })
+
+  it('shows "from {name} +{n}" for several senders', () => {
+    const { getByText } = render(
+      <EventCard
+        event={makeEvent()}
+        index={0}
+        sharedBy={['Alice', 'Bob', null]}
+      />,
+    )
+    expect(getByText('from Alice +2')).toBeInTheDocument()
+  })
+
+  it('falls back to "someone" for an unknown first sender', () => {
+    const { getByText } = render(
+      <EventCard event={makeEvent()} index={0} sharedBy={[null]} />,
+    )
+    expect(getByText('from someone')).toBeInTheDocument()
+  })
 })
 
 describe('EventCard icon labels in Danish', () => {

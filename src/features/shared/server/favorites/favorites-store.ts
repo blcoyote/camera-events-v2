@@ -11,7 +11,15 @@ export interface FavoritesStore {
   removeFavorite: (userId: string, eventId: string) => void
   getUserFavoritedEventIds: (userId: string) => string[]
   isFavorited: (userId: string, eventId: string) => boolean
-  getFavoriteCount: (eventId: string) => number
+  getReferenceCount: (eventId: string) => number
+  addShare: (eventId: string, senderId: string, recipientId: string) => void
+  removeSharesForRecipient: (recipientId: string, eventId: string) => void
+  getSharesForRecipient: (
+    recipientId: string,
+  ) => Array<{ eventId: string; senderId: string; createdAt: string }>
+  getFavoritesWithTime: (
+    userId: string,
+  ) => Array<{ eventId: string; createdAt: string }>
   /** Inspection helper for tests: list table names. */
   tableNames: () => string[]
   /** Inspection helper for tests: count rows matching SQL + params. */
@@ -38,6 +46,15 @@ export async function createFavoritesStore(
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       UNIQUE(user_id, event_id)
     );
+    CREATE TABLE IF NOT EXISTS event_shares (
+      id           INTEGER PRIMARY KEY AUTOINCREMENT,
+      event_id     TEXT NOT NULL,
+      sender_id    TEXT NOT NULL,
+      recipient_id TEXT NOT NULL,
+      created_at   TEXT NOT NULL DEFAULT (datetime('now')),
+      UNIQUE(event_id, sender_id, recipient_id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_event_shares_recipient ON event_shares(recipient_id);
   `)
 
   const stmts = {
@@ -54,7 +71,21 @@ export async function createFavoritesStore(
       'SELECT 1 FROM event_favorites WHERE user_id = ? AND event_id = ? LIMIT 1',
     ),
     count: db.prepare(
-      'SELECT COUNT(*) AS n FROM event_favorites WHERE event_id = ?',
+      `SELECT (SELECT COUNT(*) FROM event_favorites WHERE event_id = ?)
+            + (SELECT COUNT(*) FROM event_shares WHERE event_id = ?) AS n`,
+    ),
+    addShare: db.prepare(
+      `INSERT INTO event_shares (event_id, sender_id, recipient_id) VALUES (?, ?, ?)
+       ON CONFLICT(event_id, sender_id, recipient_id) DO UPDATE SET created_at = datetime('now')`,
+    ),
+    removeShares: db.prepare(
+      'DELETE FROM event_shares WHERE recipient_id = ? AND event_id = ?',
+    ),
+    sharesFor: db.prepare(
+      'SELECT event_id, sender_id, created_at FROM event_shares WHERE recipient_id = ? ORDER BY created_at ASC, id ASC',
+    ),
+    favsWithTime: db.prepare(
+      'SELECT event_id, created_at FROM event_favorites WHERE user_id = ?',
     ),
   }
 
@@ -77,8 +108,37 @@ export async function createFavoritesStore(
       return row != null
     },
 
-    getFavoriteCount(eventId) {
-      return (stmts.count.get(eventId) as { n: number }).n
+    getReferenceCount(eventId) {
+      return (stmts.count.get(eventId, eventId) as { n: number }).n
+    },
+
+    addShare(eventId, senderId, recipientId) {
+      stmts.addShare.run(eventId, senderId, recipientId)
+    },
+
+    removeSharesForRecipient(recipientId, eventId) {
+      stmts.removeShares.run(recipientId, eventId)
+    },
+
+    getSharesForRecipient(recipientId) {
+      const rows = stmts.sharesFor.all(recipientId) as Array<{
+        event_id: string
+        sender_id: string
+        created_at: string
+      }>
+      return rows.map((r) => ({
+        eventId: r.event_id,
+        senderId: r.sender_id,
+        createdAt: r.created_at,
+      }))
+    },
+
+    getFavoritesWithTime(userId) {
+      const rows = stmts.favsWithTime.all(userId) as Array<{
+        event_id: string
+        created_at: string
+      }>
+      return rows.map((r) => ({ eventId: r.event_id, createdAt: r.created_at }))
     },
 
     tableNames() {

@@ -1,12 +1,12 @@
 import { m } from '#/paraglide/messages.js'
 import { Link } from '@tanstack/react-router'
-import type { FrigateEvent } from '#/features/shared/server/frigate/types'
+import type { FavoriteEntry } from '#/features/shared/server/favorites/types'
 import { EventCard } from '#/features/shared/components/EventCard'
 import { Button } from '#/features/shared/components/ui/button'
 import { PageHeader } from '#/features/shared/components/PageHeader'
 
-export function FavoritesPage({ events }: { events: FrigateEvent[] }) {
-  if (events.length === 0) {
+export function FavoritesPage({ entries }: { entries: FavoriteEntry[] }) {
+  if (entries.length === 0) {
     return (
       <main id="main-content" className="page-wrap px-4 pb-8 pt-3 sm:pt-14">
         <PageHeader
@@ -36,12 +36,13 @@ export function FavoritesPage({ events }: { events: FrigateEvent[] }) {
         aria-label={m.favorites_grid_label()}
         className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
       >
-        {events.map((event, i) => (
+        {entries.map((entry, i) => (
           <EventCard
-            key={event.id}
-            event={event}
+            key={entry.event.id}
+            event={entry.event}
             index={i}
-            initialFavorited={true}
+            initialFavorited={entry.favorited}
+            sharedBy={entry.sharedBy}
           />
         ))}
       </section>

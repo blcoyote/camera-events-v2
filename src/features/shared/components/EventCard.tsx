@@ -1,7 +1,7 @@
 import { m } from '#/paraglide/messages.js'
 import { getLocale } from '#/paraglide/runtime.js'
 import { translateLabel } from '#/features/shared/utils/labels'
-import { Video } from 'lucide-react'
+import { Share2, Video } from 'lucide-react'
 import { MediaCard } from '#/features/shared/components/MediaCard'
 import type { FrigateEvent } from '#/features/shared/server/frigate/types'
 import {
@@ -16,10 +16,12 @@ export function EventCard({
   event,
   index,
   initialFavorited = false,
+  sharedBy = [],
 }: {
   event: FrigateEvent
   index: number
   initialFavorited?: boolean
+  sharedBy?: (string | null)[]
 }) {
   const { favorited, pending, error, toggle } = useFavoriteToggle(
     event.id,
@@ -89,6 +91,19 @@ export function EventCard({
             {formatRelativeTime(event.start_time)}
           </time>
         </div>
+        {sharedBy.length > 0 && (
+          <span className="inline-flex shrink-0 items-center gap-1 text-xs text-muted-foreground">
+            <Share2 size={14} aria-hidden="true" />
+            {sharedBy.length === 1
+              ? m.shared_share_from({
+                  name: sharedBy[0] ?? m.shared_share_someone(),
+                })
+              : m.shared_share_from_more({
+                  name: sharedBy[0] ?? m.shared_share_someone(),
+                  more: sharedBy.length - 1,
+                })}
+          </span>
+        )}
         <FavoriteButton
           eventId={event.id}
           favorited={favorited}
