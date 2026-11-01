@@ -45,6 +45,8 @@ const {
   unretainIfLast,
   getUserFavoritedEventIdsHandler,
   getFavoritesPageHandler,
+  getReceivedSharesHandler,
+  removeReceivedShareHandler,
 } = await import('./favorites-handlers')
 
 // ─── Test fixtures ────────────────────────────────────────────────────────────
@@ -428,5 +430,75 @@ describe('getFavoritesPageHandler', () => {
     )
     const result = await getFavoritesPageHandler()
     expect(result.map((e) => e.event.id)).toEqual(['event-1'])
+  })
+})
+
+// ─── received shares ──────────────────────────────────────────────────────────
+
+describe('getReceivedSharesHandler', () => {
+  it('throws before touching the store when unauthenticated', async () => {
+    mockRequireSession.mockRejectedValue(new Error('Unauthorized'))
+    _testStore = null
+    await expect(
+      getReceivedSharesHandler({ eventId: VALID_ID }),
+    ).rejects.toThrow('Unauthorized')
+  })
+
+  it('rejects an invalid event id', async () => {
+    await expect(
+      getReceivedSharesHandler({ eventId: '../etc' }),
+    ).rejects.toThrow('Invalid event ID')
+  })
+
+  it('returns deduped sender names for the caller only, oldest first', async () => {
+    _testStore!.addShare(VALID_ID, 'alice', USER)
+    _testStore!.addShare(VALID_ID, 'alice', USER)
+    _testStore!.addShare(VALID_ID, 'ghost', USER)
+    _testStore!.addShare(VALID_ID, 'bob', 'someone-else')
+    mockGetUser.mockImplementation((sub: string) =>
+      sub === 'alice' ? { first_name: 'Alice', email: 'a@x.dk' } : null,
+    )
+    expect(await getReceivedSharesHandler({ eventId: VALID_ID })).toEqual([
+      'Alice',
+      null,
+    ])
+  })
+})
+
+describe('removeReceivedShareHandler', () => {
+  it('throws before touching the store when unauthenticated', async () => {
+    mockRequireSession.mockRejectedValue(new Error('Unauthorized'))
+    _testStore = null
+    await expect(
+      removeReceivedShareHandler({ eventId: VALID_ID }),
+    ).rejects.toThrow('Unauthorized')
+  })
+
+  it('rejects an invalid event id', async () => {
+    await expect(
+      removeReceivedShareHandler({ eventId: 'bad id' }),
+    ).rejects.toThrow('Invalid event ID')
+  })
+
+  it('removes only the caller shares and unretains on last reference', async () => {
+    _testStore!.addShare(VALID_ID, 'alice', USER)
+    await removeReceivedShareHandler({ eventId: VALID_ID })
+    expect(_testStore!.getSharesForRecipient(USER)).toEqual([])
+    expect(mockUnretainEvent).toHaveBeenCalledWith(VALID_ID)
+  })
+
+  it('keeps other recipients shares and does not unretain', async () => {
+    _testStore!.addShare(VALID_ID, 'alice', USER)
+    _testStore!.addShare(VALID_ID, 'alice', 'someone-else')
+    await removeReceivedShareHandler({ eventId: VALID_ID })
+    expect(_testStore!.getSharesForRecipient('someone-else')).toHaveLength(1)
+    expect(mockUnretainEvent).not.toHaveBeenCalled()
+  })
+
+  it('does not unretain while the caller still favorites it', async () => {
+    _testStore!.addFavorite(USER, VALID_ID)
+    _testStore!.addShare(VALID_ID, 'alice', USER)
+    await removeReceivedShareHandler({ eventId: VALID_ID })
+    expect(mockUnretainEvent).not.toHaveBeenCalled()
   })
 })

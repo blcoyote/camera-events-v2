@@ -39,6 +39,14 @@ export async function unretainIfLast(
   }
 }
 
+function senderName(
+  users: Awaited<ReturnType<typeof getUserStore>>,
+  sub: string,
+): string | null {
+  const u = users.getUser(sub)
+  return u ? u.first_name || u.email : null
+}
+
 /**
  * Pure handler for toggling a favorite. Exported for unit testing.
  * Calls requireSession() as its first operation — userId never comes from input.
@@ -116,11 +124,40 @@ export async function getFavoritesPageHandler(): Promise<FavoriteEntry[]> {
     entries.push({
       event: r.data,
       favorited: e.favorited,
-      sharedBy: e.senders.map((sub) => {
-        const u = users.getUser(sub)
-        return u ? u.first_name || u.email : null
-      }),
+      sharedBy: e.senders.map((sub) => senderName(users, sub)),
     })
   })
   return entries
+}
+
+/** Sender names (oldest first, deduped) of the caller's shares of one event. */
+export async function getReceivedSharesHandler({
+  eventId,
+}: {
+  eventId: string
+}): Promise<(string | null)[]> {
+  const userId = await requireSession()
+  if (!isValidEventId(eventId)) throw new Error('Invalid event ID')
+  const store = await getFavoritesStore()
+  const users = await getUserStore()
+  const senders = new Set(
+    store
+      .getSharesForRecipient(userId)
+      .filter((s) => s.eventId === eventId)
+      .map((s) => s.senderId),
+  )
+  return [...senders].map((sub) => senderName(users, sub))
+}
+
+/** Drop the caller's received shares of one event; unretain if now unreferenced. */
+export async function removeReceivedShareHandler({
+  eventId,
+}: {
+  eventId: string
+}): Promise<void> {
+  const userId = await requireSession()
+  if (!isValidEventId(eventId)) throw new Error('Invalid event ID')
+  const store = await getFavoritesStore()
+  store.removeSharesForRecipient(userId, eventId)
+  await unretainIfLast(store, eventId)
 }

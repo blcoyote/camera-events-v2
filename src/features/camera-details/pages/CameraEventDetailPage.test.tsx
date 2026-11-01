@@ -26,6 +26,11 @@ vi.mock('#/features/shared/components/FavoriteButton', () => ({
   FavoriteButton: (props: unknown) => mockFavoriteButton(props),
 }))
 
+vi.mock('../components/ShareButton', () => ({
+  ShareButton: ({ eventId }: { eventId: string }) =>
+    React.createElement('div', { 'data-testid': 'share-button', eventId }),
+}))
+
 vi.mock('@tanstack/react-router', () => ({
   Link: ({ children, to }: { children: React.ReactNode; to: string }) =>
     React.createElement('a', { href: to }, children),
@@ -557,6 +562,34 @@ describe('CameraEventDetailPage', () => {
       ).toBeInTheDocument()
       expect(mockFavoriteButton).toHaveBeenCalled()
     })
+  })
+})
+
+describe('CameraEventDetailPage sharing', () => {
+  afterEach(cleanup)
+
+  it('renders the share button on an event', () => {
+    render(<CameraEventDetailPage result={successResult()} />)
+    expect(screen.getByTestId('share-button')).toBeInTheDocument()
+  })
+
+  it('shows who shared the event and wires remove', () => {
+    const onRemoveShare = vi.fn().mockResolvedValue(undefined)
+    render(
+      <CameraEventDetailPage
+        result={successResult()}
+        sharedBy={['Alice']}
+        onRemoveShare={onRemoveShare}
+      />,
+    )
+    expect(screen.getByText(/Alice/)).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /remove/i }))
+    expect(onRemoveShare).toHaveBeenCalled()
+  })
+
+  it('shows no shared-by row without senders', () => {
+    render(<CameraEventDetailPage result={successResult()} />)
+    expect(screen.queryByRole('button', { name: /remove/i })).toBeNull()
   })
 })
 
