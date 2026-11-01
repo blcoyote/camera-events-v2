@@ -158,6 +158,11 @@ export async function removeReceivedShareHandler({
   const userId = await requireSession()
   if (!isValidEventId(eventId)) throw new Error('Invalid event ID')
   const store = await getFavoritesStore()
+  // A no-op removal must not unretain: Frigate may hold a retain set outside the app.
+  const held = store
+    .getSharesForRecipient(userId)
+    .some((s) => s.eventId === eventId)
+  if (!held) return
   store.removeSharesForRecipient(userId, eventId)
   await unretainIfLast(store, eventId)
 }

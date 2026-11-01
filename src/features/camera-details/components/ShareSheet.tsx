@@ -1,5 +1,6 @@
 import { m } from '#/paraglide/messages.js'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import type { RefObject } from 'react'
 import {
   Sheet,
   SheetContent,
@@ -18,15 +19,19 @@ import { getShareRecipientsFn } from '#/features/shared/server/users/users-fns'
 import type { ShareRecipient } from '#/features/shared/server/users/types'
 
 const CLOSE_DELAY_MS = 1000
+// Matches the share endpoint's MAX_RECIPIENTS.
+export const MAX_SHARE_RECIPIENTS = 50
 
 export function ShareSheet({
   eventId,
   open,
   onOpenChange,
+  returnFocusRef,
 }: {
   eventId: string
   open: boolean
   onOpenChange: (open: boolean) => void
+  returnFocusRef?: RefObject<HTMLElement | null>
 }) {
   const [recipients, setRecipients] = useState<ShareRecipient[] | null>(null)
   const [selected, setSelected] = useState<string[]>([])
@@ -34,25 +39,39 @@ export function ShareSheet({
   const [sent, setSent] = useState(false)
   const [error, setError] = useState(false)
 
+  // Bumped whenever an opening ends (close, eventId change, unmount) so older sends go stale.
+  const opening = useRef(0)
+  const closeTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
+
   useEffect(() => {
     if (!open) return
     let cancelled = false
     setRecipients(null)
+    setSelected([])
+    setSent(false)
+    setSending(false)
     setError(false)
     getShareRecipientsFn()
       .then((r) => !cancelled && setRecipients(r))
       .catch(() => !cancelled && setError(true))
     return () => {
       cancelled = true
+      opening.current++
+      clearTimeout(closeTimer.current)
     }
-  }, [open])
+  }, [open, eventId])
 
   const toggle = (sub: string) =>
     setSelected((s) =>
-      s.includes(sub) ? s.filter((x) => x !== sub) : [...s, sub],
+      s.includes(sub)
+        ? s.filter((x) => x !== sub)
+        : s.length < MAX_SHARE_RECIPIENTS
+          ? [...s, sub]
+          : s,
     )
 
   const send = async () => {
+    const id = opening.current
     setSending(true)
     setError(false)
     try {
@@ -66,14 +85,11 @@ export function ShareSheet({
         },
       )
       if (!res.ok) throw new Error(String(res.status))
+      if (id !== opening.current) return
       setSent(true)
-      setTimeout(() => {
-        onOpenChange(false)
-        setSelected([])
-        setSent(false)
-        setSending(false)
-      }, CLOSE_DELAY_MS)
+      closeTimer.current = setTimeout(() => onOpenChange(false), CLOSE_DELAY_MS)
     } catch {
+      if (id !== opening.current) return
       setError(true)
       setSending(false)
     }
@@ -81,7 +97,14 @@ export function ShareSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom">
+      <SheetContent
+        side="bottom"
+        onCloseAutoFocus={(e) => {
+          if (!returnFocusRef?.current) return
+          e.preventDefault()
+          returnFocusRef.current.focus()
+        }}
+      >
         <SheetHeader>
           <SheetTitle>{m.details_share_title()}</SheetTitle>
         </SheetHeader>
@@ -104,6 +127,10 @@ export function ShareSheet({
                 type="checkbox"
                 className="size-5 accent-brand"
                 checked={selected.includes(r.sub)}
+                disabled={
+                  !selected.includes(r.sub) &&
+                  selected.length >= MAX_SHARE_RECIPIENTS
+                }
                 onChange={() => toggle(r.sub)}
               />
               <Avatar aria-hidden="true">

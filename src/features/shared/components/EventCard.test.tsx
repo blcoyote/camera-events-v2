@@ -177,6 +177,16 @@ describe('EventCard', () => {
     expect(getByText('from Alice +2')).toBeInTheDocument()
   })
 
+  it('truncates the sender text and keeps the full text as title', () => {
+    const name = 'a.very.long.email.address@example.com'
+    const { getByText } = render(
+      <EventCard event={makeEvent()} index={0} sharedBy={[name]} />,
+    )
+    const text = getByText(`from ${name}`)
+    expect(text).toHaveClass('truncate')
+    expect(text.parentElement).toHaveAttribute('title', `from ${name}`)
+  })
+
   it('falls back to "someone" for an unknown first sender', () => {
     const { getByText } = render(
       <EventCard event={makeEvent()} index={0} sharedBy={[null]} />,

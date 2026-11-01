@@ -29,6 +29,11 @@ export function EventCard({
   )
   const isRecent = Date.now() / 1000 - event.start_time < 300
 
+  const first = sharedBy[0] ?? m.shared_share_someone()
+  const sharedLabel =
+    sharedBy.length > 1
+      ? m.shared_share_from_more({ name: first, more: sharedBy.length - 1 })
+      : m.shared_share_from({ name: first })
   return (
     <MediaCard
       to="/camera-events/$id"
@@ -92,16 +97,12 @@ export function EventCard({
           </time>
         </div>
         {sharedBy.length > 0 && (
-          <span className="inline-flex shrink-0 items-center gap-1 text-xs text-muted-foreground">
-            <Share2 size={14} aria-hidden="true" />
-            {sharedBy.length === 1
-              ? m.shared_share_from({
-                  name: sharedBy[0] ?? m.shared_share_someone(),
-                })
-              : m.shared_share_from_more({
-                  name: sharedBy[0] ?? m.shared_share_someone(),
-                  more: sharedBy.length - 1,
-                })}
+          <span
+            className="inline-flex min-w-0 max-w-[45%] items-center gap-1 text-xs text-muted-foreground"
+            title={sharedLabel}
+          >
+            <Share2 size={14} className="shrink-0" aria-hidden="true" />
+            <span className="truncate">{sharedLabel}</span>
           </span>
         )}
         <FavoriteButton

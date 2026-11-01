@@ -495,6 +495,11 @@ describe('removeReceivedShareHandler', () => {
     expect(mockUnretainEvent).not.toHaveBeenCalled()
   })
 
+  it('does not touch Frigate when the caller had no share to remove', async () => {
+    await removeReceivedShareHandler({ eventId: VALID_ID })
+    expect(mockUnretainEvent).not.toHaveBeenCalled()
+  })
+
   it('does not unretain while the caller still favorites it', async () => {
     _testStore!.addFavorite(USER, VALID_ID)
     _testStore!.addShare(VALID_ID, 'alice', USER)

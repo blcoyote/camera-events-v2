@@ -42,4 +42,18 @@ describe('SharedByRow', () => {
     resolve()
     await vi.waitFor(() => expect(btn).not.toBeDisabled())
   })
+
+  it('shows an alert and re-enables Remove when onRemove rejects', async () => {
+    const onRemove = vi.fn().mockRejectedValue(new Error('x'))
+    render(<SharedByRow sharedBy={['Alice']} onRemove={onRemove} />)
+    const btn = screen.getByRole('button', { name: m.details_share_remove() })
+    fireEvent.click(btn)
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      m.details_share_remove_error(),
+    )
+    expect(btn).toBeEnabled()
+    expect(
+      screen.getByText(m.details_shared_by({ names: 'Alice' })),
+    ).toBeInTheDocument()
+  })
 })

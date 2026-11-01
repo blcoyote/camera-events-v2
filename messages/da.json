@@ -189,6 +189,7 @@
   "details_share_loading": "Henter…",
   "details_shared_by": "Delt af {names}",
   "details_share_remove": "Fjern",
+  "details_share_remove_error": "Delingen kunne ikke fjernes. Prøv igen.",
   "details_confidence": "Registreringssikkerhed",
   "details_duration_seconds": "{seconds} s",
   "details_duration_minutes": "{minutes} min",

@@ -189,6 +189,7 @@
   "details_share_loading": "Loading…",
   "details_shared_by": "Shared by {names}",
   "details_share_remove": "Remove",
+  "details_share_remove_error": "Couldn't remove the share. Try again.",
   "details_confidence": "Detection confidence",
   "details_duration_seconds": "{seconds}s",
   "details_duration_minutes": "{minutes}m",
