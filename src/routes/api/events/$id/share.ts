@@ -15,7 +15,16 @@ export const Route = createFileRoute('/api/events/$id/share')({
             // Corrupted session
           }
 
-          const body: unknown = await request.json().catch(() => undefined)
+          // Read the body only once a session exists (see api/push/subscribe.ts);
+          // unauthenticated callers get the handler's 401 with `undefined`.
+          let body: unknown
+          if (userId) {
+            try {
+              body = await request.json()
+            } catch {
+              body = undefined
+            }
+          }
           const result = await handleShareEvent(userId, params.id, body)
           if (result.status === 204) return new Response(null, { status: 204 })
           return new Response(JSON.stringify(result.body), {
