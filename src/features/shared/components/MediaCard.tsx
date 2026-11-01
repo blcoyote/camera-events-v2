@@ -42,16 +42,17 @@ export function MediaCard({
   )
 
   if (to) {
+    // Stretched link: the empty <a> covers the card so no <button> nests inside it.
     return (
-      <Link
-        to={to}
-        params={params as Record<string, string>}
-        className={cardClass}
-        style={style}
-        aria-label={ariaLabel}
-      >
+      <article className={cardClass} style={style}>
+        <Link
+          to={to}
+          params={params as Record<string, string>}
+          aria-label={ariaLabel}
+          className="absolute inset-0 z-[1] rounded-[inherit] outline-none"
+        />
         {inner}
-      </Link>
+      </article>
     )
   }
 

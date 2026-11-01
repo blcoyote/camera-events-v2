@@ -20,7 +20,7 @@ vi.mock('../hooks/useFavoriteToggle', () => ({
   useFavoriteToggle: mockUseFavoriteToggle,
 }))
 
-const mockFavoriteButton = vi.fn((_props: unknown) => null)
+const mockFavoriteButton = vi.fn((_props: unknown): React.ReactNode => null)
 vi.mock('./FavoriteButton', () => ({
   FavoriteButton: (props: unknown) => mockFavoriteButton(props),
 }))
@@ -108,9 +108,24 @@ describe('EventCard', () => {
     }
   })
 
+  it('shows the Copenhagen clock time of the event', () => {
+    const { getByText } = render(<EventCard event={makeEvent()} index={0} />)
+    expect(getByText('13:43')).toBeInTheDocument() // 1713095000 = 11:43 UTC, CEST
+  })
+
   it('renders a FavoriteButton', () => {
     render(<EventCard event={makeEvent()} index={0} />)
     expect(mockFavoriteButton).toHaveBeenCalled()
+  })
+
+  it('lifts the favourite button above the stretched link and outside any <a>', () => {
+    mockFavoriteButton.mockImplementationOnce(() =>
+      React.createElement('button', { type: 'button' }, 'fav'),
+    )
+    const { getByRole } = render(<EventCard event={makeEvent()} index={0} />)
+    const button = getByRole('button')
+    expect(button.closest('a')).toBeNull()
+    expect(button.parentElement).toHaveClass('relative', 'z-[2]')
   })
 
   it('calls useFavoriteToggle with (event.id, false) when initialFavorited is omitted', () => {

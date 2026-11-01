@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest'
+import { useState } from 'react'
 import { render, screen, cleanup, fireEvent } from '@testing-library/react'
 import '@testing-library/jest-dom/vitest'
 import { withLocale } from '#/test-utils/locale'
@@ -7,7 +8,29 @@ import { withLocale } from '#/test-utils/locale'
 vi.mock('#/features/shared/components/EventCard', () => ({
   EventCard: () => null,
 }))
-const { CameraEventsListPage } = await import('./CameraEventsListPage')
+const { CameraEventsListPage: Page } = await import('./CameraEventsListPage')
+
+function CameraEventsListPage(
+  props: Omit<
+    React.ComponentProps<typeof Page>,
+    | 'labelFilter'
+    | 'cameraFilter'
+    | 'onLabelFilterChange'
+    | 'onCameraFilterChange'
+  >,
+) {
+  const [labelFilter, setLabel] = useState<string | null>(null)
+  const [cameraFilter, setCamera] = useState<string | null>(null)
+  return (
+    <Page
+      {...props}
+      labelFilter={labelFilter}
+      cameraFilter={cameraFilter}
+      onLabelFilterChange={setLabel}
+      onCameraFilterChange={setCamera}
+    />
+  )
+}
 
 let restore: () => void
 beforeEach(() => {
@@ -57,5 +80,29 @@ describe('CameraEventsListPage (da)', () => {
     ).toBeInTheDocument()
     rerender(<CameraEventsListPage result={{ ok: true, data: [] }} />)
     expect(screen.getByText('Ingen hændelser registreret')).toBeInTheDocument()
+  })
+})
+
+describe('CameraEventsListPage (da) day headings', () => {
+  it('titles today as "I dag"', () => {
+    render(
+      <CameraEventsListPage
+        result={{
+          ok: true,
+          data: [
+            {
+              id: 'a',
+              camera: 'c',
+              label: 'person',
+              start_time: Date.now() / 1000,
+              end_time: Date.now() / 1000,
+            } as never,
+          ],
+        }}
+      />,
+    )
+    expect(
+      screen.getByRole('heading', { level: 2, name: 'I dag' }),
+    ).toBeInTheDocument()
   })
 })

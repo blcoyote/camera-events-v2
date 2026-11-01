@@ -2,8 +2,8 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { withLocale } from '#/test-utils/locale'
 import {
   getEventsPageState,
-  getUniqueLabels,
-  getUniqueCameras,
+  getLabelOptions,
+  getCameraOptions,
   filterEvents,
 } from '#/features/camera-events/pages/CameraEventsListPage'
 import {
@@ -58,25 +58,67 @@ describe('getEventsPageState', () => {
   })
 })
 
-describe('getUniqueLabels', () => {
-  it('returns sorted unique labels', () => {
-    const events = [
-      makeEvent({ label: 'car' }),
-      makeEvent({ label: 'person' }),
-      makeEvent({ label: 'car' }),
-    ]
-    expect(getUniqueLabels(events)).toEqual(['car', 'person'])
+describe('getLabelOptions', () => {
+  const events = [
+    makeEvent({ label: 'person', camera: 'front' }),
+    makeEvent({ label: 'car', camera: 'front' }),
+    makeEvent({ label: 'car', camera: 'front' }),
+    makeEvent({ label: 'dog', camera: 'back' }),
+  ]
+
+  it('counts all events without a camera filter, sorted by count desc then label', () => {
+    expect(getLabelOptions(events, null, null)).toEqual([
+      { label: 'car', count: 2 },
+      { label: 'dog', count: 1 },
+      { label: 'person', count: 1 },
+    ])
+  })
+
+  it('counts only events of the camera filter and drops empty labels', () => {
+    expect(getLabelOptions(events, 'front', null)).toEqual([
+      { label: 'car', count: 2 },
+      { label: 'person', count: 1 },
+    ])
+  })
+
+  it('keeps the active label with count 0', () => {
+    expect(getLabelOptions(events, 'front', 'dog')).toEqual([
+      { label: 'car', count: 2 },
+      { label: 'person', count: 1 },
+      { label: 'dog', count: 0 },
+    ])
   })
 })
 
-describe('getUniqueCameras', () => {
-  it('returns sorted unique camera names', () => {
-    const events = [
-      makeEvent({ camera: 'garage' }),
-      makeEvent({ camera: 'backyard' }),
-      makeEvent({ camera: 'garage' }),
-    ]
-    expect(getUniqueCameras(events)).toEqual(['backyard', 'garage'])
+describe('getCameraOptions', () => {
+  const events = [
+    makeEvent({ label: 'person', camera: 'garage' }),
+    makeEvent({ label: 'car', camera: 'garage' }),
+    makeEvent({ label: 'car', camera: 'backyard' }),
+    makeEvent({ label: 'dog', camera: 'attic' }),
+  ]
+
+  it('returns cameras sorted by name with counts', () => {
+    expect(getCameraOptions(events, null, null)).toEqual([
+      { camera: 'attic', count: 1 },
+      { camera: 'backyard', count: 1 },
+      { camera: 'garage', count: 2 },
+    ])
+  })
+
+  it('counts against the label filter and drops empty cameras', () => {
+    expect(getCameraOptions(events, 'car', null)).toEqual([
+      { camera: 'backyard', count: 1 },
+      { camera: 'garage', count: 1 },
+    ])
+  })
+
+  it('keeps the active camera with count 0', () => {
+    expect(getCameraOptions(events, 'car', 'attic')).toEqual([
+      { camera: 'attic', count: 0 },
+      { camera: 'backyard', count: 1 },
+      { camera: 'garage', count: 1 },
+    ])
   })
 })
 

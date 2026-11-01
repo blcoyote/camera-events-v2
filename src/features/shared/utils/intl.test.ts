@@ -4,6 +4,7 @@ import {
   formatDateTime,
   formatPercent,
   formatTime,
+  dayKey,
   intlLocale,
 } from './intl'
 
@@ -35,5 +36,11 @@ describe('intl formatting', () => {
   it('formats percent', () => {
     expect(formatPercent(0.87, 'en')).toBe('87%')
     expect(formatPercent(0.87, 'da')).toMatch(/^87\s%$/)
+  })
+
+  it('dayKey returns the Copenhagen calendar date', () => {
+    expect(dayKey(CET)).toBe('2026-10-31')
+    // 2026-10-31 23:30 UTC is already 1 Nov in Copenhagen (CET, UTC+1)
+    expect(dayKey(Date.UTC(2026, 9, 31, 23, 30) / 1000)).toBe('2026-11-01')
   })
 })

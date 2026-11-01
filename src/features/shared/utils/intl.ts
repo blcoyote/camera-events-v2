@@ -49,3 +49,8 @@ export function formatPercent(ratio: number, locale: AppLocale): string {
     maximumFractionDigits: 0,
   }).format(ratio)
 }
+
+export const dayKey = (unixSeconds: number) =>
+  new Intl.DateTimeFormat('en-CA', { timeZone: TIME_ZONE }).format(
+    new Date(unixSeconds * 1000),
+  )

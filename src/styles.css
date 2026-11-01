@@ -436,7 +436,7 @@
     box-shadow: var(--gl-elev-raised);
   }
 
-  .event-card:focus-visible {
+  .event-card:has(> a:focus-visible) {
     outline: none;
     box-shadow: var(--gl-focus-ring);
   }
