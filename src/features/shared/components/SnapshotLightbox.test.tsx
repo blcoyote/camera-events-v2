@@ -1,3 +1,4 @@
+import { withLocale } from '#/test-utils/locale'
 // @vitest-environment jsdom
 import { describe, expect, it, afterEach, vi } from 'vitest'
 import {
@@ -112,5 +113,19 @@ describe('SnapshotLightbox dialog behaviour', () => {
     const ev = new Event('touchmove', { bubbles: true, cancelable: true })
     img.dispatchEvent(ev)
     expect(ev.defaultPrevented).toBe(true)
+  })
+})
+
+describe('SnapshotLightbox in Danish', () => {
+  it('localises close button and description', () => {
+    const restore = withLocale('da')
+    try {
+      render(<SnapshotLightbox src="/x" alt="snap" open onClose={() => {}} />)
+      expect(
+        screen.getByRole('button', { name: 'Luk visning af stillbillede' }),
+      ).toBeInTheDocument()
+    } finally {
+      restore()
+    }
   })
 })

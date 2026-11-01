@@ -1,8 +1,8 @@
+import { m } from '#/paraglide/messages.js'
+import { getLocale } from '#/paraglide/runtime.js'
+import { translateLabel } from '#/features/shared/utils/labels'
 import { Maximize } from 'lucide-react'
-import {
-  formatLabelName,
-  formatCameraName,
-} from '#/features/shared/utils/eventFormatting'
+import { formatCameraName } from '#/features/shared/utils/eventFormatting'
 
 export function EventSnapshot({
   eventId,
@@ -15,13 +15,17 @@ export function EventSnapshot({
   label: string
   onZoom: () => void
 }) {
-  const altText = `Snapshot of ${formatLabelName(label)} detected by ${formatCameraName(camera)}`
+  const args = {
+    label: translateLabel(label, getLocale()),
+    camera: formatCameraName(camera),
+  }
+  const altText = m.details_snapshot_alt(args)
   const src = `/api/events/${eventId}/snapshot`
   return (
     <button
       type="button"
       onClick={onZoom}
-      aria-label={`${altText} — tap to view fullscreen`}
+      aria-label={m.details_snapshot_zoom(args)}
       className="relative block w-full cursor-zoom-in overflow-hidden border border-border-soft bg-card sm:rounded-card"
     >
       <img

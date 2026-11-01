@@ -1,3 +1,6 @@
+// @vitest-environment jsdom
+import { render } from '@testing-library/react'
+import { withLocale } from '#/test-utils/locale'
 import { describe, expect, it } from 'vitest'
 import { PullToRefreshIndicator } from './PullToRefreshIndicator'
 
@@ -52,5 +55,24 @@ describe('PullToRefreshIndicator', () => {
       threshold,
     })
     expect(result).toBeNull()
+  })
+})
+
+describe('PullToRefreshIndicator in Danish', () => {
+  it('localises the status text', () => {
+    const restore = withLocale('da')
+    try {
+      const { container } = render(
+        <PullToRefreshIndicator
+          pullDistance={0}
+          isRefreshing
+          isComplete={false}
+          threshold={80}
+        />,
+      )
+      expect(container.textContent).toBe('Opdaterer…')
+    } finally {
+      restore()
+    }
   })
 })

@@ -25,9 +25,7 @@ export const Route = createFileRoute('/api/push/mute')({
           })
         } catch (err) {
           console.error('[push/mute GET] Unhandled error:', err)
-          const message =
-            err instanceof Error ? err.message : 'Internal server error'
-          return new Response(JSON.stringify({ error: message }), {
+          return new Response(JSON.stringify({ error: 'internal_error' }), {
             status: 500,
             headers: { 'Content-Type': 'application/json' },
           })
@@ -69,9 +67,7 @@ export const Route = createFileRoute('/api/push/mute')({
           })
         } catch (err) {
           console.error('[push/mute POST] Unhandled error:', err)
-          const message =
-            err instanceof Error ? err.message : 'Internal server error'
-          return new Response(JSON.stringify({ error: message }), {
+          return new Response(JSON.stringify({ error: 'internal_error' }), {
             status: 500,
             headers: { 'Content-Type': 'application/json' },
           })

@@ -2,6 +2,7 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { render, screen, fireEvent, cleanup } from '@testing-library/react'
 import { CameraPreferences } from './CameraPreferences'
+import { withLocale } from '#/test-utils/locale'
 
 const cameras = [
   { name: 'front_porch', enabled: true },
@@ -51,5 +52,24 @@ describe('CameraPreferences', () => {
   it('renders no switches while loading', () => {
     render(<CameraPreferences cameras={cameras} loading onToggle={vi.fn()} />)
     expect(screen.queryAllByRole('switch')).toHaveLength(0)
+  })
+
+  it('renders Danish copy', () => {
+    const restore = withLocale('da')
+    try {
+      render(
+        <CameraPreferences
+          cameras={cameras}
+          loading={false}
+          onToggle={vi.fn()}
+        />,
+      )
+      expect(screen.getByText('Kameranotifikationer')).toBeTruthy()
+      expect(
+        screen.getByRole('switch', { name: 'Notifikationer for Front Porch' }),
+      ).toBeTruthy()
+    } finally {
+      restore()
+    }
   })
 })

@@ -12,17 +12,26 @@
  * tests (Step 8).
  *
  * This file validates:
- *   1. The module exports the expected shape.
- *   2. The exported save-error message constant matches the error text shown in
+ *   1. The save-error message matches the error text shown in
  *      the UI spec (keeps the spec, hook, and UI in sync via a single source).
  */
 import { describe, expect, it } from 'vitest'
-import { SAVE_ERROR_MESSAGE } from './useCameraOrder'
+import { m } from '#/paraglide/messages.js'
+import { withLocale } from '#/test-utils/locale'
 
-describe('useCameraOrder module exports', () => {
-  it('exports a SAVE_ERROR_MESSAGE string that matches the spec copy', () => {
-    expect(SAVE_ERROR_MESSAGE).toBe(
+describe('save error copy', () => {
+  it('matches the spec copy in English', () => {
+    expect(m.cameras_save_error()).toBe(
       'Order saved for this session only — storage is full or disabled',
     )
+  })
+
+  it('is translated to Danish', () => {
+    const restore = withLocale('da')
+    try {
+      expect(m.cameras_save_error()).toContain('Rækkefølgen gemmes kun')
+    } finally {
+      restore()
+    }
   })
 })

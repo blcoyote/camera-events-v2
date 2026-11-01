@@ -1,3 +1,4 @@
+import '#/i18n/client-locale'
 import { createRouter as createTanStackRouter } from '@tanstack/react-router'
 import { routeTree } from './routeTree.gen'
 

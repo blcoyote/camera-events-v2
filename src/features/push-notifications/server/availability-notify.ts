@@ -13,6 +13,8 @@ import type { PushPayload } from './push'
 import { formatCameraName } from './push-notify'
 import { createDelivery } from './delivery'
 import type { Delivery } from './delivery'
+import type { PushLocale } from './push-locale'
+import { m } from '#/paraglide/messages.js'
 
 export type CameraAvailabilityStatus = 'online' | 'offline'
 
@@ -29,15 +31,17 @@ export function cameraAvailabilityNotificationTag(camera: string): string {
 export function buildAvailabilityPayload(
   camera: string,
   status: CameraAvailabilityStatus,
+  locale: PushLocale,
 ): PushPayload {
   const body =
     status === 'offline'
-      ? 'Camera went offline — no frames received'
-      : 'Camera is back online'
+      ? m.push_camera_offline({}, { locale })
+      : m.push_camera_online({}, { locale })
 
   return {
     title: formatCameraName(camera),
     body,
+    locale,
     url: '/cameras',
     icon: '/icon-192.png',
     tag: cameraAvailabilityNotificationTag(camera),
@@ -63,6 +67,7 @@ export async function notifyUsersForCameraAvailability(
     description: `Camera "${camera}" ${status}`,
     isUserEligible: (userId, store) =>
       store.isCameraAvailabilityEnabledForUser(userId),
-    buildPayload: () => buildAvailabilityPayload(camera, status),
+    buildPayload: (_burstStart, locale) =>
+      buildAvailabilityPayload(camera, status, locale),
   })
 }

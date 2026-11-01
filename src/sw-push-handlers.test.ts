@@ -46,7 +46,7 @@ describe('parsePushPayload', () => {
     })
   })
 
-  it('re-formats a single-event body using the device timezone', () => {
+  it('re-formats a single-event body in Europe/Copenhagen', () => {
     // 1713182400 = 2024-04-15T12:00:00Z
     const result = parsePushPayload({
       title: 'Front Porch',
@@ -60,11 +60,7 @@ describe('parsePushPayload', () => {
         burstStart: true,
       },
     })
-    const localTime = new Date(1713182400 * 1000).toLocaleTimeString('en-GB', {
-      hour: '2-digit',
-      minute: '2-digit',
-    })
-    expect(result.body).toBe(`Person detected at ${localTime}`)
+    expect(result.body).toBe('Person detected at 14:00')
     expect(result.event).toEqual({
       camera: 'front_porch',
       count: 1,
@@ -87,11 +83,7 @@ describe('parsePushPayload', () => {
         burstStart: true,
       },
     })
-    const localTime = new Date(1713182400 * 1000).toLocaleTimeString('en-GB', {
-      hour: '2-digit',
-      minute: '2-digit',
-    })
-    expect(result.body).toBe(`3 new events — Person, Car, Dog at ${localTime}`)
+    expect(result.body).toBe('3 new events — Person, Car, Dog at 14:00')
   })
 
   it('truncates label lists beyond three with +N more', () => {
@@ -210,6 +202,61 @@ describe('parsePushPayload', () => {
   it('falls back url to default when empty string', () => {
     const result = parsePushPayload({ title: 'T', body: 'B', url: '' })
     expect(result.url).toBe('/')
+  })
+})
+
+describe('parsePushPayload locale', () => {
+  const event = {
+    camera: 'c',
+    count: 3,
+    labels: ['Person', 'Bil'],
+    timestamp: 1793412744,
+    burstStart: true,
+  }
+
+  it('re-derives a Danish body from payload.locale', () => {
+    const r = parsePushPayload({
+      title: 'T',
+      body: 'x',
+      url: '/',
+      locale: 'da',
+      event,
+    })
+    expect(r.body).toBe('3 nye hændelser — Person, Bil kl. 03.12')
+  })
+
+  it('falls back to English for missing or unknown locale', () => {
+    for (const locale of [undefined, 'fr']) {
+      const r = parsePushPayload({
+        title: 'T',
+        body: 'x',
+        url: '/',
+        locale,
+        event,
+      })
+      expect(r.body).toBe('3 new events — Person, Bil at 03:12')
+    }
+  })
+
+  it('keeps a merged Patch Danish', () => {
+    const plan = planNotification(
+      parsePushPayload({
+        title: 'T',
+        body: 'x',
+        url: '/',
+        tag: 't',
+        locale: 'da',
+        event: { ...event, count: 1, burstStart: false },
+      }),
+      {
+        camera: 'c',
+        count: 1,
+        labels: ['Person'],
+        timestamp: 1793412744,
+        url: '/',
+      },
+    )
+    expect(plan.body).toBe('2 nye hændelser — Person, Bil kl. 03.12')
   })
 })
 

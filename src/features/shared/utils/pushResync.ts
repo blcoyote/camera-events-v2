@@ -1,3 +1,5 @@
+import { getLocale } from '#/paraglide/runtime.js'
+
 /**
  * Best-effort re-registration of the browser's current push subscription with
  * the server. Web Push subscriptions can be silently invalidated server-side
@@ -22,7 +24,11 @@ export async function resyncSubscription(
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ endpoint: subJson.endpoint, keys: subJson.keys }),
+      body: JSON.stringify({
+        endpoint: subJson.endpoint,
+        keys: subJson.keys,
+        locale: getLocale(),
+      }),
     })
     return res.ok
   } catch {

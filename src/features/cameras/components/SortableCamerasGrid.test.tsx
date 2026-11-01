@@ -127,3 +127,22 @@ describe('SortableCamerasGrid structure', () => {
     expect(viewJSON).toContain('"isEditing":false')
   })
 })
+
+describe('SortableCamerasGrid (da)', () => {
+  it('labels the list in Danish', async () => {
+    const { withLocale } = await import('#/test-utils/locale')
+    const restore = withLocale('da')
+    try {
+      const json = JSON.stringify(
+        SortableCamerasGrid({
+          cameras: ['a'],
+          isEditing: false,
+          onOrderChange: vi.fn(),
+        }),
+      )
+      expect(json).toContain('Kameraliste')
+    } finally {
+      restore()
+    }
+  })
+})

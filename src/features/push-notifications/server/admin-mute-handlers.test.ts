@@ -28,13 +28,13 @@ describe('handleGetNotificationMute', () => {
   it('returns 401 when userId is null', async () => {
     const result = await handleGetNotificationMute(null)
     expect(result.status).toBe(401)
-    expect(result.body).toEqual({ error: 'Unauthorized' })
+    expect(result.body).toEqual({ error: 'unauthorized' })
   })
 
   it('returns 401 when userId is an empty string', async () => {
     const result = await handleGetNotificationMute('')
     expect(result.status).toBe(401)
-    expect(result.body).toEqual({ error: 'Unauthorized' })
+    expect(result.body).toEqual({ error: 'unauthorized' })
   })
 
   it('returns isAdmin: true and the active mute deadline for an admin during a mute', async () => {
@@ -70,7 +70,7 @@ describe('handleGetNotificationMute', () => {
     const result = await handleGetNotificationMute('regular-user')
 
     expect(result.status).toBe(403)
-    expect(result.body).toEqual({ error: 'Forbidden' })
+    expect(result.body).toEqual({ error: 'forbidden' })
     expect(getActiveMuteUntil).not.toHaveBeenCalled()
   })
 })
@@ -79,7 +79,7 @@ describe('handleSetNotificationMute', () => {
   it('returns 401 when userId is null', async () => {
     const result = await handleSetNotificationMute(null, { durationMs: 0 })
     expect(result.status).toBe(401)
-    expect(result.body).toEqual({ error: 'Unauthorized' })
+    expect(result.body).toEqual({ error: 'unauthorized' })
   })
 
   it('returns 403 for a signed-in non-admin and never mutes', async () => {
@@ -92,7 +92,7 @@ describe('handleSetNotificationMute', () => {
     })
 
     expect(result.status).toBe(403)
-    expect(result.body).toEqual({ error: 'Forbidden' })
+    expect(result.body).toEqual({ error: 'forbidden' })
     expect(applyNotificationMute).not.toHaveBeenCalled()
   })
 
@@ -108,8 +108,7 @@ describe('handleSetNotificationMute', () => {
 
       expect(result.status).toBe(400)
       expect(result.body).toEqual({
-        error:
-          'Invalid request: durationMs must be one of the supported mute durations',
+        error: 'invalid_body',
       })
       expect(applyNotificationMute).not.toHaveBeenCalled()
     })

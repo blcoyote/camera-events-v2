@@ -1,3 +1,4 @@
+import { m } from '#/paraglide/messages.js'
 import { useCallback, useRef } from 'react'
 import { XIcon } from 'lucide-react'
 import { useImageGestures } from '#/features/shared/hooks/useImageGestures'
@@ -50,7 +51,7 @@ export function SnapshotLightbox({
       >
         <DialogTitle className="sr-only">{alt}</DialogTitle>
         <DialogDescription className="sr-only">
-          Pinch to zoom, drag to pan, swipe down or press Escape to close.
+          {m.shared_lightbox_hint()}
         </DialogDescription>
         <LightboxViewer src={src} alt={alt} onClose={onClose} />
       </DialogContent>
@@ -99,7 +100,7 @@ function LightboxViewer({
         variant="ghost"
         size="icon"
         onClick={handleClose}
-        aria-label="Close snapshot viewer"
+        aria-label={m.shared_lightbox_close()}
         className="absolute right-3 top-[calc(0.75rem+env(safe-area-inset-top))] z-10 h-11 w-11 bg-white/20 text-white backdrop-blur-sm hover:bg-white/30"
       >
         <XIcon className="size-5" aria-hidden="true" />

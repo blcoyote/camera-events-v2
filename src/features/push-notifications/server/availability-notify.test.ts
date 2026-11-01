@@ -36,7 +36,7 @@ describe('cameraAvailabilityNotificationTag', () => {
 
 describe('buildAvailabilityPayload', () => {
   it('builds an offline payload with the formatted camera name as title', () => {
-    const payload = buildAvailabilityPayload('front_porch', 'offline')
+    const payload = buildAvailabilityPayload('front_porch', 'offline', 'en')
 
     expect(payload.title).toBe('Front Porch')
     expect(payload.body).toBe('Camera went offline — no frames received')
@@ -46,14 +46,23 @@ describe('buildAvailabilityPayload', () => {
   })
 
   it('builds an online payload with the back-online body text', () => {
-    const payload = buildAvailabilityPayload('front_porch', 'online')
+    const payload = buildAvailabilityPayload('front_porch', 'online', 'en')
 
     expect(payload.body).toBe('Camera is back online')
   })
 
+  it('renders Danish text and sets payload.locale', () => {
+    const off = buildAvailabilityPayload('front_porch', 'offline', 'da')
+    const on = buildAvailabilityPayload('front_porch', 'online', 'da')
+    expect(off.body).toBe('Kameraet gik offline — ingen billeder modtaget')
+    expect(on.body).toBe('Kameraet er online igen')
+    expect(off.locale).toBe('da')
+    expect(buildAvailabilityPayload('x', 'online', 'en').locale).toBe('en')
+  })
+
   it('tags the online and offline payloads for the same camera identically', () => {
-    const offline = buildAvailabilityPayload('front_porch', 'offline')
-    const online = buildAvailabilityPayload('front_porch', 'online')
+    const offline = buildAvailabilityPayload('front_porch', 'offline', 'en')
+    const online = buildAvailabilityPayload('front_porch', 'online', 'en')
 
     expect(online.tag).toBe(offline.tag)
   })
@@ -154,7 +163,11 @@ describe('notifyUsersForCameraAvailability', () => {
     await notifyUsersForCameraAvailability('front_porch', 'offline')
 
     expect(sendPushNotificationMock).toHaveBeenCalledTimes(2)
-    const expectedPayload = buildAvailabilityPayload('front_porch', 'offline')
+    const expectedPayload = buildAvailabilityPayload(
+      'front_porch',
+      'offline',
+      'en',
+    )
     expect(sendPushNotificationMock).toHaveBeenNthCalledWith(
       1,
       {
@@ -309,7 +322,7 @@ describe('notifyUsersForCameraAvailability', () => {
       })
       expect(sendPushNotificationMock).toHaveBeenCalledTimes(1)
       expect(sendPushNotificationMock.mock.calls[0][1]).toEqual(
-        buildAvailabilityPayload('front_porch', 'offline'),
+        buildAvailabilityPayload('front_porch', 'offline', 'en'),
       )
 
       // The next motion continuation flush is still promoted to an Alert.

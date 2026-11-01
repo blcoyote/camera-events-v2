@@ -1,7 +1,9 @@
+import { m } from '#/paraglide/messages.js'
+import { getLocale } from '#/paraglide/runtime.js'
+import { translateLabel } from '#/features/shared/utils/labels'
 import { useState } from 'react'
 import type { FrigateResult } from '#/features/shared/server/frigate/config'
 import type { FrigateEvent } from '#/features/shared/server/frigate/types'
-import { formatLabelName } from '#/features/shared/utils/eventFormatting'
 import { FilterPill } from '../components/FilterPill'
 import { EventCard } from '#/features/shared/components/EventCard'
 import { Button } from '#/features/shared/components/ui/button'
@@ -21,7 +23,7 @@ export function getEventsPageState(
   if (!result.ok) {
     return {
       kind: 'error',
-      message: 'Could not load events. Check that Frigate is running.',
+      message: m.events_load_error(),
     }
   }
   if (result.data.length === 0) {
@@ -70,7 +72,7 @@ export function CameraEventsListPage({
 
   return (
     <main id="main-content" className="page-wrap px-4 pb-8 pt-3 sm:pt-14">
-      <PageHeader eyebrow="Camera Events" title="Recent Events" />
+      <PageHeader eyebrow={m.shell_title_app()} title={m.events_page_title()} />
 
       {/* Error state */}
       {state.kind === 'error' && (
@@ -83,11 +85,9 @@ export function CameraEventsListPage({
       {state.kind === 'empty' && (
         <div className="mt-12 text-center">
           <p className="text-lg font-medium text-foreground">
-            No events recorded
+            {m.events_empty_title()}
           </p>
-          <p className="mt-1 text-sm text-fg-2">
-            Events will appear here when your cameras detect activity.
-          </p>
+          <p className="mt-1 text-sm text-fg-2">{m.events_empty_hint()}</p>
         </div>
       )}
 
@@ -99,11 +99,11 @@ export function CameraEventsListPage({
             {labels.length > 1 && (
               <div
                 role="group"
-                aria-label="Filter by detection type"
+                aria-label={m.events_filter_type_group()}
                 className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0"
               >
                 <FilterPill
-                  label="All types"
+                  label={m.events_filter_all_types()}
                   active={labelFilter === null}
                   onClick={() => setLabelFilter(null)}
                   count={events.length}
@@ -111,7 +111,7 @@ export function CameraEventsListPage({
                 {labels.map((l) => (
                   <FilterPill
                     key={l}
-                    label={formatLabelName(l)}
+                    label={translateLabel(l, getLocale())}
                     active={labelFilter === l}
                     onClick={() => setLabelFilter(labelFilter === l ? null : l)}
                     count={events.filter((e) => e.label === l).length}
@@ -122,11 +122,11 @@ export function CameraEventsListPage({
             {cameras.length > 1 && (
               <div
                 role="group"
-                aria-label="Filter by camera"
+                aria-label={m.events_filter_camera_group()}
                 className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0"
               >
                 <FilterPill
-                  label="All cameras"
+                  label={m.events_filter_all_cameras()}
                   active={cameraFilter === null}
                   onClick={() => setCameraFilter(null)}
                 />
@@ -149,14 +149,15 @@ export function CameraEventsListPage({
             className="mt-4 text-xs font-medium text-muted-foreground"
             aria-live="polite"
           >
-            {filtered.length} {filtered.length === 1 ? 'event' : 'events'}
-            {(labelFilter || cameraFilter) && ' (filtered)'}
+            {labelFilter || cameraFilter
+              ? m.events_count_filtered({ count: filtered.length })
+              : m.events_count({ count: filtered.length })}
           </p>
 
           {/* Event grid */}
           {filtered.length > 0 ? (
             <section
-              aria-label="Camera events"
+              aria-label={m.events_grid_label()}
               className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
             >
               {filtered.map((event, i) => (
@@ -170,9 +171,7 @@ export function CameraEventsListPage({
             </section>
           ) : (
             <div className="mt-8 text-center">
-              <p className="text-sm text-fg-2">
-                No events match the selected filters.
-              </p>
+              <p className="text-sm text-fg-2">{m.events_no_match()}</p>
               <Button
                 variant="link"
                 size="sm"
@@ -182,7 +181,7 @@ export function CameraEventsListPage({
                 }}
                 className="mt-2"
               >
-                Clear filters
+                {m.events_clear_filters()}
               </Button>
             </div>
           )}

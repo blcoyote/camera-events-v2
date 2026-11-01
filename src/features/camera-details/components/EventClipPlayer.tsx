@@ -1,10 +1,10 @@
+import { m } from '#/paraglide/messages.js'
+import { getLocale } from '#/paraglide/runtime.js'
+import { translateLabel } from '#/features/shared/utils/labels'
 import { useState } from 'react'
 import { cn } from '#/features/shared/utils/cn'
 import { Button } from '#/features/shared/components/ui/button'
-import {
-  formatLabelName,
-  formatCameraName,
-} from '#/features/shared/utils/eventFormatting'
+import { formatCameraName } from '#/features/shared/utils/eventFormatting'
 
 export function EventClipPlayer({
   eventId,
@@ -24,9 +24,10 @@ export function EventClipPlayer({
 
   const [retry, setRetry] = useState(0)
 
-  const ariaLabel = `Clip of ${formatLabelName(label)} from ${formatCameraName(
-    camera,
-  )}`
+  const ariaLabel = m.details_clip_aria({
+    label: translateLabel(label, getLocale()),
+    camera: formatCameraName(camera),
+  })
 
   return (
     <div
@@ -55,10 +56,10 @@ export function EventClipPlayer({
           className="flex h-full w-full flex-col items-center justify-center gap-3 bg-surface-warm px-4 text-center"
         >
           <p className="text-sm font-semibold text-foreground">
-            Couldn't load clip
+            {m.details_clip_error_title()}
           </p>
           <p className="text-sm text-muted-foreground">
-            Frigate may still be saving it, or it may no longer be stored.
+            {m.details_clip_error_body()}
           </p>
           <Button
             variant="secondary"
@@ -68,7 +69,7 @@ export function EventClipPlayer({
               setStatus('idle')
             }}
           >
-            Try again
+            {m.details_try_again()}
           </Button>
         </div>
       )}

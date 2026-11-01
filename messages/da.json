@@ -1,0 +1,291 @@
+{
+  "$schema": "https://inlang.com/schema/inlang-message-format",
+  "app_name": "Camera Events",
+  "error_unknown": "Noget gik galt",
+  "error_unauthorized": "Ikke logget ind",
+  "error_forbidden": "Ingen adgang",
+  "error_push_not_configured": "Notifikationer er ikke sat op",
+  "error_invalid_body": "Ugyldig forespørgsel",
+  "error_invalid_endpoint": "Ugyldig adresse til enhedens abonnement",
+  "error_endpoint_not_https": "Enhedens abonnement skal bruge HTTPS",
+  "error_cameras_unavailable": "Kameralisten kunne ikke hentes",
+  "error_invalid_camera_name": "Ugyldigt kameranavn",
+  "error_internal_error": "Intern serverfejl",
+  "label_person": "Person",
+  "label_car": "Bil",
+  "label_dog": "Hund",
+  "label_cat": "Kat",
+  "label_bird": "Fugl",
+  "label_bicycle": "Cykel",
+  "label_motorcycle": "Motorcykel",
+  "label_bus": "Bus",
+  "label_truck": "Lastbil",
+  "label_boat": "Båd",
+  "label_horse": "Hest",
+  "label_package": "Pakke",
+  "label_face": "Ansigt",
+  "label_license_plate": "Nummerplade",
+  "push_event_single": "{label} registreret kl. {time}",
+  "push_event_multi": "{count} nye hændelser — {labels} kl. {time}",
+  "push_labels_more": "{labels} +{more} mere",
+  "push_camera_offline": "Kameraet gik offline — ingen billeder modtaget",
+  "push_camera_online": "Kameraet er online igen",
+  "shell_tab_cameras": "Kameraer",
+  "shell_tab_events": "Hændelser",
+  "shell_tab_favorites": "Favoritter",
+  "shell_tab_settings": "Indstillinger",
+  "shell_title_event": "Hændelse",
+  "shell_title_live_view": "Live-visning",
+  "shell_title_app": "Camera Events",
+  "shell_nav_site": "Webstedsnavigation",
+  "shell_nav_primary": "Primær",
+  "shell_sign_in_google": "Log ind med Google",
+  "shell_sign_out": "Log ud",
+  "shell_account": "Konto",
+  "shell_account_menu": "Kontomenu",
+  "shell_account_menu_admin": "Kontomenu (admin)",
+  "shell_admin": "Admin",
+  "shell_theme_light": "Lys",
+  "shell_theme_dark": "Mørk",
+  "shell_theme_system": "System",
+  "shell_theme_toggle": "Tema: {current}. Skift til {next}.",
+  "shell_update_available": "En ny version er tilgængelig.",
+  "shell_update_now": "Opdater nu",
+  "shell_update_later": "Senere",
+  "shared_alert_login_failed": "Noget gik galt under login. Prøv igen.",
+  "shared_alert_access_denied": "Du afviste Google-loginanmodningen.",
+  "shared_alert_logged_out": "Du er logget ud.",
+  "shared_alert_dismiss": "Luk besked",
+  "shared_event_card_aria": "{label} registreret af {camera}, {time}",
+  "shared_time_just_now": "Lige nu",
+  "shared_time_minutes_ago": "{count} min. siden",
+  "shared_time_hours_ago": "{count} t. siden",
+  "shared_time_days_ago": "{count} d. siden",
+  "shared_event_recent": "Ny hændelse",
+  "shared_event_has_clip": "Har klip",
+  "shared_favorite_saving": "Gemmer…",
+  "shared_favorite_remove": "Fjern fra favoritter",
+  "shared_favorite_add": "Føj til favoritter",
+  "shared_refreshing": "Opdaterer…",
+  "shared_refreshed": "Opdateret",
+  "shared_lightbox_hint": "Knib for at zoome, træk for at panorere, stryg ned eller tryk Escape for at lukke.",
+  "shared_lightbox_close": "Luk visning af stillbillede",
+  "ui_close": "Luk",
+  "cameras_eyebrow": "Kameraer",
+  "cameras_page_title": "Seneste stillbilleder",
+  "cameras_arrange": "Arranger",
+  "cameras_done": "Færdig",
+  "cameras_dismiss": "Luk",
+  "cameras_dismiss_storage_error": "Luk besked",
+  "cameras_empty": "Ingen kameraer fundet",
+  "cameras_load_error": "Kameraer kunne ikke indlæses. Tjek at Frigate kører.",
+  "cameras_save_error": "Rækkefølgen gemmes kun i denne session — lageret er fuldt eller slået fra",
+  "cameras_live_view_of": "Live-visning af {name}",
+  "cameras_latest_snapshot_from": "Seneste stillbillede fra {name}",
+  "cameras_reorder": "Flyt {name}",
+  "cameras_list": "Kameraliste",
+  "cameras_loading_title": "Indlæser kameraer…",
+  "cameras_loading": "Indlæser kameraer",
+  "events_page_title": "Seneste hændelser",
+  "events_load_error": "Hændelser kunne ikke indlæses. Tjek at Frigate kører.",
+  "events_empty_title": "Ingen hændelser registreret",
+  "events_empty_hint": "Hændelser vises her, når dine kameraer registrerer aktivitet.",
+  "events_filter_type_group": "Filtrer efter type",
+  "events_filter_all_types": "Alle typer",
+  "events_filter_camera_group": "Filtrer efter kamera",
+  "events_filter_all_cameras": "Alle kameraer",
+  "events_count": [
+    {
+      "declarations": [
+        "input count",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
+      "match": {
+        "countPlural=one": "{count} hændelse",
+        "countPlural=other": "{count} hændelser"
+      }
+    }
+  ],
+  "events_count_filtered": [
+    {
+      "declarations": [
+        "input count",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
+      "match": {
+        "countPlural=one": "{count} hændelse (filtreret)",
+        "countPlural=other": "{count} hændelser (filtreret)"
+      }
+    }
+  ],
+  "events_grid_label": "Kamerahændelser",
+  "events_no_match": "Ingen hændelser matcher de valgte filtre.",
+  "events_clear_filters": "Ryd filtre",
+  "events_loading_title": "Indlæser hændelser…",
+  "events_loading_status": "Indlæser hændelser",
+  "events_loading_label": "Indlæser hændelser",
+  "favorites_page_title": "Dine favoritter",
+  "favorites_empty_title": "Ingen favoritter endnu",
+  "favorites_empty_hint": "Tryk på hjertet på en hændelse for at gemme den her",
+  "favorites_browse": "Gå til hændelser",
+  "favorites_grid_label": "Favoritmarkerede hændelser",
+  "favorites_loading_title": "Indlæser favoritter…",
+  "favorites_loading_status": "Indlæser favoritter",
+  "favorites_loading_label": "Indlæser favoritter",
+  "home_title": "Overvåg dine kameraer, hvor som helst.",
+  "home_subtitle": "Se hændelser med bevægelse, personer og køretøjer fra alle dine kameraer samlet ét sted.",
+  "home_sign_in": "Log ind med Google",
+  "live_snapshot_alt": "Live-stillbillede fra {name}",
+  "live_fullscreen": "Vis i fuld skærm",
+  "live_badge": "Live",
+  "cameras_arrange_hint": "Træk i {icon} for at flytte et kamera. Rækkefølgen gemmes kun på denne enhed.",
+  "details_snapshot_alt": "Stillbillede af {label} fra {camera}",
+  "details_snapshot_zoom": "Stillbillede af {label} fra {camera} – tryk for fuldskærm",
+  "details_clip_aria": "Klip af {label} fra {camera}",
+  "details_clip_error_title": "Kunne ikke indlæse klippet",
+  "details_clip_error_body": "Frigate gemmer det muligvis stadig, eller det er ikke længere gemt.",
+  "details_try_again": "Prøv igen",
+  "details_pending_title": "Behandles",
+  "details_pending_body": "Frigate har ikke gemt hændelsen endnu. Den dukker op om lidt – siden tjekker automatisk.",
+  "details_check_again": "Tjek igen",
+  "details_back": "Tilbage til hændelser",
+  "details_not_found_title": "Hændelsen blev ikke fundet",
+  "details_not_found_body": "Hændelsen findes ikke, eller den er blevet fjernet.",
+  "details_load_error": "Kunne ikke indlæse hændelsen. Tjek at Frigate kører.",
+  "details_watch_clip": "Se klip",
+  "details_camera": "Kamera",
+  "details_duration": "Varighed",
+  "details_zones": "Zoner",
+  "details_clip": "Klip",
+  "details_snapshot": "Stillbillede",
+  "details_available": "Tilgængelig",
+  "details_none": "Ingen",
+  "details_download_clip": "Hent klip",
+  "details_download_snapshot": "Hent stillbillede",
+  "details_confidence": "Registreringssikkerhed",
+  "details_duration_seconds": "{seconds} s",
+  "details_duration_minutes": "{minutes} min",
+  "details_duration_minutes_seconds": "{minutes} min {seconds} s",
+  "settings_account": "Konto",
+  "settings_appearance": "Udseende",
+  "settings_language_label": "Sprog",
+  "settings_language_auto": "Automatisk",
+  "settings_theme_group": "Tema",
+  "settings_camera_events": "Hændelser",
+  "settings_event_limit_label": "Antal hændelser der vises",
+  "settings_event_count": [
+    {
+      "declarations": [
+        "input count",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
+      "match": {
+        "countPlural=one": "{count} hændelse",
+        "countPlural=other": "{count} hændelser"
+      }
+    }
+  ],
+  "settings_event_limit_desc": "Styrer, hvor mange hændelser der indlæses på siden Hændelser. Interval: {min}–{max}.",
+  "settings_live_view": "Live-visning",
+  "settings_refresh_interval": "Opdateringsinterval",
+  "settings_refresh_seconds": "{seconds} s",
+  "settings_refresh_desc": "Hvor ofte kameraets live-stillbillede opdateres. Interval: {min}–{max} sekunder.",
+  "settings_notifications": "Notifikationer",
+  "settings_push_unsupported": "Pushnotifikationer understøttes ikke i denne browser.",
+  "settings_push_unavailable": "Pushnotifikationer er ikke tilgængelige på denne server.",
+  "settings_blocked": "Notifikationer er blokeret i browserens indstillinger.",
+  "settings_unblock_help": "Sådan fjerner du blokeringen: I Chrome skal du klikke på låseikonet i adresselinjen > Webstedsindstillinger > Notifikationer > Tillad. I Safari skal du gå til Indstillinger > Websteder > Notifikationer og tillade dette websted.",
+  "settings_test_sent": [
+    {
+      "declarations": [
+        "input count",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
+      "match": {
+        "countPlural=one": "Test sendt til {count} enhed.",
+        "countPlural=other": "Test sendt til {count} enheder."
+      }
+    }
+  ],
+  "settings_enabled": "Notifikationer er aktiveret",
+  "settings_working": "Arbejder...",
+  "settings_sending": "Sender...",
+  "settings_disable": "Deaktivér notifikationer",
+  "settings_send_test": "Send testnotifikation",
+  "settings_enable_prompt": "Aktivér pushnotifikationer for at modtage notifikationer på denne enhed.",
+  "settings_enable": "Aktivér notifikationer",
+  "settings_error_session_expired": "Din session er udløbet. Log ind igen, og aktivér derefter notifikationer.",
+  "settings_error_unavailable": "Notifikationer er midlertidigt utilgængelige. Prøv igen senere.",
+  "settings_error_enable": "Kunne ikke aktivere notifikationer. Prøv igen.",
+  "settings_error_enable_detail": "Kunne ikke aktivere notifikationer: {detail}. Prøv igen.",
+  "settings_error_permission_not_granted": "Tilladelse til notifikationer blev ikke givet.",
+  "settings_error_vapid": "Kunne ikke hente VAPID-nøglen",
+  "settings_error_brave": "Brave blokerer pushnotifikationer som standard. Aktivér \"Use Google services for push messaging\" i brave://settings/privacy, og prøv igen.",
+  "settings_error_subscribe": "Kunne ikke tilmelde",
+  "settings_error_unsubscribe": "Kunne ikke afmelde",
+  "settings_error_send_test": "Kunne ikke sende testnotifikation",
+  "settings_description": "Kontoindstillinger og kamerakonfiguration.",
+  "route_skip_to_content": "Gå til hovedindhold",
+  "route_not_found_title": "Siden blev ikke fundet",
+  "route_not_found_body": "Siden findes ikke, eller den er flyttet.",
+  "route_not_found_home": "Til forsiden",
+  "settings_prefs_title": "Kameranotifikationer",
+  "settings_prefs_hint": "Vælg, hvilke kameraer der sender dig push-notifikationer.",
+  "settings_prefs_switch": "Notifikationer for {name}",
+  "settings_availability_title": "Kamerastatus-notifikationer",
+  "settings_availability_hint": "Få besked, når et kamera holder op med at sende video eller kommer online igen.",
+  "settings_availability_switch": "Kamerastatus-notifikationer",
+  "settings_mute_title": "Admin",
+  "settings_mute_description": "Sæt notifikationer om bevægelse og kamerastatus på pause for alle brugere i den valgte periode, eller vælg Fra for at genoptage med det samme. Hændelser registreres stadig — kun push-notifikationer sættes på pause.",
+  "settings_mute_duration_label": "Varighed af pause",
+  "settings_mute_off": "Fra — genoptag notifikationer",
+  "settings_mute_minutes": [
+    {
+      "declarations": [
+        "input count",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
+      "match": {
+        "countPlural=one": "{count} minut",
+        "countPlural=other": "{count} minutter"
+      }
+    }
+  ],
+  "settings_mute_hours": [
+    {
+      "declarations": [
+        "input count",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
+      "match": {
+        "countPlural=one": "{count} time",
+        "countPlural=other": "{count} timer"
+      }
+    }
+  ],
+  "settings_mute_submit": "Sæt alle notifikationer på pause i {duration}",
+  "settings_mute_submitting": "Sætter på pause…",
+  "settings_mute_resume": "Genoptag notifikationer",
+  "settings_mute_resuming": "Genoptager…",
+  "settings_mute_active": "Alle notifikationer er på pause — {remaining} tilbage",
+  "settings_mute_error_silence": "Kunne ikke sætte notifikationer på pause. Prøv igen.",
+  "settings_mute_error_resume": "Kunne ikke genoptage notifikationer. Prøv igen."
+}

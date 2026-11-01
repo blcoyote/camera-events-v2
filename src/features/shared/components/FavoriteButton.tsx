@@ -1,3 +1,4 @@
+import { m } from '#/paraglide/messages.js'
 import { useEffect, useState } from 'react'
 import { Heart, AlertCircle } from 'lucide-react'
 import { Button } from '#/features/shared/components/ui/button'
@@ -51,10 +52,10 @@ export function FavoriteButton({
         size="icon"
         aria-label={
           pending
-            ? 'Saving…'
+            ? m.shared_favorite_saving()
             : favorited
-              ? 'Remove from favorites'
-              : 'Add to favorites'
+              ? m.shared_favorite_remove()
+              : m.shared_favorite_add()
         }
         aria-pressed={favorited}
         disabled={pending}

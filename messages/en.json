@@ -1,0 +1,291 @@
+{
+  "$schema": "https://inlang.com/schema/inlang-message-format",
+  "app_name": "Camera Events",
+  "error_unknown": "Something went wrong",
+  "error_unauthorized": "Unauthorized",
+  "error_forbidden": "Forbidden",
+  "error_push_not_configured": "Push notifications are not configured",
+  "error_invalid_body": "Invalid request",
+  "error_invalid_endpoint": "Invalid subscription endpoint URL",
+  "error_endpoint_not_https": "Subscription endpoint must use HTTPS",
+  "error_cameras_unavailable": "Failed to fetch camera list",
+  "error_invalid_camera_name": "Invalid camera name",
+  "error_internal_error": "Internal server error",
+  "label_person": "Person",
+  "label_car": "Car",
+  "label_dog": "Dog",
+  "label_cat": "Cat",
+  "label_bird": "Bird",
+  "label_bicycle": "Bicycle",
+  "label_motorcycle": "Motorcycle",
+  "label_bus": "Bus",
+  "label_truck": "Truck",
+  "label_boat": "Boat",
+  "label_horse": "Horse",
+  "label_package": "Package",
+  "label_face": "Face",
+  "label_license_plate": "License plate",
+  "push_event_single": "{label} detected at {time}",
+  "push_event_multi": "{count} new events — {labels} at {time}",
+  "push_labels_more": "{labels} +{more} more",
+  "push_camera_offline": "Camera went offline — no frames received",
+  "push_camera_online": "Camera is back online",
+  "shell_tab_cameras": "Cameras",
+  "shell_tab_events": "Events",
+  "shell_tab_favorites": "Favorites",
+  "shell_tab_settings": "Settings",
+  "shell_title_event": "Event",
+  "shell_title_live_view": "Live view",
+  "shell_title_app": "Camera Events",
+  "shell_nav_site": "Site navigation",
+  "shell_nav_primary": "Primary",
+  "shell_sign_in_google": "Sign in with Google",
+  "shell_sign_out": "Sign out",
+  "shell_account": "Account",
+  "shell_account_menu": "Account menu",
+  "shell_account_menu_admin": "Account menu (Admin)",
+  "shell_admin": "Admin",
+  "shell_theme_light": "Light",
+  "shell_theme_dark": "Dark",
+  "shell_theme_system": "System",
+  "shell_theme_toggle": "Theme: {current}. Switch to {next}.",
+  "shell_update_available": "A new version is available.",
+  "shell_update_now": "Update now",
+  "shell_update_later": "Later",
+  "shared_alert_login_failed": "Something went wrong during sign-in. Please try again.",
+  "shared_alert_access_denied": "You declined the Google sign-in request.",
+  "shared_alert_logged_out": "You have been signed out.",
+  "shared_alert_dismiss": "Dismiss message",
+  "shared_event_card_aria": "{label} detected by {camera}, {time}",
+  "shared_time_just_now": "Just now",
+  "shared_time_minutes_ago": "{count}m ago",
+  "shared_time_hours_ago": "{count}h ago",
+  "shared_time_days_ago": "{count}d ago",
+  "shared_event_recent": "Recent event",
+  "shared_event_has_clip": "Has video clip",
+  "shared_favorite_saving": "Saving…",
+  "shared_favorite_remove": "Remove from favorites",
+  "shared_favorite_add": "Add to favorites",
+  "shared_refreshing": "Refreshing…",
+  "shared_refreshed": "Refreshed",
+  "shared_lightbox_hint": "Pinch to zoom, drag to pan, swipe down or press Escape to close.",
+  "shared_lightbox_close": "Close snapshot viewer",
+  "ui_close": "Close",
+  "cameras_eyebrow": "Cameras",
+  "cameras_page_title": "Latest snapshots",
+  "cameras_arrange": "Arrange",
+  "cameras_done": "Done",
+  "cameras_dismiss": "Dismiss",
+  "cameras_dismiss_storage_error": "Dismiss storage error",
+  "cameras_empty": "No cameras found",
+  "cameras_load_error": "Could not load cameras. Check that Frigate is running.",
+  "cameras_save_error": "Order saved for this session only — storage is full or disabled",
+  "cameras_live_view_of": "Live view of {name}",
+  "cameras_latest_snapshot_from": "Latest snapshot from {name}",
+  "cameras_reorder": "Reorder {name}",
+  "cameras_list": "Camera list",
+  "cameras_loading_title": "Loading cameras…",
+  "cameras_loading": "Loading cameras",
+  "events_page_title": "Recent Events",
+  "events_load_error": "Could not load events. Check that Frigate is running.",
+  "events_empty_title": "No events recorded",
+  "events_empty_hint": "Events will appear here when your cameras detect activity.",
+  "events_filter_type_group": "Filter by detection type",
+  "events_filter_all_types": "All types",
+  "events_filter_camera_group": "Filter by camera",
+  "events_filter_all_cameras": "All cameras",
+  "events_count": [
+    {
+      "declarations": [
+        "input count",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
+      "match": {
+        "countPlural=one": "{count} event",
+        "countPlural=other": "{count} events"
+      }
+    }
+  ],
+  "events_count_filtered": [
+    {
+      "declarations": [
+        "input count",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
+      "match": {
+        "countPlural=one": "{count} event (filtered)",
+        "countPlural=other": "{count} events (filtered)"
+      }
+    }
+  ],
+  "events_grid_label": "Camera events",
+  "events_no_match": "No events match the selected filters.",
+  "events_clear_filters": "Clear filters",
+  "events_loading_title": "Loading events…",
+  "events_loading_status": "Loading camera events",
+  "events_loading_label": "Loading events",
+  "favorites_page_title": "Your Favorites",
+  "favorites_empty_title": "No favorites yet",
+  "favorites_empty_hint": "Tap the heart on any event to save it here",
+  "favorites_browse": "Browse events",
+  "favorites_grid_label": "Favorited events",
+  "favorites_loading_title": "Loading favorites…",
+  "favorites_loading_status": "Loading favorites",
+  "favorites_loading_label": "Loading favorites",
+  "home_title": "Monitor your cameras, anywhere.",
+  "home_subtitle": "View motion, person, and vehicle detection events from all your cameras in one place.",
+  "home_sign_in": "Sign in with Google",
+  "live_snapshot_alt": "Live snapshot from {name}",
+  "live_fullscreen": "View fullscreen",
+  "live_badge": "Live",
+  "cameras_arrange_hint": "Drag {icon} to move a camera. The order is saved on this device only.",
+  "details_snapshot_alt": "Snapshot of {label} detected by {camera}",
+  "details_snapshot_zoom": "Snapshot of {label} detected by {camera} — tap to view fullscreen",
+  "details_clip_aria": "Clip of {label} from {camera}",
+  "details_clip_error_title": "Couldn't load clip",
+  "details_clip_error_body": "Frigate may still be saving it, or it may no longer be stored.",
+  "details_try_again": "Try again",
+  "details_pending_title": "Still being saved",
+  "details_pending_body": "Frigate is still writing this event to disk. It should appear in a moment — this page is checking automatically.",
+  "details_check_again": "Check again",
+  "details_back": "Back to Camera Events",
+  "details_not_found_title": "Event not found",
+  "details_not_found_body": "The event you're looking for doesn't exist or has been removed.",
+  "details_load_error": "Could not load event. Check that Frigate is running.",
+  "details_watch_clip": "Watch clip",
+  "details_camera": "Camera",
+  "details_duration": "Duration",
+  "details_zones": "Zones",
+  "details_clip": "Clip",
+  "details_snapshot": "Snapshot",
+  "details_available": "Available",
+  "details_none": "None",
+  "details_download_clip": "Download video clip",
+  "details_download_snapshot": "Download snapshot image",
+  "details_confidence": "Detection confidence",
+  "details_duration_seconds": "{seconds}s",
+  "details_duration_minutes": "{minutes}m",
+  "details_duration_minutes_seconds": "{minutes}m {seconds}s",
+  "settings_account": "Account",
+  "settings_appearance": "Appearance",
+  "settings_language_label": "Language",
+  "settings_language_auto": "Automatic",
+  "settings_theme_group": "Theme",
+  "settings_camera_events": "Camera Events",
+  "settings_event_limit_label": "Number of events to display",
+  "settings_event_count": [
+    {
+      "declarations": [
+        "input count",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
+      "match": {
+        "countPlural=one": "{count} event",
+        "countPlural=other": "{count} events"
+      }
+    }
+  ],
+  "settings_event_limit_desc": "Controls how many events are loaded on the Camera Events page. Range: {min}–{max}.",
+  "settings_live_view": "Live View",
+  "settings_refresh_interval": "Refresh interval",
+  "settings_refresh_seconds": "{seconds}s",
+  "settings_refresh_desc": "How often the live camera snapshot refreshes. Range: {min}–{max} seconds.",
+  "settings_notifications": "Notifications",
+  "settings_push_unsupported": "Push notifications are not supported in this browser.",
+  "settings_push_unavailable": "Push notifications are not available on this server.",
+  "settings_blocked": "Notifications are blocked in your browser settings.",
+  "settings_unblock_help": "To unblock: in Chrome, click the lock icon in the address bar > Site settings > Notifications > Allow. In Safari, go to Settings > Websites > Notifications and allow this site.",
+  "settings_test_sent": [
+    {
+      "declarations": [
+        "input count",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
+      "match": {
+        "countPlural=one": "Test sent to {count} device.",
+        "countPlural=other": "Test sent to {count} devices."
+      }
+    }
+  ],
+  "settings_enabled": "Notifications are enabled",
+  "settings_working": "Working...",
+  "settings_sending": "Sending...",
+  "settings_disable": "Disable notifications",
+  "settings_send_test": "Send test notification",
+  "settings_enable_prompt": "Enable push notifications to receive alerts on this device.",
+  "settings_enable": "Enable notifications",
+  "settings_error_session_expired": "Your session has expired. Please sign in again, then enable notifications.",
+  "settings_error_unavailable": "Notifications are temporarily unavailable. Please try again later.",
+  "settings_error_enable": "Could not enable notifications. Please try again.",
+  "settings_error_enable_detail": "Could not enable notifications: {detail}. Please try again.",
+  "settings_error_permission_not_granted": "Notification permission was not granted.",
+  "settings_error_vapid": "Could not fetch VAPID key",
+  "settings_error_brave": "Brave blocks push notifications by default. Enable \"Use Google services for push messaging\" in brave://settings/privacy, then try again.",
+  "settings_error_subscribe": "Failed to subscribe",
+  "settings_error_unsubscribe": "Failed to unsubscribe",
+  "settings_error_send_test": "Failed to send test notification",
+  "settings_description": "Account preferences and camera configuration.",
+  "route_skip_to_content": "Skip to main content",
+  "route_not_found_title": "Page not found",
+  "route_not_found_body": "The page you're looking for doesn't exist or has been moved.",
+  "route_not_found_home": "Back to Home",
+  "settings_prefs_title": "Camera Notifications",
+  "settings_prefs_hint": "Choose which cameras send you push notifications.",
+  "settings_prefs_switch": "Notifications for {name}",
+  "settings_availability_title": "Camera Offline Notifications",
+  "settings_availability_hint": "Get notified when a camera stops sending video or comes back online.",
+  "settings_availability_switch": "Camera offline notifications",
+  "settings_mute_title": "Admin",
+  "settings_mute_description": "Silence motion and camera-offline notifications for every user for the selected duration, or choose Off to resume notifications immediately. Events are still recorded — this only pauses push alerts.",
+  "settings_mute_duration_label": "Mute duration",
+  "settings_mute_off": "Off — resume notifications",
+  "settings_mute_minutes": [
+    {
+      "declarations": [
+        "input count",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
+      "match": {
+        "countPlural=one": "{count} minute",
+        "countPlural=other": "{count} minutes"
+      }
+    }
+  ],
+  "settings_mute_hours": [
+    {
+      "declarations": [
+        "input count",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
+      "match": {
+        "countPlural=one": "{count} hour",
+        "countPlural=other": "{count} hours"
+      }
+    }
+  ],
+  "settings_mute_submit": "Silence all notifications for {duration}",
+  "settings_mute_submitting": "Silencing…",
+  "settings_mute_resume": "Resume notifications",
+  "settings_mute_resuming": "Resuming…",
+  "settings_mute_active": "All notifications silenced — {remaining} remaining",
+  "settings_mute_error_silence": "Could not silence notifications. Please try again.",
+  "settings_mute_error_resume": "Could not resume notifications. Please try again."
+}

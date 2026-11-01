@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, fireEvent, cleanup } from '@testing-library/react'
 import '@testing-library/jest-dom/vitest'
 import type React from 'react'
+import { withLocale } from '#/test-utils/locale'
 
 const { FavoriteButton } = await import('./FavoriteButton')
 
@@ -162,5 +163,19 @@ describe('FavoriteButton', () => {
       renderFavoriteButton({ pending: true })
       expect(screen.getByRole('button', { name: 'Saving…' })).toBeTruthy()
     })
+  })
+})
+
+describe('FavoriteButton in Danish', () => {
+  it('localises the aria-label', () => {
+    const restore = withLocale('da')
+    try {
+      renderFavoriteButton()
+      expect(
+        screen.getByRole('button', { name: 'Føj til favoritter' }),
+      ).toBeInTheDocument()
+    } finally {
+      restore()
+    }
   })
 })

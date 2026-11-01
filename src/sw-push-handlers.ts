@@ -3,6 +3,8 @@
  * Extracted from sw.ts so they can be tested without SW globals.
  */
 
+import { m } from './paraglide/messages.js'
+
 /**
  * Structured event data sent by the server. Mirrors `PushEventInfo` in
  * `#/features/push-notifications/server/push` — the two sides of the push
@@ -29,7 +31,13 @@ export interface PushPayload {
   icon?: string
   tag?: string
   event?: PushPayloadEvent
+  /** Language the server rendered this push in; absent on older payloads. */
+  locale?: SwLocale
 }
+
+type SwLocale = 'en' | 'da'
+
+const parseLocale = (value: unknown): SwLocale => (value === 'da' ? 'da' : 'en')
 
 const DEFAULT_PAYLOAD: PushPayload = {
   title: 'Notification',
@@ -65,17 +73,22 @@ function parseEvent(value: unknown): PushPayloadEvent | undefined {
 }
 
 /** Format a unix timestamp to a short HH:MM time string in the device's local timezone. */
-function formatLocalTime(unixSeconds: number): string {
+function formatLocalTime(unixSeconds: number, locale: SwLocale): string {
   const d = new Date(unixSeconds * 1000)
-  return d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+  return d.toLocaleTimeString(locale === 'da' ? 'da-DK' : 'en-GB', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+    timeZone: 'Europe/Copenhagen', // keep in sync with TIME_ZONE in features/shared/utils/intl.ts
+  })
 }
 
 /** Condense a label list to at most three names plus a "+N more" suffix. */
-function summarizeLabels(labels: string[]): string {
-  return (
-    labels.slice(0, 3).join(', ') +
-    (labels.length > 3 ? ` +${labels.length - 3} more` : '')
-  )
+function summarizeLabels(labels: string[], locale: SwLocale): string {
+  const head = labels.slice(0, 3).join(', ')
+  return labels.length > 3
+    ? m.push_labels_more({ labels: head, more: labels.length - 3 }, { locale })
+    : head
 }
 
 /**
@@ -87,12 +100,16 @@ export function buildNotificationBody(
   count: number,
   labels: string[],
   timestamp: number,
+  locale: SwLocale = 'en',
 ): string {
-  const time = formatLocalTime(timestamp)
+  const time = formatLocalTime(timestamp, locale)
   if (count === 1) {
-    return `${labels[0]} detected at ${time}`
+    return m.push_event_single({ label: labels[0], time }, { locale })
   }
-  return `${count} new events — ${summarizeLabels(labels)} at ${time}`
+  return m.push_event_multi(
+    { count, labels: summarizeLabels(labels, locale), time },
+    { locale },
+  )
 }
 
 /**
@@ -108,6 +125,7 @@ export function parsePushPayload(data: unknown): PushPayload {
 
   const obj = data as Record<string, unknown>
   const event = parseEvent(obj.event)
+  const locale = parseLocale(obj.locale)
   const rawBody = typeof obj.body === 'string' ? obj.body : DEFAULT_PAYLOAD.body
   return {
     title:
@@ -115,12 +133,18 @@ export function parsePushPayload(data: unknown): PushPayload {
         ? obj.title
         : DEFAULT_PAYLOAD.title,
     body: event
-      ? buildNotificationBody(event.count, event.labels, event.timestamp)
+      ? buildNotificationBody(
+          event.count,
+          event.labels,
+          event.timestamp,
+          locale,
+        )
       : rawBody,
     url: typeof obj.url === 'string' && obj.url ? obj.url : DEFAULT_PAYLOAD.url,
     icon: typeof obj.icon === 'string' && obj.icon ? obj.icon : undefined,
     tag: typeof obj.tag === 'string' && obj.tag ? obj.tag : undefined,
     event,
+    locale,
   }
 }
 
@@ -281,7 +305,7 @@ export function planNotification(
 
   return {
     ...base,
-    body: buildNotificationBody(count, labels, timestamp),
+    body: buildNotificationBody(count, labels, timestamp, payload.locale),
     url,
     silent: true,
     state: { camera: event.camera, count, labels, timestamp, url },

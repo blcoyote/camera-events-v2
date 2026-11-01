@@ -1,3 +1,4 @@
+import { m } from '#/paraglide/messages.js'
 import { Card } from '#/features/shared/components/ui/card'
 import { Switch } from '#/features/shared/components/ui/switch'
 
@@ -22,10 +23,10 @@ export function CameraPreferences({
   return (
     <Card variant="flat" className="mt-2">
       <h3 className="mb-3 text-sm font-semibold text-foreground">
-        Camera Notifications
+        {m.settings_prefs_title()}
       </h3>
       <p className="mb-4 text-xs text-muted-foreground">
-        Choose which cameras send you push notifications.
+        {m.settings_prefs_hint()}
       </p>
       {loading ? (
         <div className="h-6" />
@@ -37,7 +38,9 @@ export function CameraPreferences({
                 {formatCameraName(cam.name)}
               </span>
               <Switch
-                aria-label={`Notifications for ${formatCameraName(cam.name)}`}
+                aria-label={m.settings_prefs_switch({
+                  name: formatCameraName(cam.name),
+                })}
                 checked={cam.enabled}
                 onCheckedChange={(checked) => onToggle(cam.name, checked)}
               />

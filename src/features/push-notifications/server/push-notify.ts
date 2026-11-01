@@ -15,6 +15,10 @@ import { createDelivery } from './delivery'
 import type { Delivery } from './delivery'
 import { SendThrottle, isAppleEndpoint } from './send-throttle'
 import { resolveAppleUpdateIntervalMs } from './env'
+import type { PushLocale } from './push-locale'
+import { m } from '#/paraglide/messages.js'
+import { translateLabel } from '#/features/shared/utils/labels'
+import { formatTime } from '#/features/shared/utils/intl'
 
 /** Extract the host of a push endpoint for logging, or 'unknown' if unparseable. */
 export function endpointHost(endpoint: string): string {
@@ -30,23 +34,12 @@ export function formatCameraName(name: string): string {
   return name.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
 }
 
-/** Format a label for display: capitalize first letter. */
-export function formatLabel(label: string): string {
-  return label.charAt(0).toUpperCase() + label.slice(1)
-}
-
-/** Format a unix timestamp to a short HH:MM time string. */
-export function formatTime(unixSeconds: number): string {
-  const d = new Date(unixSeconds * 1000)
-  return d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
-}
-
 /** Condense a label list to at most three names plus a "+N more" suffix. */
-function summarizeLabels(labels: string[]): string {
-  return (
-    labels.slice(0, 3).join(', ') +
-    (labels.length > 3 ? ` +${labels.length - 3} more` : '')
-  )
+function summarizeLabels(labels: string[], locale: PushLocale): string {
+  const head = labels.slice(0, 3).join(', ')
+  return labels.length > 3
+    ? m.push_labels_more({ labels: head, more: labels.length - 3 }, { locale })
+    : head
 }
 
 /**
@@ -83,18 +76,29 @@ export function buildCameraPayload(
   camera: string,
   events: DetectionInfo[],
   burstStart: boolean,
+  locale: PushLocale,
 ): PushPayload {
-  const labels = [...new Set(events.map((e) => formatLabel(e.label)))]
+  const labels = [
+    ...new Set(events.map((e) => translateLabel(e.label, locale))),
+  ]
   const timestamp = Math.max(...events.map((e) => e.startTime))
-  const time = formatTime(timestamp)
+  const time = formatTime(timestamp, locale)
   const body =
     events.length === 1
-      ? `${labels[0]} detected at ${time}`
-      : `${events.length} new events \u2014 ${summarizeLabels(labels)} at ${time}`
+      ? m.push_event_single({ label: labels[0], time }, { locale })
+      : m.push_event_multi(
+          {
+            count: events.length,
+            labels: summarizeLabels(labels, locale),
+            time,
+          },
+          { locale },
+        )
 
   return {
     title: formatCameraName(camera),
     body,
+    locale,
     url:
       events.length === 1 && isDeepLinkable(events[0])
         ? `/camera-events/${events[0].id}`
@@ -175,8 +179,8 @@ export async function notifyUsersForCamera(
       )
       return false
     },
-    buildPayload: (burstStart) =>
-      buildCameraPayload(camera, events, burstStart),
+    buildPayload: (burstStart, locale) =>
+      buildCameraPayload(camera, events, burstStart, locale),
     allowEndpoint: (endpoint, burstStart, deliveryNow) =>
       shouldSendToEndpoint(
         endpoint,

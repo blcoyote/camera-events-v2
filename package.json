@@ -18,6 +18,7 @@
     "check": "biome check --write .",
     "knip": "knip",
     "prepare": "husky",
+    "postinstall": "paraglide-js compile --project ./project.inlang --outdir ./src/paraglide --strategy cookie preferredLanguage baseLocale --no-emit-ts-declarations --silent",
     "start": "bun run .output/server"
   },
   "dependencies": {
@@ -25,6 +26,7 @@
     "@dnd-kit/modifiers": "^9.0.0",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
+    "@inlang/paraglide-js": "^2.29.3",
     "@tailwindcss/vite": "^4.3.3",
     "@tanstack/react-router": "1.170.46",
     "@tanstack/react-start": "1.169.4",
@@ -47,6 +49,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.6.4",
+    "@inlang/plugin-message-format": "^4.5.6",
     "@serwist/build": "^9.5.13",
     "@tailwindcss/typography": "^0.5.20",
     "@tanstack/devtools-vite": "0.8.5",

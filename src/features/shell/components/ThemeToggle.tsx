@@ -1,12 +1,19 @@
 import { MoonIcon, SunIcon, SunMoonIcon } from 'lucide-react'
+import { m } from '#/paraglide/messages.js'
 import { Button } from '#/features/shared/components/ui/button'
 import { useTheme } from '#/features/shared/hooks/useTheme'
 import type { ThemeMode } from '#/features/shared/hooks/themeMode'
 
-const LABELS: Record<ThemeMode, { current: string; next: string }> = {
-  light: { current: 'Light', next: 'Dark' },
-  dark: { current: 'Dark', next: 'System' },
-  auto: { current: 'System', next: 'Light' },
+const NAMES: Record<ThemeMode, () => string> = {
+  light: () => m.shell_theme_light(),
+  dark: () => m.shell_theme_dark(),
+  auto: () => m.shell_theme_system(),
+}
+
+const NEXT: Record<ThemeMode, ThemeMode> = {
+  light: 'dark',
+  dark: 'auto',
+  auto: 'light',
 }
 
 const ICONS = {
@@ -17,9 +24,11 @@ const ICONS = {
 
 export function ThemeToggle() {
   const { mode, cycleTheme } = useTheme()
-  const { current, next } = LABELS[mode]
   const Icon = ICONS[mode]
-  const label = `Theme: ${current}. Switch to ${next}.`
+  const label = m.shell_theme_toggle({
+    current: NAMES[mode](),
+    next: NAMES[NEXT[mode]](),
+  })
 
   return (
     <Button

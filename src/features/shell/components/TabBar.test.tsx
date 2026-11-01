@@ -4,6 +4,7 @@ import { render, screen, cleanup } from '@testing-library/react'
 import type { ComponentProps, ReactNode } from 'react'
 import '@testing-library/jest-dom/vitest'
 import { TabBar } from './TabBar'
+import { withLocale } from '#/test-utils/locale'
 
 let mockUser: unknown = { firstName: 'A' }
 let mockPath = '/cameras'
@@ -73,5 +74,20 @@ describe('TabBar', () => {
     expect(
       container.querySelector('div[aria-hidden="true"].h-14'),
     ).not.toBeNull()
+  })
+})
+
+describe('TabBar in Danish', () => {
+  it('translates the nav name and tab labels', () => {
+    const restore = withLocale('da')
+    try {
+      render(<TabBar />)
+      expect(
+        screen.getByRole('navigation', { name: 'Primær' }),
+      ).toBeInTheDocument()
+      expect(screen.getByText('Hændelser')).toBeInTheDocument()
+    } finally {
+      restore()
+    }
   })
 })

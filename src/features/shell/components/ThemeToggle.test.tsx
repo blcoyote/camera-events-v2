@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, fireEvent, cleanup } from '@testing-library/react'
 import type { ThemeMode } from '#/features/shared/hooks/themeMode'
 import { ThemeToggle } from './ThemeToggle'
+import { withLocale } from '#/test-utils/locale'
 
 const useThemeMock = vi.fn()
 
@@ -108,5 +109,22 @@ describe('ThemeToggle', () => {
       fireEvent.click(screen.getByRole('button'))
       expect(cycleTheme).toHaveBeenCalledOnce()
     })
+  })
+})
+
+describe('ThemeToggle in Danish', () => {
+  afterEach(() => cleanup())
+
+  it('translates the label', () => {
+    mockTheme('light')
+    const restore = withLocale('da')
+    try {
+      render(<ThemeToggle />)
+      expect(
+        screen.getByRole('button', { name: 'Tema: Lys. Skift til Mørk.' }),
+      ).toBeTruthy()
+    } finally {
+      restore()
+    }
   })
 })

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, screen, cleanup } from '@testing-library/react'
+import { render, screen, cleanup, fireEvent } from '@testing-library/react'
 import '@testing-library/jest-dom/vitest'
 import type { FrigateEvent } from '#/features/shared/server/frigate/types'
 
@@ -64,6 +64,46 @@ describe('CameraEventsListPage', () => {
     expect(
       screen.getByRole('heading', { level: 1, name: 'Recent Events' }),
     ).toHaveClass('sr-only', 'sm:not-sr-only')
+  })
+
+  describe('event count', () => {
+    const list = (n: number) =>
+      render(
+        <CameraEventsListPage
+          result={{
+            ok: true,
+            data: Array.from({ length: n }, (_, i) => makeEvent(`e${i}`)),
+          }}
+        />,
+      )
+
+    it('uses the singular for one event', () => {
+      list(1)
+      expect(screen.getByText('1 event')).toBeInTheDocument()
+    })
+
+    it('uses the plural for several events', () => {
+      list(3)
+      expect(screen.getByText('3 events')).toBeInTheDocument()
+    })
+
+    it('uses the filtered wording when a filter is active', () => {
+      render(
+        <CameraEventsListPage
+          result={{
+            ok: true,
+            data: [
+              makeEvent('a'),
+              makeEvent('b'),
+              { ...makeEvent('c'), label: 'car' },
+            ],
+          }}
+        />,
+      )
+      expect(screen.getByText('3 events')).toBeInTheDocument()
+      fireEvent.click(screen.getByRole('button', { name: /^Car/ }))
+      expect(screen.getByText('1 event (filtered)')).toBeInTheDocument()
+    })
   })
 
   describe('favoritedIds prop', () => {

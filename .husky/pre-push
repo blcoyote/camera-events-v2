@@ -5,6 +5,7 @@ set -e
 
 echo "▶ pre-push: running code_quality checks (tsc --noEmit · biome lint · biome format)…"
 
+bun run --silent postinstall  # regenerate src/paraglide; it goes stale across branch switches
 bun x tsc --noEmit
 bun run lint
 bun run format

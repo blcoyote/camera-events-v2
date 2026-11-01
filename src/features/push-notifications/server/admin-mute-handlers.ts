@@ -13,7 +13,7 @@ export async function handleGetNotificationMute(
   userId: string | null,
 ): Promise<HandlerResult> {
   if (!userId) {
-    return { status: 401, body: { error: 'Unauthorized' } }
+    return { status: 401, body: { error: 'unauthorized' } }
   }
 
   // Admin status is deliberately not carried in the session cookie, so it is
@@ -22,7 +22,7 @@ export async function handleGetNotificationMute(
   // signed-in non-admin gets 403, never a 200 that leaks the mute state.
   const isAdmin = (await getUserStore()).isAdmin(userId)
   if (!isAdmin) {
-    return { status: 403, body: { error: 'Forbidden' } }
+    return { status: 403, body: { error: 'forbidden' } }
   }
 
   const mutedUntil = await getActiveMuteUntil()
@@ -37,14 +37,14 @@ export async function handleSetNotificationMute(
   // Check authentication before authorization: an anonymous caller must get
   // 401, and a signed-in non-admin must get 403 — never leak one as the other.
   if (!userId) {
-    return { status: 401, body: { error: 'Unauthorized' } }
+    return { status: 401, body: { error: 'unauthorized' } }
   }
 
   // Route-level guards do not protect this endpoint (it is directly callable
   // over HTTP), so the admin check is re-read from the store here too.
   const isAdmin = (await getUserStore()).isAdmin(userId)
   if (!isAdmin) {
-    return { status: 403, body: { error: 'Forbidden' } }
+    return { status: 403, body: { error: 'forbidden' } }
   }
 
   // The body's shape is untrusted (it may be a parsed-but-non-object JSON
@@ -60,8 +60,7 @@ export async function handleSetNotificationMute(
     return {
       status: 400,
       body: {
-        error:
-          'Invalid request: durationMs must be one of the supported mute durations',
+        error: 'invalid_body',
       },
     }
   }

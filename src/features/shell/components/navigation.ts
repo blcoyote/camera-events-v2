@@ -1,10 +1,36 @@
+import { m } from '#/paraglide/messages.js'
 import { Bell, Cctv, Heart, Settings } from 'lucide-react'
 
+// `label` is a getter so the message resolves per render, not at import.
 export const TABS = [
-  { label: 'Cameras', to: '/cameras', icon: Cctv },
-  { label: 'Events', to: '/camera-events', icon: Bell },
-  { label: 'Favorites', to: '/favorites', icon: Heart },
-  { label: 'Settings', to: '/settings', icon: Settings },
+  {
+    get label() {
+      return m.shell_tab_cameras()
+    },
+    to: '/cameras',
+    icon: Cctv,
+  },
+  {
+    get label() {
+      return m.shell_tab_events()
+    },
+    to: '/camera-events',
+    icon: Bell,
+  },
+  {
+    get label() {
+      return m.shell_tab_favorites()
+    },
+    to: '/favorites',
+    icon: Heart,
+  },
+  {
+    get label() {
+      return m.shell_tab_settings()
+    },
+    to: '/settings',
+    icon: Settings,
+  },
 ]
 
 const owns = (path: string, base: string) =>
@@ -16,7 +42,7 @@ export function getActiveTab(pathname: string): string | null {
 }
 
 export function getPageTitle(pathname: string): string {
-  if (pathname.startsWith('/camera-events/')) return 'Event'
-  if (owns(pathname, '/live')) return 'Live view'
-  return TABS.find((t) => t.to === pathname)?.label ?? 'Camera Events'
+  if (pathname.startsWith('/camera-events/')) return m.shell_title_event()
+  if (owns(pathname, '/live')) return m.shell_title_live_view()
+  return TABS.find((t) => t.to === pathname)?.label ?? m.shell_title_app()
 }

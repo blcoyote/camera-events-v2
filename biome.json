@@ -10,6 +10,7 @@
       "**",
       "!**/*.json",
       "!src/routeTree.gen.ts",
+      "!src/paraglide",
       "!.claude/worktrees",
       "!.claude/skills/impeccable/scripts",
       "!.github/skills/impeccable/scripts"

@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, cleanup, act } from '@testing-library/react'
 import { ServiceWorkerRegistration } from './ServiceWorkerRegistration'
 import { resyncExistingPushSubscription } from '#/features/shared/utils/pushResync'
+import { withLocale } from '#/test-utils/locale'
 
 vi.mock('#/features/shared/utils/pushResync', () => ({
   resyncExistingPushSubscription: vi.fn().mockResolvedValue(false),
@@ -159,5 +160,36 @@ describe('ServiceWorkerRegistration toast offset', () => {
     expect(alert.className).toContain(
       'sm:bottom-[calc(1rem+env(safe-area-inset-bottom))]',
     )
+  })
+})
+
+describe('ServiceWorkerRegistration in Danish', () => {
+  afterEach(() => cleanup())
+
+  it('translates the update toast', async () => {
+    Object.defineProperty(navigator, 'serviceWorker', {
+      value: {
+        register: vi.fn().mockResolvedValue({
+          update: vi.fn().mockResolvedValue(undefined),
+          waiting: { postMessage: vi.fn() },
+          installing: null,
+          addEventListener: vi.fn(),
+        }),
+        ready: Promise.resolve({ active: null }),
+        controller: null,
+        addEventListener: vi.fn(),
+      },
+      configurable: true,
+      writable: true,
+    })
+    const restore = withLocale('da')
+    try {
+      const { findByText, getByText } = render(<ServiceWorkerRegistration />)
+      await findByText('En ny version er tilgængelig.')
+      getByText('Opdater nu')
+      getByText('Senere')
+    } finally {
+      restore()
+    }
   })
 })

@@ -1,3 +1,4 @@
+import { m } from '#/paraglide/messages.js'
 const INDICATOR_SIZE = 36
 
 export function PullToRefreshIndicator({
@@ -93,7 +94,11 @@ export function PullToRefreshIndicator({
         )}
       </div>
       <span className="sr-only" role="status" aria-live="polite">
-        {isRefreshing ? 'Refreshing…' : isComplete ? 'Refreshed' : ''}
+        {isRefreshing
+          ? m.shared_refreshing()
+          : isComplete
+            ? m.shared_refreshed()
+            : ''}
       </span>
     </div>
   )

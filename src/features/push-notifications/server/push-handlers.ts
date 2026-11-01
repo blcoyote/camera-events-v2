@@ -3,6 +3,7 @@ import { isPushEnabled, getVapidPublicKey, sendPushNotification } from './push'
 import { getPushStore } from './push-store'
 import { getCameras } from '#/features/shared/server/frigate/client'
 import { readBodyField } from './request-body'
+import { isPushLocale } from './push-locale'
 
 interface HandlerResult {
   status: number
@@ -13,7 +14,7 @@ export function handleVapidPublicKey(): HandlerResult {
   if (!isPushEnabled()) {
     return {
       status: 503,
-      body: { error: 'Push notifications are not configured' },
+      body: { error: 'push_not_configured' },
     }
   }
   return { status: 200, body: { publicKey: getVapidPublicKey() } }
@@ -24,12 +25,12 @@ export async function handleSubscribe(
   body: unknown,
 ): Promise<HandlerResult> {
   if (!userId) {
-    return { status: 401, body: { error: 'Unauthorized' } }
+    return { status: 401, body: { error: 'unauthorized' } }
   }
   if (!isPushEnabled()) {
     return {
       status: 503,
-      body: { error: 'Push notifications are not configured' },
+      body: { error: 'push_not_configured' },
     }
   }
 
@@ -50,25 +51,38 @@ export async function handleSubscribe(
   if (!endpoint || !p256dh || !auth) {
     return {
       status: 400,
-      body: { error: 'Invalid subscription: endpoint and keys are required' },
+      body: { error: 'invalid_body' },
     }
   }
+
+  // Optional; absent preserves the stored locale (new rows get 'en'). Present-but-unsupported is a trust-boundary 400.
+  const localeField = readBodyField(body, 'locale')
+  if (localeField !== undefined && !isPushLocale(localeField)) {
+    return { status: 400, body: { error: 'invalid_body' } }
+  }
+  const locale = localeField
 
   // Validate endpoint is an HTTPS URL (push services always use HTTPS)
   let parsedUrl: URL
   try {
     parsedUrl = new URL(endpoint)
   } catch {
-    return { status: 400, body: { error: 'Invalid subscription endpoint URL' } }
+    return { status: 400, body: { error: 'invalid_endpoint' } }
   }
   if (parsedUrl.protocol !== 'https:') {
     return {
       status: 400,
-      body: { error: 'Subscription endpoint must use HTTPS' },
+      body: { error: 'endpoint_not_https' },
     }
   }
 
-  ;(await getPushStore()).saveSubscription(userId, endpoint, p256dh, auth)
+  ;(await getPushStore()).saveSubscription(
+    userId,
+    endpoint,
+    p256dh,
+    auth,
+    locale,
+  )
   return { status: 200, body: { ok: true } }
 }
 
@@ -77,7 +91,7 @@ export async function handleUnsubscribe(
   body: unknown,
 ): Promise<HandlerResult> {
   if (!userId) {
-    return { status: 401, body: { error: 'Unauthorized' } }
+    return { status: 401, body: { error: 'unauthorized' } }
   }
 
   // See handleSubscribe: the body may be a non-object JSON value, so read
@@ -87,7 +101,7 @@ export async function handleUnsubscribe(
   if (!endpoint) {
     return {
       status: 400,
-      body: { error: 'Invalid request: endpoint is required' },
+      body: { error: 'invalid_body' },
     }
   }
 
@@ -99,12 +113,12 @@ export async function handleTest(
   userId: string | null,
 ): Promise<HandlerResult> {
   if (!userId) {
-    return { status: 401, body: { error: 'Unauthorized' } }
+    return { status: 401, body: { error: 'unauthorized' } }
   }
   if (!isPushEnabled()) {
     return {
       status: 503,
-      body: { error: 'Push notifications are not configured' },
+      body: { error: 'push_not_configured' },
     }
   }
 
@@ -137,12 +151,12 @@ export async function handleGetPreferences(
   userId: string | null,
 ): Promise<HandlerResult> {
   if (!userId) {
-    return { status: 401, body: { error: 'Unauthorized' } }
+    return { status: 401, body: { error: 'unauthorized' } }
   }
 
   const camerasResult = await getCameras()
   if (!camerasResult.ok) {
-    return { status: 502, body: { error: 'Failed to fetch camera list' } }
+    return { status: 502, body: { error: 'cameras_unavailable' } }
   }
 
   const disabledSet = new Set((await getPushStore()).getDisabledCameras(userId))
@@ -159,7 +173,7 @@ export async function handleSetPreference(
   body: unknown,
 ): Promise<HandlerResult> {
   if (!userId) {
-    return { status: 401, body: { error: 'Unauthorized' } }
+    return { status: 401, body: { error: 'unauthorized' } }
   }
 
   // See handleSubscribe: the body may be a non-object JSON value, so read
@@ -173,8 +187,7 @@ export async function handleSetPreference(
     return {
       status: 400,
       body: {
-        error:
-          'Invalid request: camera (string) and enabled (boolean) are required',
+        error: 'invalid_body',
       },
     }
   }
@@ -183,7 +196,7 @@ export async function handleSetPreference(
     '#/features/shared/server/frigate/validation'
   )
   if (!isValidCameraName(camera)) {
-    return { status: 400, body: { error: 'Invalid camera name' } }
+    return { status: 400, body: { error: 'invalid_camera_name' } }
   }
 
   ;(await getPushStore()).setPreference(userId, camera, enabled)
@@ -194,7 +207,7 @@ export async function handleGetAvailabilityPreference(
   userId: string | null,
 ): Promise<HandlerResult> {
   if (!userId) {
-    return { status: 401, body: { error: 'Unauthorized' } }
+    return { status: 401, body: { error: 'unauthorized' } }
   }
   const enabled = (await getPushStore()).isCameraAvailabilityEnabledForUser(
     userId,
@@ -207,7 +220,7 @@ export async function handleSetAvailabilityPreference(
   body: unknown,
 ): Promise<HandlerResult> {
   if (!userId) {
-    return { status: 401, body: { error: 'Unauthorized' } }
+    return { status: 401, body: { error: 'unauthorized' } }
   }
 
   // See handleSubscribe: the body may be a non-object JSON value, so read
@@ -217,7 +230,7 @@ export async function handleSetAvailabilityPreference(
   if (enabled === null) {
     return {
       status: 400,
-      body: { error: 'Invalid request: enabled (boolean) is required' },
+      body: { error: 'invalid_body' },
     }
   }
 

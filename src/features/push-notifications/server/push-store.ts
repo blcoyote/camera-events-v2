@@ -3,6 +3,7 @@ import { openSqlite } from '#/features/shared/server/sqlite'
 import type { SqliteDatabase } from '#/features/shared/server/sqlite'
 import { mkdirSync, existsSync } from 'node:fs'
 import { dirname } from 'node:path'
+import type { PushLocale } from './push-locale'
 
 const DEFAULT_DB_PATH = 'data/camera-events.db'
 
@@ -29,6 +30,7 @@ export interface PushSubscriptionRow {
   endpoint: string
   p256dh: string
   auth: string
+  locale: PushLocale
   created_at: string
 }
 
@@ -38,7 +40,14 @@ export interface PushStore {
     endpoint: string,
     p256dh: string,
     auth: string,
+    locale?: PushLocale,
   ) => void
+  /** Updates only the row owned by userId for endpoint; true if a row changed. */
+  updateLocale: (
+    userId: string,
+    endpoint: string,
+    locale: PushLocale,
+  ) => boolean
   getSubscriptionsByUserId: (userId: string) => PushSubscriptionRow[]
   removeSubscription: (userId: string, endpoint: string) => void
   removeSubscriptionByEndpoint: (endpoint: string) => void
@@ -84,6 +93,7 @@ export async function createPushStore(
       endpoint   TEXT NOT NULL,
       p256dh     TEXT NOT NULL,
       auth       TEXT NOT NULL,
+      locale     TEXT NOT NULL DEFAULT 'en',
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       UNIQUE(user_id, endpoint)
     );
@@ -105,14 +115,28 @@ export async function createPushStore(
     );
   `)
 
+  // Upgrade DBs created before the locale column existed.
+  const subColumns = db.pragmaRead('table_info(push_subscriptions)') as Array<{
+    name: string
+  }>
+  if (!subColumns.some((c) => c.name === 'locale')) {
+    db.exec(
+      "ALTER TABLE push_subscriptions ADD COLUMN locale TEXT NOT NULL DEFAULT 'en'",
+    )
+  }
+
   const stmts = {
     upsert: db.prepare(`
-      INSERT INTO push_subscriptions (user_id, endpoint, p256dh, auth)
-      VALUES (?, ?, ?, ?)
+      INSERT INTO push_subscriptions (user_id, endpoint, p256dh, auth, locale)
+      VALUES (?, ?, ?, ?, COALESCE(?, 'en'))
       ON CONFLICT(user_id, endpoint) DO UPDATE SET
         p256dh = excluded.p256dh,
-        auth = excluded.auth
+        auth = excluded.auth,
+        locale = COALESCE(?, push_subscriptions.locale)
     `),
+    updateLocale: db.prepare(
+      'UPDATE push_subscriptions SET locale = ? WHERE user_id = ? AND endpoint = ?',
+    ),
     getByUser: db.prepare('SELECT * FROM push_subscriptions WHERE user_id = ?'),
     remove: db.prepare(
       'DELETE FROM push_subscriptions WHERE user_id = ? AND endpoint = ?',
@@ -160,8 +184,22 @@ export async function createPushStore(
   }
 
   return {
-    saveSubscription(userId, endpoint, p256dh, auth) {
-      stmts.upsert.run(userId, endpoint, p256dh, auth)
+    saveSubscription(userId, endpoint, p256dh, auth, locale) {
+      stmts.upsert.run(
+        userId,
+        endpoint,
+        p256dh,
+        auth,
+        locale ?? null,
+        locale ?? null,
+      )
+    },
+
+    updateLocale(userId, endpoint, locale) {
+      const res = stmts.updateLocale.run(locale, userId, endpoint) as {
+        changes: number
+      }
+      return res.changes > 0
     },
 
     getSubscriptionsByUserId(userId) {

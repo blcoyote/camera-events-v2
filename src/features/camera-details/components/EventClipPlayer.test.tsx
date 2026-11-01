@@ -3,6 +3,7 @@ import { describe, it, expect, vi, afterEach } from 'vitest'
 import { render, cleanup, fireEvent, screen } from '@testing-library/react'
 import '@testing-library/jest-dom/vitest'
 import { EventClipPlayer } from './EventClipPlayer'
+import { withLocale } from '#/test-utils/locale'
 
 afterEach(() => {
   cleanup()
@@ -156,5 +157,30 @@ describe('EventClipPlayer', () => {
     )
     fireEvent.error(container.querySelector('video') as HTMLVideoElement)
     expect(onError).toHaveBeenCalledOnce()
+  })
+
+  it('renders Danish labels and the Danish error state', () => {
+    const restore = withLocale('da')
+    try {
+      const { container } = render(
+        <EventClipPlayer
+          eventId="front_door.123"
+          camera="front_door"
+          label="person"
+        />,
+      )
+      const video = container.querySelector('video') as HTMLVideoElement
+      expect(video).toHaveAttribute(
+        'aria-label',
+        'Klip af Person fra Front Door',
+      )
+      fireEvent.error(video)
+      expect(screen.getByText('Kunne ikke indlæse klippet')).toBeInTheDocument()
+      expect(
+        screen.getByRole('button', { name: 'Prøv igen' }),
+      ).toBeInTheDocument()
+    } finally {
+      restore()
+    }
   })
 })

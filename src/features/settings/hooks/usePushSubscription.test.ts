@@ -38,7 +38,7 @@ describe('formatSubscribeError', () => {
 
   it('surfaces server-supplied detail on 4xx', () => {
     const msg = formatSubscribeError(400, {
-      error: 'Invalid subscription endpoint URL',
+      error: 'invalid_endpoint',
     })
     expect(msg).toBe(
       'Could not enable notifications: Invalid subscription endpoint URL. Please try again.',
@@ -315,5 +315,23 @@ describe('usePushSubscription helpers', () => {
         expect.objectContaining({ method: 'POST' }),
       )
     })
+  })
+})
+
+describe('formatSubscribeError (da)', () => {
+  it('translates the whole sentence including the detail', async () => {
+    const { withLocale } = await import('#/test-utils/locale')
+    const restore = withLocale('da')
+    try {
+      expect(formatSubscribeError(503, null)).toMatch(/midlertidigt/)
+      expect(formatSubscribeError(400, null)).toBe(
+        'Kunne ikke aktivere notifikationer. Prøv igen.',
+      )
+      expect(formatSubscribeError(400, { error: 'x' })).toMatch(
+        /^Kunne ikke aktivere notifikationer: .+\. Prøv igen\.$/,
+      )
+    } finally {
+      restore()
+    }
   })
 })

@@ -1,28 +1,26 @@
+import { m } from '#/paraglide/messages.js'
+import { getLocale } from '#/paraglide/runtime.js'
+import { formatDate } from './intl'
+
 export function formatRelativeTime(unixSeconds: number): string {
+  const locale = getLocale()
   const now = Date.now() / 1000
   const diff = now - unixSeconds
-  if (diff < 0) return 'Just now'
-  if (diff < 60) return 'Just now'
+  if (diff < 0) return m.shared_time_just_now({}, { locale })
+  if (diff < 60) return m.shared_time_just_now({}, { locale })
   if (diff < 3600) {
     const mins = Math.floor(diff / 60)
-    return `${mins}m ago`
+    return m.shared_time_minutes_ago({ count: mins }, { locale })
   }
   if (diff < 86400) {
     const hours = Math.floor(diff / 3600)
-    return `${hours}h ago`
+    return m.shared_time_hours_ago({ count: hours }, { locale })
   }
   if (diff < 604800) {
     const days = Math.floor(diff / 86400)
-    return `${days}d ago`
+    return m.shared_time_days_ago({ count: days }, { locale })
   }
-  return new Date(unixSeconds * 1000).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-  })
-}
-
-export function formatLabelName(label: string): string {
-  return label.charAt(0).toUpperCase() + label.slice(1)
+  return formatDate(unixSeconds, locale)
 }
 
 const LABEL_DOT_COLORS: Record<string, string> = {

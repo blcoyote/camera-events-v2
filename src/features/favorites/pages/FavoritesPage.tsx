@@ -1,3 +1,4 @@
+import { m } from '#/paraglide/messages.js'
 import { Link } from '@tanstack/react-router'
 import type { FrigateEvent } from '#/features/shared/server/frigate/types'
 import { EventCard } from '#/features/shared/components/EventCard'
@@ -8,16 +9,17 @@ export function FavoritesPage({ events }: { events: FrigateEvent[] }) {
   if (events.length === 0) {
     return (
       <main id="main-content" className="page-wrap px-4 pb-8 pt-3 sm:pt-14">
-        <PageHeader eyebrow="Favorites" title="Your Favorites" />
+        <PageHeader
+          eyebrow={m.shell_tab_favorites()}
+          title={m.favorites_page_title()}
+        />
         <div className="mt-12 text-center">
           <p className="text-lg font-medium text-foreground">
-            No favorites yet
+            {m.favorites_empty_title()}
           </p>
-          <p className="mt-1 text-sm text-fg-2">
-            Tap the heart on any event to save it here
-          </p>
+          <p className="mt-1 text-sm text-fg-2">{m.favorites_empty_hint()}</p>
           <Button asChild className="mt-4">
-            <Link to="/camera-events">Browse events</Link>
+            <Link to="/camera-events">{m.favorites_browse()}</Link>
           </Button>
         </div>
       </main>
@@ -26,9 +28,12 @@ export function FavoritesPage({ events }: { events: FrigateEvent[] }) {
 
   return (
     <main id="main-content" className="page-wrap px-4 pb-8 pt-3 sm:pt-14">
-      <PageHeader eyebrow="Favorites" title="Your Favorites" />
+      <PageHeader
+        eyebrow={m.shell_tab_favorites()}
+        title={m.favorites_page_title()}
+      />
       <section
-        aria-label="Favorited events"
+        aria-label={m.favorites_grid_label()}
         className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
       >
         {events.map((event, i) => (

@@ -5,6 +5,7 @@ import {
   formatDuration,
   getDownloadUrl,
 } from '#/features/camera-details/pages/CameraEventDetailPage'
+import { withLocale } from '#/test-utils/locale'
 import { formatCameraName } from '#/features/shared/utils/eventFormatting'
 import type { FrigateEvent } from '#/features/shared/server/frigate/types'
 
@@ -94,6 +95,19 @@ describe('formatTimestamp', () => {
     const result = formatTimestamp(ts)
     expect(result).toContain('Apr')
     expect(result).toContain('14')
+  })
+})
+
+describe('formatTimestamp in da', () => {
+  it('uses Danish month names and 24h time', () => {
+    const restore = withLocale('da')
+    try {
+      const result = formatTimestamp(1793412744)
+      expect(result).toContain('31. okt.')
+      expect(result).toContain('03.12')
+    } finally {
+      restore()
+    }
   })
 })
 

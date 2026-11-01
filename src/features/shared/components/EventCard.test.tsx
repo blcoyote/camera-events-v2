@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, cleanup } from '@testing-library/react'
 import '@testing-library/jest-dom/vitest'
 import React from 'react'
+import { withLocale } from '#/test-utils/locale'
 import type { FrigateEvent } from '#/features/shared/server/frigate/types'
 
 // ─── Module mocks ─────────────────────────────────────────────────────────────
@@ -95,6 +96,18 @@ afterEach(() => {
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
 describe('EventCard', () => {
+  it('renders the label in Danish under the da locale', () => {
+    const restore = withLocale('da')
+    try {
+      const { getByText } = render(
+        <EventCard event={makeEvent({ label: 'car' })} index={0} />,
+      )
+      expect(getByText('Bil')).toBeInTheDocument()
+    } finally {
+      restore()
+    }
+  })
+
   it('renders a FavoriteButton', () => {
     render(<EventCard event={makeEvent()} index={0} />)
     expect(mockFavoriteButton).toHaveBeenCalled()
@@ -139,5 +152,23 @@ describe('EventCard', () => {
     const cls = getByText('Brian').className
     expect(cls).toContain('bg-black/55')
     expect(cls).not.toContain('bg-white/20')
+  })
+})
+
+describe('EventCard icon labels in Danish', () => {
+  it('localises the recent and clip badges', () => {
+    const restore = withLocale('da')
+    try {
+      const { getByRole } = render(
+        <EventCard
+          event={makeEvent({ has_clip: true, start_time: Date.now() / 1000 })}
+          index={0}
+        />,
+      )
+      expect(getByRole('img', { name: 'Ny hændelse' })).toBeTruthy()
+      expect(getByRole('img', { name: 'Har klip' })).toBeTruthy()
+    } finally {
+      restore()
+    }
   })
 })

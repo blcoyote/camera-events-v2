@@ -1,3 +1,4 @@
+import { m } from '#/paraglide/messages.js'
 import {
   useEventLimit,
   MIN_EVENT_LIMIT,
@@ -24,8 +25,8 @@ import { PageHeader } from '#/features/shared/components/PageHeader'
 
 export function getSettingsContent(): { heading: string; description: string } {
   return {
-    heading: 'Settings',
-    description: 'Account preferences and camera configuration.',
+    heading: m.shell_tab_settings(),
+    description: m.settings_description(),
   }
 }
 
@@ -37,17 +38,17 @@ export function SettingsPage() {
 
   return (
     <main id="main-content" className="page-wrap px-4 pb-8 pt-3 sm:pt-14">
-      <PageHeader eyebrow="Account" title={content.heading} />
+      <PageHeader eyebrow={m.settings_account()} title={content.heading} />
 
       <AppearanceSettings className="mt-6" />
 
       <Card className="mt-6">
         <CardHeader>
-          <CardTitle>Camera Events</CardTitle>
+          <CardTitle>{m.settings_camera_events()}</CardTitle>
         </CardHeader>
 
         <div className="flex flex-col gap-3">
-          <Label id="event-limit-label">Number of events to display</Label>
+          <Label id="event-limit-label">{m.settings_event_limit_label()}</Label>
           <div className="flex items-center gap-4">
             <Slider
               min={MIN_EVENT_LIMIT}
@@ -63,23 +64,27 @@ export function SettingsPage() {
               className="min-w-16 rounded-input border border-border bg-surface-warm px-3 py-1.5 text-center text-sm font-medium text-foreground tabular-nums"
               aria-live="polite"
             >
-              {eventLimit} events
+              {m.settings_event_count({ count: eventLimit })}
             </span>
           </div>
           <p id="event-limit-desc" className="text-xs text-muted-foreground">
-            Controls how many events are loaded on the Camera Events page.
-            Range: {MIN_EVENT_LIMIT}–{MAX_EVENT_LIMIT}.
+            {m.settings_event_limit_desc({
+              min: MIN_EVENT_LIMIT,
+              max: MAX_EVENT_LIMIT,
+            })}
           </p>
         </div>
       </Card>
 
       <Card className="mt-6">
         <CardHeader>
-          <CardTitle>Live View</CardTitle>
+          <CardTitle>{m.settings_live_view()}</CardTitle>
         </CardHeader>
 
         <div className="flex flex-col gap-3">
-          <Label id="live-view-refresh-label">Refresh interval</Label>
+          <Label id="live-view-refresh-label">
+            {m.settings_refresh_interval()}
+          </Label>
           <div className="flex items-center gap-4">
             <Slider
               min={MIN_LIVE_VIEW_REFRESH_SECONDS}
@@ -95,16 +100,17 @@ export function SettingsPage() {
               className="min-w-16 rounded-input border border-border bg-surface-warm px-3 py-1.5 text-center text-sm font-medium text-foreground tabular-nums"
               aria-live="polite"
             >
-              {liveViewRefreshSeconds}s
+              {m.settings_refresh_seconds({ seconds: liveViewRefreshSeconds })}
             </span>
           </div>
           <p
             id="live-view-refresh-desc"
             className="text-xs text-muted-foreground"
           >
-            How often the live camera snapshot refreshes. Range:{' '}
-            {MIN_LIVE_VIEW_REFRESH_SECONDS}–{MAX_LIVE_VIEW_REFRESH_SECONDS}{' '}
-            seconds.
+            {m.settings_refresh_desc({
+              min: MIN_LIVE_VIEW_REFRESH_SECONDS,
+              max: MAX_LIVE_VIEW_REFRESH_SECONDS,
+            })}
           </p>
         </div>
       </Card>

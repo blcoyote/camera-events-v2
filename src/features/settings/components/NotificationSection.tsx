@@ -1,3 +1,4 @@
+import { m } from '#/paraglide/messages.js'
 import {
   Card,
   CardHeader,
@@ -12,7 +13,7 @@ export function NotificationSection({
   return (
     <Card className="mt-6">
       <CardHeader>
-        <CardTitle>Notifications</CardTitle>
+        <CardTitle>{m.settings_notifications()}</CardTitle>
       </CardHeader>
       {children}
     </Card>

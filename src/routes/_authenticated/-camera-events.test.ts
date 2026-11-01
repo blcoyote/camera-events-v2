@@ -1,4 +1,5 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
+import { withLocale } from '#/test-utils/locale'
 import {
   getEventsPageState,
   getUniqueLabels,
@@ -7,7 +8,6 @@ import {
 } from '#/features/camera-events/pages/CameraEventsListPage'
 import {
   formatRelativeTime,
-  formatLabelName,
   getLabelDotColor,
 } from '#/features/shared/utils/eventFormatting'
 import type { FrigateEvent } from '#/features/shared/server/frigate/types'
@@ -119,12 +119,21 @@ describe('formatRelativeTime', () => {
     const now = Date.now() / 1000
     expect(formatRelativeTime(now - 7200)).toBe('2h ago')
   })
-})
 
-describe('formatLabelName', () => {
-  it('capitalizes the first letter', () => {
-    expect(formatLabelName('person')).toBe('Person')
-    expect(formatLabelName('car')).toBe('Car')
+  describe('in Danish', () => {
+    let restore = () => {}
+    afterEach(() => restore())
+
+    it.each([
+      [30, 'Lige nu'],
+      [300, '5 min. siden'],
+      [7200, '2 t. siden'],
+      [172800, '2 d. siden'],
+    ])('formats %is ago as "%s"', (secondsAgo, expected) => {
+      restore = withLocale('da')
+      const now = Date.now() / 1000
+      expect(formatRelativeTime(now - secondsAgo)).toBe(expected)
+    })
   })
 })
 

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { m } from '#/paraglide/messages.js'
 import { Button } from '#/features/shared/components/ui/button'
 import { Label } from '#/features/shared/components/ui/label'
 import { NativeSelect } from '#/features/shared/components/ui/native-select'
@@ -11,12 +12,18 @@ import { getAdminMuteView, formatRemaining } from '../utils/adminMuteState'
 import {
   MUTE_DURATION_OPTIONS,
   DEFAULT_MUTE_DURATION_MS,
-  muteDurationLabel,
 } from '#/features/shared/utils/muteDurations'
 
-const SILENCE_ERROR_MESSAGE =
-  'Could not silence notifications. Please try again.'
-const RESUME_ERROR_MESSAGE = 'Could not resume notifications. Please try again.'
+function durationLabel(ms: number): string {
+  if (ms === 0) return m.settings_mute_off()
+  const hours = ms / 3_600_000
+  return Number.isInteger(hours)
+    ? m.settings_mute_hours({ count: hours })
+    : m.settings_mute_minutes({ count: ms / 60_000 })
+}
+
+const silenceError = () => m.settings_mute_error_silence()
+const resumeError = () => m.settings_mute_error_resume()
 
 export function AdminNotificationMute() {
   const [isAdmin, setIsAdmin] = useState(false)
@@ -75,9 +82,7 @@ export function AdminNotificationMute() {
         body: JSON.stringify({ durationMs }),
       })
       if (!res.ok) {
-        setError(
-          durationMs === 0 ? RESUME_ERROR_MESSAGE : SILENCE_ERROR_MESSAGE,
-        )
+        setError(durationMs === 0 ? resumeError() : silenceError())
         return
       }
       const data = await res.json()
@@ -86,7 +91,7 @@ export function AdminNotificationMute() {
       )
       setNow(Date.now())
     } catch {
-      setError(durationMs === 0 ? RESUME_ERROR_MESSAGE : SILENCE_ERROR_MESSAGE)
+      setError(durationMs === 0 ? resumeError() : silenceError())
     } finally {
       setIsSubmitting(false)
     }
@@ -100,25 +105,23 @@ export function AdminNotificationMute() {
   const isResume = durationMs === 0
   const buttonLabel = isSubmitting
     ? isResume
-      ? 'Resuming…'
-      : 'Silencing…'
+      ? m.settings_mute_resuming()
+      : m.settings_mute_submitting()
     : isResume
-      ? 'Resume notifications'
-      : `Silence all notifications for ${muteDurationLabel(durationMs)}`
+      ? m.settings_mute_resume()
+      : m.settings_mute_submit({ duration: durationLabel(durationMs) })
 
   return (
     <Card className="mt-6">
       <CardHeader>
-        <CardTitle>Admin</CardTitle>
+        <CardTitle>{m.settings_mute_title()}</CardTitle>
       </CardHeader>
-      <p className="text-sm text-fg-2">
-        Silence motion and camera-offline notifications for every user for the
-        selected duration, or choose Off to resume notifications immediately.
-        Events are still recorded — this only pauses push alerts.
-      </p>
+      <p className="text-sm text-fg-2">{m.settings_mute_description()}</p>
       <div className="flex flex-wrap items-end gap-3">
         <div className="flex min-w-48 flex-col gap-1.5">
-          <Label htmlFor="admin-mute-duration">Mute duration</Label>
+          <Label htmlFor="admin-mute-duration">
+            {m.settings_mute_duration_label()}
+          </Label>
           <NativeSelect
             id="admin-mute-duration"
             value={durationMs}
@@ -126,7 +129,7 @@ export function AdminNotificationMute() {
           >
             {MUTE_DURATION_OPTIONS.map((option) => (
               <option key={option.ms} value={option.ms}>
-                {option.label}
+                {durationLabel(option.ms)}
               </option>
             ))}
           </NativeSelect>
@@ -143,8 +146,9 @@ export function AdminNotificationMute() {
       <div aria-live="polite" className="mt-3 min-h-5">
         {isMuted && (
           <p className="text-sm text-muted-foreground">
-            All notifications silenced — {formatRemaining(view.remainingMs)}{' '}
-            remaining
+            {m.settings_mute_active({
+              remaining: formatRemaining(view.remainingMs),
+            })}
           </p>
         )}
         {error && <p className="text-sm text-danger-text">{error}</p>}
