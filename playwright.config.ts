@@ -18,7 +18,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'E2E_TEST=true FRIGATE_MOCK=true bun run dev',
+    command: 'bun run dev:e2e',
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
     timeout: 60_000,
