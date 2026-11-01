@@ -117,15 +117,25 @@ falls back to `error_unknown`. HTTP status codes stay unchanged.
   added idempotently on store open. Existing rows read as `en`.
 - The subscribe endpoint accepts an optional `locale`. Anything other than `en`
   or `da` is rejected with `invalid_body`, because this is a trust boundary.
-- A new server function, `updatePushLocaleFn({ endpoint, locale })`, calls
-  `requireSession()`, validates the locale and updates only rows owned by the
-  session user.
+  When `locale` is omitted, a new row gets `en` and an existing row keeps its
+  stored locale, so a re-registration without it never resets the language.
+- `POST /api/push/locale` (`src/routes/api/push/locale.ts`, logic in
+  `handleUpdateLocale`) reads the session user before parsing the body and
+  returns 401 without one. It validates `endpoint` (an https URL) and `locale`
+  (400 `invalid_body` otherwise), and updates only rows owned by that user.
 - Delivery renders the title and body per subscription locale, with messages
   called with an explicit `{ locale }`. The payload carries `locale`, and the
   service worker uses it when merging, falling back to `en` when it is missing.
-- **Sync:** the client calls `updatePushLocaleFn` right after a language
-  change, and on each app open when the device has an active subscription. The
-  update is idempotent, so no client-side "last synced" bookkeeping is needed.
+- **Sync:** `syncPushLocale` (`shared/utils/pushLocaleSync.ts`) posts to
+  `/api/push/locale`.
+  - When the device has an active subscription, the Language setting calls it
+    before switching. The wait is capped at 3 s, so a slow network never blocks
+    the switch.
+  - `useSyncPushLocale` calls it on each app open.
+  - Re-registering the subscription (on app open and when the app returns to
+    the foreground) also sends the current locale.
+  - The update is idempotent, so no client-side "last synced" bookkeeping is
+    needed.
 
 ## Rollout
 
