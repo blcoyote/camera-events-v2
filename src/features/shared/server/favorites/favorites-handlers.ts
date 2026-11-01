@@ -11,18 +11,43 @@ import type { FavoriteEntry } from './types'
 import { getFavoritesStore } from './favorites-store'
 import type { FavoritesStore } from './favorites-store'
 
+/**
+ * Retention calls for one event run one at a time, so a retain cannot overtake
+ * an in-flight unretain (or vice versa). Each call re-reads the reference count
+ * when its turn comes and skips if a later mutation made it obsolete.
+ * shortcut: in-process only, fine for the single Bun server; needs a DB lock if we ever scale out.
+ */
+const retentionTails = new Map<string, Promise<void>>()
+
+function enqueueRetention(
+  eventId: string,
+  task: () => Promise<void>,
+): Promise<void> {
+  const run = (retentionTails.get(eventId) ?? Promise.resolve()).then(task)
+  const tail = run
+    .catch(() => {})
+    .then(() => {
+      if (retentionTails.get(eventId) === tail) retentionTails.delete(eventId)
+    })
+  retentionTails.set(eventId, tail)
+  return run
+}
+
 /** Retain the event in Frigate when it just gained its first reference. */
 export async function retainIfFirst(
   store: FavoritesStore,
   eventId: string,
 ): Promise<void> {
   if (store.getReferenceCount(eventId) !== 1) return
-  try {
-    const r = await retainEvent(eventId)
-    if (!r.ok) console.warn('retain failed', r)
-  } catch (e) {
-    console.warn('retain error', e)
-  }
+  return enqueueRetention(eventId, async () => {
+    if (store.getReferenceCount(eventId) === 0) return
+    try {
+      const r = await retainEvent(eventId)
+      if (!r.ok) console.warn('retain failed', r)
+    } catch (e) {
+      console.warn('retain error', e)
+    }
+  })
 }
 
 /** Unretain the event in Frigate when it lost its last reference. */
@@ -31,12 +56,15 @@ export async function unretainIfLast(
   eventId: string,
 ): Promise<void> {
   if (store.getReferenceCount(eventId) !== 0) return
-  try {
-    const r = await unretainEvent(eventId)
-    if (!r.ok) console.warn('unretain failed', r)
-  } catch (e) {
-    console.warn('unretain error', e)
-  }
+  return enqueueRetention(eventId, async () => {
+    if (store.getReferenceCount(eventId) !== 0) return
+    try {
+      const r = await unretainEvent(eventId)
+      if (!r.ok) console.warn('unretain failed', r)
+    } catch (e) {
+      console.warn('unretain error', e)
+    }
+  })
 }
 
 function senderName(

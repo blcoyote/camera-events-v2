@@ -1,13 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { handleShareEvent } from './share-handlers'
 import type { Delivery, DeliveryRequest } from './delivery'
-import { getEvent } from '#/features/shared/server/frigate/client'
+import { getEventUncached } from '#/features/shared/server/frigate/client'
 import { getFavoritesStore } from '#/features/shared/server/favorites/favorites-store'
 import { getUserStore } from '#/features/shared/server/users/user-store'
 import { retainIfFirst } from '#/features/shared/server/favorites/favorites-handlers'
 
 vi.mock('#/features/shared/server/frigate/client', () => ({
-  getEvent: vi.fn(),
+  getEventUncached: vi.fn(),
 }))
 vi.mock('#/features/shared/server/favorites/favorites-store', () => ({
   getFavoritesStore: vi.fn(),
@@ -41,7 +41,7 @@ beforeEach(() => {
     getUser: (s: string) => users[s] ?? null,
   } as never)
   vi.mocked(getFavoritesStore).mockResolvedValue({ addShare } as never)
-  vi.mocked(getEvent).mockResolvedValue({
+  vi.mocked(getEventUncached).mockResolvedValue({
     ok: true,
     data: { label: 'person', camera: 'front_door' },
   } as never)
@@ -82,8 +82,11 @@ describe('handleShareEvent', () => {
     expect(deliver).not.toHaveBeenCalled()
   })
 
-  it('404 when event missing', async () => {
-    vi.mocked(getEvent).mockResolvedValue({ ok: false, error: 'x' } as never)
+  it('404 when event missing (uncached lookup)', async () => {
+    vi.mocked(getEventUncached).mockResolvedValue({
+      ok: false,
+      error: 'x',
+    } as never)
     expect(await run({ recipientIds: ['a'] })).toEqual({
       status: 404,
       body: { error: 'not_found' },

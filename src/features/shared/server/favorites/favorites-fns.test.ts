@@ -260,6 +260,51 @@ describe('unretainIfLast', () => {
   })
 })
 
+describe('retention ordering per event', () => {
+  function deferred() {
+    let release!: () => void
+    const promise = new Promise<{ ok: true; data: undefined }>((resolve) => {
+      release = () => resolve({ ok: true, data: undefined })
+    })
+    return { promise, release }
+  }
+
+  it('sends a re-share retain only after the in-flight unretain settles', async () => {
+    const unretain = deferred()
+    mockUnretainEvent.mockReturnValue(unretain.promise)
+
+    const removal = unretainIfLast(_testStore!, VALID_ID)
+    await vi.waitFor(() => expect(mockUnretainEvent).toHaveBeenCalled())
+    _testStore!.addShare(VALID_ID, 'alice', USER)
+    const reshare = retainIfFirst(_testStore!, VALID_ID)
+    await new Promise((r) => setTimeout(r, 0))
+
+    expect(mockRetainEvent).not.toHaveBeenCalled()
+    unretain.release()
+    await Promise.all([removal, reshare])
+    expect(mockRetainEvent).toHaveBeenCalledWith(VALID_ID)
+    expect(mockRetainEvent.mock.invocationCallOrder[0]).toBeGreaterThan(
+      mockUnretainEvent.mock.invocationCallOrder[0],
+    )
+  })
+
+  it('skips a queued unretain when the event is referenced again before it runs', async () => {
+    const retain = deferred()
+    mockRetainEvent.mockReturnValue(retain.promise)
+
+    _testStore!.addShare(VALID_ID, 'alice', USER)
+    const share = retainIfFirst(_testStore!, VALID_ID)
+    await vi.waitFor(() => expect(mockRetainEvent).toHaveBeenCalled())
+    _testStore!.removeSharesForRecipient(USER, VALID_ID)
+    const removal = unretainIfLast(_testStore!, VALID_ID)
+    _testStore!.addShare(VALID_ID, 'bob', USER)
+
+    retain.release()
+    await Promise.all([share, removal])
+    expect(mockUnretainEvent).not.toHaveBeenCalled()
+  })
+})
+
 // ─── getUserFavoritedEventIdsHandler ─────────────────────────────────────────
 
 describe('getUserFavoritedEventIdsHandler', () => {

@@ -24,6 +24,9 @@ instead of a heart. Spec: `docs/specs/event-sharing.md`.
 - **Retention = Favorites + Shares.** Retain when the first Favorite or Share is
   added, unretain when the last is removed (`getReferenceCount`). Otherwise
   Frigate could delete a shared Event before the recipient opens it.
+  Retain and unretain calls for one Event run one at a time (an in-process
+  queue per Event). Each re-checks the count when its turn comes, so a
+  concurrent re-share cannot be overtaken by a stale unretain.
 - **Mute does not apply.** A share is one person messaging another, so
   `DeliveryRequest.ignoreMute` skips the admin Mute. Per-camera Preferences are
   not consulted either. It is always an Alert with tag `share:<eventId>`, so it

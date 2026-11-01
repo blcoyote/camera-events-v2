@@ -5,7 +5,7 @@ import { readBodyField } from './request-body'
 import { formatCameraName } from './push-notify'
 import { m } from '#/paraglide/messages.js'
 import { translateLabel } from '#/features/shared/utils/labels'
-import { getEvent } from '#/features/shared/server/frigate/client'
+import { getEventUncached } from '#/features/shared/server/frigate/client'
 import { isValidEventId } from '#/features/shared/server/frigate/validation'
 import { getFavoritesStore } from '#/features/shared/server/favorites/favorites-store'
 import { retainIfFirst } from '#/features/shared/server/favorites/favorites-handlers'
@@ -51,7 +51,7 @@ export async function handleShareEvent(
     if (!users.getUser(id)) return fail(400, 'unknown_recipient')
   }
 
-  const found = await getEvent(eventId)
+  const found = await getEventUncached(eventId)
   if (!found.ok) return fail(404, 'not_found')
   const event = found.data
 
