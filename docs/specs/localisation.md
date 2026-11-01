@@ -132,7 +132,7 @@ falls back to `error_unknown`. HTTP status codes stay unchanged.
 1. The foundation, formatting and per-feature string extraction land with the
    `preferredLanguage` strategy left out. Without a cookie everyone resolves
    to English, so Danish is invisible.
-2. To test Danish during development, set `document.cookie = 'PARAGLIDE_LOCALE=da'`.
+2. To test Danish during development, set `document.cookie = 'PARAGLIDE_LOCALE=da; Path=/'` (without `Path=/` the cookie is scoped to the current folder and missing from other routes).
 3. Done: the final PR added `preferredLanguage` to the strategy and shipped the
    Language control (Settings → Appearance).
 
