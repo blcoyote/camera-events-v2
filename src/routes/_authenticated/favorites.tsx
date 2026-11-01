@@ -1,11 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { FavoritesPage } from '#/features/favorites/pages/FavoritesPage'
 import { FavoritesLoading } from '#/features/favorites/components/FavoritesLoading'
-import { getUserFavoritedEventsFn } from '#/features/shared/server/favorites/favorites-fns'
-import type { FrigateEvent } from '#/features/shared/server/frigate/types'
+import { getFavoritesPageFn } from '#/features/shared/server/favorites/favorites-fns'
+import type { FavoriteEntry } from '#/features/shared/server/favorites/types'
 
-export async function favoritesLoader(): Promise<FrigateEvent[]> {
-  return getUserFavoritedEventsFn().catch((): FrigateEvent[] => [])
+export async function favoritesLoader(): Promise<FavoriteEntry[]> {
+  return getFavoritesPageFn().catch((): FavoriteEntry[] => [])
 }
 
 export const Route = createFileRoute('/_authenticated/favorites')({
@@ -15,6 +15,6 @@ export const Route = createFileRoute('/_authenticated/favorites')({
 })
 
 function FavoritesRoute() {
-  const events = Route.useLoaderData()
-  return <FavoritesPage events={events} />
+  const entries = Route.useLoaderData()
+  return <FavoritesPage entries={entries} />
 }

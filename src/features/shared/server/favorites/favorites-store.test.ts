@@ -22,6 +22,10 @@ describe('favorites-store table initialization', () => {
   it('creates event_favorites table on init', () => {
     expect(store.tableNames()).toContain('event_favorites')
   })
+
+  it('creates event_shares table on init', () => {
+    expect(store.tableNames()).toContain('event_shares')
+  })
 })
 
 describe('addFavorite', () => {
@@ -102,33 +106,102 @@ describe('isFavorited', () => {
   })
 })
 
-describe('getFavoriteCount', () => {
+describe('getReferenceCount', () => {
   it('returns 0 when no one has favorited the event', () => {
-    expect(store.getFavoriteCount('event-abc')).toBe(0)
+    expect(store.getReferenceCount('event-abc')).toBe(0)
   })
 
   it('returns 1 after one user favorites the event', () => {
     store.addFavorite('user1', 'event-abc')
-    expect(store.getFavoriteCount('event-abc')).toBe(1)
+    expect(store.getReferenceCount('event-abc')).toBe(1)
   })
 
   it('returns 2 after two different users favorite the same event', () => {
     store.addFavorite('user1', 'event-abc')
     store.addFavorite('user2', 'event-abc')
-    expect(store.getFavoriteCount('event-abc')).toBe(2)
+    expect(store.getReferenceCount('event-abc')).toBe(2)
   })
 
   it('does not count rows for a different event (cross-event isolation)', () => {
     store.addFavorite('user1', 'event-abc')
     store.addFavorite('user1', 'event-xyz')
-    expect(store.getFavoriteCount('event-abc')).toBe(1)
-    expect(store.getFavoriteCount('event-xyz')).toBe(1)
+    expect(store.getReferenceCount('event-abc')).toBe(1)
+    expect(store.getReferenceCount('event-xyz')).toBe(1)
   })
 
   it('returns 0 after the only favorite is removed', () => {
     store.addFavorite('user1', 'event-abc')
     store.removeFavorite('user1', 'event-abc')
-    expect(store.getFavoriteCount('event-abc')).toBe(0)
+    expect(store.getReferenceCount('event-abc')).toBe(0)
+  })
+})
+
+describe('getReferenceCount with shares', () => {
+  it('counts favorites and shares together', () => {
+    store.addFavorite('user1', 'event-abc')
+    store.addShare('event-abc', 'sender', 'user2')
+    expect(store.getReferenceCount('event-abc')).toBe(2)
+  })
+
+  it('does not count shares of a different event', () => {
+    store.addShare('event-xyz', 'sender', 'user2')
+    expect(store.getReferenceCount('event-abc')).toBe(0)
+  })
+})
+
+describe('addShare', () => {
+  it('is idempotent per (event, sender, recipient) and refreshes created_at', () => {
+    store.addShare('e1', 's', 'r')
+    store.addShare('e1', 's', 'r')
+    expect(store.getSharesForRecipient('r')).toHaveLength(1)
+    expect(store.getReferenceCount('e1')).toBe(1)
+  })
+
+  it('keeps separate rows for different senders', () => {
+    store.addShare('e1', 's1', 'r')
+    store.addShare('e1', 's2', 'r')
+    expect(store.getSharesForRecipient('r')).toHaveLength(2)
+  })
+})
+
+describe('getSharesForRecipient', () => {
+  it('returns [] when none', () => {
+    expect(store.getSharesForRecipient('r')).toEqual([])
+  })
+
+  it('returns only that recipient shares ordered by insertion', () => {
+    store.addShare('e1', 's', 'r')
+    store.addShare('e2', 's', 'r')
+    store.addShare('e3', 's', 'other')
+    const rows = store.getSharesForRecipient('r')
+    expect(rows.map((x) => x.eventId)).toEqual(['e1', 'e2'])
+    expect(rows[0]).toMatchObject({ senderId: 's' })
+    expect(typeof rows[0].createdAt).toBe('string')
+  })
+})
+
+describe('removeSharesForRecipient', () => {
+  it('removes only that recipient rows for that event', () => {
+    store.addShare('e1', 's1', 'r')
+    store.addShare('e1', 's2', 'r')
+    store.addShare('e1', 's1', 'other')
+    store.addShare('e2', 's1', 'r')
+    store.removeSharesForRecipient('r', 'e1')
+    expect(store.getSharesForRecipient('r').map((x) => x.eventId)).toEqual([
+      'e2',
+    ])
+    expect(store.getSharesForRecipient('other')).toHaveLength(1)
+  })
+})
+
+describe('getFavoritesWithTime', () => {
+  it('returns eventId and createdAt for the user only', () => {
+    store.addFavorite('u', 'e1')
+    store.addFavorite('v', 'e2')
+    const rows = store.getFavoritesWithTime('u')
+    expect(rows).toHaveLength(1)
+    expect(rows[0].eventId).toBe('e1')
+    expect(typeof rows[0].createdAt).toBe('string')
   })
 })
 

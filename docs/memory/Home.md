@@ -49,6 +49,7 @@ this vault is meant to be used.
 - [[decisions/2026-10-24-glassmorphism-dark-mode]] — dark mode via `:root.dark` over `--gl-*` primitives; navy `#0b1424`, light/dark/auto toggle in header + Settings
 - [[decisions/2026-10-31-typescript-7-and-biome]] — TS 7 native compiler; Biome replaces ESLint and Prettier
 - [[decisions/2026-10-31-paraglide-localisation]] — English + Danish via Paraglide; system language, cookie override, per-subscription push locale
+- [[decisions/2026-11-01-event-sharing]] — `event_shares` table; Retention counts Favorites + Shares; share push bypasses Mute
 
 ## ⚠️ Gotchas
 

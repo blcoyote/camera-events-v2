@@ -102,6 +102,22 @@ describe('createDelivery', () => {
     })
   })
 
+  describe('ignoreMute', () => {
+    it('sends while muted without consulting the mute check', async () => {
+      const isMuted = vi.fn(() => Promise.resolve(true))
+      const deps = makeDeps({ isMuted })
+      await createDelivery(deps).deliver(makeRequest({ ignoreMute: true }))
+      expect(isMuted).not.toHaveBeenCalled()
+      expect(deps.send).toHaveBeenCalledTimes(1)
+    })
+
+    it('still suppresses while muted without it', async () => {
+      const deps = makeDeps({ isMuted: () => Promise.resolve(true) })
+      await createDelivery(deps).deliver(makeRequest())
+      expect(deps.send).not.toHaveBeenCalled()
+    })
+  })
+
   describe('fan-out', () => {
     it('sends once per subscription across users', async () => {
       const store = makeStore({

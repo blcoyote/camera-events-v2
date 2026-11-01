@@ -36,6 +36,10 @@ _Avoid_: Ghost event
 A user's marker on an Event. A Favorite starts Retention, but they are separate terms: one is the user's marker, the other is what Frigate does about it.
 _Avoid_: Saved, starred, pinned
 
+**Share**:
+One user sending an Event to another. The recipient gets an Alert and the Event appears on their Favorites page. A Share also starts Retention.
+_Avoid_: Forward, send
+
 ### Notifications
 
 **Burst**:
@@ -100,6 +104,7 @@ User-facing Danish equivalents of the terms above, approved 2026-10-31. UI copy 
 | Alert / notification                 | Notifikation                        | "Notifikationer" in Settings                    |
 | Mute (admin)                         | Pause                               | Verb "Sæt på pause"; state "På pause til 21.40" |
 | Favorite                             | Favorit                             | Plural: favoritter                              |
+| Share                                | Del / Delt                          | "Delt af Anna", "fra Anna"; unknown = "nogen"   |
 | Retention                            | Gemmes                              | "Gemmes i Frigate"                              |
 | Camera / Cameras                     | Kamera / Kameraer                   |                                                 |
 | Live view                            | Live-visning                        |                                                 |

@@ -25,8 +25,25 @@ afterEach(() => {
 
 describe('FavoritesPage (da)', () => {
   it('renders the empty state in Danish', () => {
-    render(<FavoritesPage events={[]} />)
+    render(<FavoritesPage entries={[]} />)
     expect(screen.getByText('Ingen favoritter endnu')).toBeInTheDocument()
     expect(screen.getByText('Gå til hændelser')).toBeInTheDocument()
+  })
+
+  it('renders the filter group label in Danish', () => {
+    render(
+      <FavoritesPage
+        entries={[
+          {
+            event: { id: 'e' } as never,
+            favorited: true,
+            sharedBy: [],
+          },
+        ]}
+      />,
+    )
+    expect(
+      screen.getByRole('group', { name: 'Filtrér favoritter' }),
+    ).toBeInTheDocument()
   })
 })

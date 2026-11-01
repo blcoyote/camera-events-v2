@@ -16,9 +16,23 @@ export const getUserFavoritedEventIdsFn = createServerFn({
   return getUserFavoritedEventIdsHandler()
 })
 
-export const getUserFavoritedEventsFn = createServerFn({
+export const getFavoritesPageFn = createServerFn({
   method: 'GET',
 }).handler(async () => {
-  const { getUserFavoritedEventsHandler } = await import('./favorites-handlers')
-  return getUserFavoritedEventsHandler()
+  const { getFavoritesPageHandler } = await import('./favorites-handlers')
+  return getFavoritesPageHandler()
 })
+
+export const getReceivedSharesFn = createServerFn({ method: 'GET' })
+  .validator((data: { eventId: string }) => data)
+  .handler(async ({ data }) => {
+    const { getReceivedSharesHandler } = await import('./favorites-handlers')
+    return getReceivedSharesHandler(data)
+  })
+
+export const removeReceivedShareFn = createServerFn({ method: 'POST' })
+  .validator((data: { eventId: string }) => data)
+  .handler(async ({ data }) => {
+    const { removeReceivedShareHandler } = await import('./favorites-handlers')
+    return removeReceivedShareHandler(data)
+  })

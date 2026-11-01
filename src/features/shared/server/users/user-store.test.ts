@@ -375,3 +375,49 @@ describe('getUserStore singleton', () => {
     s.close()
   })
 })
+
+describe('listUsers', () => {
+  const u = (sub: string, email: string, firstName: string) => ({
+    sub,
+    email,
+    firstName,
+    avatarUrl: `https://img/${sub}`,
+  })
+
+  it('returns empty array when no users', () => {
+    expect(store.listUsers()).toEqual([])
+  })
+
+  it('returns users ordered by first name case-insensitively', () => {
+    store.upsertUser(u('s1', 'z@x.com', 'bob'))
+    store.upsertUser(u('s2', 'y@x.com', 'Alice'))
+    expect(store.listUsers()).toEqual([
+      {
+        sub: 's2',
+        email: 'y@x.com',
+        firstName: 'Alice',
+        avatarUrl: 'https://img/s2',
+      },
+      {
+        sub: 's1',
+        email: 'z@x.com',
+        firstName: 'bob',
+        avatarUrl: 'https://img/s1',
+      },
+    ])
+  })
+
+  it('falls back to email for ordering and keeps null first_name', async () => {
+    store.upsertUser(u('s1', 'a@x.com', 'Carl'))
+    const db = await openSqlite(path.join(tmpDir, 'test.db'))
+    db.prepare(
+      'INSERT INTO users (sub, email, first_name, avatar_url) VALUES (?, ?, NULL, NULL)',
+    ).run('s2', 'b@x.com')
+    db.close()
+    expect(store.listUsers().map((x) => x.sub)).toEqual(['s2', 's1'])
+    expect(store.listUsers()[0]).toMatchObject({
+      firstName: null,
+      avatarUrl: null,
+    })
+  })
+})

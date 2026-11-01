@@ -882,3 +882,45 @@ describe('frigateGet caching', () => {
     }
   })
 })
+
+describe('getEventUncached', () => {
+  const originalEnv = process.env.FRIGATE_URL
+  const originalFetch = globalThis.fetch
+
+  beforeEach(() => {
+    clearFrigateCache()
+    process.env.FRIGATE_URL = FRIGATE_URL
+  })
+
+  afterEach(() => {
+    globalThis.fetch = originalFetch
+    clearFrigateCache()
+    if (originalEnv === undefined) delete process.env.FRIGATE_URL
+    else process.env.FRIGATE_URL = originalEnv
+  })
+
+  it('fetches from the network even when a cached ok result exists', async () => {
+    globalThis.fetch = mockFetchJson(MOCK_EVENT)
+    const { getEvent, getEventUncached } = await import('./client')
+    await getEvent(MOCK_EVENT.id)
+    await getEventUncached(MOCK_EVENT.id)
+    expect(globalThis.fetch).toHaveBeenCalledTimes(2)
+  })
+
+  it('returns non-ok on 404 even when a stale ok is cached', async () => {
+    globalThis.fetch = mockFetchJson(MOCK_EVENT)
+    const { getEvent, getEventUncached } = await import('./client')
+    await getEvent(MOCK_EVENT.id)
+    globalThis.fetch = mockFetchJson({ detail: 'nf' }, 404)
+    const result = await getEventUncached(MOCK_EVENT.id)
+    expect(result).toEqual({ ok: false, error: 'HTTP 404', status: 404 })
+  })
+
+  it('refreshes the cache on ok', async () => {
+    globalThis.fetch = mockFetchJson(MOCK_EVENT)
+    const { getEvent, getEventUncached } = await import('./client')
+    await getEventUncached(MOCK_EVENT.id)
+    await getEvent(MOCK_EVENT.id)
+    expect(globalThis.fetch).toHaveBeenCalledTimes(1)
+  })
+})

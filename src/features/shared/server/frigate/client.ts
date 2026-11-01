@@ -150,6 +150,24 @@ export async function getEvent(
   return frigateGet(`/api/events/${eventId}`, undefined, timeoutMs)
 }
 
+// Existence checks (e.g. sharing) must not trust a cached success for an event deleted since.
+export async function getEventUncached(
+  eventId: string,
+  timeoutMs?: number,
+): Promise<FrigateResult<FrigateEvent>> {
+  if (process.env.FRIGATE_MOCK === 'true')
+    return (await loadMock()).getEvent(eventId, timeoutMs)
+  const path = `/api/events/${eventId}`
+  const result = await frigateFetch(
+    path,
+    undefined,
+    (res) => res.json() as Promise<FrigateEvent>,
+    timeoutMs,
+  )
+  if (result.ok) frigateCache.set(buildUrl(path), result)
+  return result
+}
+
 export async function getEventThumbnail(
   eventId: string,
   params?: GetEventMediaParams,

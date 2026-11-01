@@ -47,6 +47,8 @@ export interface DeliveryDeps {
 export interface DeliveryRequest {
   logTag: string
   description: string
+  /** Deliver even while globally muted (direct, user-initiated sends like shares). */
+  ignoreMute?: boolean
   burst?: { key: string; start: boolean }
   isUserEligible: (userId: string, store: DeliveryStore) => boolean
   buildPayload: (burstStart: boolean, locale: PushLocale) => PushPayload
@@ -90,7 +92,7 @@ export function createDelivery(
     if (!deps.isPushEnabled()) return
 
     const now = deps.now()
-    if (await deps.isMuted(now)) {
+    if (!request.ignoreMute && (await deps.isMuted(now))) {
       if (burst?.start) swallowed.add(burst.key)
       console.log(
         `[${logTag}] ${request.description} suppressed — notifications are globally muted`,

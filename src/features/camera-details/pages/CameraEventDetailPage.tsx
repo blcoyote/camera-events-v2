@@ -18,6 +18,8 @@ import { SnapshotLightbox } from '#/features/shared/components/SnapshotLightbox'
 import { EventSnapshot } from '../components/EventSnapshot'
 import { EventClipPlayer } from '../components/EventClipPlayer'
 import { InfoCard } from '../components/InfoCard'
+import { ShareButton } from '../components/ShareButton'
+import { SharedByRow } from '../components/SharedByRow'
 import { parseEventStartTimeMs } from '../utils/eventId'
 import { useFavoriteToggle } from '#/features/shared/hooks/useFavoriteToggle'
 import { FavoriteButton } from '#/features/shared/components/FavoriteButton'
@@ -161,6 +163,8 @@ export function CameraEventDetailPage({
   nowMs,
   onRetry,
   initialFavorited = false,
+  sharedBy = [],
+  onRemoveShare,
 }: {
   result: FrigateResult<FrigateEvent>
   /** The ID that was requested — the only handle we have when the load 404s. */
@@ -174,6 +178,9 @@ export function CameraEventDetailPage({
   /** Re-runs the loader. Drives the pending state's retries. */
   onRetry?: () => void | Promise<void>
   initialFavorited?: boolean
+  /** Names of the people who shared this event with the viewer. */
+  sharedBy?: (string | null)[]
+  onRemoveShare?: () => Promise<void>
 }) {
   const [fallbackNow] = useState(() => Date.now())
   const state = getDetailPageState(
@@ -299,7 +306,11 @@ export function CameraEventDetailPage({
             error={favoriteError}
             onToggle={toggle}
           />
+          <ShareButton eventId={event.id} />
         </div>
+        {onRemoveShare && (
+          <SharedByRow sharedBy={sharedBy} onRemove={onRemoveShare} />
+        )}
 
         {event.has_snapshot && (
           <>

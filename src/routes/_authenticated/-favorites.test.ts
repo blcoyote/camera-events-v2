@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 const mockGetUserFavoritedEventsFn = vi.fn()
 
 vi.mock('#/features/shared/server/favorites/favorites-fns', () => ({
-  getUserFavoritedEventsFn: mockGetUserFavoritedEventsFn,
+  getFavoritesPageFn: mockGetUserFavoritedEventsFn,
   toggleFavoriteFn: vi.fn(),
 }))
 
@@ -28,23 +28,23 @@ vi.mock('#/features/camera-events/components/FavoritesLoading', () => ({
 
 const { favoritesLoader } = await import('./favorites')
 
-const MOCK_EVENTS = [
-  { id: 'evt-1', label: 'person', camera: 'front_porch' },
-  { id: 'evt-2', label: 'car', camera: 'driveway' },
+const MOCK_ENTRIES = [
+  { event: { id: 'evt-1' }, favorited: true, sharedBy: [] },
+  { event: { id: 'evt-2' }, favorited: false, sharedBy: ['Alice'] },
 ]
 
 beforeEach(() => {
   vi.clearAllMocks()
-  mockGetUserFavoritedEventsFn.mockResolvedValue(MOCK_EVENTS)
+  mockGetUserFavoritedEventsFn.mockResolvedValue(MOCK_ENTRIES)
 })
 
 describe('favoritesLoader', () => {
-  it('returns the array from getUserFavoritedEventsFn', async () => {
+  it('returns the array from getFavoritesPageFn', async () => {
     const result = await favoritesLoader()
-    expect(result).toEqual(MOCK_EVENTS)
+    expect(result).toEqual(MOCK_ENTRIES)
   })
 
-  it('returns [] when getUserFavoritedEventsFn throws', async () => {
+  it('returns [] when getFavoritesPageFn throws', async () => {
     mockGetUserFavoritedEventsFn.mockRejectedValue(new Error('Unauthorized'))
     const result = await favoritesLoader()
     expect(result).toEqual([])
