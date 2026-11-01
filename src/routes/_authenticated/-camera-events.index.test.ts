@@ -139,6 +139,13 @@ describe('validateCameraEventsSearch', () => {
     ).toEqual({ type: undefined, camera: undefined })
   })
 
+  it('drops empty strings', () => {
+    expect(validateCameraEventsSearch({ type: '', camera: '' })).toEqual({
+      type: undefined,
+      camera: undefined,
+    })
+  })
+
   it('accepts exactly 64 chars', () => {
     const v = 'x'.repeat(64)
     expect(validateCameraEventsSearch({ type: v }).type).toBe(v)

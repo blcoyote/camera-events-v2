@@ -25,7 +25,7 @@ export function validateCameraEventsSearch(s: Record<string, unknown>): {
   camera?: string
 } {
   const str = (v: unknown) =>
-    typeof v === 'string' && v.length <= 64 ? v : undefined
+    typeof v === 'string' && v.length > 0 && v.length <= 64 ? v : undefined
   return { type: str(s.type), camera: str(s.camera) }
 }
 
