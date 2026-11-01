@@ -77,7 +77,7 @@ describe('handleSubscribe', () => {
     expect(result.status).toBe(503)
   })
 
-  it('upserts subscription for authenticated user', async () => {
+  it('upserts subscription for authenticated user (locale omitted)', async () => {
     vi.mocked(isPushEnabled).mockReturnValue(true)
     const mockSave = vi.fn()
     vi.mocked(getPushStore).mockReturnValue({
@@ -95,7 +95,7 @@ describe('handleSubscribe', () => {
       'https://push.example.com/sub1',
       'p-key',
       'a-key',
-      'en',
+      undefined,
     )
   })
 

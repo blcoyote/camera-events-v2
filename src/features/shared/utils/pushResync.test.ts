@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
+import { withLocale } from '#/test-utils/locale'
 import {
   resyncSubscription,
   resyncExistingPushSubscription,
@@ -39,7 +40,19 @@ describe('resyncSubscription', () => {
     expect(body).toEqual({
       endpoint: 'https://push.example.com/sub1',
       keys: { p256dh: 'p-key', auth: 'a-key' },
+      locale: 'en',
     })
+  })
+
+  it('includes the current locale in the body', async () => {
+    const restore = withLocale('da')
+    try {
+      const fetchMock = vi.fn().mockResolvedValue({ ok: true })
+      await resyncSubscription(makeSubscription(), fetchMock)
+      expect(JSON.parse(fetchMock.mock.calls[0][1].body).locale).toBe('da')
+    } finally {
+      restore()
+    }
   })
 
   it('returns true when the response is ok', async () => {

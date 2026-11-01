@@ -30,10 +30,10 @@ export function getAlertMessage(
   error: string | undefined,
   status: string | undefined,
 ): AlertMessage | null {
-  if (error && ERROR_MESSAGES[error]) {
+  if (error && Object.hasOwn(ERROR_MESSAGES, error)) {
     return { text: ERROR_MESSAGES[error](), type: 'error' }
   }
-  if (status && STATUS_MESSAGES[status]) {
+  if (status && Object.hasOwn(STATUS_MESSAGES, status)) {
     return { text: STATUS_MESSAGES[status](), type: 'success' }
   }
   return null

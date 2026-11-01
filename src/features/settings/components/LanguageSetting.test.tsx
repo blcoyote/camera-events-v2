@@ -73,6 +73,37 @@ describe('LanguageSetting', () => {
     )
   })
 
+  describe('with a hanging push sync', () => {
+    beforeEach(() => {
+      vi.useFakeTimers({ shouldAdvanceTime: true })
+      mocks.sync.mockImplementationOnce(() => new Promise<void>(() => {}))
+    })
+    afterEach(() => {
+      vi.useRealTimers()
+    })
+
+    it('disables the select while the sync is pending', async () => {
+      render(<LanguageSetting />)
+      await userEvent.selectOptions(screen.getByLabelText('Language'), 'da')
+      expect(screen.getByLabelText('Language')).toBeDisabled()
+      expect(mocks.setLocale).not.toHaveBeenCalled()
+    })
+
+    it('still sets the locale after the timeout', async () => {
+      render(<LanguageSetting />)
+      await userEvent.selectOptions(screen.getByLabelText('Language'), 'da')
+      await vi.advanceTimersByTimeAsync(3000)
+      expect(mocks.setLocale).toHaveBeenCalledWith('da')
+    })
+  })
+
+  it('still sets the locale when the sync rejects', async () => {
+    mocks.sync.mockRejectedValueOnce(new Error('boom'))
+    render(<LanguageSetting />)
+    await userEvent.selectOptions(screen.getByLabelText('Language'), 'da')
+    await waitFor(() => expect(mocks.setLocale).toHaveBeenCalledWith('da'))
+  })
+
   it('Automatic clears the cookie and reloads', async () => {
     document.cookie = 'PARAGLIDE_LOCALE=da; path=/'
     render(<LanguageSetting />)

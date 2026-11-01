@@ -128,11 +128,11 @@ export async function createPushStore(
   const stmts = {
     upsert: db.prepare(`
       INSERT INTO push_subscriptions (user_id, endpoint, p256dh, auth, locale)
-      VALUES (?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, COALESCE(?, 'en'))
       ON CONFLICT(user_id, endpoint) DO UPDATE SET
         p256dh = excluded.p256dh,
         auth = excluded.auth,
-        locale = excluded.locale
+        locale = COALESCE(?, push_subscriptions.locale)
     `),
     updateLocale: db.prepare(
       'UPDATE push_subscriptions SET locale = ? WHERE user_id = ? AND endpoint = ?',
@@ -184,8 +184,15 @@ export async function createPushStore(
   }
 
   return {
-    saveSubscription(userId, endpoint, p256dh, auth, locale = 'en') {
-      stmts.upsert.run(userId, endpoint, p256dh, auth, locale)
+    saveSubscription(userId, endpoint, p256dh, auth, locale) {
+      stmts.upsert.run(
+        userId,
+        endpoint,
+        p256dh,
+        auth,
+        locale ?? null,
+        locale ?? null,
+      )
     },
 
     updateLocale(userId, endpoint, locale) {

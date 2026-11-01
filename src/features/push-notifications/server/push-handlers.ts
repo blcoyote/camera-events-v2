@@ -55,12 +55,12 @@ export async function handleSubscribe(
     }
   }
 
-  // Optional; absent means 'en'. Present-but-unsupported is a trust-boundary 400.
+  // Optional; absent preserves the stored locale (new rows get 'en'). Present-but-unsupported is a trust-boundary 400.
   const localeField = readBodyField(body, 'locale')
   if (localeField !== undefined && !isPushLocale(localeField)) {
     return { status: 400, body: { error: 'invalid_body' } }
   }
-  const locale = localeField ?? 'en'
+  const locale = localeField
 
   // Validate endpoint is an HTTPS URL (push services always use HTTPS)
   let parsedUrl: URL

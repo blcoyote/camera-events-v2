@@ -421,6 +421,12 @@ describe('push-store locale', () => {
     expect(store.getSubscriptionsByUserId('u1')[0].locale).toBe('en')
   })
 
+  it('keeps the stored locale when re-saved without one', () => {
+    store.saveSubscription('u1', 'https://e/1', 'p', 'a', 'da')
+    store.saveSubscription('u1', 'https://e/1', 'p2', 'a2')
+    expect(store.getSubscriptionsByUserId('u1')[0].locale).toBe('da')
+  })
+
   it('updateLocale only touches the matching user and endpoint', () => {
     store.saveSubscription('u1', 'https://e/1', 'p', 'a')
     expect(store.updateLocale('u2', 'https://e/1', 'da')).toBe(false)

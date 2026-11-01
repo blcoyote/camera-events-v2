@@ -53,6 +53,12 @@ describe('getAlertMessage', () => {
     expect(result).toBeNull()
   })
 
+  it('ignores inherited Object.prototype keys', () => {
+    expect(getAlertMessage('__defineGetter__', undefined)).toBeNull()
+    expect(getAlertMessage('toString', undefined)).toBeNull()
+    expect(getAlertMessage(undefined, 'constructor')).toBeNull()
+  })
+
   it('prioritizes error over status with correct text', () => {
     const result = getAlertMessage('access_denied', 'logged_out')
     expect(result!.type).toBe('error')

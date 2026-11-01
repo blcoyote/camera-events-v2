@@ -9,12 +9,16 @@ import {
   reloadPage,
 } from '../utils/languagePreference'
 
+// Push sync is best-effort; never let a slow network block the switch.
+const PUSH_SYNC_TIMEOUT_MS = 3000
+
 type Choice = 'auto' | 'en' | 'da'
 
 export function LanguageSetting() {
   const id = useId()
   // 'auto' on first render keeps SSR and hydration identical; cookie read is deferred.
   const [value, setValue] = useState<Choice>('auto')
+  const [pending, setPending] = useState(false)
 
   useEffect(() => {
     const stored = readStoredLanguage()
@@ -28,8 +32,16 @@ export function LanguageSetting() {
       reloadPage()
       return
     }
-    await syncPushLocale(next)
-    setLocale(next)
+    setPending(true)
+    try {
+      await Promise.race([
+        syncPushLocale(next).catch(() => {}),
+        new Promise((r) => setTimeout(r, PUSH_SYNC_TIMEOUT_MS)),
+      ])
+      setLocale(next)
+    } finally {
+      setPending(false)
+    }
   }
 
   return (
@@ -40,6 +52,7 @@ export function LanguageSetting() {
       <NativeSelect
         id={id}
         value={value}
+        disabled={pending}
         onChange={(e) => void onChange(e.target.value as Choice)}
       >
         <option value="auto">{m.settings_language_auto()}</option>
