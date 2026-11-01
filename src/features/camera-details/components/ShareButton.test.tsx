@@ -41,3 +41,17 @@ describe('ShareButton', () => {
     expect(screen.getByTestId('sheet')).toBeInTheDocument()
   })
 })
+
+describe('ShareButton showLabel', () => {
+  it('is icon-only by default', () => {
+    render(<ShareButton eventId="e1" />)
+    expect(screen.getByRole('button', { name: 'Share' })).toHaveTextContent('')
+  })
+
+  it('shows a visible label when showLabel', () => {
+    render(<ShareButton eventId="e1" showLabel />)
+    expect(screen.getByRole('button', { name: 'Share' })).toHaveTextContent(
+      'Share',
+    )
+  })
+})

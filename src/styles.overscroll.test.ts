@@ -25,3 +25,11 @@ describe('root overscroll behaviour', () => {
     expect(ruleBody('body')).not.toContain('overscroll-behavior')
   })
 })
+
+describe('body height', () => {
+  // ce-6wc: on short pages iOS standalone left the fixed tab bar floating
+  // above the bottom edge; body must fill the dynamic viewport.
+  it('sets min-height: 100dvh on body', () => {
+    expect(ruleBody('body')).toContain('min-height: 100dvh;')
+  })
+})

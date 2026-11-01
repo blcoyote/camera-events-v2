@@ -44,6 +44,36 @@ describe('mock-client', () => {
       expect(result.data).toHaveLength(5)
     })
 
+    it('honours the cameras param', async () => {
+      const result = await getEvents({ cameras: 'driveway,garage', limit: 20 })
+      if (!result.ok) throw new Error('expected ok')
+      for (const e of result.data) {
+        expect(['driveway', 'garage']).toContain(e.camera)
+      }
+    })
+
+    it('keeps start_time strictly after `after` and before now', async () => {
+      const after = Date.now() / 1000 - 3600
+      const result = await getEvents({ after, limit: 20 })
+      if (!result.ok) throw new Error('expected ok')
+      for (const e of result.data) {
+        expect(e.start_time).toBeGreaterThan(after)
+        expect(e.start_time).toBeLessThan(Date.now() / 1000)
+      }
+    })
+
+    it('keeps start_time strictly before `before`', async () => {
+      const before = Date.now() / 1000 - 3600
+      const result = await getEvents({ before, limit: 20 })
+      if (!result.ok) throw new Error('expected ok')
+      for (const e of result.data) expect(e.start_time).toBeLessThan(before)
+    })
+
+    it('returns nothing when `after` is within the last minute', async () => {
+      const result = await getEvents({ after: Date.now() / 1000 - 30 })
+      expect(result).toEqual({ ok: true, data: [] })
+    })
+
     it('generates events with varied labels and cameras', async () => {
       const result = await getEvents({ limit: 20 })
       if (!result.ok) return

@@ -123,22 +123,39 @@ function randomBoundingBox(): BoundingBox {
 
 // ─── Data generators ───
 
-function generateEvent(eventId?: string): FrigateEvent {
+interface EventOverrides {
+  cameras?: readonly string[]
+  /** Unix seconds; start_time is generated strictly between the bounds. */
+  startAfter?: number
+  startBefore?: number
+}
+
+function generateEvent(
+  eventId?: string,
+  overrides: EventOverrides = {},
+): FrigateEvent {
   const id = eventId ?? randomId()
-  const camera = randomChoice(MOCK_CAMERAS)
+  const camera = randomChoice(overrides.cameras ?? MOCK_CAMERAS)
   const label = randomChoice(MOCK_LABELS)
-  const startOffset = randomInt(1, 1440) // up to 24 hours ago
   const durationMins = randomInt(1, 10)
   const score = randomFloat(0.5, 0.99)
   const box = randomBoundingBox()
+  const now = Date.now() / 1000
+  const lo = overrides.startAfter ?? (overrides.startBefore ?? now) - 86400
+  const hi = overrides.startBefore ?? now
+  // keep strictly inside (lo, hi)
+  const start =
+    overrides.startAfter === undefined && overrides.startBefore === undefined
+      ? minutesAgo(randomInt(1, 1440)) // up to 24 hours ago
+      : lo + (hi - lo) * (0.001 + 0.998 * Math.random())
 
   return {
     id,
     label,
     sub_label: Math.random() > 0.8 ? 'delivery' : null,
     camera,
-    start_time: minutesAgo(startOffset),
-    end_time: minutesAgo(startOffset - durationMins),
+    start_time: start,
+    end_time: start + durationMins * 60,
     false_positive: null,
     zones: randomSubset(MOCK_ZONES),
     thumbnail: '',
@@ -223,8 +240,21 @@ export async function getEvents(
   params?: GetEventsParams,
   _timeoutMs?: number,
 ): Promise<FrigateResult<FrigateEvent[]>> {
+  const now = Date.now() / 1000
+  const after = params?.after === undefined ? undefined : Number(params.after)
+  const before =
+    params?.before === undefined ? undefined : Number(params.before)
+  // Nothing new within the last minute, so "nothing since" shows up in dev.
+  if (after !== undefined && after > now - 60) return { ok: true, data: [] }
+  const cameras = params?.cameras?.split(',').filter(Boolean)
   const count = params?.limit ?? randomInt(10, 20)
-  const events = Array.from({ length: count }, () => generateEvent())
+  const events = Array.from({ length: count }, () =>
+    generateEvent(undefined, {
+      cameras: cameras?.length ? cameras : undefined,
+      startAfter: after,
+      startBefore: before ?? (after === undefined ? undefined : now - 30),
+    }),
+  )
   return { ok: true, data: events }
 }
 

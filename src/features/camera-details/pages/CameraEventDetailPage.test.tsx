@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, cleanup, fireEvent, screen } from '@testing-library/react'
+import { m } from '#/paraglide/messages.js'
+import { render, cleanup, fireEvent, screen, act } from '@testing-library/react'
 import '@testing-library/jest-dom/vitest'
 import React from 'react'
 import type { FrigateEvent } from '#/features/shared/server/frigate/types'
@@ -26,14 +27,47 @@ vi.mock('#/features/shared/components/FavoriteButton', () => ({
   FavoriteButton: (props: unknown) => mockFavoriteButton(props),
 }))
 
+const mockShareButton = vi.fn((_props: unknown) => null)
 vi.mock('../components/ShareButton', () => ({
-  ShareButton: ({ eventId }: { eventId: string }) =>
-    React.createElement('div', { 'data-testid': 'share-button', eventId }),
+  ShareButton: (props: { eventId: string }) => {
+    mockShareButton(props)
+    return React.createElement('div', { 'data-testid': 'share-button' })
+  },
+}))
+
+const mockDownloadActions = vi.fn((_props: unknown) => null)
+vi.mock('../components/DownloadActions', () => ({
+  DownloadActions: (props: unknown) => mockDownloadActions(props),
+  getDownloadUrl: (id: string, kind: string) =>
+    `/api/events/${id}/${kind}?download=true`,
 }))
 
 vi.mock('@tanstack/react-router', () => ({
-  Link: ({ children, to }: { children: React.ReactNode; to: string }) =>
-    React.createElement('a', { href: to }, children),
+  Link: ({
+    children,
+    to,
+    params,
+  }: {
+    children: React.ReactNode
+    to: string
+    params?: Record<string, string>
+  }) =>
+    React.createElement(
+      'a',
+      {
+        href: to.replace(/\$(\w+)/g, (_, k: string) => params?.[k] ?? ''),
+      },
+      children,
+    ),
+}))
+
+const mockUseCameraNeighbors = vi.fn((_event: unknown) => ({
+  status: 'ready' as const,
+  previous: null,
+  next: null,
+}))
+vi.mock('../hooks/useCameraNeighbors', () => ({
+  useCameraNeighbors: (event: unknown) => mockUseCameraNeighbors(event),
 }))
 
 const mockEventSnapshot = vi.fn((_props: unknown) => null)
@@ -52,11 +86,15 @@ vi.mock('#/features/shared/components/SnapshotLightbox', () => ({
   },
 }))
 
-const mockEventClipPlayer = vi.fn(
-  (_props: { onError?: () => void; eventId: string }) => null,
-)
+type ClipProps = {
+  eventId: string
+  poster?: string
+  fallback?: React.ReactNode
+  onZoom?: () => void
+}
+const mockEventClipPlayer = vi.fn((_props: ClipProps) => null)
 vi.mock('../components/EventClipPlayer', () => ({
-  EventClipPlayer: (props: { onError?: () => void; eventId: string }) => {
+  EventClipPlayer: (props: ClipProps) => {
     mockEventClipPlayer(props)
     return React.createElement('video', {
       'data-testid': 'clip-player',
@@ -65,17 +103,17 @@ vi.mock('../components/EventClipPlayer', () => ({
   },
 }))
 
+const mockInfoCard = vi.fn(
+  (_props: { label: string; value: React.ReactNode }) => null,
+)
 vi.mock('../components/InfoCard', () => ({
-  InfoCard: () => null,
+  InfoCard: (props: { label: string; value: React.ReactNode }) =>
+    mockInfoCard(props),
 }))
 
 // Import component AFTER mocks
-const {
-  CameraEventDetailPage,
-  getDownloadUrl,
-  getDetailPageState,
-  formatDuration,
-} = await import('./CameraEventDetailPage')
+const { CameraEventDetailPage, getDetailPageState, formatDuration } =
+  await import('./CameraEventDetailPage')
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────
 
@@ -124,20 +162,6 @@ afterEach(() => {
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
-describe('getDownloadUrl', () => {
-  it('appends ?download=true to the clip URL so the proxy sets Content-Disposition: attachment', () => {
-    expect(getDownloadUrl('front_door.123', 'clip')).toBe(
-      '/api/events/front_door.123/clip?download=true',
-    )
-  })
-
-  it('appends ?download=true to the snapshot URL', () => {
-    expect(getDownloadUrl('front_door.123', 'snapshot')).toBe(
-      '/api/events/front_door.123/snapshot?download=true',
-    )
-  })
-})
-
 describe('getDetailPageState', () => {
   // Frigate IDs embed their start time, so the state can be derived without
   // asking Frigate anything: 1713095000 seconds -> 1713095000000 ms.
@@ -163,22 +187,40 @@ describe('getDetailPageState', () => {
     expect(state.kind).toBe('pending')
   })
 
-  it('reports a 404 on an old event as not found', () => {
+  it('reports a 404 past the pending window but under 24h as a ghost', () => {
     const state = getDetailPageState(
       { ok: false, error: 'HTTP 404', status: 404 },
       RECENT_ID,
       1713095000_000 + 60 * 60 * 1000,
     )
-    expect(state.kind).toBe('error')
+    expect(state).toEqual({ kind: 'ghost' })
   })
 
-  it('reports a 404 as not found when the ID carries no start time', () => {
+  it('reports a 404 older than 24h as gone', () => {
+    const state = getDetailPageState(
+      { ok: false, error: 'HTTP 404', status: 404 },
+      RECENT_ID,
+      1713095000_000 + 25 * 60 * 60 * 1000,
+    )
+    expect(state).toEqual({ kind: 'gone' })
+  })
+
+  it('reports a 404 as gone when the ID carries no start time', () => {
     const state = getDetailPageState(
       { ok: false, error: 'HTTP 404', status: 404 },
       'not-a-frigate-id-shape',
       RECENT_NOW,
     )
-    expect(state.kind).toBe('error')
+    expect(state).toEqual({ kind: 'gone' })
+  })
+
+  it('reports a 400 (invalid ID) as gone, even with a recent timestamp', () => {
+    const state = getDetailPageState(
+      { ok: false, error: 'Invalid event ID', status: 400 },
+      RECENT_ID,
+      RECENT_NOW,
+    )
+    expect(state).toEqual({ kind: 'gone' })
   })
 
   it('never treats a non-404 failure as pending, however fresh the ID', () => {
@@ -187,15 +229,60 @@ describe('getDetailPageState', () => {
       RECENT_ID,
       RECENT_NOW,
     )
-    expect(state).toEqual({
-      kind: 'error',
-      message: 'Could not load event. Check that Frigate is running.',
-    })
+    expect(state).toEqual({ kind: 'unreachable' })
   })
 })
 
 describe('CameraEventDetailPage', () => {
   describe('with a successful result', () => {
+    it('resets per-event state when navigating to a different event', () => {
+      mockUseFavoriteToggle.mockImplementation(((
+        _id: string,
+        initial: boolean,
+      ) => {
+        const [favorited] = React.useState(initial)
+        return { favorited, pending: false, error: null, toggle: mockToggle }
+      }) as never)
+      mockFavoriteButton.mockImplementation(((props: { favorited: boolean }) =>
+        React.createElement('button', {
+          'aria-pressed': props.favorited,
+        })) as never)
+      try {
+        const a = successResult({ id: '1713095000.1-aaaaaa' })
+        const b = successResult({ id: '1713095999.2-bbbbbb' })
+        const { rerender } = render(
+          <CameraEventDetailPage
+            result={a}
+            eventId="1713095000.1-aaaaaa"
+            initialFavorited={true}
+          />,
+        )
+        expect(screen.getByRole('button')).toHaveAttribute(
+          'aria-pressed',
+          'true',
+        )
+        rerender(
+          <CameraEventDetailPage
+            result={b}
+            eventId="1713095999.2-bbbbbb"
+            initialFavorited={false}
+          />,
+        )
+        expect(screen.getByRole('button')).toHaveAttribute(
+          'aria-pressed',
+          'false',
+        )
+      } finally {
+        mockUseFavoriteToggle.mockImplementation(() => ({
+          favorited: false,
+          pending: false,
+          error: null,
+          toggle: mockToggle,
+        }))
+        mockFavoriteButton.mockImplementation(() => null)
+      }
+    })
+
     it('calls useFavoriteToggle with (event.id, true) when initialFavorited=true', () => {
       const event = makeEvent()
       render(
@@ -211,6 +298,13 @@ describe('CameraEventDetailPage', () => {
       const event = makeEvent()
       render(<CameraEventDetailPage result={successResult()} />)
       expect(mockUseFavoriteToggle).toHaveBeenCalledWith(event.id, false)
+    })
+
+    it('renders a watch-live link to the event camera in the action row', () => {
+      render(<CameraEventDetailPage result={successResult()} />)
+      expect(
+        screen.getByRole('link', { name: m.details_watch_live() }),
+      ).toHaveAttribute('href', '/live/front_porch')
     })
 
     it('renders a FavoriteButton with the correct eventId', () => {
@@ -233,13 +327,13 @@ describe('CameraEventDetailPage', () => {
       expect(props.onToggle).toBe(mockToggle)
     })
 
-    it('renders the detection confidence progressbar with the rounded score', () => {
+    it('shows the certainty as an info row, not a progress bar', () => {
       render(<CameraEventDetailPage result={successResult()} />)
-      const bar = screen.getByRole('progressbar', {
-        name: 'Detection confidence',
-      })
-      expect(bar.getAttribute('aria-valuenow')).toBe('90')
-      expect(screen.getByText('90%')).toBeTruthy()
+      expect(screen.queryByRole('progressbar')).toBeNull()
+      const call = mockInfoCard.mock.calls.find(
+        (c) => c[0].label === 'Certainty',
+      )
+      expect(call?.[0].value).toBe('90%')
     })
 
     it('shows the snapshot score (as drawn on the image), not the top score', () => {
@@ -250,11 +344,81 @@ describe('CameraEventDetailPage', () => {
           })}
         />,
       )
-      const bar = screen.getByRole('progressbar', {
-        name: 'Detection confidence',
+      const call = mockInfoCard.mock.calls.find(
+        (c) => c[0].label === 'Certainty',
+      )
+      expect(call?.[0].value).toBe('83%')
+    })
+
+    it('omits the certainty row when the score is 0', () => {
+      render(
+        <CameraEventDetailPage
+          result={successResult({
+            data: { ...makeEvent().data, score: 0 },
+          })}
+        />,
+      )
+      expect(
+        mockInfoCard.mock.calls.some((c) => c[0].label === 'Certainty'),
+      ).toBe(false)
+    })
+
+    it('has no Clip or Snapshot info rows', () => {
+      render(
+        <CameraEventDetailPage
+          result={successResult({ has_clip: true, has_snapshot: true })}
+        />,
+      )
+      const labels = mockInfoCard.mock.calls.map((c) => c[0].label)
+      expect(labels).not.toContain('Clip')
+      expect(labels).not.toContain('Snapshot')
+    })
+
+    it('formats zone names like camera names', () => {
+      render(
+        <CameraEventDetailPage
+          result={successResult({ zones: ['front_yard', 'driveway'] })}
+        />,
+      )
+      const call = mockInfoCard.mock.calls.find((c) => c[0].label === 'Zones')
+      expect(call?.[0].value).toBe('Front Yard, Driveway')
+    })
+
+    it('passes clip/snapshot availability to DownloadActions', () => {
+      render(
+        <CameraEventDetailPage
+          result={successResult({ has_clip: true, has_snapshot: false })}
+        />,
+      )
+      expect(mockDownloadActions).toHaveBeenCalledWith({
+        eventId: makeEvent().id,
+        hasClip: true,
+        hasSnapshot: false,
       })
-      expect(bar.getAttribute('aria-valuenow')).toBe('83')
-      expect(screen.getByText('83%')).toBeTruthy()
+    })
+
+    it('renders labelled Favorite and Share buttons after the media', () => {
+      render(
+        <CameraEventDetailPage result={successResult({ has_clip: true })} />,
+      )
+      const fav = mockFavoriteButton.mock.calls[0]?.[0] as Record<
+        string,
+        unknown
+      >
+      expect(fav.showLabel).toBe(true)
+      expect(mockShareButton).toHaveBeenCalledWith(
+        expect.objectContaining({
+          showLabel: true,
+          label: 'person',
+          startTime: 1713095000,
+        }),
+      )
+    })
+
+    it('hides the back link below the sm breakpoint', () => {
+      render(<CameraEventDetailPage result={successResult()} />)
+      const link = screen.getByRole('link', { name: /back/i })
+      expect(link.parentElement).toHaveClass('hidden', 'sm:block')
     })
   })
 
@@ -282,14 +446,58 @@ describe('CameraEventDetailPage', () => {
       expect(mockUseFavoriteToggle).toHaveBeenCalled()
     })
 
-    it('says the event does not exist for a 404 on a long-past event', () => {
+    it('says the event is no longer available for a 404 on a long-past event', () => {
       render(
         <CameraEventDetailPage
           result={{ ok: false, error: 'HTTP 404', status: 404 }}
           eventId={OLD_ID}
+          nowMs={1713095000_000 + 25 * 3_600_000}
         />,
       )
-      expect(screen.getByText(/event not found/i)).toBeInTheDocument()
+      expect(
+        screen.getByRole('heading', { name: /no longer available/i }),
+      ).toBeInTheDocument()
+      expect(document.querySelector('p.eyebrow')).toBeNull()
+    })
+
+    it('says the detection was not saved for a recent 404 past the pending window', () => {
+      render(
+        <CameraEventDetailPage
+          result={{ ok: false, error: 'HTTP 404', status: 404 }}
+          eventId={OLD_ID}
+          nowMs={1713095000_000 + 3_600_000}
+        />,
+      )
+      expect(
+        screen.getByRole('heading', { name: /wasn't saved/i }),
+      ).toBeInTheDocument()
+      expect(screen.getByRole('link', { name: /back/i })).toBeInTheDocument()
+    })
+
+    it('says the cameras are unreachable on a non-404 failure, with Try again', () => {
+      const onRetry = vi.fn()
+      render(
+        <CameraEventDetailPage
+          result={{ ok: false, error: 'fetch failed' }}
+          eventId={OLD_ID}
+          onRetry={onRetry}
+        />,
+      )
+      expect(
+        screen.getByRole('heading', { name: /couldn't load this event/i }),
+      ).toBeInTheDocument()
+      fireEvent.click(screen.getByRole('button', { name: /try again/i }))
+      expect(onRetry).toHaveBeenCalledTimes(1)
+    })
+
+    it('hides Try again when there is no retry handler', () => {
+      render(
+        <CameraEventDetailPage
+          result={{ ok: false, error: 'fetch failed' }}
+          eventId={OLD_ID}
+        />,
+      )
+      expect(screen.queryByRole('button', { name: /try again/i })).toBeNull()
     })
   })
 
@@ -314,7 +522,56 @@ describe('CameraEventDetailPage', () => {
         />,
       )
       expect(screen.getByText(/still being saved/i)).toBeInTheDocument()
-      expect(screen.queryByText(/event not found/i)).toBeNull()
+      expect(screen.queryByText(/no longer available/i)).toBeNull()
+    })
+
+    it('announces itself as a status region', () => {
+      render(
+        <CameraEventDetailPage
+          result={{ ok: false, error: 'HTTP 404', status: 404 }}
+          eventId={eventId}
+        />,
+      )
+      expect(screen.getByRole('status')).toHaveTextContent('Still being saved')
+    })
+
+    it('fires one final retry at the deadline so the loader can move on', async () => {
+      const onRetry = vi.fn()
+      render(
+        <CameraEventDetailPage
+          result={{ ok: false, error: 'HTTP 404', status: 404 }}
+          eventId={eventId}
+          onRetry={onRetry}
+        />,
+      )
+      // 5s elapsed of 120s: 115s remain. Ticks every 3s -> 38 ticks reach 114s,
+      // the 39th (117s) is past the deadline.
+      await vi.advanceTimersByTimeAsync(114_000)
+      const before = onRetry.mock.calls.length
+      await vi.advanceTimersByTimeAsync(3_000)
+      expect(onRetry.mock.calls.length).toBe(before + 1)
+      await vi.advanceTimersByTimeAsync(30_000)
+      expect(onRetry.mock.calls.length).toBe(before + 1)
+    })
+
+    it('moves focus to the heading when the event arrives', () => {
+      const { rerender } = render(
+        <CameraEventDetailPage
+          result={{ ok: false, error: 'HTTP 404', status: 404 }}
+          eventId={eventId}
+        />,
+      )
+      rerender(
+        <CameraEventDetailPage result={successResult()} eventId={eventId} />,
+      )
+      expect(document.activeElement).toBe(
+        screen.getByRole('heading', { level: 1 }),
+      )
+    })
+
+    it('does not steal focus on a plain event render', () => {
+      render(<CameraEventDetailPage result={successResult()} />)
+      expect(document.activeElement).toBe(document.body)
     })
 
     it('retries automatically while the event may still appear', async () => {
@@ -348,10 +605,12 @@ describe('CameraEventDetailPage', () => {
       await vi.advanceTimersByTimeAsync(3_000)
       expect(onRetry).toHaveBeenCalledTimes(1)
 
-      // Past the pending window the row is not coming — stop hammering Frigate.
+      // Past the pending window: one final look, then stop hammering Frigate.
       vi.setSystemTime(startedAt + 130_000)
       await vi.advanceTimersByTimeAsync(3_000)
-      expect(onRetry).toHaveBeenCalledTimes(1)
+      expect(onRetry).toHaveBeenCalledTimes(2)
+      await vi.advanceTimersByTimeAsync(9_000)
+      expect(onRetry).toHaveBeenCalledTimes(2)
     })
 
     it('offers a manual retry', () => {
@@ -397,6 +656,21 @@ describe('CameraEventDetailPage', () => {
       expect(onRetry).toHaveBeenCalledTimes(2)
     })
 
+    it('does not fire an extra concurrent retry at the deadline', async () => {
+      const onRetry = vi.fn(() => new Promise<void>(() => {}))
+      render(
+        <CameraEventDetailPage
+          result={{ ok: false, error: 'HTTP 404', status: 404 }}
+          eventId={eventId}
+          onRetry={onRetry}
+        />,
+      )
+      await vi.advanceTimersByTimeAsync(114_000)
+      const before = onRetry.mock.calls.length
+      await vi.advanceTimersByTimeAsync(6_000)
+      expect(onRetry.mock.calls.length).toBe(before)
+    })
+
     it('keeps retrying after a retry rejects', async () => {
       // A rejected refresh must clear the in-flight guard, not wedge the
       // poller — and must be caught, since nothing awaits the returned promise.
@@ -430,137 +704,110 @@ describe('CameraEventDetailPage', () => {
     })
   })
 
-  describe('clip accordion (lazy-mounted player)', () => {
-    it('renders a "Watch clip" accordion summary when has_clip=true', () => {
-      render(
-        <CameraEventDetailPage
-          result={successResult({ has_clip: true, has_snapshot: true })}
-        />,
-      )
-      const summary = screen.getByText(/watch clip/i)
-      expect(summary).toBeInTheDocument()
-    })
+  describe('clip as hero', () => {
+    const lastClipProps = () => mockEventClipPlayer.mock.calls.at(-1)?.[0]
 
-    it('is open by default with the player mounted immediately', () => {
+    it('renders the clip player with no <details> accordion', () => {
       render(
         <CameraEventDetailPage
           result={successResult({ has_clip: true, has_snapshot: true })}
         />,
       )
-      const details = document.querySelector('details') as HTMLDetailsElement
-      expect(details.open).toBe(true)
       expect(
         document.querySelector('[data-testid="clip-player"]'),
       ).toBeInTheDocument()
-    })
-
-    it('does not scroll on the initial toggle event, but scrolls when the user re-opens', () => {
-      vi.stubGlobal('requestAnimationFrame', (cb: FrameRequestCallback) => {
-        cb(0)
-        return 0
-      })
-      const scroll = vi.fn()
-      Element.prototype.scrollIntoView = scroll
-      render(
-        <CameraEventDetailPage
-          result={successResult({ has_clip: true, has_snapshot: true })}
-        />,
-      )
-      const details = document.querySelector('details') as HTMLDetailsElement
-      // Browser may fire toggle for an initially-open details.
-      fireEvent(details, new Event('toggle', { bubbles: false }))
-      expect(scroll).not.toHaveBeenCalled()
-
-      details.open = false
-      fireEvent(details, new Event('toggle', { bubbles: false }))
-      details.open = true
-      fireEvent(details, new Event('toggle', { bubbles: false }))
-      expect(scroll).toHaveBeenCalledOnce()
-      vi.unstubAllGlobals()
-    })
-
-    it('keeps the player mounted after the accordion is closed and re-opened', () => {
-      render(
-        <CameraEventDetailPage
-          result={successResult({ has_clip: true, has_snapshot: true })}
-        />,
-      )
-      const details = document.querySelector('details') as HTMLDetailsElement
-
-      details.open = false
-      fireEvent(details, new Event('toggle', { bubbles: false }))
-      expect(
-        document.querySelector('[data-testid="clip-player"]'),
-      ).toBeInTheDocument()
-
-      details.open = true
-      fireEvent(details, new Event('toggle', { bubbles: false }))
-      expect(
-        document.querySelector('[data-testid="clip-player"]'),
-      ).toBeInTheDocument()
-    })
-
-    it('does NOT render the accordion when has_clip is false', () => {
-      render(
-        <CameraEventDetailPage
-          result={successResult({ has_clip: false, has_snapshot: true })}
-        />,
-      )
-      expect(screen.queryByText(/watch clip/i)).toBeNull()
       expect(document.querySelector('details')).toBeNull()
+      expect(screen.queryByText(/watch clip/i)).toBeNull()
     })
 
-    it('places the accordion below the snapshot in DOM order', () => {
+    it('passes the snapshot as poster and fallback when has_snapshot', () => {
+      const event = makeEvent()
       render(
         <CameraEventDetailPage
           result={successResult({ has_clip: true, has_snapshot: true })}
         />,
       )
-      const snapshot = document.querySelector('[data-testid="snapshot"]')
-      const details = document.querySelector('details')
-      expect(snapshot).toBeInTheDocument()
-      expect(details).toBeInTheDocument()
-      // DOCUMENT_POSITION_FOLLOWING: details follows snapshot in DOM order.
-      const relation = snapshot?.compareDocumentPosition(details!)
-      expect(relation! & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+      expect(lastClipProps()?.poster).toBe(`/api/events/${event.id}/snapshot`)
+      expect(lastClipProps()?.fallback).toBeTruthy()
     })
 
-    it('renders the accordion and the snapshot together when both clip and snapshot exist', () => {
-      render(
-        <CameraEventDetailPage
-          result={successResult({ has_clip: true, has_snapshot: true })}
-        />,
-      )
-      expect(
-        document.querySelector('[data-testid="snapshot"]'),
-      ).toBeInTheDocument()
-      expect(document.querySelector('details')).toBeInTheDocument()
-    })
-
-    it('with has_clip=true and has_snapshot=false, renders only the accordion (no snapshot block)', () => {
+    it('passes no poster or fallback without a snapshot', () => {
       render(
         <CameraEventDetailPage
           result={successResult({ has_clip: true, has_snapshot: false })}
         />,
       )
-      expect(document.querySelector('details')).toBeInTheDocument()
+      expect(lastClipProps()?.poster).toBeUndefined()
+      expect(lastClipProps()?.fallback).toBeUndefined()
       expect(document.querySelector('[data-testid="snapshot"]')).toBeNull()
     })
 
-    it('keeps the snapshot and favorite rendered when the opened player errors', () => {
+    it('opens the lightbox when the clip zoom is triggered', () => {
       render(
         <CameraEventDetailPage
           result={successResult({ has_clip: true, has_snapshot: true })}
         />,
       )
-      const playerProps = mockEventClipPlayer.mock.calls.at(-1)?.[0]
-      expect(playerProps?.onError).toBeDefined()
-      playerProps?.onError?.()
+      expect(mockSnapshotLightbox.mock.calls.at(-1)?.[0]).toMatchObject({
+        open: false,
+      })
+      act(() => lastClipProps()?.onZoom?.())
+      expect(mockSnapshotLightbox.mock.calls.at(-1)?.[0]).toMatchObject({
+        open: true,
+      })
+    })
 
+    it('renders the snapshot as hero (no clip player) when there is no clip', () => {
+      render(
+        <CameraEventDetailPage
+          result={successResult({ has_clip: false, has_snapshot: true })}
+        />,
+      )
       expect(
         document.querySelector('[data-testid="snapshot"]'),
       ).toBeInTheDocument()
-      expect(mockFavoriteButton).toHaveBeenCalled()
+      expect(document.querySelector('[data-testid="clip-player"]')).toBeNull()
+    })
+  })
+
+  describe('same-camera context', () => {
+    it('renders the burst nav with a live link even without clip or snapshot', () => {
+      render(<CameraEventDetailPage result={successResult()} />)
+      expect(screen.getByRole('link', { name: /watch live/i })).toHaveAttribute(
+        'href',
+        '/live/front_porch',
+      )
+    })
+
+    it('asks for neighbours of the event, and of nothing on error', () => {
+      render(<CameraEventDetailPage result={successResult()} />)
+      expect(mockUseCameraNeighbors).toHaveBeenLastCalledWith(
+        expect.objectContaining({ id: '1713095000.123456-abcdef' }),
+      )
+      cleanup()
+      render(
+        <CameraEventDetailPage
+          result={{ ok: false, error: 'x' }}
+          eventId="x"
+        />,
+      )
+      expect(mockUseCameraNeighbors).toHaveBeenLastCalledWith(null)
+    })
+  })
+
+  describe('header', () => {
+    it('has no eyebrow camera paragraph and puts the camera first in the meta line', () => {
+      render(<CameraEventDetailPage result={successResult()} />)
+      expect(document.querySelector('p.eyebrow')).toBeNull()
+      expect(screen.getByText(/^Front Porch ·/)).toBeInTheDocument()
+    })
+
+    it('no longer renders a Camera info row', () => {
+      render(<CameraEventDetailPage result={successResult()} />)
+      expect(mockInfoCard).toHaveBeenCalled()
+      expect(mockInfoCard.mock.calls.some(([p]) => p.label === 'Camera')).toBe(
+        false,
+      )
     })
   })
 })
@@ -602,6 +849,7 @@ describe('CameraEventDetailPage in Danish', () => {
           result={{ ok: false, error: 'HTTP 404', status: 404 }}
           eventId="1713095000.123456-abcdef"
           nowMs={1713095000_000 + 5_000}
+          onRetry={() => {}}
         />,
       )
       expect(screen.getByText('Behandles')).toBeInTheDocument()
@@ -613,17 +861,19 @@ describe('CameraEventDetailPage in Danish', () => {
     }
   })
 
-  it('renders the not-found state in Danish', () => {
+  it('renders the gone state in Danish', () => {
     const restore = withLocale('da')
     try {
       render(
         <CameraEventDetailPage
           result={{ ok: false, error: 'HTTP 404', status: 404 }}
           eventId="1713095000.123456-abcdef"
-          nowMs={1713095000_000 + 3_600_000}
+          nowMs={1713095000_000 + 25 * 3_600_000}
         />,
       )
-      expect(screen.getByText('Hændelsen blev ikke fundet')).toBeInTheDocument()
+      expect(
+        screen.getByText('Hændelsen er ikke længere tilgængelig'),
+      ).toBeInTheDocument()
       expect(screen.getByText('Tilbage til hændelser')).toBeInTheDocument()
     } finally {
       restore()
@@ -636,10 +886,23 @@ describe('CameraEventDetailPage in Danish', () => {
       render(
         <CameraEventDetailPage result={successResult({ has_clip: true })} />,
       )
-      expect(screen.getByText('Se klip')).toBeInTheDocument()
+      expect(screen.getByText(/^Front Porch ·/)).toBeInTheDocument()
       expect(formatDuration(100, 130)).toBe('30 s')
       expect(formatDuration(100, 280)).toBe('3 min')
       expect(formatDuration(100, 235)).toBe('2 min 15 s')
+    } finally {
+      restore()
+    }
+  })
+
+  it('shows Danish certainty label and percent format', () => {
+    const restore = withLocale('da')
+    try {
+      render(<CameraEventDetailPage result={successResult()} />)
+      const call = mockInfoCard.mock.calls.find(
+        (c) => c[0].label === 'Træfsikkerhed',
+      )
+      expect(call?.[0].value).toMatch(/^90\s%$/)
     } finally {
       restore()
     }

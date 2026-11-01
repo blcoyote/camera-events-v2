@@ -263,6 +263,8 @@
 
   body {
     margin: 0;
+    /* ce-6wc: short pages left iOS standalone's fixed tab bar floating. */
+    min-height: 100dvh;
     padding-bottom: env(safe-area-inset-bottom);
     color: var(--foreground);
     background-color: var(--background);

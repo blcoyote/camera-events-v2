@@ -179,3 +179,17 @@ describe('FavoriteButton in Danish', () => {
     }
   })
 })
+
+describe('FavoriteButton showLabel', () => {
+  it('is icon-only by default', () => {
+    renderFavoriteButton()
+    expect(screen.queryByText('Favorite')).toBeNull()
+  })
+
+  it('shows a visible label and keeps aria-pressed when showLabel', () => {
+    renderFavoriteButton({ showLabel: true, favorited: true })
+    const btn = screen.getByRole('button', { name: /favorite/i })
+    expect(btn).toHaveTextContent('Favorite')
+    expect(btn).toHaveAttribute('aria-pressed', 'true')
+  })
+})

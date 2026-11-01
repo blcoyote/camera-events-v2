@@ -10,6 +10,7 @@ export interface FavoriteButtonProps {
   pending: boolean
   error: string | null
   onToggle: () => void
+  showLabel?: boolean
 }
 
 const ERROR_DISMISS_MS = 4000
@@ -19,6 +20,7 @@ export function FavoriteButton({
   pending,
   error,
   onToggle,
+  showLabel = false,
 }: FavoriteButtonProps) {
   const [visibleError, setVisibleError] = useState(error)
 
@@ -48,8 +50,8 @@ export function FavoriteButton({
     >
       <Button
         type="button"
-        variant="ghost"
-        size="icon"
+        variant={showLabel ? 'secondary' : 'ghost'}
+        size={showLabel ? 'sm' : 'icon'}
         aria-label={
           pending
             ? m.shared_favorite_saving()
@@ -64,13 +66,18 @@ export function FavoriteButton({
           e.preventDefault()
           onToggle()
         }}
-        className="text-fg-2 hover:bg-transparent hover:text-danger"
+        className={
+          showLabel
+            ? 'gap-2 px-4'
+            : 'text-fg-2 hover:bg-transparent hover:text-danger'
+        }
       >
         <Heart
           size={20}
           aria-hidden="true"
           className={favorited ? 'fill-danger text-danger' : ''}
         />
+        {showLabel && m.details_action_favorite()}
       </Button>
 
       {visibleError && (

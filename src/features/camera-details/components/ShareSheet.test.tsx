@@ -4,6 +4,9 @@ import { render, cleanup, screen, fireEvent, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import '@testing-library/jest-dom/vitest'
 import { m } from '#/paraglide/messages.js'
+import { getLocale } from '#/paraglide/runtime.js'
+import { translateLabel } from '#/features/shared/utils/labels'
+import { formatDateTime } from '#/features/shared/utils/intl'
 
 const mockGetRecipients = vi.fn()
 vi.mock('#/features/shared/server/users/users-fns', () => ({
@@ -42,13 +45,34 @@ afterEach(() => {
 })
 
 describe('ShareSheet', () => {
-  it('shows loading, then lists recipients as labelled checkboxes', async () => {
+  it('shows loading, then lists recipients as labelled switches', async () => {
     setup()
     expect(screen.getByText(m.details_share_loading())).toBeInTheDocument()
     expect(
-      await screen.findByRole('checkbox', { name: 'Alice' }),
+      await screen.findByRole('switch', { name: 'Alice' }),
     ).toBeInTheDocument()
-    expect(screen.getByRole('checkbox', { name: 'Bob' })).toBeInTheDocument()
+    expect(screen.getByRole('switch', { name: 'Bob' })).toBeInTheDocument()
+  })
+
+  it('shows label and time as the sheet description when given', async () => {
+    render(
+      <ShareSheet
+        eventId="1.0-abc"
+        open
+        onOpenChange={vi.fn()}
+        label="person"
+        startTime={1_700_000_000}
+      />,
+    )
+    const expected = `${translateLabel('person', getLocale())} · ${formatDateTime(1_700_000_000, getLocale())}`
+    expect(await screen.findByText(expected)).toBeInTheDocument()
+    expect(screen.getByRole('dialog')).toHaveAccessibleDescription(expected)
+  })
+
+  it('toggles a recipient by clicking their name', async () => {
+    setup()
+    fireEvent.click(await screen.findByText('Alice'))
+    expect(screen.getByRole('switch', { name: 'Alice' })).toBeChecked()
   })
 
   it('shows the empty state', async () => {
@@ -67,15 +91,15 @@ describe('ShareSheet', () => {
 
   it('disables Send until a recipient is selected', async () => {
     setup()
-    fireEvent.click(await screen.findByRole('checkbox', { name: 'Alice' }))
+    fireEvent.click(await screen.findByRole('switch', { name: 'Alice' }))
     expect(sendBtn()).toBeEnabled()
-    fireEvent.click(screen.getByRole('checkbox', { name: 'Alice' }))
+    fireEvent.click(screen.getByRole('switch', { name: 'Alice' }))
     expect(sendBtn()).toBeDisabled()
   })
 
   it('posts the selected recipients', async () => {
     setup()
-    fireEvent.click(await screen.findByRole('checkbox', { name: 'Bob' }))
+    fireEvent.click(await screen.findByRole('switch', { name: 'Bob' }))
     fireEvent.click(sendBtn())
     await vi.waitFor(() => expect(mockFetch).toHaveBeenCalled())
     expect(mockFetch).toHaveBeenCalledWith('/api/events/1.0-abc/share', {
@@ -88,14 +112,12 @@ describe('ShareSheet', () => {
 
   it('shows Sent then closes after a second', async () => {
     const onOpenChange = setup()
-    fireEvent.click(await screen.findByRole('checkbox', { name: 'Alice' }))
+    fireEvent.click(await screen.findByRole('switch', { name: 'Alice' }))
     vi.useFakeTimers()
     await act(async () => {
       fireEvent.click(sendBtn())
     })
-    expect(
-      screen.getByRole('button', { name: m.details_share_sent() }),
-    ).toBeInTheDocument()
+    expect(screen.getByRole('status')).toHaveTextContent(m.details_share_sent())
     expect(onOpenChange).not.toHaveBeenCalled()
     await act(async () => {
       vi.advanceTimersByTime(1000)
@@ -106,7 +128,7 @@ describe('ShareSheet', () => {
   it('shows an alert and stays open when the post fails', async () => {
     mockFetch.mockResolvedValue({ ok: false, status: 500 })
     const onOpenChange = setup()
-    fireEvent.click(await screen.findByRole('checkbox', { name: 'Alice' }))
+    fireEvent.click(await screen.findByRole('switch', { name: 'Alice' }))
     fireEvent.click(sendBtn())
     expect(await screen.findByRole('alert')).toHaveTextContent(
       m.details_share_error(),
@@ -122,11 +144,11 @@ describe('ShareSheet', () => {
       <ShareSheet eventId="1.0-abc" open={open} onOpenChange={onOpenChange} />
     )
     const { rerender } = render(ui(true))
-    fireEvent.click(await screen.findByRole('checkbox', { name: 'Alice' }))
+    fireEvent.click(await screen.findByRole('switch', { name: 'Alice' }))
     fireEvent.click(sendBtn())
     rerender(ui(false))
     rerender(ui(true))
-    fireEvent.click(await screen.findByRole('checkbox', { name: 'Bob' }))
+    fireEvent.click(await screen.findByRole('switch', { name: 'Bob' }))
     vi.useFakeTimers()
     await act(async () => {
       resolveFetch({ ok: true, status: 204 })
@@ -134,11 +156,11 @@ describe('ShareSheet', () => {
     await act(async () => {
       vi.advanceTimersByTime(2000)
     })
-    expect(
-      screen.queryByRole('button', { name: m.details_share_sent() }),
-    ).toBeNull()
+    expect(screen.getByRole('status')).not.toHaveTextContent(
+      m.details_share_sent(),
+    )
     expect(onOpenChange).not.toHaveBeenCalled()
-    expect(screen.getByRole('checkbox', { name: 'Bob' })).toBeChecked()
+    expect(screen.getByRole('switch', { name: 'Bob' })).toBeChecked()
   })
 
   it('does not call onOpenChange after unmount with a pending close timer', async () => {
@@ -146,7 +168,7 @@ describe('ShareSheet', () => {
     const { unmount } = render(
       <ShareSheet eventId="1.0-abc" open onOpenChange={onOpenChange} />,
     )
-    fireEvent.click(await screen.findByRole('checkbox', { name: 'Alice' }))
+    fireEvent.click(await screen.findByRole('switch', { name: 'Alice' }))
     vi.useFakeTimers()
     await act(async () => {
       fireEvent.click(sendBtn())
@@ -165,15 +187,15 @@ describe('ShareSheet', () => {
       })),
     )
     setup()
-    await screen.findByRole('checkbox', { name: 'User0' })
+    await screen.findByRole('switch', { name: 'User0' })
     for (let i = 0; i < MAX_SHARE_RECIPIENTS; i++) {
-      fireEvent.click(screen.getByRole('checkbox', { name: `User${i}` }))
+      fireEvent.click(screen.getByRole('switch', { name: `User${i}` }))
     }
-    const last = screen.getByRole('checkbox', {
+    const last = screen.getByRole('switch', {
       name: `User${MAX_SHARE_RECIPIENTS}`,
     })
     expect(last).toBeDisabled()
-    expect(screen.getByRole('checkbox', { name: 'User0' })).toBeEnabled()
+    expect(screen.getByRole('switch', { name: 'User0' })).toBeEnabled()
   })
 
   it('returns focus to the Share button on Escape', async () => {
@@ -181,7 +203,7 @@ describe('ShareSheet', () => {
     render(<ShareButton eventId="1.0-abc" />)
     const btn = screen.getByRole('button', { name: m.details_share() })
     await user.click(btn)
-    await screen.findByRole('checkbox', { name: 'Alice' })
+    await screen.findByRole('switch', { name: 'Alice' })
     await user.keyboard('{Escape}')
     await vi.waitFor(() => expect(btn).toHaveFocus())
   })
