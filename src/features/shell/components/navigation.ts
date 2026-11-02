@@ -1,4 +1,5 @@
 import { m } from '#/paraglide/messages.js'
+import type { Crumb } from '#/features/shared/navigation/types'
 import { Bell, Cctv, Heart, Settings } from 'lucide-react'
 
 // `label` is a getter so the message resolves per render, not at import.
@@ -36,13 +37,21 @@ export const TABS = [
 const owns = (path: string, base: string) =>
   path === base || path.startsWith(`${base}/`)
 
-export function getActiveTab(pathname: string): string | null {
+export function getActiveTab(
+  pathname: string,
+  search?: Record<string, unknown>,
+): string | null {
+  if (pathname.startsWith('/camera-events/') && search?.from === 'favorites')
+    return '/favorites'
   if (owns(pathname, '/live')) return '/cameras'
   return TABS.find((t) => owns(pathname, t.to))?.to ?? null
 }
 
-export function getPageTitle(pathname: string): string {
-  if (pathname.startsWith('/camera-events/')) return m.shell_title_event()
-  if (owns(pathname, '/live')) return m.shell_title_live_view()
-  return TABS.find((t) => t.to === pathname)?.label ?? m.shell_title_app()
+export function getTitleBar(crumbs: Crumb[]): {
+  title: string
+  back: Crumb | null
+} {
+  const title = crumbs[crumbs.length - 1]?.label ?? ''
+  const prev = crumbs.length > 1 ? crumbs[crumbs.length - 2] : undefined
+  return { title, back: prev?.to ? prev : null }
 }

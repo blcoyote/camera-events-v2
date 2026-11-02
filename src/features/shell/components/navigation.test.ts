@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { TABS, getActiveTab, getPageTitle } from './navigation'
+import { TABS, getActiveTab, getTitleBar } from './navigation'
 import { withLocale } from '#/test-utils/locale'
 
 describe('TABS', () => {
@@ -28,23 +28,55 @@ describe('getActiveTab', () => {
   })
 })
 
-describe('getPageTitle', () => {
-  it.each([
-    ['/cameras', 'Cameras'],
-    ['/camera-events', 'Events'],
-    ['/camera-events/abc', 'Event'],
-    ['/favorites', 'Favorites'],
-    ['/settings', 'Settings'],
-    ['/live/front', 'Live view'],
-    ['/', 'Camera Events'],
-    ['/other', 'Camera Events'],
-  ])('%s -> %s', (path, expected) => {
-    expect(getPageTitle(path)).toBe(expected)
+describe('getActiveTab with origin', () => {
+  it('attributes an event detail opened from favorites to Favorites', () => {
+    expect(getActiveTab('/camera-events/abc', { from: 'favorites' })).toBe(
+      '/favorites',
+    )
+  })
+  it('keeps Events for an event detail opened from events', () => {
+    expect(getActiveTab('/camera-events/abc', { from: 'events' })).toBe(
+      '/camera-events',
+    )
+  })
+  it('keeps Events for an event detail without search', () => {
+    expect(getActiveTab('/camera-events/abc')).toBe('/camera-events')
+  })
+  it('ignores from=favorites on the list path', () => {
+    expect(getActiveTab('/camera-events', { from: 'favorites' })).toBe(
+      '/camera-events',
+    )
+  })
+  it('ignores from=favorites on /cameras', () => {
+    expect(getActiveTab('/cameras', { from: 'favorites' })).toBe('/cameras')
+  })
+})
+
+describe('getTitleBar', () => {
+  it('uses the last crumb as title and the previous linked crumb as back', () => {
+    expect(
+      getTitleBar([
+        { label: 'Favorites', to: '/favorites' },
+        { label: 'Person · Front Door' },
+      ]),
+    ).toEqual({
+      title: 'Person · Front Door',
+      back: { label: 'Favorites', to: '/favorites' },
+    })
+  })
+  it('has no back for a single crumb', () => {
+    expect(getTitleBar([{ label: 'Cameras' }])).toEqual({
+      title: 'Cameras',
+      back: null,
+    })
+  })
+  it('has no back when the previous crumb has no link', () => {
+    expect(getTitleBar([{ label: 'A' }, { label: 'B' }]).back).toBeNull()
   })
 })
 
 describe('Danish', () => {
-  it('translates tab labels and page titles', () => {
+  it('translates tab labels', () => {
     const restore = withLocale('da')
     try {
       expect(TABS.map((t) => t.label)).toEqual([
@@ -53,8 +85,6 @@ describe('Danish', () => {
         'Favoritter',
         'Indstillinger',
       ])
-      expect(getPageTitle('/live/front')).toBe('Live-visning')
-      expect(getPageTitle('/camera-events/abc')).toBe('Hændelse')
     } finally {
       restore()
     }

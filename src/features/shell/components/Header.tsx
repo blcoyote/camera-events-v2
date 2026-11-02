@@ -1,8 +1,10 @@
-import { Link, useRouteContext, useRouterState } from '@tanstack/react-router'
+import { Link, useRouteContext } from '@tanstack/react-router'
+import { ChevronLeft } from 'lucide-react'
 import { m } from '#/paraglide/messages.js'
 import { AvatarMenu } from './AvatarMenu'
 import { ThemeToggle } from './ThemeToggle'
-import { getPageTitle } from './navigation'
+import { getTitleBar } from './navigation'
+import { useBreadcrumbs } from '#/features/shared/navigation/useBreadcrumbs'
 import { useStandaloneAuth } from '#/features/auth/hooks/useStandaloneAuth'
 import { useSessionRefresh } from '#/features/auth/hooks/useSessionRefresh'
 import { Button } from '#/features/shared/components/ui/button'
@@ -52,7 +54,7 @@ export default function Header() {
   const state = getHeaderAuthState(user)
   const { onClick: onSignIn } = useStandaloneAuth(state.signInHref)
   useSessionRefresh(!!user, state.sessionExpiresAt)
-  const pathname = useRouterState({ select: (st) => st.location.pathname })
+  const { title, back } = getTitleBar(useBreadcrumbs())
 
   return (
     <header className="glass-header sticky top-0 z-50 border-b border-border pt-[env(safe-area-inset-top)]">
@@ -61,12 +63,26 @@ export default function Header() {
         className="page-wrap flex items-center gap-x-2 py-1.5 sm:gap-x-3 sm:py-2"
       >
         {user && (
-          <span
-            aria-hidden="true"
-            className="text-base font-semibold text-foreground sm:hidden"
-          >
-            {getPageTitle(pathname)}
-          </span>
+          <div className="flex min-w-0 items-center gap-1 sm:hidden">
+            {back && (
+              <Link
+                // `to` is a runtime string here, not a typed route literal
+                to={back.to as string}
+                search={back.search as never}
+                aria-label={m.shell_back_to({ label: back.label })}
+                className="inline-flex min-h-11 shrink-0 items-center gap-0.5 text-sm font-medium text-brand-strong no-underline"
+              >
+                <ChevronLeft aria-hidden="true" className="size-4" />
+                {back.label}
+              </Link>
+            )}
+            <span
+              aria-hidden="true"
+              className="min-w-0 truncate text-base font-semibold text-foreground"
+            >
+              {title}
+            </span>
+          </div>
         )}
 
         {/* Desktop nav links — hidden on mobile */}

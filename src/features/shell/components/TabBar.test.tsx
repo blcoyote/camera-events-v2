@@ -8,6 +8,7 @@ import { withLocale } from '#/test-utils/locale'
 
 let mockUser: unknown = { firstName: 'A' }
 let mockPath = '/cameras'
+let mockSearch: Record<string, unknown> = {}
 
 vi.mock('@tanstack/react-router', () => ({
   Link: ({
@@ -21,13 +22,14 @@ vi.mock('@tanstack/react-router', () => ({
   ),
   useRouteContext: () => ({ user: mockUser }),
   useRouterState: ({ select }: { select: (s: unknown) => unknown }) =>
-    select({ location: { pathname: mockPath } }),
+    select({ location: { pathname: mockPath, search: mockSearch } }),
 }))
 
 afterEach(() => {
   cleanup()
   mockUser = { firstName: 'A' }
   mockPath = '/cameras'
+  mockSearch = {}
 })
 
 describe('TabBar', () => {
@@ -53,6 +55,19 @@ describe('TabBar', () => {
     mockPath = '/live/front'
     render(<TabBar />)
     expect(screen.getByRole('link', { name: 'Cameras' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    )
+    expect(screen.getByRole('link', { name: 'Events' })).not.toHaveAttribute(
+      'aria-current',
+    )
+  })
+
+  it('marks Favorites current on an event opened from favorites', () => {
+    mockPath = '/camera-events/abc'
+    mockSearch = { from: 'favorites' }
+    render(<TabBar />)
+    expect(screen.getByRole('link', { name: 'Favorites' })).toHaveAttribute(
       'aria-current',
       'page',
     )
