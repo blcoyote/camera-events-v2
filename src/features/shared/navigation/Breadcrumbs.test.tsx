@@ -10,14 +10,21 @@ vi.mock('@tanstack/react-router', () => ({
   Link: ({
     to,
     search,
+    activeOptions,
     children,
     ...props
   }: ComponentProps<'a'> & {
     to: string
     search?: unknown
+    activeOptions?: unknown
     children: ReactNode
   }) => (
-    <a href={to} data-search={JSON.stringify(search)} {...props}>
+    <a
+      href={to}
+      data-search={JSON.stringify(search)}
+      data-active-options={JSON.stringify(activeOptions)}
+      {...props}
+    >
       {children}
     </a>
   ),
@@ -85,6 +92,16 @@ describe('Breadcrumbs', () => {
       'data-search',
       JSON.stringify({ from: 'favorites' }),
     )
+  })
+
+  it('makes parent crumb links exact so the router never marks them current', () => {
+    render(<Breadcrumbs crumbs={trail} />)
+    expect(
+      JSON.parse(
+        screen.getByRole('link', { name: 'Events' }).dataset
+          .activeOptions as string,
+      ),
+    ).toEqual({ exact: true, includeSearch: false })
   })
 
   it('applies a custom className to the nav', () => {

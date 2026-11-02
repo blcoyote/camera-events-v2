@@ -37,6 +37,9 @@ export function Breadcrumbs({
                   // `to` is a runtime string here, not a typed route literal
                   to={crumb.to as string}
                   search={crumb.search as never}
+                  // Router's prefix match would mark this parent current on the
+                  // child page; the last crumb alone owns aria-current.
+                  activeOptions={{ exact: true, includeSearch: false }}
                   className="inline-flex min-h-11 items-center py-2 text-sm font-medium text-brand-strong no-underline transition hover:text-foreground"
                 >
                   {crumb.label}

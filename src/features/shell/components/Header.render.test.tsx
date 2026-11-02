@@ -8,25 +8,31 @@ import type { Crumb } from '#/features/shared/navigation/types'
 
 let mockUser: unknown = { firstName: 'A' }
 let mockCrumbs: Crumb[] = [{ label: 'Cameras' }]
+let mockLocation: { pathname: string; search: Record<string, unknown> } = {
+  pathname: '/',
+  search: {},
+}
 
 vi.mock('@tanstack/react-router', () => ({
   Link: ({
     to,
     search: _search,
+    activeOptions,
     children,
     ...props
   }: ComponentProps<'a'> & {
     to: string
     search?: unknown
+    activeOptions?: unknown
     children: ReactNode
   }) => (
-    <a href={to} {...props}>
+    <a href={to} data-active-options={JSON.stringify(activeOptions)} {...props}>
       {children}
     </a>
   ),
   useRouteContext: () => ({ user: mockUser }),
   useRouterState: ({ select }: { select: (s: unknown) => unknown }) =>
-    select({ location: { pathname: '/', search: {} } }),
+    select({ location: mockLocation }),
 }))
 vi.mock('#/features/shared/navigation/useBreadcrumbs', () => ({
   useBreadcrumbs: () => mockCrumbs,
@@ -44,6 +50,7 @@ afterEach(() => {
   cleanup()
   mockUser = { firstName: 'A' }
   mockCrumbs = [{ label: 'Cameras' }]
+  mockLocation = { pathname: '/', search: {} }
 })
 
 describe('Header mobile title bar', () => {
@@ -72,5 +79,55 @@ describe('Header mobile title bar', () => {
     render(<Header />)
     expect(screen.queryByText('X')).toBeNull()
     expect(screen.queryByRole('link', { name: /^Back to/ })).toBeNull()
+  })
+})
+
+describe('Header back link', () => {
+  it('is exact so the router never marks it current', () => {
+    mockCrumbs = [
+      { label: 'Favorites', to: '/favorites' },
+      { label: 'Person · Front Door' },
+    ]
+    render(<Header />)
+    const back = screen.getByRole('link', { name: 'Back to Favorites' })
+    expect(JSON.parse(back.dataset.activeOptions as string)).toEqual({
+      exact: true,
+      includeSearch: false,
+    })
+  })
+})
+
+describe('Header desktop nav', () => {
+  const desktop = () => screen.getByText('Events').closest('div') as HTMLElement
+  const link = (name: string) =>
+    Array.from(desktop().querySelectorAll('a')).find(
+      (a) => a.textContent === name,
+    ) as HTMLElement
+
+  it('highlights the origin tab on event detail', () => {
+    mockLocation = {
+      pathname: '/camera-events/abc',
+      search: { from: 'favorites' },
+    }
+    render(<Header />)
+    expect(link('Favorites')).toHaveAttribute('aria-current', 'page')
+    expect(link('Favorites')).toHaveClass('is-active')
+    expect(link('Events')).not.toHaveAttribute('aria-current')
+    expect(link('Events')).not.toHaveClass('is-active')
+  })
+
+  it('highlights Events on the events list', () => {
+    mockLocation = { pathname: '/camera-events', search: {} }
+    render(<Header />)
+    expect(link('Events')).toHaveAttribute('aria-current', 'page')
+    expect(link('Favorites')).not.toHaveAttribute('aria-current')
+  })
+
+  it('makes nav links exact so the router adds no aria-current itself', () => {
+    render(<Header />)
+    expect(JSON.parse(link('Events').dataset.activeOptions as string)).toEqual({
+      exact: true,
+      includeSearch: false,
+    })
   })
 })

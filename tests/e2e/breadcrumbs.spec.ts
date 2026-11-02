@@ -47,7 +47,8 @@ test.describe('desktop', () => {
     await expect(nav).toBeVisible()
     const parent = nav.getByRole('link', { name: 'Events' })
     await expect(parent).toHaveAttribute('href', /camera=front_door/)
-    await expect(nav.locator('span[aria-current="page"]')).toContainText(' · ')
+    await expect(nav.locator('[aria-current="page"]')).toHaveCount(1)
+    await expect(nav.locator('[aria-current="page"]')).toContainText(' · ')
 
     await parent.click()
     await page.waitForURL(/\/camera-events\?.*camera=front_door/)
@@ -70,7 +71,8 @@ test.describe('desktop', () => {
 
     const nav = breadcrumb(page)
     await expect(nav.getByRole('link', { name: 'Favorites' })).toBeVisible()
-    await expect(nav.locator('span[aria-current="page"]')).toContainText(' · ')
+    await expect(nav.locator('[aria-current="page"]')).toHaveCount(1)
+    await expect(nav.locator('[aria-current="page"]')).toContainText(' · ')
 
     await nav.getByRole('link', { name: 'Favorites' }).click()
     await page.waitForURL('**/favorites')
@@ -85,7 +87,7 @@ test.describe('desktop', () => {
     await page.goto(path)
     const nav = breadcrumb(page)
     await expect(nav.getByRole('link', { name: 'Events' })).toBeVisible()
-    await expect(nav.locator('span[aria-current="page"]')).toBeVisible()
+    await expect(nav.locator('[aria-current="page"]')).toHaveCount(1)
   })
 
   test('tampered from=settings falls back to Events', async ({ page }) => {
@@ -104,9 +106,8 @@ test.describe('desktop', () => {
     await signIn(page, '/live/front_door')
     const nav = breadcrumb(page)
     await expect(nav.getByRole('link', { name: 'Cameras' })).toBeVisible()
-    await expect(nav.locator('span[aria-current="page"]')).toHaveText(
-      'Front Door',
-    )
+    await expect(nav.locator('[aria-current="page"]')).toHaveCount(1)
+    await expect(nav.locator('[aria-current="page"]')).toHaveText('Front Door')
   })
 
   test('burst navigation keeps from and does not grow history', async ({
