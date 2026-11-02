@@ -1,4 +1,9 @@
 {
+  "attribution": {
+    "commit": "",
+    "pr": "",
+    "sessionUrl": false
+  },
   "enabledPlugins": {
     "agentic-dev-team@bfinster": true,
     "mattpocock-skills@claude-plugins-official": true
