@@ -5,7 +5,7 @@ import { translateLabel } from '#/features/shared/utils/labels'
 import { formatCameraName } from '#/features/shared/utils/eventFormatting'
 import type { BreadcrumbFn, Crumb } from '#/features/shared/navigation/types'
 
-export type EventOrigin = 'events' | 'favorites'
+type EventOrigin = 'events' | 'favorites'
 
 export interface EventDetailSearch {
   from?: EventOrigin

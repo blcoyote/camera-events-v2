@@ -13,7 +13,9 @@ vi.mock('@tanstack/react-router', () => ({
     className,
     style,
     'aria-label': ariaLabel,
+    search,
   }: {
+    search?: Record<string, string>
     to?: string
     children?: React.ReactNode
     className?: string
@@ -22,7 +24,13 @@ vi.mock('@tanstack/react-router', () => ({
   }) =>
     React.createElement(
       'a',
-      { href: to, className, style, 'aria-label': ariaLabel },
+      {
+        href: to,
+        className,
+        style,
+        'aria-label': ariaLabel,
+        'data-search': search ? JSON.stringify(search) : undefined,
+      },
       children,
     ),
 }))
@@ -32,6 +40,32 @@ afterEach(() => {
 })
 
 describe('MediaCard component', () => {
+  it('passes `search` to the stretched Link', () => {
+    const { container } = render(
+      <MediaCard
+        image={<div>image</div>}
+        to="/somewhere"
+        search={{ from: 'events', camera: 'garage' }}
+      >
+        <span>children</span>
+      </MediaCard>,
+    )
+    expect(container.querySelector('a')?.getAttribute('data-search')).toBe(
+      JSON.stringify({ from: 'events', camera: 'garage' }),
+    )
+  })
+
+  it('passes no search to Link when omitted', () => {
+    const { container } = render(
+      <MediaCard image={<div>image</div>} to="/somewhere">
+        <span>children</span>
+      </MediaCard>,
+    )
+    expect(container.querySelector('a')?.hasAttribute('data-search')).toBe(
+      false,
+    )
+  })
+
   it('renders a <div> (not an <a>) when `to` is not provided', () => {
     render(
       <MediaCard image={<div>image</div>} aria-label="card">

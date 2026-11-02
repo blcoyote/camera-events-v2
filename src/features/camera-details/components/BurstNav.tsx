@@ -28,6 +28,8 @@ function NeighborLink({
     <Link
       to="/camera-events/$id"
       params={{ id: event.id }}
+      search
+      replace
       className={`flex min-h-11 items-center gap-1 ${isNext ? 'ml-auto text-right' : ''}`}
     >
       {!isNext && <Icon className="size-5 shrink-0" aria-hidden />}

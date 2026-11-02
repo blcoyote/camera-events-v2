@@ -12,8 +12,12 @@ vi.mock('@tanstack/react-router', () => ({
     to,
     params,
     children,
+    search,
+    replace,
     ...props
   }: ComponentProps<'a'> & {
+    search?: unknown
+    replace?: boolean
     to: string
     params?: Record<string, string>
     children: ReactNode
@@ -23,6 +27,8 @@ vi.mock('@tanstack/react-router', () => ({
         (t, [k, v]) => t.replace(`$${k}`, v),
         to,
       )}
+      data-replace={String(replace)}
+      data-search={typeof search === 'function' ? 'fn' : String(search)}
       {...props}
     >
       {children}
@@ -55,6 +61,20 @@ describe('BurstNav', () => {
     expect(
       screen.queryByRole('link', { name: m.details_watch_live() }),
     ).toBeNull()
+  })
+
+  it('neighbor links replace history and preserve current search', () => {
+    render(
+      <BurstNav
+        camera="front_porch"
+        status="ready"
+        previous={prev}
+        next={next}
+      />,
+    )
+    const link = document.querySelector('a[href="/camera-events/n1"]')
+    expect(link?.getAttribute('data-replace')).toBe('true')
+    expect(link?.getAttribute('data-search')).toBe('true')
   })
 
   it('shows nothing-since text when next is null', () => {

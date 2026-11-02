@@ -18,7 +18,9 @@ vi.mock('#/features/shared/components/EventCard', () => ({
       event,
       initialFavorited,
       sharedBy,
+      origin,
     }: {
+      origin?: { from: string }
       event: FrigateEvent
       index: number
       initialFavorited?: boolean
@@ -29,6 +31,7 @@ vi.mock('#/features/shared/components/EventCard', () => ({
         data-event-id={event.id}
         data-initial-favorited={String(initialFavorited)}
         data-shared-by={JSON.stringify(sharedBy)}
+        data-origin={JSON.stringify(origin)}
       />
     ),
   ),
@@ -102,6 +105,13 @@ describe('FavoritesPage', () => {
     expect(a.dataset.sharedBy).toBe('[]')
     expect(b.dataset.initialFavorited).toBe('false')
     expect(b.dataset.sharedBy).toBe('["Alice",null]')
+  })
+
+  it('passes origin from=favorites to each EventCard', () => {
+    render(<FavoritesPage entries={[entry('evt-1')]} />)
+    expect(screen.getByTestId('event-card').dataset.origin).toBe(
+      '{"from":"favorites"}',
+    )
   })
 
   it('renders empty state headline when no events', () => {

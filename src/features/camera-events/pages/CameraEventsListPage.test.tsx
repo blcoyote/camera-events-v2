@@ -2,6 +2,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { useState } from 'react'
 import { render, screen, cleanup, fireEvent } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import '@testing-library/jest-dom/vitest'
 import type { FrigateEvent } from '#/features/shared/server/frigate/types'
 
@@ -180,6 +181,25 @@ describe('CameraEventsListPage', () => {
       const props = mockEventCard.mock.calls[0]?.[0] as Record<string, unknown>
       expect(props.initialFavorited).toBe(false)
     })
+  })
+})
+
+describe('EventCard origin', () => {
+  it('passes from=events with no filters when none active', () => {
+    render(
+      <CameraEventsListPage result={{ ok: true, data: [makeEvent('a')] }} />,
+    )
+    const props = mockEventCard.mock.calls[0]?.[0] as Record<string, unknown>
+    expect(props.origin).toEqual({ from: 'events' })
+  })
+
+  it('passes active camera filter as origin.camera', async () => {
+    const events = [makeEvent('a'), { ...makeEvent('b'), camera: 'garage' }]
+    render(<CameraEventsListPage result={{ ok: true, data: events }} />)
+    mockEventCard.mockClear()
+    await userEvent.selectOptions(screen.getByRole('combobox'), 'garage')
+    const props = mockEventCard.mock.calls[0]?.[0] as Record<string, unknown>
+    expect(props.origin).toEqual({ from: 'events', camera: 'garage' })
   })
 })
 
