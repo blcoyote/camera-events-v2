@@ -14,9 +14,14 @@ vi.mock('@tanstack/react-router', () => ({
   Link: ({
     to,
     children,
+    activeOptions,
     ...props
-  }: ComponentProps<'a'> & { to: string; children: ReactNode }) => (
-    <a href={to} {...props}>
+  }: ComponentProps<'a'> & {
+    to: string
+    children: ReactNode
+    activeOptions?: unknown
+  }) => (
+    <a href={to} data-active-options={JSON.stringify(activeOptions)} {...props}>
       {children}
     </a>
   ),
@@ -49,6 +54,15 @@ describe('TabBar', () => {
       'Favorites',
       'Settings',
     ])
+  })
+
+  it('uses exact, search-less active matching on every tab', () => {
+    render(<TabBar />)
+    for (const a of screen.getAllByRole('link')) {
+      expect(
+        JSON.parse(a.getAttribute('data-active-options') ?? 'null'),
+      ).toEqual({ exact: true, includeSearch: false })
+    }
   })
 
   it('marks only the owning tab as current', () => {

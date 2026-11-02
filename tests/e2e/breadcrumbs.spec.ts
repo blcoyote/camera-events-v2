@@ -160,6 +160,11 @@ test.describe('phone', () => {
         .getByRole('navigation', { name: 'Primary' })
         .getByRole('link', { name: 'Favorites' }),
     ).toHaveAttribute('aria-current', 'page')
+    await expect(
+      page
+        .getByRole('navigation', { name: 'Primary' })
+        .getByRole('link', { name: 'Events' }),
+    ).not.toHaveAttribute('aria-current', /.*/)
 
     await back.click()
     await page.waitForURL('**/favorites')

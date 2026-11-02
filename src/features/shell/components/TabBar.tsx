@@ -24,6 +24,7 @@ export function TabBar() {
               <Link
                 key={to}
                 to={to}
+                activeOptions={{ exact: true, includeSearch: false }}
                 aria-current={isActive ? 'page' : undefined}
                 className={`relative flex min-h-14 flex-col items-center justify-center gap-0.5 text-xs font-semibold ${isActive ? 'text-brand-strong' : 'text-fg-2'}`}
               >

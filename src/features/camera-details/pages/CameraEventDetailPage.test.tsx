@@ -889,7 +889,7 @@ describe('CameraEventDetailPage in Danish', () => {
       expect(
         screen.getByText('Hændelsen er ikke længere tilgængelig'),
       ).toBeInTheDocument()
-      expect(screen.getByText('Tilbage til hændelser')).toBeInTheDocument()
+      expect(screen.getByText('Tilbage til Events')).toBeInTheDocument()
     } finally {
       restore()
     }
@@ -957,7 +957,7 @@ describe('CameraEventDetailPage breadcrumbs', () => {
     ])
     render(<CameraEventDetailPage {...GONE} />)
     expect(
-      screen.getByRole('link', { name: m.details_back() }),
+      screen.getByRole('link', { name: 'Back to Favorites' }),
     ).toHaveAttribute('href', '/favorites')
   })
 
@@ -968,7 +968,7 @@ describe('CameraEventDetailPage breadcrumbs', () => {
     ])
     render(<CameraEventDetailPage {...GONE} />)
     expect(
-      screen.getByRole('link', { name: m.details_back() }),
+      screen.getByRole('link', { name: 'Back to Events' }),
     ).toHaveAttribute('href', '/camera-events?camera=front')
   })
 

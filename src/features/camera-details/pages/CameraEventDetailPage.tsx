@@ -271,7 +271,9 @@ function EventDetailContent({
           search={parent?.to ? (parent.search as never) : undefined}
           className="no-underline"
         >
-          {m.details_back()}
+          {parent?.to
+            ? m.shell_back_to({ label: parent.label })
+            : m.details_back()}
         </Link>
       </Button>
     )
