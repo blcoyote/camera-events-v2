@@ -10,9 +10,27 @@ created: 2026-11-02
 > declares its trail in `staticData.breadcrumb`, and the shell reads it through
 > `useMatches()`. That replaces `getPageTitle(pathname)`.
 
-**Status:** accepted, implementation pending. Spec: `docs/specs/breadcrumbs.md`.
-When the slices land, update this note to describe the shipped code and any
-deviations.
+**Status:** implemented. Spec: `docs/specs/breadcrumbs.md`.
+
+**Where it lives:**
+
+- `src/features/shared/navigation/`: `Crumb`/`BreadcrumbFn` types and the
+  `StaticDataRouteOption` augmentation, `resolveBreadcrumbs` (deepest declaring
+  match wins, fallback `Camera Events`), `useBreadcrumbs`, `<Breadcrumbs>`, and
+  `tabBreadcrumb(label)` for single-crumb tab routes.
+- `src/features/shared/utils/eventListSearch.ts`: `validateEventListFilters`,
+  shared by the Events list and event detail routes.
+- `src/features/camera-details/utils/eventBreadcrumb.ts`:
+  `validateEventDetailSearch` and `eventDetailBreadcrumb`.
+- `src/features/live-view/utils/liveViewBreadcrumb.ts`.
+- Shell: `getTitleBar(crumbs)` and `getActiveTab(pathname, search)` in
+  `navigation.ts`. `getPageTitle` was removed.
+- `EventCard` takes an `origin` prop. `BurstNav` keeps the current search and
+  navigates with `replace`.
+
+**Deviation from the spec:** the state-card back button reads the parent crumb
+from `useBreadcrumbs()` instead of rebuilding the origin URL itself, so it
+cannot drift from the crumb row.
 
 ## Context
 
