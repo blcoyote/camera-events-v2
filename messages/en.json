@@ -40,6 +40,8 @@
   "shell_title_live_view": "Live view",
   "shell_title_app": "Camera Events",
   "shell_nav_site": "Site navigation",
+  "shell_breadcrumb": "Breadcrumb",
+  "shell_back_to": "Back to {label}",
   "shell_nav_primary": "Primary",
   "shell_sign_in_google": "Sign in with Google",
   "shell_sign_out": "Sign out",

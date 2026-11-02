@@ -7,6 +7,9 @@ import { withLocale } from '#/test-utils/locale'
 vi.mock('#/features/live-view/components/LiveSnapshot', () => ({
   LiveSnapshot: () => null,
 }))
+vi.mock('#/features/shared/navigation/useBreadcrumbs', () => ({
+  useBreadcrumbs: () => [],
+}))
 const { LiveViewPage } = await import('./LiveViewPage')
 
 let restore: () => void

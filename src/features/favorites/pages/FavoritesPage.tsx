@@ -77,6 +77,7 @@ export function FavoritesPage({ entries }: { entries: FavoriteEntry[] }) {
               index={i}
               initialFavorited={entry.favorited}
               sharedBy={entry.sharedBy}
+              origin={{ from: 'favorites' }}
             />
           ))}
         </section>

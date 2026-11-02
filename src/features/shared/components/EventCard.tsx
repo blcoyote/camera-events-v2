@@ -13,16 +13,31 @@ import { EventThumbnail } from '#/features/shared/components/EventThumbnail'
 import { useFavoriteToggle } from '#/features/shared/hooks/useFavoriteToggle'
 import { FavoriteButton } from '#/features/shared/components/FavoriteButton'
 
+export interface EventCardOrigin {
+  from: 'events' | 'favorites'
+  camera?: string
+  type?: string
+}
+
+function originToSearch(origin: EventCardOrigin | undefined) {
+  if (!origin) return undefined
+  return Object.fromEntries(
+    Object.entries(origin).filter(([, v]) => v !== undefined),
+  ) as Record<string, string>
+}
+
 export function EventCard({
   event,
   index,
   initialFavorited = false,
   sharedBy = [],
+  origin,
 }: {
   event: FrigateEvent
   index: number
   initialFavorited?: boolean
   sharedBy?: (string | null)[]
+  origin?: EventCardOrigin
 }) {
   const { favorited, pending, error, toggle } = useFavoriteToggle(
     event.id,
@@ -39,6 +54,7 @@ export function EventCard({
     <MediaCard
       to="/camera-events/$id"
       params={{ id: event.id }}
+      search={originToSearch(origin)}
       aria-label={m.shared_event_card_aria({
         label: translateLabel(event.label, getLocale()),
         camera: event.camera,

@@ -242,6 +242,11 @@ export function CameraEventsListPage({
                         event={event}
                         index={index++}
                         initialFavorited={favoritedIds.has(event.id)}
+                        origin={{
+                          from: 'events',
+                          ...(cameraFilter && { camera: cameraFilter }),
+                          ...(labelFilter && { type: labelFilter }),
+                        }}
                       />
                     ))}
                   </div>

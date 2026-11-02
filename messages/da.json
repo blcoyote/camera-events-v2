@@ -40,6 +40,8 @@
   "shell_title_live_view": "Live-visning",
   "shell_title_app": "Camera Events",
   "shell_nav_site": "Webstedsnavigation",
+  "shell_breadcrumb": "Brødkrumme",
+  "shell_back_to": "Tilbage til {label}",
   "shell_nav_primary": "Primær",
   "shell_sign_in_google": "Log ind med Google",
   "shell_sign_out": "Log ud",

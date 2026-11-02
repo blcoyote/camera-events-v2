@@ -4,6 +4,7 @@ import type { CSSProperties, ReactNode } from 'react'
 interface MediaCardProps {
   to?: string
   params?: Record<string, string>
+  search?: Record<string, string>
   'aria-label'?: string
   index?: number
   image: ReactNode
@@ -15,6 +16,7 @@ interface MediaCardProps {
 export function MediaCard({
   to,
   params,
+  search,
   'aria-label': ariaLabel,
   index,
   image,
@@ -48,6 +50,7 @@ export function MediaCard({
         <Link
           to={to}
           params={params as Record<string, string>}
+          search={search as never}
           aria-label={ariaLabel}
           className="absolute inset-0 z-[1] rounded-[inherit] outline-none"
         />

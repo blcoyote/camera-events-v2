@@ -39,13 +39,18 @@ vi.mock('#/features/shared/components/MediaCard', () => ({
   MediaCard: ({
     children,
     overlay,
+    search,
   }: {
     children: React.ReactNode
     overlay: React.ReactNode
+    search?: Record<string, string>
   }) =>
     React.createElement(
       'div',
-      { 'data-testid': 'media-card' },
+      {
+        'data-testid': 'media-card',
+        'data-search': search ? JSON.stringify(search) : undefined,
+      },
       React.createElement('div', { 'data-testid': 'overlay' }, overlay),
       children,
     ),
@@ -96,6 +101,24 @@ afterEach(() => {
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
 describe('EventCard', () => {
+  it('passes only the defined origin keys as search', () => {
+    const { getByTestId } = render(
+      <EventCard
+        event={makeEvent()}
+        index={0}
+        origin={{ from: 'events', camera: 'garage', type: undefined }}
+      />,
+    )
+    expect(getByTestId('media-card').dataset.search).toBe(
+      JSON.stringify({ from: 'events', camera: 'garage' }),
+    )
+  })
+
+  it('passes no search without origin', () => {
+    const { getByTestId } = render(<EventCard event={makeEvent()} index={0} />)
+    expect(getByTestId('media-card').dataset.search).toBeUndefined()
+  })
+
   it('renders the label in Danish under the da locale', () => {
     const restore = withLocale('da')
     try {

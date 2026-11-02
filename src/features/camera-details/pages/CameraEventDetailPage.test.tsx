@@ -6,6 +6,7 @@ import '@testing-library/jest-dom/vitest'
 import React from 'react'
 import type { FrigateEvent } from '#/features/shared/server/frigate/types'
 import type { FrigateResult } from '#/features/shared/server/frigate/config'
+import type { Crumb } from '#/features/shared/navigation/types'
 import { withLocale } from '#/test-utils/locale'
 
 // ─── Module mocks ─────────────────────────────────────────────────────────────
@@ -47,18 +48,31 @@ vi.mock('@tanstack/react-router', () => ({
     children,
     to,
     params,
+    search,
   }: {
     children: React.ReactNode
     to: string
     params?: Record<string, string>
+    search?: Record<string, string>
   }) =>
     React.createElement(
       'a',
       {
-        href: to.replace(/\$(\w+)/g, (_, k: string) => params?.[k] ?? ''),
+        href:
+          to.replace(/\$(\w+)/g, (_, k: string) => params?.[k] ?? '') +
+          (search ? `?${new URLSearchParams(search).toString()}` : ''),
       },
       children,
     ),
+}))
+
+const defaultCrumbs: Crumb[] = [
+  { label: 'Events', to: '/camera-events' },
+  { label: 'Person · Front Porch' },
+]
+const mockUseBreadcrumbs = vi.fn((): Crumb[] => defaultCrumbs)
+vi.mock('#/features/shared/navigation/useBreadcrumbs', () => ({
+  useBreadcrumbs: () => mockUseBreadcrumbs(),
 }))
 
 const mockUseCameraNeighbors = vi.fn((_event: unknown) => ({
@@ -154,6 +168,7 @@ function successResult(
 
 beforeEach(() => {
   vi.clearAllMocks()
+  mockUseBreadcrumbs.mockImplementation(() => defaultCrumbs)
 })
 
 afterEach(() => {
@@ -415,10 +430,10 @@ describe('CameraEventDetailPage', () => {
       )
     })
 
-    it('hides the back link below the sm breakpoint', () => {
+    it('hides the breadcrumbs below the sm breakpoint', () => {
       render(<CameraEventDetailPage result={successResult()} />)
-      const link = screen.getByRole('link', { name: /back/i })
-      expect(link.parentElement).toHaveClass('hidden', 'sm:block')
+      const nav = screen.getByRole('navigation', { name: 'Breadcrumb' })
+      expect(nav).toHaveClass('hidden', 'sm:block')
     })
   })
 
@@ -874,7 +889,7 @@ describe('CameraEventDetailPage in Danish', () => {
       expect(
         screen.getByText('Hændelsen er ikke længere tilgængelig'),
       ).toBeInTheDocument()
-      expect(screen.getByText('Tilbage til hændelser')).toBeInTheDocument()
+      expect(screen.getByText('Tilbage til Events')).toBeInTheDocument()
     } finally {
       restore()
     }
@@ -906,5 +921,62 @@ describe('CameraEventDetailPage in Danish', () => {
     } finally {
       restore()
     }
+  })
+})
+
+describe('CameraEventDetailPage breadcrumbs', () => {
+  const GONE = {
+    result: { ok: false, error: 'HTTP 404', status: 404 } as const,
+    eventId: '1713095000.123456-abcdef',
+    nowMs: 1713095000_000 + 25 * 3_600_000,
+  }
+
+  it('renders the breadcrumb trail instead of a back link on the event', () => {
+    mockUseBreadcrumbs.mockImplementation(() => [
+      { label: 'Favorites', to: '/favorites' },
+      { label: 'Person · Front Porch' },
+    ])
+    render(
+      <CameraEventDetailPage
+        result={successResult()}
+        eventId="1713095000.123456-abcdef"
+      />,
+    )
+    const nav = screen.getByRole('navigation', { name: 'Breadcrumb' })
+    expect(nav.querySelector('a')).toHaveAttribute('href', '/favorites')
+    expect(nav.querySelector('[aria-current="page"]')).toHaveTextContent(
+      'Person · Front Porch',
+    )
+    expect(screen.queryByText(/←/)).toBeNull()
+  })
+
+  it('points the state card back button at a Favorites parent', () => {
+    mockUseBreadcrumbs.mockImplementation(() => [
+      { label: 'Favorites', to: '/favorites' },
+      { label: 'Person · Front Porch' },
+    ])
+    render(<CameraEventDetailPage {...GONE} />)
+    expect(
+      screen.getByRole('link', { name: 'Back to Favorites' }),
+    ).toHaveAttribute('href', '/favorites')
+  })
+
+  it('keeps the parent search on the state card back button', () => {
+    mockUseBreadcrumbs.mockImplementation(() => [
+      { label: 'Events', to: '/camera-events', search: { camera: 'front' } },
+      { label: 'Person · Front Porch' },
+    ])
+    render(<CameraEventDetailPage {...GONE} />)
+    expect(
+      screen.getByRole('link', { name: 'Back to Events' }),
+    ).toHaveAttribute('href', '/camera-events?camera=front')
+  })
+
+  it('falls back to /camera-events without a parent crumb', () => {
+    mockUseBreadcrumbs.mockImplementation(() => [{ label: 'Person' }])
+    render(<CameraEventDetailPage {...GONE} />)
+    expect(
+      screen.getByRole('link', { name: m.details_back() }),
+    ).toHaveAttribute('href', '/camera-events')
   })
 })

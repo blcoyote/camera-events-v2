@@ -8,8 +8,14 @@ import {
 } from '#/features/shared/server/favorites/favorites-fns'
 import { useRefetchOnMount } from '#/features/shared/hooks/useRefetchOnMount'
 import { useRefetchOnFocus } from '#/features/shared/hooks/useRefetchOnFocus'
+import {
+  validateEventDetailSearch,
+  eventDetailBreadcrumb,
+} from '#/features/camera-details/utils/eventBreadcrumb'
 
 export const Route = createFileRoute('/_authenticated/camera-events/$id')({
+  validateSearch: validateEventDetailSearch,
+  staticData: { breadcrumb: eventDetailBreadcrumb },
   loader: async ({ params }) => {
     const [result, favoritedEventIds, sharedBy] = await Promise.all([
       loadEventFn({ data: params.id }),

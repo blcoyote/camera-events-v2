@@ -4,9 +4,11 @@ import { TABS, getActiveTab } from './navigation'
 
 export function TabBar() {
   const { user } = useRouteContext({ from: '__root__' })
-  const pathname = useRouterState({ select: (s) => s.location.pathname })
+  const { pathname, search } = useRouterState({
+    select: (s) => s.location,
+  })
   if (!user) return null
-  const active = getActiveTab(pathname)
+  const active = getActiveTab(pathname, search as Record<string, unknown>)
 
   return (
     <>
@@ -22,6 +24,7 @@ export function TabBar() {
               <Link
                 key={to}
                 to={to}
+                activeOptions={{ exact: true, includeSearch: false }}
                 aria-current={isActive ? 'page' : undefined}
                 className={`relative flex min-h-14 flex-col items-center justify-center gap-0.5 text-xs font-semibold ${isActive ? 'text-brand-strong' : 'text-fg-2'}`}
               >

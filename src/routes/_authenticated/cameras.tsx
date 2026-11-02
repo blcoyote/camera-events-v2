@@ -1,3 +1,5 @@
+import { tabBreadcrumb } from '#/features/shared/navigation/tabBreadcrumb'
+import { m } from '#/paraglide/messages.js'
 import { useState, useCallback } from 'react'
 import { createFileRoute, useRouter } from '@tanstack/react-router'
 import { clearCacheFn } from '#/features/shared/server/frigate/cache-actions'
@@ -11,6 +13,7 @@ import { PullToRefreshIndicator } from '#/features/shared/components/PullToRefre
 const PULL_THRESHOLD = 80
 
 export const Route = createFileRoute('/_authenticated/cameras')({
+  staticData: { breadcrumb: tabBreadcrumb(() => m.shell_tab_cameras()) },
   loader: () => loadCamerasFn(),
   pendingComponent: CamerasLoading,
   component: CamerasRoute,

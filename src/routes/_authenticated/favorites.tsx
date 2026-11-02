@@ -1,3 +1,5 @@
+import { tabBreadcrumb } from '#/features/shared/navigation/tabBreadcrumb'
+import { m } from '#/paraglide/messages.js'
 import { createFileRoute } from '@tanstack/react-router'
 import { FavoritesPage } from '#/features/favorites/pages/FavoritesPage'
 import { FavoritesLoading } from '#/features/favorites/components/FavoritesLoading'
@@ -9,6 +11,7 @@ export async function favoritesLoader(): Promise<FavoriteEntry[]> {
 }
 
 export const Route = createFileRoute('/_authenticated/favorites')({
+  staticData: { breadcrumb: tabBreadcrumb(() => m.shell_tab_favorites()) },
   loader: favoritesLoader,
   pendingComponent: FavoritesLoading,
   component: FavoritesRoute,
