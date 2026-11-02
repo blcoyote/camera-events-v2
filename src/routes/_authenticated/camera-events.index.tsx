@@ -9,6 +9,9 @@ import { useRefetchOnMount } from '#/features/shared/hooks/useRefetchOnMount'
 import { PullToRefreshIndicator } from '#/features/shared/components/PullToRefreshIndicator'
 import { getUserFavoritedEventIdsFn } from '#/features/shared/server/favorites/favorites-fns'
 
+import { validateEventListFilters } from '#/features/shared/utils/eventListSearch'
+import { m } from '#/paraglide/messages.js'
+
 const PULL_THRESHOLD = 80
 
 export async function cameraEventsLoader() {
@@ -19,18 +22,11 @@ export async function cameraEventsLoader() {
   return { result, favoritedEventIds }
 }
 
-// Filters only narrow already-loaded events client-side; never sent to Frigate.
-export function validateCameraEventsSearch(s: Record<string, unknown>): {
-  type?: string
-  camera?: string
-} {
-  const str = (v: unknown) =>
-    typeof v === 'string' && v.length > 0 && v.length <= 64 ? v : undefined
-  return { type: str(s.type), camera: str(s.camera) }
-}
+export const validateCameraEventsSearch = validateEventListFilters
 
 export const Route = createFileRoute('/_authenticated/camera-events/')({
   validateSearch: validateCameraEventsSearch,
+  staticData: { breadcrumb: () => [{ label: m.shell_tab_events() }] },
   loader: cameraEventsLoader,
   pendingComponent: CameraEventsLoading,
   component: CameraEventsRoute,
