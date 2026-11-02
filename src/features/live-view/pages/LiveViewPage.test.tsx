@@ -10,6 +10,18 @@ vi.mock('#/features/live-view/components/LiveSnapshot', () => ({
   ),
 }))
 
+vi.mock('@tanstack/react-router', () => ({
+  Link: ({ children, to }: { children: React.ReactNode; to: string }) => (
+    <a href={to}>{children}</a>
+  ),
+}))
+vi.mock('#/features/shared/navigation/useBreadcrumbs', () => ({
+  useBreadcrumbs: () => [
+    { label: 'Cameras', to: '/cameras' },
+    { label: 'front_porch' },
+  ],
+}))
+
 afterEach(() => {
   cleanup()
 })
@@ -33,5 +45,11 @@ describe('LiveViewPage', () => {
   it('renders the live snapshot for the camera', () => {
     render(<LiveViewPage cameraName="front_porch" />)
     expect(screen.getByTestId('live-snapshot')).toHaveTextContent('front_porch')
+  })
+
+  it('renders breadcrumbs linking back to cameras', () => {
+    render(<LiveViewPage cameraName="front_porch" />)
+    const nav = screen.getByRole('navigation', { name: 'Breadcrumb' })
+    expect(nav.querySelector('a')).toHaveAttribute('href', '/cameras')
   })
 })

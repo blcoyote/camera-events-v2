@@ -4,6 +4,8 @@ import { translateLabel } from '#/features/shared/utils/labels'
 import type { ComponentProps, ReactNode } from 'react'
 import { useEffect, useRef, useState } from 'react'
 import { Link } from '@tanstack/react-router'
+import { Breadcrumbs } from '#/features/shared/navigation/Breadcrumbs'
+import { useBreadcrumbs } from '#/features/shared/navigation/useBreadcrumbs'
 import { Button } from '#/features/shared/components/ui/button'
 import { Card } from '#/features/shared/components/ui/card'
 import { Clock, MapPin, Gauge } from 'lucide-react'
@@ -218,6 +220,7 @@ function EventDetailContent({
   sharedBy?: (string | null)[]
   onRemoveShare?: () => Promise<void>
 }) {
+  const crumbs = useBreadcrumbs()
   const [fallbackNow] = useState(() => Date.now())
   const state = getDetailPageState(
     result,
@@ -255,6 +258,7 @@ function EventDetailContent({
   )
 
   if (state.kind !== 'event') {
+    const parent = crumbs.at(-2)
     const back = (
       <Button
         asChild
@@ -262,7 +266,11 @@ function EventDetailContent({
           state.kind === 'ghost' || state.kind === 'gone' ? 'default' : 'ghost'
         }
       >
-        <Link to="/camera-events" className="no-underline">
+        <Link
+          to={parent?.to ?? '/camera-events'}
+          search={parent?.to ? (parent.search as never) : undefined}
+          className="no-underline"
+        >
           {m.details_back()}
         </Link>
       </Button>
@@ -319,14 +327,7 @@ function EventDetailContent({
 
   return (
     <main id="main-content" className="page-wrap pb-8 pt-4 sm:pt-14">
-      <div className="mb-6 hidden sm:block">
-        <Link
-          to="/camera-events"
-          className="inline-flex min-h-11 items-center py-2 text-sm font-medium text-brand-strong no-underline transition hover:text-foreground"
-        >
-          &larr; {m.details_back()}
-        </Link>
-      </div>
+      <Breadcrumbs crumbs={crumbs} className="mb-6 hidden sm:block" />
 
       <section className="rise-in relative sm:glass sm:overflow-hidden sm:rounded-card sm:px-8 sm:py-8">
         <h1
