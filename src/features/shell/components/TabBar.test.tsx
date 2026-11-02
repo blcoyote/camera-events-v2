@@ -98,6 +98,58 @@ describe('TabBar', () => {
     ).toBe(false)
   })
 
+  describe('shared indicator', () => {
+    const getIndicator = (c: HTMLElement) =>
+      c.querySelector<HTMLElement>('[data-testid="tab-indicator"]')
+
+    it('renders exactly one aria-hidden indicator outside the links', () => {
+      const { container } = render(<TabBar />)
+      expect(
+        container.querySelectorAll('[data-testid="tab-indicator"]'),
+      ).toHaveLength(1)
+      expect(getIndicator(container)).toHaveAttribute('aria-hidden', 'true')
+      for (const a of screen.getAllByRole('link')) {
+        expect(a.querySelector('.bg-brand')).toBeNull()
+      }
+    })
+
+    it('positions over the active tab', () => {
+      const { container, rerender } = render(<TabBar />)
+      expect(getIndicator(container)?.style.transform).toBe('translateX(0%)')
+      expect(getIndicator(container)?.style.opacity).toBe('1')
+      mockPath = '/favorites'
+      rerender(<TabBar />)
+      expect(getIndicator(container)?.style.transform).toBe('translateX(200%)')
+      mockPath = '/settings/x'
+      rerender(<TabBar />)
+      expect(getIndicator(container)?.style.transform).toBe('translateX(300%)')
+    })
+
+    it('has transition classes', () => {
+      const { container } = render(<TabBar />)
+      expect(getIndicator(container)).toHaveClass(
+        'transition-[transform,opacity]',
+        'duration-250',
+      )
+    })
+
+    it('fades out in place when no tab owns the path', () => {
+      mockPath = '/camera-events'
+      const { container, rerender } = render(<TabBar />)
+      expect(getIndicator(container)?.style.transform).toBe('translateX(100%)')
+      mockPath = '/'
+      rerender(<TabBar />)
+      expect(getIndicator(container)?.style.opacity).toBe('0')
+      expect(getIndicator(container)?.style.transform).toBe('translateX(100%)')
+    })
+
+    it('is invisible on first render at an unowned path', () => {
+      mockPath = '/'
+      const { container } = render(<TabBar />)
+      expect(getIndicator(container)?.style.opacity).toBe('0')
+    })
+  })
+
   it('renders an aria-hidden spacer', () => {
     const { container } = render(<TabBar />)
     expect(
