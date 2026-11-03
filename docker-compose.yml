@@ -59,7 +59,16 @@ services:
         condition: service_healthy
 
   rabbitmq:
-    build: ./rabbitmq
+    # Official image (not a local build) so Portainer can compare its digest
+    # against Docker Hub and show up-to-date / outdated status. Config is
+    # injected via inline `configs` below instead of being baked into an image.
+    image: rabbitmq:4-management-alpine
+    pull_policy: always
+    configs:
+      - source: rabbitmq-plugins
+        target: /etc/rabbitmq/enabled_plugins
+      - source: rabbitmq-conf
+        target: /etc/rabbitmq/conf.d/custom.conf
     hostname: rabbitmq
     restart: unless-stopped
     ports:
@@ -80,6 +89,23 @@ services:
       - ce-v2-network
     labels:
       - 'traefik.enable=false'
+
+configs:
+  rabbitmq-plugins:
+    content: |
+      [rabbitmq_management,rabbitmq_mqtt].
+  rabbitmq-conf:
+    content: |
+      # MQTT listener on standard port
+      mqtt.listeners.tcp.default = 1883
+      mqtt.allow_anonymous = false
+
+      # Frigate publishes to topics like frigate/events — map to AMQP exchange
+      mqtt.exchange = amq.topic
+      mqtt.vhost = /
+
+      # Keep connections alive (86400 seconds = 24 hours)
+      mqtt.max_session_expiry_interval_seconds = 86400
 
 volumes:
   ce-v2-data:

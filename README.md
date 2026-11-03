@@ -36,7 +36,7 @@ A self-hosted PWA for browsing and monitoring [Frigate NVR](https://frigate.vide
 
 - Bun (see [bun.sh](https://bun.sh) — `npm`/`pnpm` are blocked via `only-allow bun`)
 - A Frigate instance reachable from the server (or use `FRIGATE_MOCK=true` for development)
-- RabbitMQ with MQTT plugin (see [rabbitmq/](rabbitmq/))
+- RabbitMQ with MQTT plugin (official `rabbitmq:4-management-alpine` image; config is inline in [docker-compose.yml](docker-compose.yml) `configs`)
 - Google OAuth client (for login)
 - VAPID keys (for push notifications — `npx web-push generate-vapid-keys`)
 
