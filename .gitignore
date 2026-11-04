@@ -35,3 +35,7 @@ docs/memory/.obsidian/
 docs/memory/.trash/
 docs/memory/.obsidian-*
 /src/paraglide
+
+# Beads / Dolt files (added by bd init)
+.beads/proxieddb/
+*.gate.lock*
