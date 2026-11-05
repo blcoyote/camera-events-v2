@@ -96,6 +96,16 @@ Persistent state:
 - `ce-v2-data` — SQLite database (push subscriptions + per-camera preferences).
 - `rabbitmq-data` — RabbitMQ broker state.
 
+### Release runner
+
+The release workflow ([promote-release.yml](.github/workflows/promote-release.yml)) runs on a self-hosted GitHub Actions runner: the `github-runner` service in [docker-compose.yml](docker-compose.yml). It is only in the prod compose file, so the test and prod stacks share one runner. It uses GitHub's official runner image and registers once, with a registration token that expires after one hour:
+
+1. Run `gh api -X POST repos/blcoyote/camera-events-v2/actions/runners/registration-token --jq .token`.
+2. Set the result as `GITHUB_RUNNER_REGISTRATION_TOKEN` on the prod stack and redeploy within the hour.
+3. Check that the runner shows as idle under _Settings → Actions → Runners_.
+
+The registration is kept on the `ce-v2-runner` volume, so restarts and redeploys don't need a new token. To register again (volume lost, runner removed in GitHub, or a new image tag), remove the volume and repeat the steps. The repository is public, so keep _Settings → Actions → General → "Require approval for all external contributors"_ on. Otherwise a pull request from a fork could run code on the runner. Rationale: [docs/memory/decisions/2026-11-05-self-hosted-release-runner.md](docs/memory/decisions/2026-11-05-self-hosted-release-runner.md).
+
 ## Conventions
 
 Project-wide rules are in [CLAUDE.md](CLAUDE.md). Highlights:
