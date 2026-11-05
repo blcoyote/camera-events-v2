@@ -95,8 +95,13 @@ services:
   # file, not in docker-compose.test.yml, so the two Portainer stacks run a
   # single runner between them.
   #
-  # Hardening: no Docker socket, non-root, ephemeral (fresh registration per
-  # job), and its own network (cannot reach the app or RabbitMQ).
+  # Hardening: no Docker socket; jobs run as the non-root `runner` user with
+  # no-new-privileges, which blocks the image's passwordless sudo, so a job
+  # cannot become root and read ACCESS_TOKEN from PID 1. Ephemeral means a
+  # fresh registration per job, not a fresh filesystem: the container is
+  # restarted, not recreated. Its own network keeps it off ce-v2-network, but
+  # ports published on the host (MQTT 1883) are still reachable through the
+  # host's address, like from any LAN machine.
   # pull_policy: missing keeps a prod redeploy (which this runner itself
   # triggers) from recreating the runner mid-job; the runner binary
   # self-updates inside the container.
@@ -114,6 +119,10 @@ services:
       LABELS: camera-events-deploy
       EPHEMERAL: 'true'
       RUN_AS_ROOT: 'false'
+      # Drop registration env vars before the runner (and its jobs) start.
+      UNSET_CONFIG_VARS: 'true'
+    security_opt:
+      - no-new-privileges:true
     networks:
       - ci-runner
     labels:

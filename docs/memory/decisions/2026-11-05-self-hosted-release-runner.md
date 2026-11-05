@@ -27,9 +27,24 @@ would register two runners for the same jobs.
   `GITHUB_RUNNER_TOKEN`, a fine-grained PAT for this repo only, with
   "Administration: Read and write". The container registers itself again on
   every start.
-- **Hardening:** ephemeral (re-registers after each job), runs as a non-root
-  user, no Docker socket, its own `ci-runner` network (no route to the app or
-  RabbitMQ).
+- **Hardening:**
+  - No Docker socket.
+  - Jobs run as the non-root `runner` user with `no-new-privileges`. The image
+    gives `runner` passwordless `sudo`; the flag blocks it, so a job cannot
+    become root and read `ACCESS_TOKEN` from PID 1's environment (verified
+    against the image). `UNSET_CONFIG_VARS` also drops the registration
+    variables before the runner starts.
+  - Its own `ci-runner` network keeps it off `ce-v2-network`.
+- **Known limits (accepted):**
+  - Ephemeral means a fresh registration per job, not a fresh filesystem.
+    `restart: unless-stopped` restarts the same container, so files a job
+    writes as `runner` (including the runner's own install) survive into the
+    next job. A truly fresh container per job needs something outside compose
+    to recreate it, such as a controller with the Docker socket, which is a
+    bigger risk.
+  - Host-published ports stay reachable through the host's address, like from
+    any LAN machine. That covers MQTT on 1883 (password-protected). Blocking
+    that needs host firewall rules, not compose.
 - **No Docker daemon in the workflow:** the retag uses `crane tag` (via
   `imjasonh/setup-crane`) instead of `docker buildx imagetools create`. `crane`
   talks to the registry directly and keeps the multi-arch index digest.
