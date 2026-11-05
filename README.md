@@ -96,6 +96,10 @@ Persistent state:
 - `ce-v2-data` — SQLite database (push subscriptions + per-camera preferences).
 - `rabbitmq-data` — RabbitMQ broker state.
 
+### Release runner
+
+The release workflow ([promote-release.yml](.github/workflows/promote-release.yml)) runs on a self-hosted GitHub Actions runner: the `github-runner` service in [docker-compose.yml](docker-compose.yml). It is only in the prod compose file, so the test and prod stacks share one runner. Set `GITHUB_RUNNER_TOKEN` on the prod stack to a fine-grained personal access token for this repository with **Administration: Read and write**. The repository is public, so keep _Settings → Actions → General → "Require approval for all external contributors"_ on. Otherwise a pull request from a fork could run code on the runner. Rationale: [docs/memory/decisions/2026-11-05-self-hosted-release-runner.md](docs/memory/decisions/2026-11-05-self-hosted-release-runner.md).
+
 ## Conventions
 
 Project-wide rules are in [CLAUDE.md](CLAUDE.md). Highlights:

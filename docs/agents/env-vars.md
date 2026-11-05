@@ -18,4 +18,6 @@
 | `APPLE_UPDATE_INTERVAL_MS` | No                | Min spacing between patch pushes to one Apple endpoint; 0 disables (default 300000ms)                     |
 | `CAMERA_OFFLINE_THRESHOLD` | No                | Consecutive zero-`camera_fps` `frigate/stats` readings before a camera is flagged offline (default 10)    |
 
+`GITHUB_RUNNER_TOKEN` (prod Portainer stack only, not read by the app): fine-grained PAT for this repo with "Administration: Read and write". The `github-runner` compose service uses it to register the self-hosted release runner.
+
 Generate VAPID keys with: `npx web-push generate-vapid-keys`
