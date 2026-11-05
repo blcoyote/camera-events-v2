@@ -100,7 +100,7 @@ Never write production code before a failing test exists. Conventions (placement
 
 ## Deployment
 
-- Bun runtime (Nitro preset `bun`); production entry `bun run .output/server`. Multi-stage `Dockerfile`; `docker-compose.yml` wires the app, RabbitMQ (MQTT + management) and Traefik (TLS, security headers via middleware labels). Volumes: `ce-v2-data` (SQLite), `rabbitmq-data`.
+- Bun runtime (Nitro preset `bun`); production entry `bun run .output/server`. Multi-stage `Dockerfile`; `docker-compose.yml` wires the app, RabbitMQ (MQTT + management) and Traefik (TLS; CSP/Permissions-Policy/COOP/CORP via middleware labels, HSTS and other shared headers from portainer-traefik's entrypoint `secure-headers`). Volumes: `ce-v2-data` (SQLite), `rabbitmq-data`.
 
 ## Beads Issue Tracker
 
