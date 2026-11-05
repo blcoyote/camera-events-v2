@@ -85,7 +85,7 @@ bun run knip          # Unused-code report
 
 ## Deployment
 
-A multi-stage [Dockerfile](Dockerfile) produces a small runtime image that runs as a non-root user. [docker-compose.yml](docker-compose.yml) wires the app, RabbitMQ (with MQTT + management plugins), and Traefik for TLS via Let's Encrypt. Security headers (HSTS, X-Content-Type-Options, X-Frame-Options, Referrer-Policy, Permissions-Policy, COOP/CORP) are applied via Traefik middleware labels.
+A multi-stage [Dockerfile](Dockerfile) produces a small runtime image that runs as a non-root user. [docker-compose.yml](docker-compose.yml) wires the app, RabbitMQ (with MQTT + management plugins), and Traefik for TLS via Let's Encrypt. App-specific security headers (CSP, Permissions-Policy, COOP/CORP) are applied via Traefik middleware labels. HSTS, X-Content-Type-Options, X-Frame-Options and Referrer-Policy come from the shared `secure-headers` middleware on Traefik's `websecure` entrypoint (portainer-traefik repo).
 
 ```bash
 docker compose up -d --build
