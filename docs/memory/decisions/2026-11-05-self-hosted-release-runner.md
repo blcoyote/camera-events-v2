@@ -19,40 +19,46 @@ would register two runners for the same jobs.
 
 ## Decision
 
-- **One runner, prod stack only.** `github-runner` (`myoung34/github-runner`)
-  is in `docker-compose.yml` and not in `docker-compose.test.yml`. Its label is
-  `camera-events-deploy`. Both promote jobs use
-  `runs-on: [self-hosted, camera-events-deploy]`.
-- **Registration:** `ACCESS_TOKEN` comes from the stack variable
-  `GITHUB_RUNNER_TOKEN`, a fine-grained PAT for this repo only, with
-  "Administration: Read and write". The container registers itself again on
-  every start.
+- **One runner, prod stack only.** `github-runner` is in `docker-compose.yml`
+  and not in `docker-compose.test.yml`. Its label is `camera-events-deploy`.
+  Both promote jobs use `runs-on: [self-hosted, camera-events-deploy]`.
+- **GitHub's official image,** `ghcr.io/actions/actions-runner`, pinned to a
+  version. The image's user is `runner` and it has no entrypoint script, so
+  nothing in the container runs as root.
+- **No long-lived credential in the container.** It registers once with a
+  one-hour registration token (stack variable
+  `GITHUB_RUNNER_REGISTRATION_TOKEN`, from
+  `POST /repos/{owner}/{repo}/actions/runners/registration-token`). The
+  runner's install and registration live on the `ce-v2-runner` volume
+  (mounted at `/home/runner`), so restarts skip registration and the expired
+  token is never needed again. The start script unsets it before `run.sh`.
+  To register again: remove the volume, set a fresh token, redeploy.
+- **Persistent, not ephemeral.** Ephemeral needs a new registration per job,
+  which means a credential that can mint tokens (a PAT or GitHub App key) in
+  the container. Jobs run as the same user as the runner, so they could read
+  it.
 - **Hardening:**
   - No Docker socket.
-  - Jobs run as the non-root `runner` user with `no-new-privileges`. The image
-    gives `runner` passwordless `sudo`; the flag blocks it, so a job cannot
-    become root and read `ACCESS_TOKEN` from PID 1's environment (verified
-    against the image). `UNSET_CONFIG_VARS` also drops the registration
-    variables before the runner starts.
+  - `no-new-privileges` blocks the image's passwordless `sudo`, so jobs
+    cannot become root in the container.
   - Its own `ci-runner` network keeps it off `ce-v2-network`.
-- **Known limits (accepted):**
-  - Ephemeral means a fresh registration per job, not a fresh filesystem.
-    `restart: unless-stopped` restarts the same container, so files a job
-    writes as `runner` (including the runner's own install) survive into the
-    next job. A truly fresh container per job needs something outside compose
-    to recreate it, such as a controller with the Docker socket, which is a
-    bigger risk.
-  - Host-published ports stay reachable through the host's address, like from
-    any LAN machine. That covers MQTT on 1883 (password-protected). Blocking
-    that needs host firewall rules, not compose.
+- **Pinned image and `pull_policy: missing`.** The prod job calls the prod
+  stack webhook, which redeploys the stack that holds the runner. A changed
+  image would recreate the container while it is finishing that job. The
+  runner binary updates itself inside the volume. Because the volume holds
+  the install, bumping the image tag only takes effect after the volume is
+  recreated (and the runner registered again).
 - **No Docker daemon in the workflow:** the retag uses `crane tag` (via
   `imjasonh/setup-crane`) instead of `docker buildx imagetools create`. `crane`
   talks to the registry directly and keeps the multi-arch index digest.
-- **`pull_policy: missing`** on the runner. The prod job calls the prod stack
-  webhook, which redeploys the stack that holds the runner. With `always`, a
-  new runner image would recreate the container while it is finishing that
-  job. The runner binary updates itself inside the container. To update the
-  image, pull it by hand in Portainer.
+- **Known limits (accepted):**
+  - Jobs share one filesystem and user with the runner. A compromised job can
+    read the runner's own credentials (which only let it act as this runner)
+    and leave files that affect later jobs. It cannot get root or repo admin
+    rights.
+  - Host-published ports stay reachable through the host's address, like from
+    any LAN machine. That covers MQTT on 1883 (password-protected). Blocking
+    that needs host firewall rules, not compose.
 
 ## Alternatives
 
@@ -63,6 +69,11 @@ would register two runners for the same jobs.
   already use separate compose files.
 - **Mount the Docker socket and keep `buildx imagetools`.** Rejected: the
   socket gives root on the host.
+- **`myoung34/github-runner` with a PAT (first version of this PR).**
+  Rejected: its entrypoint runs as root and executes `config.sh` from the
+  runner-writable install, both at registration and in the exit trap. A job
+  could rewrite it and get root with the PAT in the environment;
+  `no-new-privileges` does not stop that.
 
 ## Why it matters
 
