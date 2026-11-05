@@ -42,6 +42,11 @@ would register two runners for the same jobs.
   - `no-new-privileges` blocks the image's passwordless `sudo`, so jobs
     cannot become root in the container.
   - Its own `ci-runner` network keeps it off `ce-v2-network`.
+  - It reaches Portainer over `portainer-webhooks`, an external network shared
+    only with the Portainer container. The webhook secrets point at
+    `http://portainer:9000/api/stacks/webhooks/<id>`, so the calls never leave
+    Docker. We did not use the `proxy` network: that would also put the runner
+    next to Traefik and everything it routes to.
 - **Pinned image and `pull_policy: missing`.** The prod job calls the prod
   stack webhook, which redeploys the stack that holds the runner. A changed
   image would recreate the container while it is finishing that job. The

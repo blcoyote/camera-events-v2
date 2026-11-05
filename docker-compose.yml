@@ -134,6 +134,10 @@ services:
       - no-new-privileges:true
     networks:
       - ci-runner
+      # Shared only with the Portainer container, so the release webhooks can
+      # use http://portainer:9000/api/stacks/webhooks/<id> without leaving
+      # Docker. Create it once and connect Portainer (see README).
+      - portainer-webhooks
     labels:
       - 'traefik.enable=false'
 
@@ -163,4 +167,6 @@ networks:
   ce-v2-network:
   ci-runner:
   proxy:
+    external: true
+  portainer-webhooks:
     external: true
