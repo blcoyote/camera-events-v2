@@ -104,6 +104,15 @@ The release workflow ([promote-release.yml](.github/workflows/promote-release.ym
 2. Set the result as `GITHUB_RUNNER_REGISTRATION_TOKEN` on the prod stack and redeploy within the hour.
 3. Check that the runner shows as idle under _Settings → Actions → Runners_.
 
+The runner calls Portainer's stack webhooks over a dedicated Docker network, `portainer-webhooks`, which it shares only with the Portainer container. Create it once on the host before deploying the prod stack:
+
+```bash
+docker network create portainer-webhooks
+docker network connect portainer-webhooks portainer
+```
+
+A container that is recreated (for example on a Portainer upgrade) loses networks added with `docker network connect`, so also add `portainer-webhooks` wherever Portainer's own container is defined. Set the repository secrets `TEST_WEBHOOK_URL` and `RELEASE_WEBHOOK_URL` to `http://portainer:9000/api/stacks/webhooks/<webhook-id>`, taking each ID from the stack's webhook URL in Portainer. Port 9000 is Portainer's plain-HTTP port; the request stays on the Docker network. If Portainer runs with `--http-disabled`, use port 9443 with a certificate the runner trusts instead.
+
 The registration is kept on the `ce-v2-runner` volume, so restarts and redeploys don't need a new token. To register again (volume lost, runner removed in GitHub, or a new image tag), remove the volume and repeat the steps. The repository is public, so keep _Settings → Actions → General → "Require approval for all external contributors"_ on. Otherwise a pull request from a fork could run code on the runner. Rationale: [docs/memory/decisions/2026-11-05-self-hosted-release-runner.md](docs/memory/decisions/2026-11-05-self-hosted-release-runner.md).
 
 ## Conventions
