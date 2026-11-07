@@ -5,6 +5,11 @@ import type { ComponentProps, ReactNode } from 'react'
 import '@testing-library/jest-dom/vitest'
 import { TabBar } from './TabBar'
 import { withLocale } from '#/test-utils/locale'
+import { useTabBarViewportRepair } from './useTabBarViewportRepair'
+
+vi.mock('./useTabBarViewportRepair', () => ({
+  useTabBarViewportRepair: vi.fn(),
+}))
 
 let mockUser: unknown = { firstName: 'A' }
 let mockPath = '/cameras'
@@ -148,6 +153,13 @@ describe('TabBar', () => {
       const { container } = render(<TabBar />)
       expect(getIndicator(container)?.style.opacity).toBe('0')
     })
+  })
+
+  it('passes a ref attached to the nav to the viewport repair hook', () => {
+    render(<TabBar />)
+    const nav = screen.getByRole('navigation', { name: 'Primary' })
+    const ref = vi.mocked(useTabBarViewportRepair).mock.calls[0]?.[0]
+    expect(ref?.current).toBe(nav)
   })
 
   it('renders an aria-hidden spacer', () => {

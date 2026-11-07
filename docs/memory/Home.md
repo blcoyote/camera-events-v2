@@ -65,6 +65,7 @@ this vault is meant to be used.
 - [[gotchas/unlayered-css-beats-tailwind-utilities]] — an unlayered rule in `src/styles.css` beats every utility; element rules go in `@layer base`
 - [[gotchas/ios-status-bar-ignores-app-theme]] — iOS standalone status bar follows the system appearance, not the app's light/dark toggle; accepted
 - [[gotchas/ios-overscroll-behavior-on-html]] — Safari only honours `overscroll-behavior` on `html`; `none` there stops the native pull-to-refresh and bounce
+- [[gotchas/ios-standalone-fixed-tab-bar-drift]] — after resume, WebKit can strand the fixed tab bar mid-screen; `useTabBarViewportRepair` re-lays it out and corrects against `visualViewport`
 - [[gotchas/traefik-entrypoint-headers-override-router]] — HSTS, X-Frame-Options, Referrer-Policy and nosniff come from portainer-traefik's `secure-headers@file`; app labels for them are ignored
 
 ## 🧪 Conventions
