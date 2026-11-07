@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { Link, useRouteContext, useRouterState } from '@tanstack/react-router'
 import { m } from '#/paraglide/messages.js'
 import { TABS, getActiveTab } from './navigation'
+import { useTabBarViewportRepair } from './useTabBarViewportRepair'
 
 export function TabBar() {
   const { user } = useRouteContext({ from: '__root__' })
@@ -15,12 +16,15 @@ export function TabBar() {
     if (activeIndex >= 0) lastIndex.current = activeIndex
   }, [activeIndex])
   const shownIndex = activeIndex >= 0 ? activeIndex : lastIndex.current
+  const navRef = useRef<HTMLElement>(null)
+  useTabBarViewportRepair(navRef)
   if (!user) return null
 
   return (
     <>
       <div aria-hidden="true" className="h-14 sm:hidden" />
       <nav
+        ref={navRef}
         aria-label={m.shell_nav_primary()}
         className="glass-header fixed inset-x-0 bottom-0 z-40 rounded-none border-t border-border pb-[env(safe-area-inset-bottom)] shadow-none sm:hidden"
       >
