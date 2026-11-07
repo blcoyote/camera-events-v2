@@ -156,6 +156,7 @@ describe('TabBar', () => {
   })
 
   it('passes a ref attached to the nav to the viewport repair hook', () => {
+    vi.mocked(useTabBarViewportRepair).mockClear()
     render(<TabBar />)
     const nav = screen.getByRole('navigation', { name: 'Primary' })
     const ref = vi.mocked(useTabBarViewportRepair).mock.calls[0]?.[0]

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { renderHook } from '@testing-library/react'
+import { cleanup, renderHook } from '@testing-library/react'
 import { useTabBarViewportRepair } from './useTabBarViewportRepair'
 
 type VV = EventTarget & {
@@ -79,6 +79,7 @@ beforeEach(() => {
 })
 
 afterEach(() => {
+  cleanup()
   vi.useRealTimers()
   vi.restoreAllMocks()
   nav.remove()
