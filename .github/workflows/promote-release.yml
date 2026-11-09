@@ -65,7 +65,7 @@ jobs:
       # crane re-tags in the registry directly: no Docker daemon needed, so the
       # self-hosted runner does not get the host's Docker socket. The
       # multi-arch index is tagged as-is (same digest).
-      - uses: imjasonh/setup-crane@v0.4
+      - uses: imjasonh/setup-crane@v0.7
 
       - name: Log in to GitHub Container Registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | crane auth login "${{ env.REGISTRY }}" -u "${{ github.actor }}" --password-stdin
