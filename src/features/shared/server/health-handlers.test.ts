@@ -56,8 +56,7 @@ describe('handleReadiness', () => {
     const result = await handleReadiness('/tmp/nonexistent.db')
 
     expect(result.status).toBe(200)
-    expect(result.body.status).toBe('ok')
-    expect(result.body.checks.database.status).toBe('ok')
+    expect(result.body).toEqual({ status: 'ok' })
   })
 
   it('returns 200 when DB is accessible', async () => {
@@ -72,8 +71,7 @@ describe('handleReadiness', () => {
     const result = await handleReadiness('/tmp/existing.db')
 
     expect(result.status).toBe(200)
-    expect(result.body.status).toBe('ok')
-    expect(result.body.checks.database.status).toBe('ok')
+    expect(result.body).toEqual({ status: 'ok' })
     expect(mockDb.close).toHaveBeenCalled()
   })
 
@@ -86,10 +84,7 @@ describe('handleReadiness', () => {
     const result = await handleReadiness('/tmp/bad.db')
 
     expect(result.status).toBe(503)
-    expect(result.body.status).toBe('degraded')
-    expect(result.body.checks.database.status).toBe('error')
-    expect(result.body.checks.database.message).not.toContain('SQLITE_CANTOPEN')
-    expect(result.body.checks.database.message).toBe('Database check failed')
+    expect(result.body).toEqual({ status: 'degraded' })
     expect(errSpy).toHaveBeenCalledWith(
       expect.stringContaining('SQLITE_CANTOPEN'),
     )
@@ -113,9 +108,7 @@ describe('handleReadiness', () => {
 
     const result = await handleReadiness('/tmp/bad.db')
 
-    expect(result.body.checks.database.status).toBe('error')
-    expect(result.body.checks.database.message).not.toContain('disk I/O error')
-    expect(result.body.checks.database.message).toBe('Database check failed')
+    expect(result.body).toEqual({ status: 'degraded' })
     expect(mockDb.close).toHaveBeenCalled()
     expect(errSpy).toHaveBeenCalledWith(
       expect.stringContaining('disk I/O error'),
@@ -124,51 +117,14 @@ describe('handleReadiness', () => {
     errSpy.mockRestore()
   })
 
-  it('reports the injected mqtt state', async () => {
-    vi.mocked(existsSync).mockReturnValue(false)
+  it('returns only the status, no details', async () => {
+    vi.mocked(existsSync).mockReturnValue(true)
+    vi.mocked(openSqlite).mockRejectedValue(new Error('SQLITE_CANTOPEN'))
+    vi.spyOn(console, 'error').mockImplementation(() => {})
 
-    const connected = await handleReadiness(
-      '/tmp/nonexistent.db',
-      () => 'connected',
-    )
-    expect(connected.body.checks.mqtt.status).toBe('connected')
+    const result = await handleReadiness('/tmp/bad.db')
 
-    _clearDbCheckCache()
-
-    const disconnected = await handleReadiness(
-      '/tmp/nonexistent.db',
-      () => 'disconnected',
-    )
-    expect(disconnected.body.checks.mqtt.status).toBe('disconnected')
-
-    _clearDbCheckCache()
-
-    const notConfigured = await handleReadiness(
-      '/tmp/nonexistent.db',
-      () => 'not_configured',
-    )
-    expect(notConfigured.body.checks.mqtt.status).toBe('not_configured')
-  })
-
-  it('defaults mqtt to not_configured when no getter is provided', async () => {
-    vi.mocked(existsSync).mockReturnValue(false)
-
-    const result = await handleReadiness('/tmp/nonexistent.db')
-
-    expect(result.body.checks.mqtt.status).toBe('not_configured')
-  })
-
-  it('includes an ISO timestamp', async () => {
-    vi.mocked(existsSync).mockReturnValue(false)
-    delete process.env.MQTT_URL
-
-    const before = Date.now()
-    const result = await handleReadiness('/tmp/nonexistent.db')
-    const after = Date.now()
-
-    const ts = new Date(result.body.timestamp).getTime()
-    expect(ts).toBeGreaterThanOrEqual(before)
-    expect(ts).toBeLessThanOrEqual(after)
+    expect(result.body).toEqual({ status: 'degraded' })
   })
 })
 
