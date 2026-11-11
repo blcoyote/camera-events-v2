@@ -21,6 +21,7 @@ Heuristics: 1 Status 2 (Pending copy says "checking" after polling stops, :139) 
 Specificity: glass system applied faithfully, but the layout is a generic record-detail template; no burst context, "nothing since" or live link. Detector: source 0 findings; in-page desktop 5-7 nested-cards (tiles = false positives; clip <details> :331 = real), mobile 0. Muted contrast 6.2-6.7:1.
 
 Priority issues:
+
 - [P1] Clip is not the hero: it sits in a collapsible <details> below the snapshot, has no poster and lands below the fold. Fix: clip first with snapshot as poster, snapshot as fallback, drop the accordion. (layout)
 - [P1] Error/Ghost states: "Event not found" for every error; no Ghost state; Pending never becomes Ghost; copy names Frigate. Fix: separate titles, re-check at the deadline, plain copy. (harden, clarify)
 - [P2] Downloads disguised as metadata: button wraps dt/dd (InfoCard.tsx:40-48). Fix: explicit download actions near the media; drop "Clip: None". (distill)

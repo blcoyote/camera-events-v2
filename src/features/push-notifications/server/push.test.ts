@@ -2,10 +2,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
 // Mock web-push before importing the module under test
 vi.mock('web-push', () => ({
-  default: {
-    setVapidDetails: vi.fn(),
-    sendNotification: vi.fn(),
-  },
+  setVapidDetails: vi.fn(),
+  sendNotification: vi.fn(),
 }))
 
 // Mock push-store
@@ -79,7 +77,7 @@ describe('push module', () => {
     })
 
     it('sendPushNotification calls web-push with correct payload', async () => {
-      const webPush = (await import('web-push')).default
+      const webPush = await import('web-push')
       const sendMock = vi
         .mocked(webPush.sendNotification)
         .mockResolvedValue({} as any)
@@ -105,7 +103,7 @@ describe('push module', () => {
     })
 
     it('removes subscription on 410 response', async () => {
-      const webPush = (await import('web-push')).default
+      const webPush = await import('web-push')
       const error = new Error('Gone') as any
       error.statusCode = 410
       vi.mocked(webPush.sendNotification).mockRejectedValue(error)
@@ -133,7 +131,7 @@ describe('push module', () => {
     })
 
     it('rejects without removing the subscription when the send times out', async () => {
-      const webPush = (await import('web-push')).default
+      const webPush = await import('web-push')
       const error = new Error('Request timed out')
       vi.mocked(webPush.sendNotification).mockRejectedValue(error)
 
@@ -158,7 +156,7 @@ describe('push module', () => {
     })
 
     it('re-throws non-410 errors', async () => {
-      const webPush = (await import('web-push')).default
+      const webPush = await import('web-push')
       const error = new Error('Server Error') as any
       error.statusCode = 500
       vi.mocked(webPush.sendNotification).mockRejectedValue(error)
