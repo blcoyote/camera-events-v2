@@ -4,6 +4,7 @@ import {
   handleGetAvailabilityPreference,
   handleSetAvailabilityPreference,
 } from '#/features/push-notifications/server/push-handlers'
+import { log } from '#/features/shared/server/log'
 
 export const Route = createFileRoute('/api/push/availability-preference')({
   server: {
@@ -24,10 +25,9 @@ export const Route = createFileRoute('/api/push/availability-preference')({
             headers: { 'Content-Type': 'application/json' },
           })
         } catch (err) {
-          console.error(
-            '[push/availability-preference GET] Unhandled error:',
-            err,
-          )
+          log.error('push/availability-preference', 'Unhandled error', err, {
+            method: 'GET',
+          })
           return new Response(JSON.stringify({ error: 'internal_error' }), {
             status: 500,
             headers: { 'Content-Type': 'application/json' },
@@ -69,10 +69,9 @@ export const Route = createFileRoute('/api/push/availability-preference')({
             headers: { 'Content-Type': 'application/json' },
           })
         } catch (err) {
-          console.error(
-            '[push/availability-preference PUT] Unhandled error:',
-            err,
-          )
+          log.error('push/availability-preference', 'Unhandled error', err, {
+            method: 'PUT',
+          })
           return new Response(JSON.stringify({ error: 'internal_error' }), {
             status: 500,
             headers: { 'Content-Type': 'application/json' },

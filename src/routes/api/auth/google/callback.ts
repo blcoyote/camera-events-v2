@@ -17,6 +17,7 @@ import { decryptOAuthState } from '#/features/auth/server/auth-crypto'
 import { recordUserLogin } from '#/features/auth/server/record-user-login'
 import { getUserStore } from '#/features/shared/server/users/user-store'
 import { startNewAppSession } from '#/features/shared/server/session'
+import { log } from '#/features/shared/server/log'
 
 export const Route = createFileRoute('/api/auth/google/callback')({
   server: {
@@ -96,7 +97,9 @@ export const Route = createFileRoute('/api/auth/google/callback')({
             const userStore = await getUserStore()
             recordUserLogin(userStore, sessionData, process.env.ADMIN_EMAILS)
           } catch (error) {
-            console.warn('[auth] failed to record user login', error)
+            log.warn('auth', 'Failed to record user login', {
+              reason: error instanceof Error ? error.message : String(error),
+            })
           }
 
           // Write session — always rotate (new id/createdAt) at sign-in

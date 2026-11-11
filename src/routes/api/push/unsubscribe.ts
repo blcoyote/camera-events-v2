@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { getAppSession } from '#/features/shared/server/session'
 import { handleUnsubscribe } from '#/features/push-notifications/server/push-handlers'
+import { log } from '#/features/shared/server/log'
 
 export const Route = createFileRoute('/api/push/unsubscribe')({
   server: {
@@ -39,7 +40,7 @@ export const Route = createFileRoute('/api/push/unsubscribe')({
             headers: { 'Content-Type': 'application/json' },
           })
         } catch (err) {
-          console.error('[push/unsubscribe] Unhandled error:', err)
+          log.error('push/unsubscribe', 'Unhandled error', err)
           return new Response(JSON.stringify({ error: 'internal_error' }), {
             status: 500,
             headers: { 'Content-Type': 'application/json' },

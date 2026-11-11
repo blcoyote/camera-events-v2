@@ -17,6 +17,7 @@
 | `EVENT_BURST_GAP_MS`          | No                | Quiet gap before a camera alerts again instead of patching (default 600000ms)                                               |
 | `APPLE_UPDATE_INTERVAL_MS`    | No                | Min spacing between patch pushes to one Apple endpoint; 0 disables (default 300000ms)                                       |
 | `CAMERA_OFFLINE_THRESHOLD`    | No                | Consecutive zero-`camera_fps` `frigate/stats` readings before a camera is flagged offline (default 10)                      |
+| `LOG_LEVEL`                   | No                | `debug`\|`info`\|`warn`\|`error` (default `info`); server logs are JSON lines on stdout                                     |
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | No                | OTLP collector base URL (e.g. `http://alloy:4318`); metrics are pushed every 30s, and unset means metrics are off           |
 | `OTEL_EXPORTER_OTLP_PROTOCOL` | No                | OTLP wire format; compose sets `http/json` (the exporter in use sends JSON)                                                 |
 | `OTEL_SERVICE_NAME`           | No                | Metrics `service.name` (`camera-events-v2` in both stacks)                                                                  |

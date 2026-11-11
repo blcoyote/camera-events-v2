@@ -10,6 +10,7 @@ import { getUserStore } from '#/features/shared/server/users/user-store'
 import type { FavoriteEntry } from './types'
 import { getFavoritesStore } from './favorites-store'
 import type { FavoritesStore } from './favorites-store'
+import { log } from '#/features/shared/server/log'
 
 /**
  * Retention calls for one event run one at a time, so a retain cannot overtake
@@ -43,9 +44,17 @@ export async function retainIfFirst(
     if (store.getReferenceCount(eventId) === 0) return
     try {
       const r = await retainEvent(eventId)
-      if (!r.ok) console.warn('retain failed', r)
+      if (!r.ok)
+        log.warn('favorites', 'Retain failed', {
+          event_id: eventId,
+          status: r.status,
+          reason: r.error,
+        })
     } catch (e) {
-      console.warn('retain error', e)
+      log.warn('favorites', 'Retain error', {
+        event_id: eventId,
+        reason: e instanceof Error ? e.message : String(e),
+      })
     }
   })
 }
@@ -60,9 +69,17 @@ export async function unretainIfLast(
     if (store.getReferenceCount(eventId) !== 0) return
     try {
       const r = await unretainEvent(eventId)
-      if (!r.ok) console.warn('unretain failed', r)
+      if (!r.ok)
+        log.warn('favorites', 'Unretain failed', {
+          event_id: eventId,
+          status: r.status,
+          reason: r.error,
+        })
     } catch (e) {
-      console.warn('unretain error', e)
+      log.warn('favorites', 'Unretain error', {
+        event_id: eventId,
+        reason: e instanceof Error ? e.message : String(e),
+      })
     }
   })
 }

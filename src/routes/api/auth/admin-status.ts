@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { getAppSession } from '#/features/shared/server/session'
 import { handleGetAdminStatus } from '#/features/auth/server/admin-status-handlers'
+import { log } from '#/features/shared/server/log'
 
 export const Route = createFileRoute('/api/auth/admin-status')({
   server: {
@@ -26,7 +27,7 @@ export const Route = createFileRoute('/api/auth/admin-status')({
             },
           })
         } catch (err) {
-          console.error('[auth/admin-status GET] Unhandled error:', err)
+          log.error('auth/admin-status', 'Unhandled error', err)
           return new Response(JSON.stringify({ error: 'internal_error' }), {
             status: 500,
             headers: { 'Content-Type': 'application/json' },

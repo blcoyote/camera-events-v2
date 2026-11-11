@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { getAppSession } from '#/features/shared/server/session'
 import { handleTest } from '#/features/push-notifications/server/push-handlers'
+import { log } from '#/features/shared/server/log'
 
 export const Route = createFileRoute('/api/push/test')({
   server: {
@@ -21,7 +22,7 @@ export const Route = createFileRoute('/api/push/test')({
             headers: { 'Content-Type': 'application/json' },
           })
         } catch (err) {
-          console.error('[push/test] Unhandled error:', err)
+          log.error('push/test', 'Unhandled error', err)
           return new Response(JSON.stringify({ error: 'internal_error' }), {
             status: 500,
             headers: { 'Content-Type': 'application/json' },

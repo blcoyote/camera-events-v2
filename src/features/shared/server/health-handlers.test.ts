@@ -6,6 +6,11 @@ import {
 } from './health-handlers'
 import { openSqlite } from '#/features/shared/server/sqlite'
 import { existsSync } from 'node:fs'
+import { log } from '#/features/shared/server/log'
+
+vi.mock('#/features/shared/server/log', () => ({
+  log: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
+}))
 
 vi.mock('#/features/shared/server/sqlite', () => ({
   openSqlite: vi.fn(),
@@ -79,17 +84,17 @@ describe('handleReadiness', () => {
     vi.mocked(existsSync).mockReturnValue(true)
     vi.mocked(openSqlite).mockRejectedValue(new Error('SQLITE_CANTOPEN'))
     delete process.env.MQTT_URL
-    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 
     const result = await handleReadiness('/tmp/bad.db')
 
     expect(result.status).toBe(503)
     expect(result.body).toEqual({ status: 'degraded' })
-    expect(errSpy).toHaveBeenCalledWith(
-      expect.stringContaining('SQLITE_CANTOPEN'),
+    expect(log.error).toHaveBeenCalledWith(
+      'health',
+      'Readiness DB check failed',
+      expect.any(Error),
+      { detail: 'SQLITE_CANTOPEN' },
     )
-
-    errSpy.mockRestore()
   })
 
   it('closes the DB even when query throws', async () => {
@@ -104,23 +109,22 @@ describe('handleReadiness', () => {
     }
     vi.mocked(openSqlite).mockResolvedValue(mockDb as never)
     delete process.env.MQTT_URL
-    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 
     const result = await handleReadiness('/tmp/bad.db')
 
     expect(result.body).toEqual({ status: 'degraded' })
     expect(mockDb.close).toHaveBeenCalled()
-    expect(errSpy).toHaveBeenCalledWith(
-      expect.stringContaining('disk I/O error'),
+    expect(log.error).toHaveBeenCalledWith(
+      'health',
+      'Readiness DB check failed',
+      expect.any(Error),
+      { detail: 'disk I/O error' },
     )
-
-    errSpy.mockRestore()
   })
 
   it('returns only the status, no details', async () => {
     vi.mocked(existsSync).mockReturnValue(true)
     vi.mocked(openSqlite).mockRejectedValue(new Error('SQLITE_CANTOPEN'))
-    vi.spyOn(console, 'error').mockImplementation(() => {})
 
     const result = await handleReadiness('/tmp/bad.db')
 
