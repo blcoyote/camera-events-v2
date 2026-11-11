@@ -44,7 +44,7 @@ this vault is meant to be used.
 - [[decisions/2026-10-13-app-owned-session-cookie]] — sessions sealed by the app via `iron-webcrypto`, byte-compatible with the old h3 cookies; absolute expiry, rotation at sign-in, no cookie for anonymous visitors
 - [[decisions/2026-09-21-admin-global-notification-mute]] — admin silences all push for a chosen duration (10 minutes to 6 hours); deadline in SQLite, enforced at dispatch
 - [[decisions/2026-10-14-delivery-module]] — one Delivery module owns Mute, fan-out and send; a Burst Alert swallowed by Mute is promoted on the first unmuted flush
-- [[decisions/2026-11-05-self-hosted-release-runner]] — release workflow on one self-hosted runner in the prod Portainer stack; official image, nothing runs as root, no stored PAT
+- [[decisions/2026-11-05-self-hosted-release-runner]] — release workflow on one self-hosted runner in its own Portainer stack; official image, nothing runs as root, no stored PAT
 - [[decisions/2026-10-17-single-glossary-and-vocabulary]] — CONTEXT.md is the only domain glossary; Ghost, Alert, Availability, Device, Favorite and Patch-count vocabulary settled
 - [[decisions/2026-10-24-glassmorphism-shadcn-design-system]] — Glassmorphism tokens (`--gl-*`) → shadcn semantic vars → Tailwind; light only, Radix overlays, iOS status bar `default`
 - [[decisions/2026-10-24-glassmorphism-dark-mode]] — dark mode via `:root.dark` over `--gl-*` primitives; navy `#0b1424`, light/dark/auto toggle in header + Settings

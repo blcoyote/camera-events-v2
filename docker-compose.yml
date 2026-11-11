@@ -94,60 +94,6 @@ services:
     labels:
       - 'traefik.enable=false'
 
-  # Self-hosted GitHub Actions runner for the release workflow
-  # (.github/workflows/promote-release.yml). It lives only in this prod compose
-  # file, not in docker-compose.test.yml, so the two Portainer stacks run a
-  # single runner between them.
-  #
-  # GitHub's official image. Nothing in it runs as root: the image's user is
-  # `runner`, and no-new-privileges blocks the image's passwordless sudo.
-  # No PAT is stored: it registers once with a one-hour registration token
-  # (GITHUB_RUNNER_REGISTRATION_TOKEN) and keeps its install and registration
-  # on the ce-v2-runner volume, so restarts skip registration. To register
-  # again, remove the volume and set a fresh token.
-  #
-  # The image is pinned so a prod redeploy (which this runner triggers) cannot
-  # recreate it mid-job. The runner binary updates itself inside the volume.
-  # Its own network keeps it off ce-v2-network; host-published ports (MQTT
-  # 1883) are still reachable through the host's address, like from any LAN
-  # machine.
-  github-runner:
-    image: ghcr.io/actions/actions-runner:2.338.2
-    pull_policy: missing
-    restart: unless-stopped
-    environment:
-      RUNNER_TOKEN: ${GITHUB_RUNNER_REGISTRATION_TOKEN:-}
-    command:
-      - bash
-      - -c
-      - |
-        set -e
-        if [ ! -f .runner ]; then
-          if [ -z "$$RUNNER_TOKEN" ]; then
-            echo 'Runner is not registered. Set GITHUB_RUNNER_REGISTRATION_TOKEN on the stack (see README, "Release runner").' >&2
-            exit 1
-          fi
-          ./config.sh --unattended --replace \
-            --url https://github.com/blcoyote/camera-events-v2 \
-            --token "$$RUNNER_TOKEN" \
-            --name camera-events-portainer \
-            --labels camera-events-deploy
-        fi
-        unset RUNNER_TOKEN
-        exec ./run.sh
-    volumes:
-      - ce-v2-runner:/home/runner
-    security_opt:
-      - no-new-privileges:true
-    networks:
-      - ci-runner
-      # Shared only with the Portainer container, so the release webhooks can
-      # use http://portainer:9000/api/stacks/webhooks/<id> without leaving
-      # Docker. Create it once and connect Portainer (see README).
-      - portainer-webhooks
-    labels:
-      - 'traefik.enable=false'
-
 configs:
   rabbitmq-plugins:
     content: |
@@ -168,14 +114,10 @@ configs:
 volumes:
   ce-v2-data:
   rabbitmq-data:
-  ce-v2-runner:
 
 networks:
   ce-v2-network:
-  ci-runner:
   proxy:
     external: true
   observability:
-    external: true
-  portainer-webhooks:
     external: true

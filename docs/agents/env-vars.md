@@ -23,6 +23,6 @@
 | `OTEL_SERVICE_NAME`           | No                | Metrics `service.name` (`camera-events-v2` in both stacks)                                                                  |
 | `OTEL_RESOURCE_ATTRIBUTES`    | No                | Resource attributes; compose sets `service.instance.id=prod,deployment.environment.name=prod` (test stack: `test` for both) |
 
-`GITHUB_RUNNER_REGISTRATION_TOKEN` (prod Portainer stack only, not read by the app): one-hour runner registration token from `gh api -X POST repos/blcoyote/camera-events-v2/actions/runners/registration-token --jq .token`. The `github-runner` compose service uses it only on first start to register the self-hosted release runner; see README, "Release runner".
+`GITHUB_RUNNER_REGISTRATION_TOKEN` (runner Portainer stack only, not read by the app): one-hour runner registration token from `gh api -X POST repos/blcoyote/camera-events-v2/actions/runners/registration-token --jq .token`. The `github-runner` compose service uses it only on first start to register the self-hosted release runner; see README, "Release runner".
 
 Generate VAPID keys with: `npx web-push generate-vapid-keys`
