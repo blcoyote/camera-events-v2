@@ -28,9 +28,9 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  # Both jobs run on the self-hosted runner in the Portainer prod stack
-  # (`github-runner` service in docker-compose.yml), so the deploy webhooks
-  # can point at Portainer's LAN address.
+  # Both jobs run on the self-hosted runner in its own Portainer stack
+  # (`github-runner` service in docker-compose.runner.yml), so the deploy
+  # webhooks can point at Portainer's LAN address.
   promote-to-test:
     if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: [self-hosted, camera-events-deploy]

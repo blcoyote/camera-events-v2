@@ -3,11 +3,11 @@ tags: [decision, ci, deployment, portainer]
 created: 2026-11-05
 ---
 
-# Release workflow runs on a self-hosted runner in the prod stack
+# Release workflow runs on a self-hosted runner in its own stack
 
 > `promote-release.yml` runs on one self-hosted GitHub Actions runner, the
-> `github-runner` service in `docker-compose.yml` (the Portainer **prod**
-> stack). The test stack has no runner.
+> `github-runner` service in `docker-compose.runner.yml`, deployed as its own
+> Portainer stack. Neither app stack has a runner.
 
 ## Context
 
@@ -19,8 +19,10 @@ would register two runners for the same jobs.
 
 ## Decision
 
-- **One runner, prod stack only.** `github-runner` is in `docker-compose.yml`
-  and not in `docker-compose.test.yml`. Its label is `camera-events-deploy`.
+- **One runner, in its own stack.** `github-runner` is in
+  `docker-compose.runner.yml`, not in either app compose file. Its label is
+  `camera-events-deploy`. (Until 2026-11-11 it lived in the prod stack; it
+  moved out so the prod webhook it calls cannot redeploy it mid-job.)
   Both promote jobs use `runs-on: [self-hosted, camera-events-deploy]`.
 - **GitHub's official image,** `ghcr.io/actions/actions-runner`, pinned to a
   version. The image's user is `runner` and it has no entrypoint script, so
@@ -47,12 +49,10 @@ would register two runners for the same jobs.
     `http://portainer:9000/api/stacks/webhooks/<id>`, so the calls never leave
     Docker. We did not use the `proxy` network: that would also put the runner
     next to Traefik and everything it routes to.
-- **Pinned image and `pull_policy: missing`.** The prod job calls the prod
-  stack webhook, which redeploys the stack that holds the runner. A changed
-  image would recreate the container while it is finishing that job. The
-  runner binary updates itself inside the volume. Because the volume holds
-  the install, bumping the image tag only takes effect after the volume is
-  recreated (and the runner registered again).
+- **Pinned image.** The runner binary updates itself inside the volume.
+  Because the volume holds the install, bumping the image tag only takes
+  effect after the volume is recreated (and the runner registered again).
+  GHCR publishes no major-only tag (`:2`), only exact versions and `:latest`.
 - **No Docker daemon in the workflow:** the retag uses `crane tag` (via
   `imjasonh/setup-crane`) instead of `docker buildx imagetools create`. `crane`
   talks to the registry directly and keeps the multi-arch index digest.
@@ -67,9 +67,10 @@ would register two runners for the same jobs.
 
 ## Alternatives
 
-- **Separate `ci-runner` stack.** Avoids the self-redeploy edge case
-  completely. Not chosen because the request was to keep it in the app stack.
-  Moving it out later only means copying the service into its own compose file.
+- **Runner in the prod app stack (first version).** Replaced: the prod job
+  calls the prod stack webhook, which redeployed the stack holding the runner,
+  so a changed image could recreate the container mid-job. That needed
+  `pull_policy: missing` as a workaround.
 - **Compose profile enabled in one stack only.** Not needed: test and prod
   already use separate compose files.
 - **Mount the Docker socket and keep `buildx imagetools`.** Rejected: the

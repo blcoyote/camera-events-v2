@@ -100,13 +100,13 @@ Persistent state:
 
 ### Release runner
 
-The release workflow ([promote-release.yml](.github/workflows/promote-release.yml)) runs on a self-hosted GitHub Actions runner: the `github-runner` service in [docker-compose.yml](docker-compose.yml). It is only in the prod compose file, so the test and prod stacks share one runner. It uses GitHub's official runner image and registers once, with a registration token that expires after one hour:
+The release workflow ([promote-release.yml](.github/workflows/promote-release.yml)) runs on a self-hosted GitHub Actions runner: the `github-runner` service in [docker-compose.runner.yml](docker-compose.runner.yml), deployed as its own Portainer stack, so the test and prod stacks share one runner and a prod deploy never redeploys it. It uses GitHub's official runner image and registers once, with a registration token that expires after one hour:
 
 1. Run `gh api -X POST repos/blcoyote/camera-events-v2/actions/runners/registration-token --jq .token`.
-2. Set the result as `GITHUB_RUNNER_REGISTRATION_TOKEN` on the prod stack and redeploy within the hour.
+2. Set the result as `GITHUB_RUNNER_REGISTRATION_TOKEN` on the runner stack and deploy it within the hour.
 3. Check that the runner shows as idle under _Settings → Actions → Runners_.
 
-The runner calls Portainer's stack webhooks over a dedicated Docker network, `portainer-webhooks`, which it shares only with the Portainer container. Create it once on the host before deploying the prod stack:
+The runner calls Portainer's stack webhooks over a dedicated Docker network, `portainer-webhooks`, which it shares only with the Portainer container. Create it once on the host before deploying the runner stack:
 
 ```bash
 docker network create portainer-webhooks
