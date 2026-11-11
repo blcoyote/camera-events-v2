@@ -4,7 +4,7 @@ import {
   InMemoryMetricExporter,
   PeriodicExportingMetricReader,
 } from '@opentelemetry/sdk-metrics'
-import { SpanKind, trace } from '@opentelemetry/api'
+import { SpanKind, SpanStatusCode, trace } from '@opentelemetry/api'
 import {
   InMemorySpanExporter,
   SimpleSpanProcessor,
@@ -814,6 +814,51 @@ describe('pipeline spans', () => {
       'push.burst_start': true,
     })
     expect(sendSpanParent).toBe(batch.spanContext().spanId)
+  })
+
+  it('dispatchBatch logs flush and failure inside push.batch, marking it ERROR', async () => {
+    const { dispatchBatch } = await import('./mqtt')
+    const { log: freshLog } = await import('#/features/shared/server/log')
+    const seen: Record<string, string | undefined> = {}
+    vi.mocked(freshLog.info).mockImplementation((_c, msg) => {
+      seen[msg] = trace.getActiveSpan()?.spanContext().spanId
+    })
+    vi.mocked(freshLog.error).mockImplementation((_c, msg) => {
+      seen[msg] = trace.getActiveSpan()?.spanContext().spanId
+      trace.getActiveSpan()?.setStatus({ code: SpanStatusCode.ERROR })
+    })
+    notifyMock.mockRejectedValueOnce(new Error('boom'))
+    dispatchBatch('front_porch', [], { burstStart: false })
+    await new Promise((r) => setTimeout(r, 0))
+    const batch = exporter
+      .getFinishedSpans()
+      .find((s) => s.name === 'push.batch')!
+    expect(seen['Flushing detection batch']).toBe(batch.spanContext().spanId)
+    expect(seen['Push notification dispatch failed']).toBe(
+      batch.spanContext().spanId,
+    )
+    expect(batch.status.code).toBe(SpanStatusCode.ERROR)
+  })
+
+  it('dispatchAvailability logs transition and failure inside push.availability', async () => {
+    const { dispatchAvailability } = await import('./mqtt')
+    const { log: freshLog } = await import('#/features/shared/server/log')
+    const seen: Record<string, string | undefined> = {}
+    const capture = (_c: string, msg: string) => {
+      seen[msg] = trace.getActiveSpan()?.spanContext().spanId
+    }
+    vi.mocked(freshLog.info).mockImplementation(capture)
+    vi.mocked(freshLog.error).mockImplementation(capture)
+    vi.mocked(notifyUsersForCameraAvailability).mockRejectedValueOnce(
+      new Error('boom'),
+    )
+    dispatchAvailability('driveway', 'offline')
+    await new Promise((r) => setTimeout(r, 0))
+    const [span] = exporter.getFinishedSpans()
+    expect(seen['Camera availability changed']).toBe(span.spanContext().spanId)
+    expect(seen['Availability push dispatch failed']).toBe(
+      span.spanContext().spanId,
+    )
   })
 
   it('dispatchAvailability: push.availability root span', async () => {

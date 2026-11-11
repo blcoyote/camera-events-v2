@@ -58,12 +58,8 @@ export function dispatchBatch(
   events: DetectionInfo[],
   meta: FlushMeta,
 ): void {
-  log.info('mqtt', 'Flushing detection batch', {
-    camera,
-    count: events.length,
-    burst_start: meta.burstStart,
-  })
-  // Batches flush from a timer, so they start their own trace.
+  // Batches flush from a timer, so they start their own trace. Logs and error
+  // handling run inside it so they carry the batch's trace (log.error marks it).
   void withSpan(
     'push.batch',
     {
@@ -71,11 +67,20 @@ export function dispatchBatch(
       'frigate.event.ids': events.map((e) => e.id),
       'push.burst_start': meta.burstStart,
     },
-    () => notifyUsersForCamera(camera, events, meta),
+    async () => {
+      log.info('mqtt', 'Flushing detection batch', {
+        camera,
+        count: events.length,
+        burst_start: meta.burstStart,
+      })
+      try {
+        await notifyUsersForCamera(camera, events, meta)
+      } catch (err) {
+        log.error('mqtt', 'Push notification dispatch failed', err, { camera })
+      }
+    },
     { root: true },
-  ).catch((err) => {
-    log.error('mqtt', 'Push notification dispatch failed', err, { camera })
-  })
+  )
 }
 
 /** Singleton event batcher — flushes per-camera batches to push notifications. */
@@ -89,15 +94,19 @@ export function dispatchAvailability(
   camera: string,
   status: CameraAvailabilityStatus,
 ): void {
-  log.info('mqtt', 'Camera availability changed', { camera, status })
   void withSpan(
     'push.availability',
     { 'frigate.camera': camera, 'camera.status': status },
-    () => notifyUsersForCameraAvailability(camera, status),
+    async () => {
+      log.info('mqtt', 'Camera availability changed', { camera, status })
+      try {
+        await notifyUsersForCameraAvailability(camera, status)
+      } catch (err) {
+        log.error('mqtt', 'Availability push dispatch failed', err, { camera })
+      }
+    },
     { root: true },
-  ).catch((err) => {
-    log.error('mqtt', 'Availability push dispatch failed', err, { camera })
-  })
+  )
 }
 
 /** Singleton availability tracker — reassignable so tests can isolate state. */
