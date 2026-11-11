@@ -132,6 +132,7 @@ CREATE INDEX IF NOT EXISTS idx_event_shares_recipient ON event_shares(recipient_
 ```
 
 New store methods:
+
 - `addShare(eventId, senderId, recipientId)`: upsert that refreshes `created_at`.
 - `removeSharesForRecipient(recipientId, eventId)`.
 - `getSharesForRecipient(recipientId)`: rows `{ event_id, sender_id, created_at }`.
@@ -145,6 +146,7 @@ The existing `getFavoriteCount` is replaced by `getReferenceCount` in the retent
 **Users (`src/features/shared/server/users/user-store.ts`)**: `listUsers(): Array<{ sub, email, firstName, avatarUrl }>`. New server fn `getShareRecipientsFn` (GET), with its handler in `src/features/shared/server/users/`. It calls `requireSession()` first and returns everyone except the caller.
 
 **Send: `POST /api/events/$id/share`** (`src/routes/api/events/$id/share.ts`) with body `{ recipientIds: string[] }`. The handler is `handleShareEvent` in `src/features/push-notifications/server/share-handlers.ts`, in this order:
+
 1. `requireSession()` (401 on failure).
 2. Validate the input (400 on failure): `isValidEventId`; `recipientIds` is a non-empty array of strings, at most 50, de-duplicated, without the caller, and every ID exists in `users`.
 3. `getEvent(eventId)` (404 if it doesn't exist). This gives the label and camera for the notification text.
@@ -157,6 +159,7 @@ The service worker needs no change. It already shows payloads without `event` as
 **Delivery (`delivery.ts`)**: add `ignoreMute?: boolean` to `DeliveryRequest`. When true, skip the `isMuted` check, so no swallowed-burst bookkeeping happens either.
 
 **Favorites read path**: replace `getUserFavoritedEventsHandler` with `getFavoritesPageHandler` (behind the same `getUserFavoritedEventsFn`, renamed `getFavoritesPageFn`). It:
+
 - calls `requireSession()` first;
 - merges favorites and shares by event ID;
 - calls `getEvent` for each ID in parallel and drops IDs that aren't `ok`;
@@ -168,6 +171,7 @@ The service worker needs no change. It already shows payloads without `event` as
 **Detail page**: the route loader also calls `getReceivedSharesFn({ eventId })` (validated, `requireSession`), which returns `sharedBy: (string|null)[]`. `removeReceivedShareFn({ eventId })` (POST, `requireSession`, `isValidEventId`) calls `removeSharesForRecipient`, then `unretainIfLast`.
 
 **UI**
+
 - `src/features/shared/components/EventCard.tsx`: new optional prop `sharedBy?: (string|null)[]`. When non-empty, show the shared icon (`Share2`, matching the button) and the text "from {first}" or "from {first} +{n}".
 - `src/features/favorites/pages/FavoritesPage.tsx`: takes the new entries and passes `initialFavorited={favorited}` and `sharedBy`.
 - `src/features/camera-details/components/ShareButton.tsx`: picks the icon in `useEffect` from `navigator.userAgent` and `navigator.platform` (iPhone, iPad, Mac, or MacIntel with touch support counts as Apple).
@@ -179,23 +183,27 @@ The service worker needs no change. It already shows payloads without `event` as
 ## Acceptance Criteria
 
 **Store and retention**
+
 - AC1: `addShare` is idempotent per (event, sender, recipient) and refreshes `created_at`.
 - AC2: `getReferenceCount` = favorites + shares for the event, isolated per event.
 - AC3: `removeSharesForRecipient` deletes only that recipient's rows for that event.
 - AC4: The favorite toggle uses `getReferenceCount`. Favoriting an event that is already shared does not call retain, and unfavoriting while a share remains does not call unretain.
 
 **Share endpoint**
+
 - AC5: Returns 401 when there is no session. Returns 400 for an invalid event ID, an empty or non-array `recipientIds`, more than 50 recipients, an unknown recipient, or the caller as the only recipient. Returns 404 when Frigate doesn't have the event.
 - AC6: Recipients get one share row each, retain is called iff the reference count was 0 before, and delivery runs with `ignoreMute: true` and is eligible only for those recipients.
 - AC7: The payload has `url` `/camera-events/<id>`, `tag` `share:<id>`, no `event` field, and title and body in the device locale. An unknown sender name never occurs because the caller is always in `users`.
 - AC8: `Delivery` with `ignoreMute: true` sends while muted. Without it, the current behaviour is unchanged (existing tests stay green).
 
 **Read paths**
+
 - AC9: `getShareRecipientsFn` requires a session and excludes the caller.
 - AC10: `getFavoritesPageHandler` merges, de-duplicates, sorts newest first, drops events missing from Frigate, and resolves sender names (null for unknown senders).
 - AC11: `removeReceivedShareFn` requires a session, validates the event ID, removes only the caller's rows, and calls `unretainIfLast`.
 
 **UI**
+
 - AC12: `ShareButton` renders `Share2` on the server and on first render, and `Share` after mount on Apple user agents.
 - AC13: `ShareSheet` lists recipients, keeps Send disabled until someone is selected, shows "Sent ✓" then closes on 204, shows an `Alert` on failure, and shows the empty state when the list is empty.
 - AC14: `EventCard` with `sharedBy` shows the shared icon and "from X" / "from X +N" / "from someone". Without it, nothing changes.

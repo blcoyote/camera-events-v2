@@ -1,5 +1,5 @@
 import '@tanstack/react-start/server-only'
-import webPush from 'web-push'
+import * as webPush from 'web-push'
 import { getPushStore } from './push-store'
 import type { PushLocale } from './push-locale'
 

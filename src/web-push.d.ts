@@ -13,20 +13,15 @@ declare module 'web-push' {
     headers: Record<string, string>
   }
 
-  interface WebPush {
-    setVapidDetails: (
-      subject: string,
-      publicKey: string,
-      privateKey: string,
-    ) => void
-    sendNotification: (
-      subscription: PushSubscription,
-      payload: string | Buffer,
-      options?: { timeout?: number },
-    ) => Promise<SendResult>
-    generateVAPIDKeys: () => { publicKey: string; privateKey: string }
-  }
-
-  const webPush: WebPush
-  export default webPush
+  export function setVapidDetails(
+    subject: string,
+    publicKey: string,
+    privateKey: string,
+  ): void
+  export function sendNotification(
+    subscription: PushSubscription,
+    payload: string | Buffer,
+    options?: { timeout?: number },
+  ): Promise<SendResult>
+  export function generateVAPIDKeys(): { publicKey: string; privateKey: string }
 }

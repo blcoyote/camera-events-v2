@@ -46,6 +46,8 @@ export default defineConfig({
       project: './project.inlang',
       outdir: './src/paraglide',
       emitTsDeclarations: false,
+      // paraglide 3 defaults Vite to virtual-modules, which requires TS declarations
+      outputStructure: 'message-modules',
       strategy: ['cookie', 'preferredLanguage', 'baseLocale'],
     }),
     ...(isTest ? [] : [devtools(), tanstackStart(), nitro({ preset: 'bun' })]),
