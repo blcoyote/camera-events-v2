@@ -52,6 +52,7 @@ this vault is meant to be used.
 - [[decisions/2026-10-31-paraglide-localisation]] — English + Danish via Paraglide; system language, cookie override, per-subscription push locale
 - [[decisions/2026-11-01-event-sharing]] — `event_shares` table; Retention counts Favorites + Shares; share push bypasses Mute
 - [[decisions/2026-11-02-origin-aware-breadcrumbs]] — `?from=` origin param; routes declare trails in `staticData`; replaces `getPageTitle`
+- [[decisions/2026-11-11-otlp-push-metrics]] — metrics pushed over OTLP/HTTP JSON to Alloy every 30 s; own MeterProvider, no sdk-node (Bun), environment in `service.instance.id`
 
 ## ⚠️ Gotchas
 
