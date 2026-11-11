@@ -155,7 +155,7 @@ Code: `src/features/shared/server/tracing/index.ts` (server-only).
   `OTEL_EXPORTER_OTLP_ENDPOINT` is set. When on:
   - registers `AsyncLocalStorageContextManager` as the global context manager
     (needed for parent lookup across `await`);
-  - holds its own `BasicTracerProvider` (not the `@opentelemetry/api` global
+  - holds its own `TracerProvider` (3.x name of `BasicTracerProvider`) (not the `@opentelemetry/api` global
     tracer provider, same import-order reason as metrics) with a
     `BatchSpanProcessor` and `OTLPTraceExporter`; same resource as metrics.
 - Always sample. No `traceparent` header is sent to Frigate.

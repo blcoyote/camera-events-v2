@@ -30,7 +30,7 @@ trace_id, span_id, ...fields}`. Same format in every environment. `LOG_LEVEL`
   pipeline is unchanged.
 - **Traces: manual spans, own provider.** `@opentelemetry/sdk-trace` 3.x (the
   renamed `sdk-trace-base`) with `BatchSpanProcessor` and
-  `exporter-trace-otlp-http`, held in a module-local `BasicTracerProvider`, on
+  `exporter-trace-otlp-http`, held in a module-local `TracerProvider` (3.x name of `BasicTracerProvider`), on
   only when `OTEL_EXPORTER_OTLP_ENDPOINT` is set. Context crosses `await`s via
   `AsyncLocalStorageContextManager`.
 - **Spans:** one server span per request (not assets or health probes),
