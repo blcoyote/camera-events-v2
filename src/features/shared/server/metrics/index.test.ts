@@ -4,7 +4,14 @@ import {
   PeriodicExportingMetricReader,
 } from '@opentelemetry/sdk-metrics'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { _resetMetricsForTests, startMetrics, withRequestMetrics } from '.'
+import {
+  _resetMetricsForTests,
+  observeMqttConnection,
+  recordMqttMessage,
+  recordPushSend,
+  startMetrics,
+  withRequestMetrics,
+} from '.'
 
 vi.mock('@tanstack/react-start/server-only', () => ({}))
 
@@ -156,5 +163,66 @@ describe('metrics', () => {
       'http.response.status_class',
       'request.kind',
     ])
+  })
+})
+
+describe('recordMqttMessage', () => {
+  it.each([
+    ['frigate/events', 'frigate/events'],
+    ['frigate/reviews', 'frigate/reviews'],
+    ['frigate/stats', 'frigate/stats'],
+    ['frigate/available', 'frigate/available'],
+    ['frigate/front/person', 'other'],
+  ])('counts %s as topic %s', async (topic, expected) => {
+    const reader = start()
+    recordMqttMessage(topic)
+    recordMqttMessage(topic)
+    const { metric } = await collect(reader)
+    const [point] = metric('mqtt.messages')?.dataPoints ?? []
+    expect(point).toMatchObject({ attributes: { topic: expected }, value: 2 })
+  })
+
+  it('is a no-op before metrics start', () => {
+    expect(() => recordMqttMessage('frigate/events')).not.toThrow()
+  })
+})
+
+describe('observeMqttConnection', () => {
+  it.each([
+    [true, 1],
+    [false, 0],
+  ])('reports connected=%s as %i', async (connected, value) => {
+    observeMqttConnection(() => connected)
+    const reader = start()
+    const { metric } = await collect(reader)
+    expect(metric('mqtt.connected')?.dataPoints[0]?.value).toBe(value)
+  })
+
+  it('reports 0 when no connection getter was registered', async () => {
+    const reader = start()
+    const { metric } = await collect(reader)
+    expect(metric('mqtt.connected')?.dataPoints[0]?.value).toBe(0)
+  })
+})
+
+describe('recordPushSend', () => {
+  it('counts sends by kind and outcome', async () => {
+    const reader = start()
+    recordPushSend('motion', 'ok')
+    recordPushSend('motion', 'ok')
+    recordPushSend('share', 'failed')
+    const { metric } = await collect(reader)
+    const points = metric('push.sends')?.dataPoints ?? []
+    expect(points.map((p) => [p.attributes, p.value])).toEqual(
+      expect.arrayContaining([
+        [{ kind: 'motion', outcome: 'ok' }, 2],
+        [{ kind: 'share', outcome: 'failed' }, 1],
+      ]),
+    )
+    expect(points).toHaveLength(2)
+  })
+
+  it('is a no-op before metrics start', () => {
+    expect(() => recordPushSend('availability', 'expired')).not.toThrow()
   })
 })
