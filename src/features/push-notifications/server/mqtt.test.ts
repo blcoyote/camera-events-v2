@@ -4,6 +4,11 @@ import {
   InMemoryMetricExporter,
   PeriodicExportingMetricReader,
 } from '@opentelemetry/sdk-metrics'
+import { SpanKind, SpanStatusCode, trace } from '@opentelemetry/api'
+import {
+  InMemorySpanExporter,
+  SimpleSpanProcessor,
+} from '@opentelemetry/sdk-trace'
 import { clearFrigateCache } from '#/features/shared/server/frigate/cache'
 import { notifyUsersForCamera } from './push-notify'
 import { notifyUsersForCameraAvailability } from './availability-notify'
@@ -715,5 +720,157 @@ describe('mqtt metrics', () => {
       .at(-1)[1]
     connectHandler()
     expect((await read())?.dataPoints[0]?.value).toBe(1)
+  })
+})
+
+describe('pipeline spans', () => {
+  const notifyMock = vi.mocked(notifyUsersForCamera)
+  let exporter: InMemorySpanExporter
+  let tracing: typeof import('#/features/shared/server/tracing')
+
+  beforeEach(async () => {
+    // Earlier suites reset modules; load tracing fresh so ./mqtt shares this copy.
+    vi.resetModules()
+    tracing = await import('#/features/shared/server/tracing')
+    exporter = new InMemorySpanExporter()
+    tracing.startTracing(new SimpleSpanProcessor({ exporter }))
+  })
+  afterEach(async () => {
+    await tracing._resetTracingForTests()
+  })
+
+  const newEvent = (id: string) =>
+    Buffer.from(
+      JSON.stringify({
+        type: 'new',
+        after: {
+          id,
+          camera: 'front_porch',
+          label: 'person',
+          start_time: 1,
+        },
+      }),
+    )
+
+  it('frigate/events new event: consumer span, outcome batched', async () => {
+    const { onFrigateMessage } = await import('./mqtt')
+    onFrigateMessage('frigate/events', newEvent('e1'))
+    const [span, ...rest] = exporter.getFinishedSpans()
+    expect(rest).toHaveLength(0)
+    expect(span.name).toBe('mqtt frigate/events')
+    expect(span.kind).toBe(SpanKind.CONSUMER)
+    expect(span.attributes).toEqual({
+      'frigate.camera': 'front_porch',
+      'frigate.event.id': 'e1',
+      'frigate.label': 'person',
+      'mqtt.outcome': 'batched',
+    })
+  })
+
+  it('frigate/events malformed or non-new: outcome ignored', async () => {
+    const { onFrigateMessage } = await import('./mqtt')
+    onFrigateMessage('frigate/events', Buffer.from('nope'))
+    onFrigateMessage('frigate/events', Buffer.from('{"type":"update"}'))
+    const spans = exporter.getFinishedSpans()
+    expect(spans).toHaveLength(2)
+    for (const s of spans) expect(s.attributes['mqtt.outcome']).toBe('ignored')
+  })
+
+  it('frigate/stats creates no span', async () => {
+    const { onFrigateMessage } = await import('./mqtt')
+    onFrigateMessage('frigate/stats', Buffer.from('{}'))
+    onFrigateMessage('frigate/available', Buffer.from('online'))
+    expect(exporter.getFinishedSpans()).toHaveLength(0)
+  })
+
+  it('dispatchBatch: push.batch root span, even inside another span', async () => {
+    const { dispatchBatch } = await import('./mqtt')
+    let sendSpanParent: string | undefined
+    notifyMock.mockImplementationOnce(async () => {
+      sendSpanParent = trace.getActiveSpan()?.spanContext().spanId
+    })
+    const ev = (id: string) => ({
+      id,
+      camera: 'front_porch',
+      label: 'person',
+      startTime: 1,
+      hasSnapshot: false,
+      hasClip: false,
+    })
+    await tracing.withSpan('outer', {}, async () => {
+      dispatchBatch('front_porch', [ev('1'), ev('2')], { burstStart: true })
+    })
+    await new Promise((r) => setTimeout(r, 0))
+    const batch = exporter
+      .getFinishedSpans()
+      .find((s) => s.name === 'push.batch')!
+    const outer = exporter.getFinishedSpans().find((s) => s.name === 'outer')!
+    expect(batch.kind).toBe(SpanKind.INTERNAL)
+    expect(batch.parentSpanContext).toBeUndefined()
+    expect(batch.spanContext().traceId).not.toBe(outer.spanContext().traceId)
+    expect(batch.attributes).toEqual({
+      'frigate.camera': 'front_porch',
+      'frigate.event.ids': ['1', '2'],
+      'push.burst_start': true,
+    })
+    expect(sendSpanParent).toBe(batch.spanContext().spanId)
+  })
+
+  it('dispatchBatch logs flush and failure inside push.batch, marking it ERROR', async () => {
+    const { dispatchBatch } = await import('./mqtt')
+    const { log: freshLog } = await import('#/features/shared/server/log')
+    const seen: Record<string, string | undefined> = {}
+    vi.mocked(freshLog.info).mockImplementation((_c, msg) => {
+      seen[msg] = trace.getActiveSpan()?.spanContext().spanId
+    })
+    vi.mocked(freshLog.error).mockImplementation((_c, msg) => {
+      seen[msg] = trace.getActiveSpan()?.spanContext().spanId
+      trace.getActiveSpan()?.setStatus({ code: SpanStatusCode.ERROR })
+    })
+    notifyMock.mockRejectedValueOnce(new Error('boom'))
+    dispatchBatch('front_porch', [], { burstStart: false })
+    await new Promise((r) => setTimeout(r, 0))
+    const batch = exporter
+      .getFinishedSpans()
+      .find((s) => s.name === 'push.batch')!
+    expect(seen['Flushing detection batch']).toBe(batch.spanContext().spanId)
+    expect(seen['Push notification dispatch failed']).toBe(
+      batch.spanContext().spanId,
+    )
+    expect(batch.status.code).toBe(SpanStatusCode.ERROR)
+  })
+
+  it('dispatchAvailability logs transition and failure inside push.availability', async () => {
+    const { dispatchAvailability } = await import('./mqtt')
+    const { log: freshLog } = await import('#/features/shared/server/log')
+    const seen: Record<string, string | undefined> = {}
+    const capture = (_c: string, msg: string) => {
+      seen[msg] = trace.getActiveSpan()?.spanContext().spanId
+    }
+    vi.mocked(freshLog.info).mockImplementation(capture)
+    vi.mocked(freshLog.error).mockImplementation(capture)
+    vi.mocked(notifyUsersForCameraAvailability).mockRejectedValueOnce(
+      new Error('boom'),
+    )
+    dispatchAvailability('driveway', 'offline')
+    await new Promise((r) => setTimeout(r, 0))
+    const [span] = exporter.getFinishedSpans()
+    expect(seen['Camera availability changed']).toBe(span.spanContext().spanId)
+    expect(seen['Availability push dispatch failed']).toBe(
+      span.spanContext().spanId,
+    )
+  })
+
+  it('dispatchAvailability: push.availability root span', async () => {
+    const { dispatchAvailability } = await import('./mqtt')
+    dispatchAvailability('driveway', 'offline')
+    await new Promise((r) => setTimeout(r, 0))
+    const [span] = exporter.getFinishedSpans()
+    expect(span.name).toBe('push.availability')
+    expect(span.parentSpanContext).toBeUndefined()
+    expect(span.attributes).toEqual({
+      'frigate.camera': 'driveway',
+      'camera.status': 'offline',
+    })
   })
 })

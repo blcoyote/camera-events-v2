@@ -1,4 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { SpanKind, SpanStatusCode } from '@opentelemetry/api'
+import {
+  InMemorySpanExporter,
+  SimpleSpanProcessor,
+} from '@opentelemetry/sdk-trace'
+import {
+  _resetTracingForTests,
+  startTracing,
+} from '#/features/shared/server/tracing'
 import { createDelivery } from './delivery'
 import { log } from '#/features/shared/server/log'
 import type { DeliveryDeps, DeliveryRequest } from './delivery'
@@ -709,5 +718,67 @@ describe('createDelivery push.sends metric', () => {
       makeRequest({ allowEndpoint: () => false }),
     )
     expect(await sends()).toEqual([])
+  })
+})
+
+describe('createDelivery push.send spans', () => {
+  let exporter: InMemorySpanExporter
+  beforeEach(() => {
+    vi.clearAllMocks()
+    exporter = new InMemorySpanExporter()
+    startTracing(new SimpleSpanProcessor({ exporter }))
+  })
+  afterEach(async () => {
+    await _resetTracingForTests()
+  })
+
+  const run = (send: DeliveryDeps['send']) =>
+    createDelivery(
+      makeDeps({
+        send,
+        getStore: () =>
+          Promise.resolve(makeStore({ user_secret: [makeSub(1), makeSub(2)] })),
+      }),
+    ).deliver(makeRequest({ kind: 'share' }))
+
+  it('one client span per subscription with kind, host, outcome', async () => {
+    await run(vi.fn(() => Promise.resolve()))
+    const spans = exporter.getFinishedSpans()
+    expect(spans).toHaveLength(2)
+    for (const s of spans) {
+      expect(s.name).toBe('push.send')
+      expect(s.kind).toBe(SpanKind.CLIENT)
+      expect(s.attributes).toEqual({
+        'push.kind': 'share',
+        'push.service.host': 'push.example',
+        'push.outcome': 'ok',
+      })
+    }
+  })
+
+  it('expired outcome', async () => {
+    await run(vi.fn(() => Promise.resolve('expired' as const)))
+    for (const s of exporter.getFinishedSpans())
+      expect(s.attributes['push.outcome']).toBe('expired')
+  })
+
+  it('rejected send: failed, ERROR with error name only, no leaks', async () => {
+    const err = new Error('boom https://push.example/1')
+    err.name = 'WebPushError'
+    await run(vi.fn(() => Promise.reject(err)))
+    const spans = exporter.getFinishedSpans()
+    expect(spans).toHaveLength(2)
+    for (const s of spans) {
+      expect(s.attributes['push.outcome']).toBe('failed')
+      expect(s.status).toEqual({
+        code: SpanStatusCode.ERROR,
+        message: 'WebPushError',
+      })
+      expect(s.events).toHaveLength(0)
+    }
+    const all = JSON.stringify(spans.map((s) => s.attributes))
+    expect(all).not.toContain('https://push.example')
+    expect(all).not.toContain('user_secret')
+    expect(JSON.stringify(spans.map((s) => s.status))).not.toContain('https://')
   })
 })
