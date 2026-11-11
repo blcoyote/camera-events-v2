@@ -8,11 +8,7 @@ export function computeTabBarOffset(input: {
   viewportScale: number
 }): number {
   const { navBottom, viewportBottom, viewportScale } = input
-  if (
-    !Number.isFinite(navBottom) ||
-    !Number.isFinite(viewportBottom) ||
-    !Number.isFinite(viewportScale)
-  ) {
+  if (![navBottom, viewportBottom, viewportScale].every(Number.isFinite)) {
     return 0
   }
   if (viewportScale < 0.99 || viewportScale > 1.01) return 0
