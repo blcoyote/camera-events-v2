@@ -1,5 +1,7 @@
 import '@tanstack/react-start/server-only'
+import { SpanKind } from '@opentelemetry/api'
 import { log } from '#/features/shared/server/log'
+import { withSpan, withSpanSync } from '#/features/shared/server/tracing'
 import mqtt from 'mqtt'
 import type { MqttClient } from 'mqtt'
 import { clearFrigateCache } from '#/features/shared/server/frigate/cache'
@@ -61,7 +63,17 @@ export function dispatchBatch(
     count: events.length,
     burst_start: meta.burstStart,
   })
-  notifyUsersForCamera(camera, events, meta).catch((err) => {
+  // Batches flush from a timer, so they start their own trace.
+  void withSpan(
+    'push.batch',
+    {
+      'frigate.camera': camera,
+      'frigate.event.ids': events.map((e) => e.id),
+      'push.burst_start': meta.burstStart,
+    },
+    () => notifyUsersForCamera(camera, events, meta),
+    { root: true },
+  ).catch((err) => {
     log.error('mqtt', 'Push notification dispatch failed', err, { camera })
   })
 }
@@ -78,7 +90,12 @@ export function dispatchAvailability(
   status: CameraAvailabilityStatus,
 ): void {
   log.info('mqtt', 'Camera availability changed', { camera, status })
-  notifyUsersForCameraAvailability(camera, status).catch((err) => {
+  void withSpan(
+    'push.availability',
+    { 'frigate.camera': camera, 'camera.status': status },
+    () => notifyUsersForCameraAvailability(camera, status),
+    { root: true },
+  ).catch((err) => {
     log.error('mqtt', 'Availability push dispatch failed', err, { camera })
   })
 }
@@ -149,19 +166,33 @@ export function onFrigateMessage(topic: string, payload: Buffer): void {
   }
 
   if (topic === 'frigate/events') {
-    const event = parseFrigateEvent(payload)
-    if (event) {
-      log.info('mqtt', 'New detection', {
-        label: event.label,
-        camera: event.camera,
-        event_id: event.id,
-      })
-      eventBatcher.add(event)
-    } else {
-      log.debug('mqtt', 'Ignored message, not a new event or malformed', {
-        topic,
-      })
-    }
+    withSpanSync(
+      'mqtt frigate/events',
+      {},
+      (span) => {
+        const event = parseFrigateEvent(payload)
+        if (event) {
+          span?.setAttributes({
+            'frigate.camera': event.camera,
+            'frigate.event.id': event.id,
+            'frigate.label': event.label,
+            'mqtt.outcome': 'batched',
+          })
+          log.info('mqtt', 'New detection', {
+            label: event.label,
+            camera: event.camera,
+            event_id: event.id,
+          })
+          eventBatcher.add(event)
+        } else {
+          span?.setAttribute('mqtt.outcome', 'ignored')
+          log.debug('mqtt', 'Ignored message, not a new event or malformed', {
+            topic,
+          })
+        }
+      },
+      { kind: SpanKind.CONSUMER },
+    )
   } else if (topic === 'frigate/stats') {
     const camerasFps = parseFrigateStatsMessage(payload)
     if (camerasFps) {

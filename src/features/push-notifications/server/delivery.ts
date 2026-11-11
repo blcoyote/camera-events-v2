@@ -1,4 +1,6 @@
 import '@tanstack/react-start/server-only'
+import { SpanKind, SpanStatusCode } from '@opentelemetry/api'
+import { withSpan } from '#/features/shared/server/tracing'
 import { log } from '#/features/shared/server/log'
 import type { PushPayload, PushSendOutcome, PushSubscriptionInfo } from './push'
 import type { PushStore, PushSubscriptionRow } from './push-store'
@@ -138,13 +140,41 @@ export function createDelivery(
           continue
         }
         try {
-          const outcome = await deps.send(
+          const sent = await withSpan(
+            'push.send',
             {
-              endpoint: sub.endpoint,
-              keys: { p256dh: sub.p256dh, auth: sub.auth },
+              'push.kind': request.kind,
+              'push.service.host': hostOf(sub.endpoint),
             },
-            payloadFor(isPushLocale(sub.locale) ? sub.locale : 'en'),
+            async (span) => {
+              try {
+                const result = await deps.send(
+                  {
+                    endpoint: sub.endpoint,
+                    keys: { p256dh: sub.p256dh, auth: sub.auth },
+                  },
+                  payloadFor(isPushLocale(sub.locale) ? sub.locale : 'en'),
+                )
+                span?.setAttribute(
+                  'push.outcome',
+                  result === 'expired' ? 'expired' : 'ok',
+                )
+                return { result }
+              } catch (err) {
+                span?.setAttribute('push.outcome', 'failed')
+                // Name only, and no throw out of the span (withSpan would
+                // recordException): the raw error can echo the endpoint.
+                span?.setStatus({
+                  code: SpanStatusCode.ERROR,
+                  message: err instanceof Error ? err.name : typeof err,
+                })
+                return { err }
+              }
+            },
+            { kind: SpanKind.CLIENT },
           )
+          if ('err' in sent) throw sent.err
+          const outcome = sent.result
           recordPushSend(request.kind, outcome === 'expired' ? 'expired' : 'ok')
           // An expired endpoint is gone: nobody was there to alert.
           if (outcome !== 'expired') {

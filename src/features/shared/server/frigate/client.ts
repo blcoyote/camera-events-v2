@@ -1,4 +1,7 @@
 import '@tanstack/react-start/server-only'
+import { SpanKind, SpanStatusCode } from '@opentelemetry/api'
+import type { Span } from '@opentelemetry/api'
+import { withSpan } from '#/features/shared/server/tracing'
 import { getFrigateUrl, DEFAULT_TIMEOUT_MS } from './config'
 import type { FrigateResult } from './config'
 import { frigateCache } from './cache'
@@ -17,6 +20,24 @@ import type {
   GetReviewSummaryParams,
   GetTimelineParams,
 } from './types'
+
+/** Client span for one real Frigate call; url.path is the path only (no host, no query). */
+function frigateSpan<T>(
+  method: string,
+  path: string,
+  fn: (span: Span | undefined) => Promise<T>,
+): Promise<T> {
+  return withSpan(
+    `frigate ${method}`,
+    { 'http.request.method': method, 'url.path': path },
+    fn,
+    { kind: SpanKind.CLIENT },
+  )
+}
+
+function spanError(span: Span | undefined, message: string) {
+  span?.setStatus({ code: SpanStatusCode.ERROR, message })
+}
 
 function loadMock() {
   return import('./mock-client')
@@ -51,24 +72,29 @@ async function frigateFetch<T>(
   extract: (res: Response) => Promise<T>,
   timeoutMs: number = DEFAULT_TIMEOUT_MS,
 ): Promise<FrigateResult<T>> {
-  try {
-    const url = buildUrl(path, params)
-    const response = await fetch(url, {
-      signal: AbortSignal.timeout(timeoutMs),
-    })
-    if (!response.ok) {
-      return {
-        ok: false,
-        error: `HTTP ${response.status}`,
-        status: response.status,
+  return frigateSpan('GET', path, async (span) => {
+    try {
+      const url = buildUrl(path, params)
+      const response = await fetch(url, {
+        signal: AbortSignal.timeout(timeoutMs),
+      })
+      span?.setAttribute('http.response.status_code', response.status)
+      if (!response.ok) {
+        spanError(span, `HTTP ${response.status}`)
+        return {
+          ok: false,
+          error: `HTTP ${response.status}`,
+          status: response.status,
+        }
       }
+      const data = await extract(response)
+      return { ok: true, data }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err)
+      spanError(span, message)
+      return { ok: false, error: message }
     }
-    const data = await extract(response)
-    return { ok: true, data }
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err)
-    return { ok: false, error: message }
-  }
+  })
 }
 
 async function frigateGet<T>(
@@ -102,24 +128,29 @@ async function frigateWrite(
   path: string,
   timeoutMs: number = DEFAULT_TIMEOUT_MS,
 ): Promise<FrigateResult<void>> {
-  try {
-    const url = buildUrl(path)
-    const response = await fetch(url, {
-      method,
-      signal: AbortSignal.timeout(timeoutMs),
-    })
-    if (!response.ok) {
-      return {
-        ok: false,
-        error: `HTTP ${response.status}`,
-        status: response.status,
+  return frigateSpan(method, path, async (span) => {
+    try {
+      const url = buildUrl(path)
+      const response = await fetch(url, {
+        method,
+        signal: AbortSignal.timeout(timeoutMs),
+      })
+      span?.setAttribute('http.response.status_code', response.status)
+      if (!response.ok) {
+        spanError(span, `HTTP ${response.status}`)
+        return {
+          ok: false,
+          error: `HTTP ${response.status}`,
+          status: response.status,
+        }
       }
+      return { ok: true, data: undefined }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err)
+      spanError(span, message)
+      return { ok: false, error: message }
     }
-    return { ok: true, data: undefined }
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err)
-    return { ok: false, error: message }
-  }
+  })
 }
 
 function frigateBinary(
@@ -217,31 +248,38 @@ export async function getEventClipStream(
   if (process.env.FRIGATE_MOCK === 'true')
     return (await loadMock()).getEventClipStream(eventId, options, timeoutMs)
 
-  try {
-    const url = buildUrl(`/api/events/${eventId}/clip.mp4`)
-    const headers = new Headers()
-    if (options?.rangeHeader !== undefined) {
-      headers.set('Range', options.rangeHeader)
+  const path = `/api/events/${eventId}/clip.mp4`
+  // The span ends when headers arrive; the body stream is not awaited.
+  return frigateSpan('GET', path, async (span) => {
+    try {
+      const url = buildUrl(path)
+      const headers = new Headers()
+      if (options?.rangeHeader !== undefined) {
+        headers.set('Range', options.rangeHeader)
+      }
+      const response = await fetch(url, {
+        headers,
+        signal: AbortSignal.timeout(timeoutMs),
+      })
+      span?.setAttribute('http.response.status_code', response.status)
+      if (!response.ok) spanError(span, `HTTP ${response.status}`)
+      // Reserve `ok: false` for true network failures (caught below). When
+      // Frigate responds at all — even with 4xx/5xx — we hand the status back
+      // so the proxy can mirror it (e.g. 416 for a malformed Range, per AC20).
+      return {
+        ok: true,
+        data: {
+          status: response.status,
+          body: response.body,
+          headers: response.headers,
+        },
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err)
+      spanError(span, message)
+      return { ok: false, error: message }
     }
-    const response = await fetch(url, {
-      headers,
-      signal: AbortSignal.timeout(timeoutMs),
-    })
-    // Reserve `ok: false` for true network failures (caught below). When
-    // Frigate responds at all — even with 4xx/5xx — we hand the status back
-    // so the proxy can mirror it (e.g. 416 for a malformed Range, per AC20).
-    return {
-      ok: true,
-      data: {
-        status: response.status,
-        body: response.body,
-        headers: response.headers,
-      },
-    }
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err)
-    return { ok: false, error: message }
-  }
+  })
 }
 
 export async function getEventSummary(
