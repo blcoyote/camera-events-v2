@@ -74,9 +74,36 @@ describe('log', () => {
     expect(lines()[0]).toMatchObject({
       level: 'error',
       msg: 'boom',
-      fields_error: expect.any(String),
+      log_error: expect.any(String),
     })
     expect(lines()[0]).toHaveProperty('err.message', 'x')
+  })
+
+  it('ignores a toJSON field so it cannot replace the line', async () => {
+    const log = await load()
+    log.info('c', 'm', { toJSON: () => ({ level: 'forged' }) })
+    expect(lines()[0]).toMatchObject({
+      level: 'info',
+      component: 'c',
+      msg: 'm',
+    })
+  })
+
+  it('never throws on a field with a throwing getter', async () => {
+    const log = await load()
+    const fields = {
+      get bad(): never {
+        throw new Error('getter')
+      },
+    }
+    expect(() => log.info('c', 'm', fields)).not.toThrow()
+    expect(lines()[0]).toMatchObject({ level: 'info', msg: 'm' })
+  })
+
+  it('never throws on a prototype-less error', async () => {
+    const log = await load()
+    expect(() => log.error('c', 'm', Object.create(null))).not.toThrow()
+    expect(lines()[0]).toMatchObject({ level: 'error', msg: 'm' })
   })
 
   it('does not let fields overwrite reserved keys', async () => {
@@ -230,6 +257,17 @@ describe('log', () => {
       expect(done.status.code).toBe(SpanStatusCode.ERROR)
       expect(done.status.message).toBe('bad')
       expect(done.events.map((e) => e.name)).toEqual(['exception'])
+    })
+
+    it('log.error with a prototype-less error still sets ERROR status', async () => {
+      const log = await load()
+      tracer.startActiveSpan('s', (span) => {
+        expect(() => log.error('c', 'bad', Object.create(null))).not.toThrow()
+        span.end()
+      })
+      await provider.forceFlush()
+      const [done] = exporter.getFinishedSpans()
+      expect(done.status.code).toBe(SpanStatusCode.ERROR)
     })
 
     it('log.error without err sets status but records no exception', async () => {

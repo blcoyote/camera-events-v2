@@ -248,8 +248,11 @@ describe('notifyUsersForCameraAvailability', () => {
     expect(log.error).toHaveBeenCalledWith(
       expect.any(String),
       'Push send failed',
-      expect.objectContaining({ message: 'boom' }),
-      { push_service_host: 'push.example' },
+      undefined,
+      expect.objectContaining({
+        push_service_host: 'push.example',
+        error_name: 'Error',
+      }),
     )
   })
 

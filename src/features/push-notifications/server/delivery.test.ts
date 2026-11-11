@@ -168,9 +168,14 @@ describe('createDelivery', () => {
 
     it('continues after a failing send and logs it', async () => {
       const store = makeStore({ u1: [makeSub(1), makeSub(2)] })
+      // Transport errors may echo the endpoint (a capability URL) in message or stack.
+      const leaky = Object.assign(
+        new Error('rejected https://push.example/1 auth=a1'),
+        { statusCode: 503, endpoint: 'https://push.example/1' },
+      )
       const send = vi
         .fn()
-        .mockRejectedValueOnce(new Error('boom'))
+        .mockRejectedValueOnce(leaky)
         .mockResolvedValue(undefined)
       const deps = makeDeps({ getStore: () => Promise.resolve(store), send })
       await createDelivery(deps).deliver(makeRequest())
@@ -178,12 +183,19 @@ describe('createDelivery', () => {
       expect(log.error).toHaveBeenCalledWith(
         'test-tag',
         'Push send failed',
-        expect.objectContaining({ message: 'boom' }),
-        { push_service_host: 'push.example' },
+        undefined,
+        {
+          push_service_host: 'push.example',
+          error_name: 'Error',
+          status_code: 503,
+        },
       )
-      expect(JSON.stringify(vi.mocked(log.error).mock.calls)).not.toContain(
-        'https://push.example/1',
-      )
+      const args = vi.mocked(log.error).mock.calls.flat()
+      for (const a of args) {
+        const text =
+          a instanceof Error ? `${a.message} ${a.stack}` : JSON.stringify(a)
+        expect(text ?? '').not.toContain('push.example/1')
+      }
     })
 
     it('logs device count and hosts without the user id or endpoint URL', async () => {

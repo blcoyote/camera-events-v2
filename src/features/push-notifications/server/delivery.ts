@@ -154,8 +154,11 @@ export function createDelivery(
         } catch (err) {
           recordPushSend(request.kind, 'failed')
           attempted++
-          log.error(logTag, 'Push send failed', err, {
+          // Not the error itself: transport errors can echo the endpoint, a capability URL.
+          log.error(logTag, 'Push send failed', undefined, {
             push_service_host: hostOf(sub.endpoint),
+            error_name: err instanceof Error ? err.name : typeof err,
+            status_code: (err as { statusCode?: unknown } | null)?.statusCode,
           })
         }
       }
