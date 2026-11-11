@@ -170,6 +170,7 @@ export async function notifyUsersForCamera(
 
   await (options.delivery ?? defaultDelivery).deliver({
     logTag: 'push-notify',
+    kind: 'motion',
     description: `Camera "${camera}": ${events.length} event(s)`,
     burst: { key: camera, start: meta.burstStart },
     isUserEligible: (userId, store) => {

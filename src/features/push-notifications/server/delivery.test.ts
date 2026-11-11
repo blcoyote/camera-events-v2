@@ -2,6 +2,15 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createDelivery } from './delivery'
 import type { DeliveryDeps, DeliveryRequest } from './delivery'
 import type { PushPayload, PushSubscriptionInfo } from './push'
+import {
+  AggregationTemporality,
+  InMemoryMetricExporter,
+  PeriodicExportingMetricReader,
+} from '@opentelemetry/sdk-metrics'
+import {
+  _resetMetricsForTests,
+  startMetrics,
+} from '#/features/shared/server/metrics'
 
 interface FakeSub {
   endpoint: string
@@ -60,6 +69,7 @@ function makeRequest(
 ): DeliveryRequest {
   return {
     logTag: 'test-tag',
+    kind: 'motion',
     description: 'Camera "x": 3 event(s)',
     isUserEligible: () => true,
     buildPayload: (burstStart) => makePayload(burstStart),
@@ -595,5 +605,81 @@ describe('createDelivery', () => {
       held.calls[0].resolve()
       await expect(second).resolves.toBeUndefined()
     })
+  })
+})
+
+describe('createDelivery push.sends metric', () => {
+  let logSpy: ReturnType<typeof vi.spyOn>
+  let errorSpy: ReturnType<typeof vi.spyOn>
+  let reader: PeriodicExportingMetricReader
+  beforeEach(() => {
+    logSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+    errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    reader = new PeriodicExportingMetricReader({
+      exporter: new InMemoryMetricExporter(AggregationTemporality.CUMULATIVE),
+      exportIntervalMillis: 60_000,
+    })
+    startMetrics(reader)
+  })
+  afterEach(async () => {
+    logSpy.mockRestore()
+    errorSpy.mockRestore()
+    await _resetMetricsForTests()
+  })
+
+  async function sends() {
+    const { resourceMetrics } = await reader.collect()
+    return (
+      resourceMetrics.scopeMetrics
+        .flatMap((s) => s.metrics)
+        .find((m) => m.descriptor.name === 'push.sends')?.dataPoints ?? []
+    ).map((p) => ({ attributes: p.attributes, value: p.value }))
+  }
+
+  it('records ok for a successful send', async () => {
+    await createDelivery(makeDeps()).deliver(makeRequest())
+    expect(await sends()).toEqual([
+      { attributes: { kind: 'motion', outcome: 'ok' }, value: 1 },
+    ])
+  })
+
+  it('records expired when the send resolves expired', async () => {
+    const send = vi.fn(() => Promise.resolve('expired' as const))
+    await createDelivery(makeDeps({ send })).deliver(makeRequest())
+    expect(await sends()).toEqual([
+      { attributes: { kind: 'motion', outcome: 'expired' }, value: 1 },
+    ])
+  })
+
+  it('records failed when the send throws', async () => {
+    const send = vi.fn(() => Promise.reject(new Error('boom')))
+    await createDelivery(makeDeps({ send })).deliver(makeRequest())
+    expect(await sends()).toEqual([
+      { attributes: { kind: 'motion', outcome: 'failed' }, value: 1 },
+    ])
+  })
+
+  it('takes the kind from the request', async () => {
+    const delivery = createDelivery(makeDeps())
+    await delivery.deliver(makeRequest({ kind: 'share' }))
+    await delivery.deliver(makeRequest({ kind: 'availability' }))
+    const points = await sends()
+    expect(points.map((p) => p.attributes.kind).sort()).toEqual([
+      'availability',
+      'share',
+    ])
+  })
+
+  it('records nothing for a muted delivery', async () => {
+    const deps = makeDeps({ isMuted: () => Promise.resolve(true) })
+    await createDelivery(deps).deliver(makeRequest())
+    expect(await sends()).toEqual([])
+  })
+
+  it('records nothing for an endpoint rejected by allowEndpoint', async () => {
+    await createDelivery(makeDeps()).deliver(
+      makeRequest({ allowEndpoint: () => false }),
+    )
+    expect(await sends()).toEqual([])
   })
 })
