@@ -1,4 +1,9 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
+import {
+  AggregationTemporality,
+  InMemoryMetricExporter,
+  PeriodicExportingMetricReader,
+} from '@opentelemetry/sdk-metrics'
 import { clearFrigateCache } from '#/features/shared/server/frigate/cache'
 import { notifyUsersForCamera } from './push-notify'
 import { notifyUsersForCameraAvailability } from './availability-notify'
@@ -645,5 +650,67 @@ describe('getMqttConnectionState', () => {
     )?.[1]
     closeHandler()
     expect(getMqttConnectionState()).toBe('disconnected')
+  })
+})
+
+describe('mqtt metrics', () => {
+  afterEach(async () => {
+    const { _resetMetricsForTests } = await import(
+      '#/features/shared/server/metrics'
+    )
+    await _resetMetricsForTests()
+    vi.resetModules()
+  })
+
+  async function collect(name: string) {
+    const { startMetrics } = await import('#/features/shared/server/metrics')
+    const exporter = new InMemoryMetricExporter(
+      AggregationTemporality.CUMULATIVE,
+    )
+    const reader = new PeriodicExportingMetricReader({
+      exporter,
+      exportIntervalMillis: 60_000,
+    })
+    startMetrics(reader)
+    return async () => {
+      const { resourceMetrics } = await reader.collect()
+      return resourceMetrics.scopeMetrics
+        .flatMap((s) => s.metrics)
+        .find((m) => m.descriptor.name === name)
+    }
+  }
+
+  it.each([
+    'frigate/events',
+    'frigate/reviews',
+    'frigate/stats',
+    'frigate/available',
+  ])('counts a %s message by topic (even if ignored)', async (topic) => {
+    const read = await collect('mqtt.messages')
+    const { onFrigateMessage } = await import('./mqtt')
+    onFrigateMessage(topic, Buffer.from('not json'))
+    const metric = await read()
+    const point = metric?.dataPoints.find(
+      (p) => p.attributes['topic'] === topic,
+    )
+    expect(point?.value).toBe(1)
+  })
+
+  it('reports mqtt.connected 0 by default and 1 once connected', async () => {
+    // resetModules: _resetMetricsForTests cleared the module-level getter
+    vi.resetModules()
+    process.env.MQTT_URL = 'mqtt://localhost:1883'
+    delete process.env.FRIGATE_MOCK
+    const read = await collect('mqtt.connected')
+    expect((await read())?.dataPoints[0]?.value).toBe(0)
+
+    const { startMqttSubscriber } = await import('./mqtt')
+    startMqttSubscriber()
+    const mockClient = await getMockClient()
+    const connectHandler = mockClient.on.mock.calls
+      .filter((c: [string, unknown]) => c[0] === 'connect')
+      .at(-1)[1]
+    connectHandler()
+    expect((await read())?.dataPoints[0]?.value).toBe(1)
   })
 })

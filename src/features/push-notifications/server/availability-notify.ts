@@ -64,6 +64,7 @@ export async function notifyUsersForCameraAvailability(
 ): Promise<void> {
   await (options.delivery ?? defaultDelivery).deliver({
     logTag: 'availability-notify',
+    kind: 'availability',
     description: `Camera "${camera}" ${status}`,
     isUserEligible: (userId, store) =>
       store.isCameraAvailabilityEnabledForUser(userId),

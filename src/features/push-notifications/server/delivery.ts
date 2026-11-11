@@ -6,6 +6,8 @@ import { getPushStore } from './push-store'
 import { areNotificationsMuted } from './notification-mute'
 import { isPushLocale } from './push-locale'
 import type { PushLocale } from './push-locale'
+import { recordPushSend } from '#/features/shared/server/metrics'
+import type { PushSendKind } from '#/features/shared/server/metrics'
 
 function hostOf(endpoint: string): string {
   try {
@@ -46,6 +48,8 @@ export interface DeliveryDeps {
 
 export interface DeliveryRequest {
   logTag: string
+  /** Which notification type this is, for the push.sends metric. */
+  kind: PushSendKind
   description: string
   /** Deliver even while globally muted (direct, user-initiated sends like shares). */
   ignoreMute?: boolean
@@ -139,12 +143,14 @@ export function createDelivery(
             },
             payloadFor(isPushLocale(sub.locale) ? sub.locale : 'en'),
           )
+          recordPushSend(request.kind, outcome === 'expired' ? 'expired' : 'ok')
           // An expired endpoint is gone: nobody was there to alert.
           if (outcome !== 'expired') {
             attempted++
             succeeded++
           }
         } catch (err) {
+          recordPushSend(request.kind, 'failed')
           attempted++
           console.error(
             `[${logTag}] Failed to send to ${sub.endpoint}:`,

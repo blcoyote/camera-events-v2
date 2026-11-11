@@ -91,6 +91,8 @@ A multi-stage [Dockerfile](Dockerfile) produces a small runtime image that runs 
 docker compose up -d --build
 ```
 
+Both stacks' app service also joins the external `observability` network and pushes metrics (OTLP over HTTP, every 30 s) to Alloy at `http://alloy:4318`. The network is created by the portainer-traefik observability stack (`docker network create observability`) and must exist before deploying, otherwise the deploy fails. Logs need nothing: Alloy tails container stdout. Metrics list and rationale: [docs/specs/observability-metrics.md](docs/specs/observability-metrics.md).
+
 Persistent state:
 
 - `ce-v2-data` — SQLite database (push subscriptions + per-camera preferences).

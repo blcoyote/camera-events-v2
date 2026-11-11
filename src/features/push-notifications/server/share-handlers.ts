@@ -70,6 +70,7 @@ export async function handleShareEvent(
 
   await (options.delivery ?? defaultDelivery).deliver({
     logTag: 'share',
+    kind: 'share',
     description: `Share of event ${eventId} to ${recipients.size} user(s)`,
     ignoreMute: true,
     isUserEligible: (id) => recipients.has(id),

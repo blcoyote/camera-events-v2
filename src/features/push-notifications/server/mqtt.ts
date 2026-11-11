@@ -2,6 +2,10 @@ import '@tanstack/react-start/server-only'
 import mqtt from 'mqtt'
 import type { MqttClient } from 'mqtt'
 import { clearFrigateCache } from '#/features/shared/server/frigate/cache'
+import {
+  observeMqttConnection,
+  recordMqttMessage,
+} from '#/features/shared/server/metrics'
 import { EventBatcher } from './event-batcher'
 import type { DetectionInfo, FlushMeta } from './event-batcher'
 import { notifyUsersForCamera } from './push-notify'
@@ -27,6 +31,9 @@ export type MqttConnectionState =
   | 'disconnected'
 
 let mqttConnectionState: MqttConnectionState = 'not_configured'
+
+// Module level so the gauge reports 0 even when the subscriber is skipped.
+observeMqttConnection(() => mqttConnectionState === 'connected')
 
 export function getMqttConnectionState(): MqttConnectionState {
   return mqttConnectionState
@@ -132,6 +139,8 @@ export function parseFrigateEvent(payload: Buffer): DetectionInfo | null {
  * camera availability tracker for online/offline push notifications.
  */
 export function onFrigateMessage(topic: string, payload: Buffer): void {
+  recordMqttMessage(topic)
+
   if (topic === 'frigate/events' || topic === 'frigate/reviews') {
     console.log(`[mqtt] Received message on ${topic} — clearing Frigate cache`)
     clearFrigateCache()
