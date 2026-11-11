@@ -134,12 +134,17 @@ const KNOWN_METHODS = new Set([
   'OPTIONS',
 ])
 
-function requestKind(pathname: string) {
+export function requestKind(pathname: string) {
   if (pathname.startsWith('/_serverFn')) return 'serverFn'
   if (pathname.startsWith('/api/')) return 'api'
   if (pathname.startsWith('/assets/') || ASSET_EXT.test(pathname))
     return 'asset'
   return 'page'
+}
+
+// Client-controlled: unknown verbs collapse to _OTHER (OTel semconv) to bound cardinality.
+export function normaliseMethod(method: string): string {
+  return KNOWN_METHODS.has(method) ? method : '_OTHER'
 }
 
 export function withRequestMetrics<A extends unknown[]>(
@@ -154,10 +159,7 @@ export function withRequestMetrics<A extends unknown[]>(
       return res
     } finally {
       instruments?.duration.record((performance.now() - start) / 1000, {
-        // Client-controlled: unknown verbs collapse to _OTHER (OTel semconv) to bound cardinality.
-        'http.request.method': KNOWN_METHODS.has(req.method)
-          ? req.method
-          : '_OTHER',
+        'http.request.method': normaliseMethod(req.method),
         'http.response.status_class': `${Math.floor(status / 100)}xx`,
         'request.kind': requestKind(new URL(req.url).pathname),
       })
