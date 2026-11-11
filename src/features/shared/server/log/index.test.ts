@@ -239,6 +239,19 @@ describe('log', () => {
       })
     })
 
+    it('keeps trace ids when fields cannot be serialised', async () => {
+      const log = await load()
+      tracer.startActiveSpan('s', (span) => {
+        log.info('c', 'm', { count: 1n })
+        expect(lines()[0]).toMatchObject({
+          trace_id: span.spanContext().traceId,
+          span_id: span.spanContext().spanId,
+          log_error: expect.any(String),
+        })
+        span.end()
+      })
+    })
+
     it('omits trace ids without an active span', async () => {
       const log = await load()
       log.info('c', 'm')

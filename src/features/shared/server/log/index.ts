@@ -34,16 +34,19 @@ function write(
 ) {
   if (LEVELS[level] < threshold) return
   const time = new Date().toISOString()
+  const ctx = trace.getActiveSpan()?.spanContext()
+  const ids =
+    ctx && isSpanContextValid(ctx)
+      ? { trace_id: ctx.traceId, span_id: ctx.spanId }
+      : undefined
   let out: string
   try {
-    const ctx = trace.getActiveSpan()?.spanContext()
-    const active = ctx && isSpanContextValid(ctx) ? ctx : undefined
     const line: Record<string, unknown> = {
       time,
       level,
       component,
       msg,
-      ...(active && { trace_id: active.traceId, span_id: active.spanId }),
+      ...ids,
       ...(err !== undefined && { err: serialiseError(err) }),
     }
     for (const [k, v] of Object.entries(fields ?? {}))
@@ -60,6 +63,7 @@ function write(
       level,
       component: String(component),
       msg: String(msg),
+      ...ids,
       ...(errOut && { err: errOut }),
       log_error: e instanceof Error ? e.message : 'unserialisable log input',
     })

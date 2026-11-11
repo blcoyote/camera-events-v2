@@ -25,6 +25,7 @@ services:
       OTEL_EXPORTER_OTLP_ENDPOINT: http://alloy:4318
       OTEL_EXPORTER_OTLP_PROTOCOL: http/json
       OTEL_SERVICE_NAME: camera-events-v2
+      LOG_LEVEL: ${LOG_LEVEL:-info}
       OTEL_RESOURCE_ATTRIBUTES: service.instance.id=prod,deployment.environment.name=prod
     volumes:
       - ce-v2-data:/app/data
