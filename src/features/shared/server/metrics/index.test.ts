@@ -1,5 +1,6 @@
 import {
   AggregationTemporality,
+  DataPointType,
   InMemoryMetricExporter,
   PeriodicExportingMetricReader,
 } from '@opentelemetry/sdk-metrics'
@@ -132,6 +133,20 @@ describe('metrics', () => {
       const value = metric(name)?.dataPoints[0]?.value as number
       expect(value).toBeGreaterThan(0)
     }
+  })
+
+  it('exports process.cpu.time as a monotonic sum by cpu.mode', async () => {
+    const { metric } = await collect(start())
+    const cpu = metric('process.cpu.time')
+    expect(cpu?.dataPointType).toBe(DataPointType.SUM)
+    expect(cpu).toMatchObject({ isMonotonic: true })
+    expect(cpu?.descriptor.unit).toBe('s')
+    const points = cpu?.dataPoints ?? []
+    expect(points.map((p) => p.attributes['cpu.mode']).sort()).toEqual([
+      'system',
+      'user',
+    ])
+    for (const p of points) expect(p.value as number).toBeGreaterThanOrEqual(0)
   })
 
   it('takes the resource from OTEL_* env vars', async () => {

@@ -82,6 +82,16 @@ export function startMetrics(reader?: MetricReader): void {
   meter
     .createObservableGauge('process.memory.heap_used', { unit: 'By' })
     .addCallback((r) => r.observe(process.memoryUsage().heapUsed))
+  meter
+    .createObservableCounter('process.cpu.time', {
+      unit: 's',
+      description: 'CPU time used by the process',
+    })
+    .addCallback((r) => {
+      const { user, system } = process.cpuUsage()
+      r.observe(user / 1e6, { 'cpu.mode': 'user' })
+      r.observe(system / 1e6, { 'cpu.mode': 'system' })
+    })
 }
 
 export async function _resetMetricsForTests(): Promise<void> {
