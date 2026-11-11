@@ -4,6 +4,7 @@ import {
   handleGetPreferences,
   handleSetPreference,
 } from '#/features/push-notifications/server/push-handlers'
+import { log } from '#/features/shared/server/log'
 
 export const Route = createFileRoute('/api/push/preferences')({
   server: {
@@ -24,7 +25,9 @@ export const Route = createFileRoute('/api/push/preferences')({
             headers: { 'Content-Type': 'application/json' },
           })
         } catch (err) {
-          console.error('[push/preferences GET] Unhandled error:', err)
+          log.error('push/preferences', 'Unhandled error', err, {
+            method: 'GET',
+          })
           return new Response(JSON.stringify({ error: 'internal_error' }), {
             status: 500,
             headers: { 'Content-Type': 'application/json' },
@@ -66,7 +69,9 @@ export const Route = createFileRoute('/api/push/preferences')({
             headers: { 'Content-Type': 'application/json' },
           })
         } catch (err) {
-          console.error('[push/preferences PUT] Unhandled error:', err)
+          log.error('push/preferences', 'Unhandled error', err, {
+            method: 'PUT',
+          })
           return new Response(JSON.stringify({ error: 'internal_error' }), {
             status: 500,
             headers: { 'Content-Type': 'application/json' },

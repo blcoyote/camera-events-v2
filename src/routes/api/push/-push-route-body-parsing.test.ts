@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { log } from '#/features/shared/server/log'
 import type { SessionData } from '#/features/shared/server/session'
 import type * as SessionModule from '#/features/shared/server/session'
 
@@ -16,6 +17,10 @@ import type * as SessionModule from '#/features/shared/server/session'
  */
 
 const mockGetAppSession = vi.fn()
+
+vi.mock('#/features/shared/server/log', () => ({
+  log: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
+}))
 
 vi.mock('#/features/shared/server/session', async (importOriginal) => ({
   ...(await importOriginal<typeof SessionModule>()),
@@ -143,12 +148,16 @@ describe('POST /api/push/locale route handler', () => {
     const { Route } = await import('./locale')
     const request = makeRequest()
     vi.mocked(request.json).mockResolvedValue({})
-    vi.spyOn(console, 'error').mockImplementation(() => {})
 
     const res = await (Route.options.server as any).handlers.POST({ request })
 
     expect(res.status).toBe(500)
     expect(await res.json()).toEqual({ error: 'internal_error' })
+    expect(log.error).toHaveBeenCalledWith(
+      'push/locale',
+      'Unhandled error',
+      expect.any(Error),
+    )
   })
 })
 

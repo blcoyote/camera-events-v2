@@ -53,6 +53,7 @@ this vault is meant to be used.
 - [[decisions/2026-11-01-event-sharing]] — `event_shares` table; Retention counts Favorites + Shares; share push bypasses Mute
 - [[decisions/2026-11-02-origin-aware-breadcrumbs]] — `?from=` origin param; routes declare trails in `staticData`; replaces `getPageTitle`
 - [[decisions/2026-11-11-otlp-push-metrics]] — metrics pushed over OTLP/HTTP JSON to Alloy every 30 s; own MeterProvider, no sdk-node (Bun), environment in `service.instance.id`
+- [[decisions/2026-11-11-json-logs-and-manual-traces]] — JSON logs on stdout with `trace_id`; manual spans (own provider, Bun AsyncLocalStorage) to VictoriaTraces; no user ids in either
 
 ## ⚠️ Gotchas
 

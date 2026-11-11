@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   formatCameraName,
   buildCameraPayload,
@@ -6,6 +6,7 @@ import {
   notifyUsersForCamera,
   endpointHost,
 } from './push-notify'
+import { log } from '#/features/shared/server/log'
 import type { DetectionInfo } from './event-batcher'
 import { isPushEnabled, sendPushNotification } from './push'
 import { SendThrottle } from './send-throttle'
@@ -13,6 +14,10 @@ import { getPushStore } from './push-store'
 import { areNotificationsMuted } from './notification-mute'
 import { createDelivery } from './delivery'
 import type { Delivery } from './delivery'
+
+vi.mock('#/features/shared/server/log', () => ({
+  log: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
+}))
 
 vi.mock('./push', () => ({
   isPushEnabled: vi.fn(),
@@ -275,22 +280,13 @@ describe('notifyUsersForCamera', () => {
     }
   }
 
-  let consoleErrorSpy: ReturnType<typeof vi.spyOn>
-  let consoleLogSpy: ReturnType<typeof vi.spyOn>
-
   beforeEach(() => {
     isPushEnabledMock.mockReset()
     sendPushNotificationMock.mockReset()
     getPushStoreMock.mockReset()
     areNotificationsMutedMock.mockReset()
     areNotificationsMutedMock.mockResolvedValue(false)
-    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
-    consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
-  })
-
-  afterEach(() => {
-    consoleErrorSpy.mockRestore()
-    consoleLogSpy.mockRestore()
+    vi.clearAllMocks()
   })
 
   it('returns early without calling getPushStore when isPushEnabled returns false', async () => {
@@ -351,7 +347,7 @@ describe('notifyUsersForCamera', () => {
     )
   })
 
-  it('logs the user, device count, and host when dispatching to a subscribed user', async () => {
+  it('logs the device count and hosts when dispatching to a subscribed user', async () => {
     isPushEnabledMock.mockReturnValue(true)
     const subs = [
       { endpoint: 'https://push.example/a', p256dh: 'p1', auth: 'a1' },
@@ -369,23 +365,14 @@ describe('notifyUsersForCamera', () => {
       burstStart: true,
     })
 
-    const loggedMessages = consoleLogSpy.mock.calls.map(
-      (call: unknown[]) => call[0],
+    expect(log.info).toHaveBeenCalledWith(
+      expect.any(String),
+      'Pushing to user devices',
+      {
+        device_count: 2,
+        push_service_hosts: ['push.example', 'push.example'],
+      },
     )
-    expect(
-      loggedMessages.some(
-        (msg: unknown) =>
-          typeof msg === 'string' &&
-          msg.includes('user-1') &&
-          msg.includes('2'),
-      ),
-    ).toBe(true)
-    expect(
-      loggedMessages.some(
-        (msg: unknown) =>
-          typeof msg === 'string' && msg.includes('push.example'),
-      ),
-    ).toBe(true)
   })
 
   it('calls sendPushNotification with bundled payload when multiple events', async () => {
@@ -483,17 +470,14 @@ describe('notifyUsersForCamera', () => {
       burstStart: true,
     })
 
-    const loggedMessages = consoleLogSpy.mock.calls.map(
-      (call: unknown[]) => call[0],
+    expect(log.debug).toHaveBeenCalledWith(
+      'push-notify',
+      'Camera disabled for user, skipping',
+      { camera: 'front_porch' },
     )
-    expect(
-      loggedMessages.some(
-        (msg: unknown) =>
-          typeof msg === 'string' &&
-          msg.includes('user-blocked') &&
-          /disabled|skip/i.test(msg),
-      ),
-    ).toBe(true)
+    expect(JSON.stringify(vi.mocked(log.debug).mock.calls)).not.toContain(
+      'user-blocked',
+    )
   })
 
   it('catches and logs errors from sendPushNotification without rethrowing', async () => {
@@ -517,9 +501,14 @@ describe('notifyUsersForCamera', () => {
     ).resolves.toBeUndefined()
 
     expect(sendPushNotificationMock).toHaveBeenCalledTimes(2)
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
-      expect.stringContaining('https://push.example/fail'),
-      'boom',
+    expect(log.error).toHaveBeenCalledWith(
+      'push-notify',
+      'Push send failed',
+      undefined,
+      expect.objectContaining({
+        push_service_host: 'push.example',
+        error_name: 'Error',
+      }),
     )
   })
 

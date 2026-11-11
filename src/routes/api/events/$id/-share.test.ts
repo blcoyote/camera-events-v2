@@ -1,7 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { log } from '#/features/shared/server/log'
 import type * as SessionModule from '#/features/shared/server/session'
 
 const mockGetAppSession = vi.fn()
+vi.mock('#/features/shared/server/log', () => ({
+  log: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
+}))
+
 vi.mock('#/features/shared/server/session', async (importOriginal) => ({
   ...(await importOriginal<typeof SessionModule>()),
   getAppSession: (...args: unknown[]) => mockGetAppSession(...args),
@@ -103,11 +108,15 @@ describe('POST /api/events/$id/share route handler', () => {
   it('maps an unhandled error to 500 internal_error', async () => {
     mockGetAppSession.mockResolvedValue({ data: { sub: 'user-1' } })
     mockHandleShareEvent.mockRejectedValue(new Error('boom'))
-    vi.spyOn(console, 'error').mockImplementation(() => {})
 
     const res = await post(makeRequest(async () => ({})))
 
     expect(res.status).toBe(500)
     expect(await res.json()).toEqual({ error: 'internal_error' })
+    expect(log.error).toHaveBeenCalledWith(
+      'events/share',
+      'Unhandled error',
+      expect.any(Error),
+    )
   })
 })

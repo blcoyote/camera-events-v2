@@ -132,6 +132,24 @@
       }
     }
   },
+  "overrides": [
+    {
+      "includes": [
+        "src/features/**/server/**",
+        "src/routes/api/**",
+        "src/server.ts",
+        "!src/features/shared/server/log/index.ts",
+        "!**/*.test.ts"
+      ],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noConsole": "error"
+          }
+        }
+      }
+    }
+  ],
   "assist": {
     "enabled": false
   }

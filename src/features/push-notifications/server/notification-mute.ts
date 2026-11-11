@@ -1,4 +1,5 @@
 import '@tanstack/react-start/server-only'
+import { log } from '#/features/shared/server/log'
 
 /**
  * Global admin "mute all notifications" switch.
@@ -47,9 +48,10 @@ export async function getActiveMuteUntil(
     const muteUntil = store.getNotificationMuteUntil()
     return isMuteActive(muteUntil, nowMs) ? muteUntil : null
   } catch (err) {
-    console.error(
-      '[notification-mute] Failed to read mute state — treating as not muted:',
-      err instanceof Error ? err.message : err,
+    log.error(
+      'notification-mute',
+      'Failed to read mute state, treating as not muted',
+      err,
     )
     return null
   }

@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { getAppSession } from '#/features/shared/server/session'
 import { handleShareEvent } from '#/features/push-notifications/server/share-handlers'
+import { log } from '#/features/shared/server/log'
 
 export const Route = createFileRoute('/api/events/$id/share')({
   server: {
@@ -32,7 +33,7 @@ export const Route = createFileRoute('/api/events/$id/share')({
             headers: { 'Content-Type': 'application/json' },
           })
         } catch (err) {
-          console.error('[events/share] Unhandled error:', err)
+          log.error('events/share', 'Unhandled error', err)
           return new Response(JSON.stringify({ error: 'internal_error' }), {
             status: 500,
             headers: { 'Content-Type': 'application/json' },

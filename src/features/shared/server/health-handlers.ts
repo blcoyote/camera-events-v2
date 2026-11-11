@@ -1,6 +1,7 @@
 import '@tanstack/react-start/server-only'
 import { openSqlite } from '#/features/shared/server/sqlite'
 import { existsSync } from 'node:fs'
+import { log } from '#/features/shared/server/log'
 
 const DEFAULT_DB_PATH = 'data/camera-events.db'
 const DB_CHECK_CACHE_TTL_MS = 5_000
@@ -39,7 +40,7 @@ export function handleLiveness(): { status: number; body: LivenessResult } {
 
 function dbError(err: unknown): DbCheckResult {
   const detail = err instanceof Error ? err.message : String(err)
-  console.error(`Readiness DB check failed: ${detail}`)
+  log.error('health', 'Readiness DB check failed', err, { detail })
   return { status: 'error' }
 }
 

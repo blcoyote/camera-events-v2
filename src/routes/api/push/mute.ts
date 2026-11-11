@@ -4,6 +4,7 @@ import {
   handleGetNotificationMute,
   handleSetNotificationMute,
 } from '#/features/push-notifications/server/admin-mute-handlers'
+import { log } from '#/features/shared/server/log'
 
 export const Route = createFileRoute('/api/push/mute')({
   server: {
@@ -24,7 +25,7 @@ export const Route = createFileRoute('/api/push/mute')({
             headers: { 'Content-Type': 'application/json' },
           })
         } catch (err) {
-          console.error('[push/mute GET] Unhandled error:', err)
+          log.error('push/mute', 'Unhandled error', err, { method: 'GET' })
           return new Response(JSON.stringify({ error: 'internal_error' }), {
             status: 500,
             headers: { 'Content-Type': 'application/json' },
@@ -66,7 +67,7 @@ export const Route = createFileRoute('/api/push/mute')({
             headers: { 'Content-Type': 'application/json' },
           })
         } catch (err) {
-          console.error('[push/mute POST] Unhandled error:', err)
+          log.error('push/mute', 'Unhandled error', err, { method: 'POST' })
           return new Response(JSON.stringify({ error: 'internal_error' }), {
             status: 500,
             headers: { 'Content-Type': 'application/json' },

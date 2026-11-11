@@ -1,4 +1,5 @@
 import '@tanstack/react-start/server-only'
+import { log } from '#/features/shared/server/log'
 import mqtt from 'mqtt'
 import type { MqttClient } from 'mqtt'
 import { clearFrigateCache } from '#/features/shared/server/frigate/cache'
@@ -55,12 +56,13 @@ export function dispatchBatch(
   events: DetectionInfo[],
   meta: FlushMeta,
 ): void {
-  const kind = meta.burstStart ? 'new burst' : 'continuation'
-  console.log(
-    `[mqtt] Flushing batch for camera "${camera}" — ${events.length} detection(s), ${kind}, dispatching push notifications`,
-  )
+  log.info('mqtt', 'Flushing detection batch', {
+    camera,
+    count: events.length,
+    burst_start: meta.burstStart,
+  })
   notifyUsersForCamera(camera, events, meta).catch((err) => {
-    console.error('[mqtt] Push notification dispatch failed:', err)
+    log.error('mqtt', 'Push notification dispatch failed', err, { camera })
   })
 }
 
@@ -75,9 +77,9 @@ export function dispatchAvailability(
   camera: string,
   status: CameraAvailabilityStatus,
 ): void {
-  console.log(`[mqtt] Camera "${camera}" is now ${status}`)
+  log.info('mqtt', 'Camera availability changed', { camera, status })
   notifyUsersForCameraAvailability(camera, status).catch((err) => {
-    console.error('[mqtt] Availability push dispatch failed:', err)
+    log.error('mqtt', 'Availability push dispatch failed', err, { camera })
   })
 }
 
@@ -142,37 +144,40 @@ export function onFrigateMessage(topic: string, payload: Buffer): void {
   recordMqttMessage(topic)
 
   if (topic === 'frigate/events' || topic === 'frigate/reviews') {
-    console.log(`[mqtt] Received message on ${topic} — clearing Frigate cache`)
+    log.debug('mqtt', 'Message received, clearing Frigate cache', { topic })
     clearFrigateCache()
   }
 
   if (topic === 'frigate/events') {
     const event = parseFrigateEvent(payload)
     if (event) {
-      console.log(
-        `[mqtt] New detection: ${event.label} on ${event.camera} (${event.id})`,
-      )
+      log.info('mqtt', 'New detection', {
+        label: event.label,
+        camera: event.camera,
+        event_id: event.id,
+      })
       eventBatcher.add(event)
     } else {
-      console.log(
-        '[mqtt] Ignored frigate/events message (not a "new" event or malformed payload)',
-      )
+      log.debug('mqtt', 'Ignored message, not a new event or malformed', {
+        topic,
+      })
     }
   } else if (topic === 'frigate/stats') {
     const camerasFps = parseFrigateStatsMessage(payload)
     if (camerasFps) {
       availabilityTracker.handleStats(camerasFps)
     } else {
-      console.log('[mqtt] Ignored frigate/stats message (malformed payload)')
+      log.debug('mqtt', 'Ignored message, malformed payload', { topic })
     }
   } else if (topic === 'frigate/available') {
     const status = payload.toString().trim()
     if (status === 'online' || status === 'offline') {
       availabilityTracker.handleServiceAvailability(status)
     } else {
-      console.log(
-        `[mqtt] Ignored frigate/available message (unexpected payload: "${status}")`,
-      )
+      log.debug('mqtt', 'Ignored message, unexpected payload', {
+        topic,
+        status,
+      })
     }
   }
 }
@@ -187,13 +192,13 @@ export function onFrigateMessage(topic: string, payload: Buffer): void {
  */
 export function startMqttSubscriber(): MqttClient | null {
   if (process.env.FRIGATE_MOCK === 'true') {
-    console.log('[mqtt] FRIGATE_MOCK enabled — skipping MQTT subscriber')
+    log.info('mqtt', 'FRIGATE_MOCK enabled, skipping MQTT subscriber')
     return null
   }
 
   const url = process.env.MQTT_URL
   if (!url) {
-    console.log('[mqtt] MQTT_URL not set — skipping MQTT subscriber')
+    log.info('mqtt', 'MQTT_URL not set, skipping MQTT subscriber')
     return null
   }
 
@@ -202,12 +207,14 @@ export function startMqttSubscriber(): MqttClient | null {
 
   client.on('connect', () => {
     mqttConnectionState = 'connected'
-    console.log(`[mqtt] Connected to ${url}`)
+    log.info('mqtt', 'Connected to broker')
     client.subscribe(SUBSCRIBED_TOPICS as unknown as string[], (err) => {
       if (err) {
-        console.error('[mqtt] Failed to subscribe:', err.message)
+        log.error('mqtt', 'Failed to subscribe', err)
       } else {
-        console.log(`[mqtt] Subscribed to ${SUBSCRIBED_TOPICS.join(', ')}`)
+        log.info('mqtt', 'Subscribed to topics', {
+          topics: [...SUBSCRIBED_TOPICS],
+        })
       }
     })
   })
@@ -215,7 +222,7 @@ export function startMqttSubscriber(): MqttClient | null {
   client.on('message', onFrigateMessage)
 
   client.on('reconnect', () => {
-    console.log('[mqtt] Reconnecting...')
+    log.info('mqtt', 'Reconnecting')
   })
 
   client.on('close', () => {
@@ -223,7 +230,7 @@ export function startMqttSubscriber(): MqttClient | null {
   })
 
   client.on('error', (err) => {
-    console.error('[mqtt] Error:', err.message)
+    log.error('mqtt', 'MQTT client error', err)
   })
 
   return client
