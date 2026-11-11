@@ -26,8 +26,9 @@ server runs on Bun.
   (`src/features/shared/server/log`) prints `{time, level, component, msg,
 trace_id, span_id, ...fields}`. Same format in every environment. `LOG_LEVEL`
   (default `info`). Every server `console.*` call migrates; Biome `noConsole`
-  guards server paths. Grafana unpacks the JSON at query time; Alloy's log
-  pipeline is unchanged.
+  guards server paths. VictoriaLogs turns each JSON line into fields on
+  ingest; Alloy only adds `VL-Msg-Field: msg,_msg` so `msg` is the displayed
+  message (the plan had assumed `| unpack_json` at query time).
 - **Traces: manual spans, own provider.** `@opentelemetry/sdk-trace` 3.x (the
   renamed `sdk-trace-base`) with `BatchSpanProcessor` and
   `exporter-trace-otlp-http`, held in a module-local `TracerProvider` (3.x name of `BasicTracerProvider`), on
@@ -66,6 +67,11 @@ trace_id, span_id, ...fields}`. Same format in every environment. `LOG_LEVEL`
   no receiver respectively.
 
 ## Why it matters
+
+- **`msg` is not `_msg`.** VictoriaLogs parses JSON log lines itself and looks
+  for `_msg`. Without Alloy's `VL-Msg-Field: msg,_msg` header every app line
+  reads "missing \_msg field" in Grafana, though all fields are stored. Do not
+  rename the logger's `msg` key to fix it.
 
 - **Bun context propagation was proved standalone only.** A spike on Bun 1.4.4
   passed all 8 cases (await, setTimeout, `Promise.all`, late stream pull,

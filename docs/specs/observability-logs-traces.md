@@ -135,12 +135,17 @@ host).
     `tracesToLogsV2` → VictoriaLogs filtered on `trace_id`.
   - VictoriaLogs gets a derived field: `trace_id` → link to the VictoriaTraces
     datasource.
-- Log JSON is **not** parsed in Alloy; queries use `| unpack_json`. The shared
-  Alloy log pipeline stays neutral for other containers.
+- **As built:** VictoriaLogs (v1.53) parses JSON lines arriving over Alloy's
+  Loki push into fields by itself, so `level`, `component`, `trace_id` and so
+  on are real fields; no `| unpack_json` is needed. Its message field is
+  `_msg`, so Alloy's `loki.write` sends `VL-Msg-Field: msg,_msg` (plain-text
+  lines from other containers are unaffected). Without it, every app line
+  shows "missing \_msg field". The derived field reads the `trace_id` field
+  (`matcherType: label`), and trace→logs runs `trace_id:="<id>"`.
 
-Port, ingest path, Jaeger API path and whether the VictoriaLogs plugin supports
-derived fields are to be confirmed against the pinned versions while building
-the slice.
+VictoriaTraces: `v0.13.0`, port 10428, OTLP ingest
+`/insert/opentelemetry/v1/traces`, Jaeger API `/select/jaeger`. Derived fields
+are supported by the VictoriaLogs plugin since v0.15.0.
 
 ### Slice 3: Tracing
 
