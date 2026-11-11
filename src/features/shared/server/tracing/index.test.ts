@@ -11,6 +11,7 @@ import {
   startTracing,
   withRequestSpan,
   withSpan,
+  withSpanSync,
 } from '.'
 
 vi.mock('@tanstack/react-start/server-only', () => ({}))
@@ -179,5 +180,62 @@ describe('withSpan', () => {
     expect(span.attributes.a).toBe(1)
     expect(span.status.code).toBe(SpanStatusCode.ERROR)
     expect(span.events[0].name).toBe('exception')
+  })
+})
+
+describe('withSpan span argument', () => {
+  it('passes the span to fn so callers can set attributes and status', async () => {
+    const exporter = start()
+    await withSpan('x', {}, (span) => {
+      span?.setAttribute('k', 'v')
+      span?.setStatus({ code: SpanStatusCode.ERROR })
+    })
+    const [s] = exporter.getFinishedSpans()
+    expect(s.attributes.k).toBe('v')
+    expect(s.status.code).toBe(SpanStatusCode.ERROR)
+  })
+
+  it('passes undefined when tracing is off', async () => {
+    let got: unknown = 'unset'
+    await withSpan('x', {}, (span) => {
+      got = span
+    })
+    expect(got).toBeUndefined()
+  })
+})
+
+describe('withSpanSync', () => {
+  it('returns synchronously and ends the span', () => {
+    const exporter = start()
+    const out = withSpanSync(
+      'x',
+      { a: 1 },
+      (span) => {
+        span?.setAttribute('b', 2)
+        return 7
+      },
+      { kind: SpanKind.CONSUMER },
+    )
+    expect(out).toBe(7)
+    const [s] = exporter.getFinishedSpans()
+    expect(s.kind).toBe(SpanKind.CONSUMER)
+    expect(s.attributes).toMatchObject({ a: 1, b: 2 })
+  })
+
+  it('records ERROR and rethrows synchronously', () => {
+    const exporter = start()
+    const boom = new Error('boom')
+    expect(() =>
+      withSpanSync('x', {}, () => {
+        throw boom
+      }),
+    ).toThrow(boom)
+    const [s] = exporter.getFinishedSpans()
+    expect(s.status.code).toBe(SpanStatusCode.ERROR)
+    expect(s.events.map((e) => e.name)).toEqual(['exception'])
+  })
+
+  it('just runs fn when tracing is off', () => {
+    expect(withSpanSync('x', {}, (span) => span ?? 3)).toBe(3)
   })
 })

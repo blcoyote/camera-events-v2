@@ -56,19 +56,46 @@ function fail(span: Span, err: unknown) {
   }
 }
 
+type SpanOpts = { kind?: SpanKind; root?: boolean }
+
+/** fn receives the span (undefined when tracing is off) to add attributes or status. */
 export async function withSpan<T>(
   name: string,
   attributes: Attributes,
-  fn: () => Promise<T> | T,
-  opts: { kind?: SpanKind; root?: boolean } = {},
+  fn: (span: Span | undefined) => Promise<T> | T,
+  opts: SpanOpts = {},
 ): Promise<T> {
-  if (!tracer) return await fn()
+  if (!tracer) return await fn(undefined)
   return tracer.startActiveSpan(
     name,
     { kind: opts.kind, attributes, root: opts.root },
     async (span) => {
       try {
-        return await fn()
+        return await fn(span)
+      } catch (err) {
+        fail(span, err)
+        throw err
+      } finally {
+        span.end()
+      }
+    },
+  )
+}
+
+/** Same as withSpan for synchronous code, so thrown errors stay synchronous. */
+export function withSpanSync<T>(
+  name: string,
+  attributes: Attributes,
+  fn: (span: Span | undefined) => T,
+  opts: SpanOpts = {},
+): T {
+  if (!tracer) return fn(undefined)
+  return tracer.startActiveSpan(
+    name,
+    { kind: opts.kind, attributes, root: opts.root },
+    (span) => {
+      try {
+        return fn(span)
       } catch (err) {
         fail(span, err)
         throw err
