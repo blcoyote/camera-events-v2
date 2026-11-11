@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createDelivery } from './delivery'
+import { log } from '#/features/shared/server/log'
 import type { DeliveryDeps, DeliveryRequest } from './delivery'
 import type { PushPayload, PushSubscriptionInfo } from './push'
 import {
@@ -11,6 +12,10 @@ import {
   _resetMetricsForTests,
   startMetrics,
 } from '#/features/shared/server/metrics'
+
+vi.mock('#/features/shared/server/log', () => ({
+  log: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
+}))
 
 interface FakeSub {
   endpoint: string
@@ -78,15 +83,8 @@ function makeRequest(
 }
 
 describe('createDelivery', () => {
-  let logSpy: ReturnType<typeof vi.spyOn>
-  let errorSpy: ReturnType<typeof vi.spyOn>
   beforeEach(() => {
-    logSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
-    errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
-  })
-  afterEach(() => {
-    logSpy.mockRestore()
-    errorSpy.mockRestore()
+    vi.clearAllMocks()
   })
 
   describe('guards', () => {
@@ -106,8 +104,10 @@ describe('createDelivery', () => {
       expect(isMuted).toHaveBeenCalledWith(4242)
       expect(deps.send).not.toHaveBeenCalled()
       expect(getStore).not.toHaveBeenCalled()
-      expect(logSpy).toHaveBeenCalledWith(
-        '[test-tag] Camera "x": 3 event(s) suppressed — notifications are globally muted',
+      expect(log.info).toHaveBeenCalledWith(
+        'test-tag',
+        'Notification suppressed, globally muted',
+        { description: 'Camera "x": 3 event(s)' },
       )
     })
   })
@@ -175,10 +175,32 @@ describe('createDelivery', () => {
       const deps = makeDeps({ getStore: () => Promise.resolve(store), send })
       await createDelivery(deps).deliver(makeRequest())
       expect(send).toHaveBeenCalledTimes(2)
-      expect(errorSpy).toHaveBeenCalledWith(
-        '[test-tag] Failed to send to https://push.example/1:',
-        'boom',
+      expect(log.error).toHaveBeenCalledWith(
+        'test-tag',
+        'Push send failed',
+        expect.objectContaining({ message: 'boom' }),
+        { push_service_host: 'push.example' },
       )
+      expect(JSON.stringify(vi.mocked(log.error).mock.calls)).not.toContain(
+        'https://push.example/1',
+      )
+    })
+
+    it('logs device count and hosts without the user id or endpoint URL', async () => {
+      const store = makeStore({ 'secret-user-sub': [makeSub(1), makeSub(2)] })
+      const deps = makeDeps({ getStore: () => Promise.resolve(store) })
+      await createDelivery(deps).deliver(makeRequest())
+      expect(log.info).toHaveBeenCalledWith(
+        'test-tag',
+        'Pushing to user devices',
+        {
+          device_count: 2,
+          push_service_hosts: ['push.example', 'push.example'],
+        },
+      )
+      const out = JSON.stringify(vi.mocked(log.info).mock.calls)
+      expect(out).not.toContain('secret-user-sub')
+      expect(out).not.toContain('https://')
     })
   })
 
@@ -609,12 +631,8 @@ describe('createDelivery', () => {
 })
 
 describe('createDelivery push.sends metric', () => {
-  let logSpy: ReturnType<typeof vi.spyOn>
-  let errorSpy: ReturnType<typeof vi.spyOn>
   let reader: PeriodicExportingMetricReader
   beforeEach(() => {
-    logSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
-    errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
     reader = new PeriodicExportingMetricReader({
       exporter: new InMemoryMetricExporter(AggregationTemporality.CUMULATIVE),
       exportIntervalMillis: 60_000,
@@ -622,8 +640,6 @@ describe('createDelivery push.sends metric', () => {
     startMetrics(reader)
   })
   afterEach(async () => {
-    logSpy.mockRestore()
-    errorSpy.mockRestore()
     await _resetMetricsForTests()
   })
 

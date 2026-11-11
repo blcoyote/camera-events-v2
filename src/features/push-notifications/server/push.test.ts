@@ -1,9 +1,14 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { log } from '#/features/shared/server/log'
 
 // Mock web-push before importing the module under test
 vi.mock('web-push', () => ({
   setVapidDetails: vi.fn(),
   sendNotification: vi.fn(),
+}))
+
+vi.mock('#/features/shared/server/log', () => ({
+  log: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }))
 
 // Mock push-store
@@ -52,10 +57,11 @@ describe('push module', () => {
     })
 
     it('logs a warning', async () => {
-      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
       await import('./push')
-      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('VAPID'))
-      consoleSpy.mockRestore()
+      expect(log.warn).toHaveBeenCalledWith(
+        'push',
+        expect.stringContaining('VAPID'),
+      )
     })
   })
 

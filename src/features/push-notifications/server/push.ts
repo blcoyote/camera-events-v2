@@ -1,4 +1,5 @@
 import '@tanstack/react-start/server-only'
+import { log } from '#/features/shared/server/log'
 import * as webPush from 'web-push'
 import { getPushStore } from './push-store'
 import type { PushLocale } from './push-locale'
@@ -53,10 +54,9 @@ const _pushEnabled = !!(vapidPublicKey && vapidPrivateKey && vapidSubject)
 if (_pushEnabled && vapidSubject && vapidPublicKey && vapidPrivateKey) {
   webPush.setVapidDetails(vapidSubject, vapidPublicKey, vapidPrivateKey)
 } else {
-  console.warn(
-    '[push] VAPID keys not configured — push notifications are disabled.\n' +
-      '  To enable, set VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, and VAPID_SUBJECT in your .env file.\n' +
-      '  Generate keys with: npx web-push generate-vapid-keys',
+  log.warn(
+    'push',
+    'VAPID keys not configured, push notifications are disabled. Set VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY and VAPID_SUBJECT (generate with: npx web-push generate-vapid-keys)',
   )
 }
 

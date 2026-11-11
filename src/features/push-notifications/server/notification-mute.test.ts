@@ -6,7 +6,12 @@ import {
   applyNotificationMute,
 } from './notification-mute'
 import { getPushStore } from './push-store'
+import { log } from '#/features/shared/server/log'
 import { MAX_MUTE_DURATION_MS } from '#/features/shared/utils/muteDurations'
+
+vi.mock('#/features/shared/server/log', () => ({
+  log: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
+}))
 
 vi.mock('./push-store', () => ({
   getPushStore: vi.fn(),
@@ -81,18 +86,14 @@ describe('getActiveMuteUntil', () => {
   })
 
   it('fails open (returns null) and logs when the store throws', async () => {
-    const consoleErrorSpy = vi
-      .spyOn(console, 'error')
-      .mockImplementation(() => {})
     getPushStoreMock.mockRejectedValue(new Error('db unavailable'))
 
     expect(await getActiveMuteUntil(1_000)).toBeNull()
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
-      expect.stringContaining('[notification-mute]'),
-      expect.anything(),
+    expect(log.error).toHaveBeenCalledWith(
+      'notification-mute',
+      expect.any(String),
+      expect.objectContaining({ message: 'db unavailable' }),
     )
-
-    consoleErrorSpy.mockRestore()
   })
 })
 
@@ -120,14 +121,9 @@ describe('areNotificationsMuted', () => {
   })
 
   it('fails open (returns false) when the store throws', async () => {
-    const consoleErrorSpy = vi
-      .spyOn(console, 'error')
-      .mockImplementation(() => {})
     getPushStoreMock.mockRejectedValue(new Error('db unavailable'))
 
     expect(await areNotificationsMuted(1_000)).toBe(false)
-
-    consoleErrorSpy.mockRestore()
   })
 })
 

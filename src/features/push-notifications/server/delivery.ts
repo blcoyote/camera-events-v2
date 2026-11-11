@@ -1,4 +1,5 @@
 import '@tanstack/react-start/server-only'
+import { log } from '#/features/shared/server/log'
 import type { PushPayload, PushSendOutcome, PushSubscriptionInfo } from './push'
 import type { PushStore, PushSubscriptionRow } from './push-store'
 import { isPushEnabled, sendPushNotification } from './push'
@@ -98,9 +99,9 @@ export function createDelivery(
     const now = deps.now()
     if (!request.ignoreMute && (await deps.isMuted(now))) {
       if (burst?.start) swallowed.add(burst.key)
-      console.log(
-        `[${logTag}] ${request.description} suppressed — notifications are globally muted`,
-      )
+      log.info(logTag, 'Notification suppressed, globally muted', {
+        description: request.description,
+      })
       return
     }
 
@@ -124,9 +125,10 @@ export function createDelivery(
 
       const subscriptions = store.getSubscriptionsByUserId(userId)
       const hosts = subscriptions.map((sub) => hostOf(sub.endpoint))
-      console.log(
-        `[${logTag}] Pushing to user ${userId} on ${subscriptions.length} device(s): ${hosts.join(', ')}`,
-      )
+      log.info(logTag, 'Pushing to user devices', {
+        device_count: subscriptions.length,
+        push_service_hosts: hosts,
+      })
       for (const sub of subscriptions) {
         if (
           request.allowEndpoint &&
@@ -152,10 +154,9 @@ export function createDelivery(
         } catch (err) {
           recordPushSend(request.kind, 'failed')
           attempted++
-          console.error(
-            `[${logTag}] Failed to send to ${sub.endpoint}:`,
-            err instanceof Error ? err.message : err,
-          )
+          log.error(logTag, 'Push send failed', err, {
+            push_service_host: hostOf(sub.endpoint),
+          })
         }
       }
     }

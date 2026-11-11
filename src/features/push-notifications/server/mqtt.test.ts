@@ -7,7 +7,12 @@ import {
 import { clearFrigateCache } from '#/features/shared/server/frigate/cache'
 import { notifyUsersForCamera } from './push-notify'
 import { notifyUsersForCameraAvailability } from './availability-notify'
+import { log } from '#/features/shared/server/log'
 import type { DetectionInfo } from './event-batcher'
+
+vi.mock('#/features/shared/server/log', () => ({
+  log: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
+}))
 
 vi.mock('mqtt', () => {
   const mockClient = {
@@ -81,7 +86,8 @@ describe('onFrigateMessage', () => {
 
   it('logs "New detection" when a valid new detection is received', async () => {
     const { onFrigateMessage } = await import('./mqtt')
-    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+    vi.mocked(log.info).mockClear()
+    vi.mocked(log.debug).mockClear()
 
     onFrigateMessage(
       'frigate/events',
@@ -98,18 +104,17 @@ describe('onFrigateMessage', () => {
       ),
     )
 
-    expect(
-      logSpy.mock.calls.some((call) =>
-        String(call[0]).includes('New detection'),
-      ),
-    ).toBe(true)
-
-    logSpy.mockRestore()
+    expect(log.info).toHaveBeenCalledWith(
+      'mqtt',
+      'New detection',
+      expect.objectContaining({ event_id: 'x' }),
+    )
   })
 
   it('logs "Ignored" when the message is not a "new" event', async () => {
     const { onFrigateMessage } = await import('./mqtt')
-    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+    vi.mocked(log.info).mockClear()
+    vi.mocked(log.debug).mockClear()
 
     onFrigateMessage(
       'frigate/events',
@@ -126,11 +131,11 @@ describe('onFrigateMessage', () => {
       ),
     )
 
-    expect(
-      logSpy.mock.calls.some((call) => String(call[0]).includes('Ignored')),
-    ).toBe(true)
-
-    logSpy.mockRestore()
+    expect(log.debug).toHaveBeenCalledWith(
+      'mqtt',
+      expect.stringContaining('Ignored'),
+      expect.anything(),
+    )
   })
 
   it('does not clear the Frigate cache for frigate/stats', async () => {
@@ -164,32 +169,34 @@ describe('onFrigateMessage', () => {
 
   it('logs "Ignored" for a malformed frigate/stats payload', async () => {
     const { onFrigateMessage } = await import('./mqtt')
-    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+    vi.mocked(log.info).mockClear()
+    vi.mocked(log.debug).mockClear()
 
     expect(() =>
       onFrigateMessage('frigate/stats', Buffer.from('not json')),
     ).not.toThrow()
 
-    expect(
-      logSpy.mock.calls.some((call) => String(call[0]).includes('Ignored')),
-    ).toBe(true)
-
-    logSpy.mockRestore()
+    expect(log.debug).toHaveBeenCalledWith(
+      'mqtt',
+      expect.stringContaining('Ignored'),
+      expect.anything(),
+    )
   })
 
   it('logs "Ignored" for an unexpected frigate/available payload', async () => {
     const { onFrigateMessage } = await import('./mqtt')
-    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+    vi.mocked(log.info).mockClear()
+    vi.mocked(log.debug).mockClear()
 
     expect(() =>
       onFrigateMessage('frigate/available', Buffer.from('unknown')),
     ).not.toThrow()
 
-    expect(
-      logSpy.mock.calls.some((call) => String(call[0]).includes('Ignored')),
-    ).toBe(true)
-
-    logSpy.mockRestore()
+    expect(log.debug).toHaveBeenCalledWith(
+      'mqtt',
+      expect.stringContaining('Ignored'),
+      expect.anything(),
+    )
   })
 })
 
@@ -259,7 +266,8 @@ describe('dispatchBatch', () => {
 
   it('logs the flush and dispatches push notifications', async () => {
     const { dispatchBatch } = await import('./mqtt')
-    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+    vi.mocked(log.info).mockClear()
+    vi.mocked(log.debug).mockClear()
 
     const events: DetectionInfo[] = [
       {
@@ -282,23 +290,20 @@ describe('dispatchBatch', () => {
 
     dispatchBatch('front_porch', events, { burstStart: true })
 
-    expect(
-      logSpy.mock.calls.some(
-        (call) =>
-          String(call[0]).includes('front_porch') &&
-          String(call[0]).includes('2 detection(s)'),
-      ),
-    ).toBe(true)
+    expect(log.info).toHaveBeenCalledWith('mqtt', 'Flushing detection batch', {
+      camera: 'front_porch',
+      count: 2,
+      burst_start: true,
+    })
     expect(notifyMock).toHaveBeenCalledWith('front_porch', events, {
       burstStart: true,
     })
-
-    logSpy.mockRestore()
   })
 
   it('forwards a continuation flush so the dispatcher patches instead of alerting', async () => {
     const { dispatchBatch } = await import('./mqtt')
-    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+    vi.mocked(log.info).mockClear()
+    vi.mocked(log.debug).mockClear()
 
     const events: DetectionInfo[] = [
       {
@@ -316,8 +321,6 @@ describe('dispatchBatch', () => {
     expect(notifyMock).toHaveBeenCalledWith('driveway', events, {
       burstStart: false,
     })
-
-    logSpy.mockRestore()
   })
 })
 
@@ -330,20 +333,20 @@ describe('dispatchAvailability', () => {
 
   it('logs the transition and dispatches an availability push notification', async () => {
     const { dispatchAvailability } = await import('./mqtt')
-    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+    vi.mocked(log.info).mockClear()
+    vi.mocked(log.debug).mockClear()
 
     dispatchAvailability('driveway', 'offline')
 
-    expect(
-      logSpy.mock.calls.some(
-        (call) =>
-          String(call[0]).includes('driveway') &&
-          String(call[0]).includes('offline'),
-      ),
-    ).toBe(true)
+    expect(log.info).toHaveBeenCalledWith(
+      'mqtt',
+      'Camera availability changed',
+      {
+        camera: 'driveway',
+        status: 'offline',
+      },
+    )
     expect(notifyAvailabilityMock).toHaveBeenCalledWith('driveway', 'offline')
-
-    logSpy.mockRestore()
   })
 })
 

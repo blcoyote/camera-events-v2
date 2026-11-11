@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   buildAvailabilityPayload,
   cameraAvailabilityNotificationTag,
@@ -9,6 +9,11 @@ import { getPushStore } from './push-store'
 import { areNotificationsMuted } from './notification-mute'
 import { createDelivery } from './delivery'
 import { notifyUsersForCamera } from './push-notify'
+import { log } from '#/features/shared/server/log'
+
+vi.mock('#/features/shared/server/log', () => ({
+  log: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
+}))
 
 vi.mock('./push', () => ({
   isPushEnabled: vi.fn(),
@@ -96,19 +101,13 @@ describe('notifyUsersForCameraAvailability', () => {
     }
   }
 
-  let consoleErrorSpy: ReturnType<typeof vi.spyOn>
-
   beforeEach(() => {
     isPushEnabledMock.mockReset()
     sendPushNotificationMock.mockReset()
     getPushStoreMock.mockReset()
     areNotificationsMutedMock.mockReset()
     areNotificationsMutedMock.mockResolvedValue(false)
-    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
-  })
-
-  afterEach(() => {
-    consoleErrorSpy.mockRestore()
+    vi.mocked(log.error).mockClear()
   })
 
   it('returns early without calling getPushStore when isPushEnabled returns false', async () => {
@@ -246,9 +245,11 @@ describe('notifyUsersForCameraAvailability', () => {
     ).resolves.toBeUndefined()
 
     expect(sendPushNotificationMock).toHaveBeenCalledTimes(3)
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
-      expect.stringContaining('https://push.example/fail'),
-      'boom',
+    expect(log.error).toHaveBeenCalledWith(
+      expect.any(String),
+      'Push send failed',
+      expect.objectContaining({ message: 'boom' }),
+      { push_service_host: 'push.example' },
     )
   })
 

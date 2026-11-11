@@ -9,6 +9,7 @@
  */
 
 import '@tanstack/react-start/server-only'
+import { log } from '#/features/shared/server/log'
 import type { DetectionInfo, FlushMeta } from './event-batcher'
 import type { PushPayload } from './push'
 import { createDelivery } from './delivery'
@@ -175,9 +176,9 @@ export async function notifyUsersForCamera(
     burst: { key: camera, start: meta.burstStart },
     isUserEligible: (userId, store) => {
       if (store.isCameraEnabledForUser(userId, camera)) return true
-      console.log(
-        `[push-notify] User ${userId} has camera "${camera}" disabled — skipping`,
-      )
+      log.debug('push-notify', 'Camera disabled for user, skipping', {
+        camera,
+      })
       return false
     },
     buildPayload: (burstStart, locale) =>
@@ -191,8 +192,9 @@ export async function notifyUsersForCamera(
         options.now ?? deliveryNow,
       ),
     onEndpointSkipped: (endpoint) =>
-      console.log(
-        `[push-notify] Throttled update to ${endpointHost(endpoint)} for camera "${camera}" — Apple endpoints are paced to avoid re-alerting`,
-      ),
+      log.info('push-notify', 'Throttled update, Apple endpoints are paced', {
+        push_service_host: endpointHost(endpoint),
+        camera,
+      }),
   })
 }
