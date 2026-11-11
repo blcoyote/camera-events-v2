@@ -18,6 +18,11 @@ services:
       VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:-}
       VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:-}
       VAPID_SUBJECT: ${VAPID_SUBJECT:-}
+      # Metrics → Alloy on the observability network (portainer-traefik/observability)
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://alloy:4318
+      OTEL_EXPORTER_OTLP_PROTOCOL: http/json
+      OTEL_SERVICE_NAME: camera-events-v2
+      OTEL_RESOURCE_ATTRIBUTES: service.instance.id=test,deployment.environment.name=test
     volumes:
       - ce-v2-test-data:/app/data
     labels:
@@ -42,6 +47,7 @@ services:
     networks:
       - ce-v2-test
       - proxy
+      - observability
     healthcheck:
       test: ['CMD', 'wget', '-qO-', 'http://localhost:3000/']
       interval: 30s
@@ -104,4 +110,6 @@ volumes:
 networks:
   ce-v2-test:
   proxy:
+    external: true
+  observability:
     external: true
