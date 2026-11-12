@@ -201,6 +201,7 @@ cameras:
       order: 2
       dashboard: true
     ffmpeg:
+      hwaccel_args: preset-rpi-64-h264
       input_args: preset-rtsp-udp
       inputs:
         - path: rtsp://admin:{FRIGATE_RTSP_PASSWORD}@192.168.0.x:8554/Streaming/Channels/101
@@ -226,6 +227,7 @@ cameras:
       order: 3
       dashboard: true
     ffmpeg:
+      hwaccel_args: preset-rpi-64-h264
       input_args: preset-rtsp-udp
       inputs:
         - path: rtsp://admin:{FRIGATE_RTSP_PASSWORD}@192.168.0.x:8554/Streaming/Channels/101
@@ -258,6 +260,7 @@ cameras:
       order: 4
       dashboard: true
     ffmpeg:
+      hwaccel_args: preset-rpi-64-h264
       input_args: preset-rtsp-udp
       inputs:
         - path: rtsp://admin:{FRIGATE_RTSP_PASSWORD}@192.168.0.x:8554/Streaming/Channels/101
