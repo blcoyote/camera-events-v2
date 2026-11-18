@@ -39,7 +39,17 @@
         "matcher": ""
       }
     ],
-    "PreToolUse": []
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun run \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard.ts\""
+          }
+        ]
+      }
+    ]
   },
   "permissions": {
     "allow": [
@@ -51,6 +61,13 @@
       "Bash(git add *)",
       "Bash(git commit -m ' *)",
       "WebFetch(domain:tanstack.com)"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Bash(git push --force*)",
+      "Bash(git push -f*)",
+      "Bash(docker volume rm*)"
     ]
   }
 }

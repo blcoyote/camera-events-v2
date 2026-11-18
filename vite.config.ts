@@ -58,7 +58,11 @@ export default defineConfig({
         extends: true,
         test: {
           name: 'unit',
-          include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
+          include: [
+            'src/**/*.test.ts',
+            'src/**/*.test.tsx',
+            '.claude/hooks/**/*.test.ts',
+          ],
           exclude: ['src/**/*.stories.*'],
           setupFiles: ['./src/test-setup.ts'],
         },
