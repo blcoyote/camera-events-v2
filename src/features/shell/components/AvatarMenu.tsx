@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link } from '@tanstack/react-router'
+import { dropPushSubscription } from '#/features/shared/utils/pushResync'
 import { m } from '#/paraglide/messages.js'
 import {
   Avatar,
@@ -54,6 +55,7 @@ export function AvatarMenu({
     // The form posts natively without JS; with JS we POST via fetch and then
     // hard-navigate home (unchanged behaviour).
     e.preventDefault()
+    await dropPushSubscription()
     await fetch(signOutAction, {
       method: 'POST',
       credentials: 'include',

@@ -63,3 +63,49 @@ export async function resyncExistingPushSubscription(
     return false
   }
 }
+
+/**
+ * Sign-out helper: tell the server to forget this device's push subscription,
+ * then unsubscribe in the browser (otherwise the next app open re-POSTs it via
+ * resyncExistingPushSubscription). Must run while the session is still valid.
+ * Never throws and is bounded by `timeoutMs` (serviceWorker.ready can hang
+ * forever when no SW is registered).
+ */
+export async function dropPushSubscription(
+  fetchFn: typeof fetch = globalThis.fetch,
+  timeoutMs = 2000,
+): Promise<void> {
+  if (
+    typeof navigator === 'undefined' ||
+    !('serviceWorker' in navigator) ||
+    typeof globalThis.PushManager === 'undefined'
+  ) {
+    return
+  }
+  let timer: ReturnType<typeof setTimeout> | undefined
+  const timeout = new Promise<void>((resolve) => {
+    timer = setTimeout(resolve, timeoutMs)
+  })
+  const work = (async () => {
+    try {
+      const registration = await navigator.serviceWorker.ready
+      const subscription = await registration.pushManager.getSubscription()
+      if (!subscription) return
+      try {
+        await fetchFn('/api/push/unsubscribe', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ endpoint: subscription.endpoint }),
+        })
+      } catch {
+        // Best effort: still unsubscribe locally below.
+      }
+      await subscription.unsubscribe()
+    } catch {
+      // Never block sign-out.
+    }
+  })()
+  await Promise.race([work, timeout])
+  clearTimeout(timer)
+}
