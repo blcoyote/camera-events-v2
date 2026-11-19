@@ -154,6 +154,27 @@ describe('createDelivery', () => {
       expect(send).toHaveBeenCalledWith(expected, makePayload(false))
     })
 
+    it('starts every send without waiting for a hung one', async () => {
+      const store = makeStore({
+        u1: [makeSub(1), makeSub(2)],
+        u2: [makeSub(3)],
+      })
+      let release!: () => void
+      const hung = new Promise<void>((resolve) => {
+        release = resolve
+      })
+      const send = vi
+        .fn()
+        .mockReturnValueOnce(hung)
+        .mockResolvedValue(undefined)
+      const deps = makeDeps({ getStore: () => Promise.resolve(store), send })
+      const done = createDelivery(deps).deliver(makeRequest())
+      await new Promise((r) => setTimeout(r, 0))
+      expect(send).toHaveBeenCalledTimes(3)
+      release()
+      await done
+    })
+
     it('skips ineligible users', async () => {
       const store = makeStore({ u1: [makeSub(1)], u2: [makeSub(2)] })
       const deps = makeDeps({ getStore: () => Promise.resolve(store) })
