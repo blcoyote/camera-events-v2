@@ -12,6 +12,11 @@ import type { ComponentProps, ReactNode } from 'react'
 import '@testing-library/jest-dom/vitest'
 import { AvatarMenu } from './AvatarMenu'
 import { withLocale } from '#/test-utils/locale'
+import { dropPushSubscription } from '#/features/shared/utils/pushResync'
+
+vi.mock('#/features/shared/utils/pushResync', () => ({
+  dropPushSubscription: vi.fn().mockResolvedValue(undefined),
+}))
 
 vi.mock('@tanstack/react-router', () => ({
   Link: ({
@@ -285,6 +290,61 @@ describe('AvatarMenu', () => {
     const signOutBtn = screen.getByRole('menuitem', { name: 'Sign out' })
 
     await user.click(signOutBtn)
+
+    await waitFor(() => {
+      expect(assignMock).toHaveBeenCalledWith('/')
+    })
+    expect(globalThis.fetch).toHaveBeenCalledWith('/api/auth/logout', {
+      method: 'POST',
+      credentials: 'include',
+    })
+  })
+
+  it('drops the push subscription before the logout POST', async () => {
+    const order: string[] = []
+    vi.mocked(dropPushSubscription).mockImplementationOnce(async () => {
+      order.push('drop')
+    })
+    vi.mocked(globalThis.fetch).mockImplementation(((url: string) => {
+      if (url === '/api/auth/logout') order.push('logout')
+      return Promise.resolve(jsonResponse(200, { isAdmin: false }))
+    }) as typeof fetch)
+    const user = userEvent.setup()
+    render(
+      <AvatarMenu
+        avatarUrl=""
+        initials="AB"
+        signOutAction="/api/auth/logout"
+      />,
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Account menu' }))
+    await user.click(screen.getByRole('menuitem', { name: 'Sign out' }))
+
+    await waitFor(() => {
+      expect(assignMock).toHaveBeenCalledWith('/')
+    })
+    expect(order).toEqual(['drop', 'logout'])
+  })
+
+  it('waits for a slow drop before logging out and navigating', async () => {
+    let release!: () => void
+    vi.mocked(dropPushSubscription).mockImplementationOnce(
+      () => new Promise<void>((r) => (release = r)),
+    )
+    const user = userEvent.setup()
+    render(
+      <AvatarMenu
+        avatarUrl=""
+        initials="AB"
+        signOutAction="/api/auth/logout"
+      />,
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Account menu' }))
+    await user.click(screen.getByRole('menuitem', { name: 'Sign out' }))
+    expect(assignMock).not.toHaveBeenCalled()
+    release()
 
     await waitFor(() => {
       expect(assignMock).toHaveBeenCalledWith('/')

@@ -121,77 +121,94 @@ export function createDelivery(
     }
     let attempted = 0
     let succeeded = 0
+    // One slow endpoint must not delay the others: all sends run concurrently.
+    const sends: Promise<void>[] = []
 
-    for (const userId of store.getAllSubscribedUserIds()) {
-      if (!request.isUserEligible(userId, store)) continue
+    // Drain started sends even if the loop throws, so the burst key isn't released early.
+    try {
+      for (const userId of store.getAllSubscribedUserIds()) {
+        if (!request.isUserEligible(userId, store)) continue
 
-      const subscriptions = store.getSubscriptionsByUserId(userId)
-      const hosts = subscriptions.map((sub) => hostOf(sub.endpoint))
-      log.info(logTag, 'Pushing to user devices', {
-        device_count: subscriptions.length,
-        push_service_hosts: hosts,
-      })
-      for (const sub of subscriptions) {
-        if (
-          request.allowEndpoint &&
-          !request.allowEndpoint(sub.endpoint, burstStart, now)
-        ) {
-          request.onEndpointSkipped?.(sub.endpoint)
-          continue
-        }
-        try {
-          const sent = await withSpan(
-            'push.send',
-            {
-              'push.kind': request.kind,
-              'push.service.host': hostOf(sub.endpoint),
-            },
-            async (span) => {
-              try {
-                const result = await deps.send(
-                  {
-                    endpoint: sub.endpoint,
-                    keys: { p256dh: sub.p256dh, auth: sub.auth },
-                  },
-                  payloadFor(isPushLocale(sub.locale) ? sub.locale : 'en'),
-                )
-                span?.setAttribute(
-                  'push.outcome',
-                  result === 'expired' ? 'expired' : 'ok',
-                )
-                return { result }
-              } catch (err) {
-                span?.setAttribute('push.outcome', 'failed')
-                // Name only, and no throw out of the span (withSpan would
-                // recordException): the raw error can echo the endpoint.
-                span?.setStatus({
-                  code: SpanStatusCode.ERROR,
-                  message: err instanceof Error ? err.name : typeof err,
-                })
-                return { err }
-              }
-            },
-            { kind: SpanKind.CLIENT },
-          )
-          if ('err' in sent) throw sent.err
-          const outcome = sent.result
-          recordPushSend(request.kind, outcome === 'expired' ? 'expired' : 'ok')
-          // An expired endpoint is gone: nobody was there to alert.
-          if (outcome !== 'expired') {
-            attempted++
-            succeeded++
+        const subscriptions = store.getSubscriptionsByUserId(userId)
+        const hosts = subscriptions.map((sub) => hostOf(sub.endpoint))
+        log.info(logTag, 'Pushing to user devices', {
+          device_count: subscriptions.length,
+          push_service_hosts: hosts,
+        })
+        for (const sub of subscriptions) {
+          if (
+            request.allowEndpoint &&
+            !request.allowEndpoint(sub.endpoint, burstStart, now)
+          ) {
+            request.onEndpointSkipped?.(sub.endpoint)
+            continue
           }
-        } catch (err) {
-          recordPushSend(request.kind, 'failed')
-          attempted++
-          // Not the error itself: transport errors can echo the endpoint, a capability URL.
-          log.error(logTag, 'Push send failed', undefined, {
-            push_service_host: hostOf(sub.endpoint),
-            error_name: err instanceof Error ? err.name : typeof err,
-            status_code: (err as { statusCode?: unknown } | null)?.statusCode,
-          })
+          sends.push(
+            (async () => {
+              try {
+                const sent = await withSpan(
+                  'push.send',
+                  {
+                    'push.kind': request.kind,
+                    'push.service.host': hostOf(sub.endpoint),
+                  },
+                  async (span) => {
+                    try {
+                      const result = await deps.send(
+                        {
+                          endpoint: sub.endpoint,
+                          keys: { p256dh: sub.p256dh, auth: sub.auth },
+                        },
+                        payloadFor(
+                          isPushLocale(sub.locale) ? sub.locale : 'en',
+                        ),
+                      )
+                      span?.setAttribute(
+                        'push.outcome',
+                        result === 'expired' ? 'expired' : 'ok',
+                      )
+                      return { result }
+                    } catch (err) {
+                      span?.setAttribute('push.outcome', 'failed')
+                      // Name only, and no throw out of the span (withSpan would
+                      // recordException): the raw error can echo the endpoint.
+                      span?.setStatus({
+                        code: SpanStatusCode.ERROR,
+                        message: err instanceof Error ? err.name : typeof err,
+                      })
+                      return { err }
+                    }
+                  },
+                  { kind: SpanKind.CLIENT },
+                )
+                if ('err' in sent) throw sent.err
+                const outcome = sent.result
+                recordPushSend(
+                  request.kind,
+                  outcome === 'expired' ? 'expired' : 'ok',
+                )
+                // An expired endpoint is gone: nobody was there to alert.
+                if (outcome !== 'expired') {
+                  attempted++
+                  succeeded++
+                }
+              } catch (err) {
+                recordPushSend(request.kind, 'failed')
+                attempted++
+                // Not the error itself: transport errors can echo the endpoint, a capability URL.
+                log.error(logTag, 'Push send failed', undefined, {
+                  push_service_host: hostOf(sub.endpoint),
+                  error_name: err instanceof Error ? err.name : typeof err,
+                  status_code: (err as { statusCode?: unknown } | null)
+                    ?.statusCode,
+                })
+              }
+            })(),
+          )
         }
       }
+    } finally {
+      await Promise.allSettled(sends)
     }
 
     // Settled: someone got the Alert, or nobody was there to alert. Keep the

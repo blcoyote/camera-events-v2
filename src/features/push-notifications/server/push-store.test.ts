@@ -181,6 +181,43 @@ describe('saveSubscription', () => {
     const subs = store.getSubscriptionsByUserId('user1')
     expect(subs).toHaveLength(2)
   })
+
+  describe('endpoint ownership', () => {
+    const E = 'https://push.example.com/shared'
+
+    it('moves the endpoint to the last user to save it', () => {
+      store.saveSubscription('A', E, 'k1', 'a1')
+      store.saveSubscription('B', E, 'k2', 'a2')
+
+      expect(
+        store.countRows(
+          'SELECT 1 FROM push_subscriptions WHERE endpoint = ?',
+          E,
+        ),
+      ).toBe(1)
+      expect(store.getSubscriptionsByUserId('B')).toHaveLength(1)
+      expect(store.getSubscriptionsByUserId('A')).toEqual([])
+    })
+
+    it("leaves the previous owner's other endpoints untouched", () => {
+      store.saveSubscription('A', E, 'k1', 'a1')
+      store.saveSubscription('A', 'https://push.example.com/other', 'k3', 'a3')
+      store.saveSubscription('B', E, 'k2', 'a2')
+
+      expect(
+        store.getSubscriptionsByUserId('A').map((s) => s.endpoint),
+      ).toEqual(['https://push.example.com/other'])
+    })
+
+    it('still upserts keys and locale when the same user re-saves', () => {
+      store.saveSubscription('A', E, 'k1', 'a1', 'en')
+      store.saveSubscription('A', E, 'k9', 'a9', 'da')
+
+      const subs = store.getSubscriptionsByUserId('A')
+      expect(subs).toHaveLength(1)
+      expect(subs[0]).toMatchObject({ p256dh: 'k9', auth: 'a9', locale: 'da' })
+    })
+  })
 })
 
 describe('getSubscriptionsByUserId', () => {

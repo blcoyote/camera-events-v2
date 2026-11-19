@@ -35,6 +35,7 @@ export interface PushSubscriptionRow {
 }
 
 export interface PushStore {
+  /** Upserts the subscription and evicts any other user's row for the same endpoint (last saver owns it). */
   saveSubscription: (
     userId: string,
     endpoint: string,
@@ -134,6 +135,9 @@ export async function createPushStore(
         auth = excluded.auth,
         locale = COALESCE(?, push_subscriptions.locale)
     `),
+    removeOtherOwners: db.prepare(
+      'DELETE FROM push_subscriptions WHERE endpoint = ? AND user_id <> ?',
+    ),
     updateLocale: db.prepare(
       'UPDATE push_subscriptions SET locale = ? WHERE user_id = ? AND endpoint = ?',
     ),
@@ -185,6 +189,7 @@ export async function createPushStore(
 
   return {
     saveSubscription(userId, endpoint, p256dh, auth, locale) {
+      stmts.removeOtherOwners.run(endpoint, userId)
       stmts.upsert.run(
         userId,
         endpoint,

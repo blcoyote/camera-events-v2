@@ -3,10 +3,12 @@ import { withLocale } from '#/test-utils/locale'
 import {
   resyncSubscription,
   resyncExistingPushSubscription,
+  dropPushSubscription,
 } from './pushResync'
 
 afterEach(() => {
   vi.unstubAllGlobals()
+  vi.useRealTimers()
 })
 
 function makeSubscription(
@@ -168,6 +170,124 @@ describe('resyncExistingPushSubscription', () => {
     const result = await resyncExistingPushSubscription(fetchMock)
 
     expect(result).toBe(false)
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+})
+
+describe('dropPushSubscription', () => {
+  function stubBrowser(subscription: unknown, ready?: Promise<unknown>) {
+    vi.stubGlobal('PushManager', class {})
+    vi.stubGlobal('navigator', {
+      serviceWorker: {
+        ready:
+          ready ??
+          Promise.resolve({
+            pushManager: {
+              getSubscription: vi.fn().mockResolvedValue(subscription),
+            },
+          }),
+      },
+    })
+  }
+
+  function makeDroppable(unsubscribe = vi.fn().mockResolvedValue(true)) {
+    return {
+      endpoint: 'https://push.example.com/sub1',
+      unsubscribe,
+    }
+  }
+
+  it('POSTs the endpoint to /api/push/unsubscribe and unsubscribes in the browser', async () => {
+    const sub = makeDroppable()
+    stubBrowser(sub)
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true })
+
+    await dropPushSubscription(fetchMock)
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/push/unsubscribe',
+      expect.objectContaining({
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    )
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({
+      endpoint: 'https://push.example.com/sub1',
+    })
+    expect(sub.unsubscribe).toHaveBeenCalledTimes(1)
+  })
+
+  it('still unsubscribes in the browser when the POST never settles', async () => {
+    vi.useFakeTimers()
+    const sub = makeDroppable()
+    stubBrowser(sub)
+    const fetchMock = vi.fn(() => new Promise<Response>(() => {}))
+
+    const p = dropPushSubscription(fetchMock, 2000)
+    await vi.advanceTimersByTimeAsync(2000)
+
+    await expect(p).resolves.toBeUndefined()
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(sub.unsubscribe).toHaveBeenCalledTimes(1)
+  })
+
+  it('still unsubscribes when the POST rejects', async () => {
+    const sub = makeDroppable()
+    stubBrowser(sub)
+
+    await dropPushSubscription(vi.fn().mockRejectedValue(new Error('net')))
+
+    expect(sub.unsubscribe).toHaveBeenCalledTimes(1)
+  })
+
+  it('still unsubscribes when the POST is not ok', async () => {
+    const sub = makeDroppable()
+    stubBrowser(sub)
+
+    await dropPushSubscription(
+      vi.fn().mockResolvedValue({ ok: false, status: 500 }),
+    )
+
+    expect(sub.unsubscribe).toHaveBeenCalledTimes(1)
+  })
+
+  it('does not fetch when there is no subscription', async () => {
+    stubBrowser(null)
+    const fetchMock = vi.fn()
+
+    await dropPushSubscription(fetchMock)
+
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it('does not fetch when PushManager is unavailable', async () => {
+    vi.stubGlobal('navigator', { serviceWorker: {} })
+    const fetchMock = vi.fn()
+
+    await dropPushSubscription(fetchMock)
+
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it('resolves without throwing when unsubscribe rejects', async () => {
+    const sub = makeDroppable(vi.fn().mockRejectedValue(new Error('boom')))
+    stubBrowser(sub)
+
+    await expect(
+      dropPushSubscription(vi.fn().mockResolvedValue({ ok: true })),
+    ).resolves.toBeUndefined()
+  })
+
+  it('resolves after the timeout when serviceWorker.ready never settles', async () => {
+    vi.useFakeTimers()
+    stubBrowser(null, new Promise(() => {}))
+    const fetchMock = vi.fn()
+
+    const p = dropPushSubscription(fetchMock, 2000)
+    await vi.advanceTimersByTimeAsync(2000)
+
+    await expect(p).resolves.toBeUndefined()
     expect(fetchMock).not.toHaveBeenCalled()
   })
 })

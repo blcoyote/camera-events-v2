@@ -154,6 +154,27 @@ describe('createDelivery', () => {
       expect(send).toHaveBeenCalledWith(expected, makePayload(false))
     })
 
+    it('starts every send without waiting for a hung one', async () => {
+      const store = makeStore({
+        u1: [makeSub(1), makeSub(2)],
+        u2: [makeSub(3)],
+      })
+      let release!: () => void
+      const hung = new Promise<void>((resolve) => {
+        release = resolve
+      })
+      const send = vi
+        .fn()
+        .mockReturnValueOnce(hung)
+        .mockResolvedValue(undefined)
+      const deps = makeDeps({ getStore: () => Promise.resolve(store), send })
+      const done = createDelivery(deps).deliver(makeRequest())
+      await new Promise((r) => setTimeout(r, 0))
+      expect(send).toHaveBeenCalledTimes(3)
+      release()
+      await done
+    })
+
     it('skips ineligible users', async () => {
       const store = makeStore({ u1: [makeSub(1)], u2: [makeSub(2)] })
       const deps = makeDeps({ getStore: () => Promise.resolve(store) })
@@ -647,6 +668,37 @@ describe('createDelivery', () => {
       expect(held.calls).toHaveLength(1)
       held.calls[0].resolve()
       await expect(second).resolves.toBeUndefined()
+    })
+
+    it('drains started sends before a later-user lookup error releases the key', async () => {
+      const held = heldSend()
+      const store = makeStore({ u1: [makeSub(1)], u2: [makeSub(2)] })
+      store.getSubscriptionsByUserId.mockImplementation((id: string) => {
+        if (id === 'u2') throw new Error('lookup failed')
+        return [makeSub(1)]
+      })
+      const d = createDelivery(
+        makeDeps({ getStore: () => Promise.resolve(store), send: held.send }),
+      )
+      const run = () =>
+        d.deliver(makeRequest({ burst: { key: 'k', start: false } }))
+      const first = run()
+      const firstResult = first.then(
+        () => null,
+        (e: Error) => e,
+      )
+      const second = run()
+      const secondResult = expect(second).rejects.toThrow('lookup failed')
+      await tick()
+      expect(held.calls).toHaveLength(1)
+      await tick()
+      expect(held.calls).toHaveLength(1)
+      held.calls[0].resolve()
+      expect((await firstResult)?.message).toBe('lookup failed')
+      await tick()
+      expect(held.calls).toHaveLength(2)
+      held.calls[1].resolve()
+      await secondResult
     })
   })
 })
