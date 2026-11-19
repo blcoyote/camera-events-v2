@@ -197,7 +197,7 @@ describe('dropPushSubscription', () => {
     }
   }
 
-  it('POSTs the endpoint to /api/push/unsubscribe then unsubscribes in the browser', async () => {
+  it('POSTs the endpoint to /api/push/unsubscribe and unsubscribes in the browser', async () => {
     const sub = makeDroppable()
     stubBrowser(sub)
     const fetchMock = vi.fn().mockResolvedValue({ ok: true })
@@ -216,9 +216,20 @@ describe('dropPushSubscription', () => {
       endpoint: 'https://push.example.com/sub1',
     })
     expect(sub.unsubscribe).toHaveBeenCalledTimes(1)
-    expect(fetchMock.mock.invocationCallOrder[0]).toBeLessThan(
-      sub.unsubscribe.mock.invocationCallOrder[0],
-    )
+  })
+
+  it('still unsubscribes in the browser when the POST never settles', async () => {
+    vi.useFakeTimers()
+    const sub = makeDroppable()
+    stubBrowser(sub)
+    const fetchMock = vi.fn(() => new Promise<Response>(() => {}))
+
+    const p = dropPushSubscription(fetchMock, 2000)
+    await vi.advanceTimersByTimeAsync(2000)
+
+    await expect(p).resolves.toBeUndefined()
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(sub.unsubscribe).toHaveBeenCalledTimes(1)
   })
 
   it('still unsubscribes when the POST rejects', async () => {

@@ -66,7 +66,8 @@ export async function resyncExistingPushSubscription(
 
 /**
  * Sign-out helper: tell the server to forget this device's push subscription,
- * then unsubscribe in the browser (otherwise the next app open re-POSTs it via
+ * and unsubscribe in the browser concurrently, so a hung POST can't block the
+ * latter (otherwise the next app open re-POSTs it via
  * resyncExistingPushSubscription). Must run while the session is still valid.
  * Never throws and is bounded by `timeoutMs` (serviceWorker.ready can hang
  * forever when no SW is registered).
@@ -91,17 +92,17 @@ export async function dropPushSubscription(
       const registration = await navigator.serviceWorker.ready
       const subscription = await registration.pushManager.getSubscription()
       if (!subscription) return
-      try {
-        await fetchFn('/api/push/unsubscribe', {
+      const endpoint = subscription.endpoint
+      // Concurrent: a POST hanging past the timeout must not stop the local unsubscribe.
+      await Promise.allSettled([
+        fetchFn('/api/push/unsubscribe', {
           method: 'POST',
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ endpoint: subscription.endpoint }),
-        })
-      } catch {
-        // Best effort: still unsubscribe locally below.
-      }
-      await subscription.unsubscribe()
+          body: JSON.stringify({ endpoint }),
+        }),
+        subscription.unsubscribe(),
+      ])
     } catch {
       // Never block sign-out.
     }
